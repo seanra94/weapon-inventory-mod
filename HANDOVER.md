@@ -193,3 +193,13 @@ public void invalidate();
   - `Fatal: File access and reflection are not allowed to scripts. (java.lang.reflect.Field)`
 - Durable rule: do not use Java reflection, `java.lang.reflect.Field`, `getDeclaredField(...)`, `getField(...)`, or `setAccessible(...)` in Starsector runtime script code.
 - If `CommodityIconProvider.getHandlingPriority(Object params)` receives an unknown wrapper object, do not inspect internal members dynamically. Prefer public/type-safe checks and rely on `getIconName(CargoStackAPI)` to gate weapon-only rendering.
+
+## Hook proof status update (latest)
+
+- After diagnostic priority was set to literal `100`, manual retest still showed no WIM marker.
+- Demand Indicators remained enabled and its commodity indicators were visible.
+- Current leading hypothesis: provider-selection conflict. Demand Indicator's provider also returns priority `100`, so WIM may still lose selection by tie/order and never receive `getRankIconName(...)`.
+- Next diagnostic branch:
+  - inspect post-priority-100 `WIM_DIAG` lines;
+  - if priority is logged but rank/icon calls are absent, raise WIM diagnostic priority above `100` to test provider selection;
+  - also run a manual no-code control test with Demand Indicators disabled.

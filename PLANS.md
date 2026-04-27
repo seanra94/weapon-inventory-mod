@@ -100,3 +100,21 @@ Classify the failure using `starsector.log` diagnostic lines:
 - icon/rank method calls plus sprite failure: fix settings/path/deployed graphics.
 
 Ownership counting, storage scanning, generated number sprites, and tooltip changes remain blocked until a static marker visibly renders.
+
+## Current status (latest)
+
+Phase 0/1 static marker hook is still not proven.
+
+Latest result:
+
+- WIM priority was changed to literal `100`, matching Demand Indicator bytecode evidence.
+- Manual retest still showed no WIM marker.
+- Demand Indicators remained enabled and its commodity indicators were visible.
+
+## Immediate next step (latest)
+
+Classify the post-priority-100 log result.
+
+If `WIM_DIAG priority` appears but `getRankIconName` / `getIconName` calls are absent, test provider-selection conflict by raising WIM diagnostic priority above `100`.
+
+Also run a no-code control test with Demand Indicators disabled.

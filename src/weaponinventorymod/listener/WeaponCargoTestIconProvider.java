@@ -10,8 +10,9 @@ import org.apache.log4j.Logger;
 
 public class WeaponCargoTestIconProvider implements CommodityIconProvider {
     private static final Logger LOG = Global.getLogger(WeaponCargoTestIconProvider.class);
-    // Diagnostic priority aligned to Demand Indicator bytecode evidence: getHandlingPriority(...) returns literal 100.
-    private static final int ACTIVE_PRIORITY = 100;
+    // Diagnostic priority intentionally exceeds Demand Indicator's observed priority 100 to test provider selection.
+    // Do not treat this as final balancing.
+    private static final int ACTIVE_PRIORITY = 1000;
     private static final int NO_PRIORITY = -1;
     private static final String SPRITE_CATEGORY = "ui";
     private static final String SPRITE_KEY = "weapon_inventory_test_marker";
