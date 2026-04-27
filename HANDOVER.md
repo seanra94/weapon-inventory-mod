@@ -171,6 +171,20 @@ public void invalidate();
 - Confirmed deploy payload for test updates: `mod_info.json`, `data`, `graphics`, `jars`.
 - Confirmed deploy command pattern used here: `robocopy <src> <dst> <selection> /E`.
 
+### Latest diagnostic classification
+
+- Commit `15e0240` added diagnostic hook logging and temporarily forced the test marker from both `CommodityIconProvider.getIconName(...)` and `getRankIconName(...)` for all non-null stacks.
+- Manual retest after `15e0240`: no crash, but still no visible marker in tested weapon contexts.
+- Visual result alone is not enough to diagnose the hook; classification must use `starsector.log` lines beginning with `WIM_DIAG`.
+- Latest classification after `15e0240`: Branch C (register + priority logs present, but no `getIconName(...)` or `getRankIconName(...)` call logs).
+- Branch C conclusion: provider appears queried but not selected for icon methods in tested context.
+- Demand Indicator bytecode evidence remains:
+  - `getHandlingPriority(Object)` returns literal `100`;
+  - `getIconName(CargoStackAPI)` returns `null`;
+  - indicator logic is in `getRankIconName(CargoStackAPI)`;
+  - provider registration happens from plugin `onGameLoad(...) -> register()`.
+- Diagnostic priority is now set to literal `100`, aligned with Demand Indicator bytecode evidence.
+
 ## In-game verification notes
 
 - Phase 0/1 initial hook proof failed manual in-game testing: no UI marker was visible on weapon stacks in any checked context.

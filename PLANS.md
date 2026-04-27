@@ -87,15 +87,16 @@ Manual test results so far:
 2. Follow-up hook proof: entering a planet trade screen crashed with:
    `File access and reflection are not allowed to scripts. (java.lang.reflect.Field)`
 3. Commit `3a8a998`: crash fixed, but still no visible marker.
+4. Commit `15e0240`: diagnostic marker forced from icon/rank methods; no crash, but still no visible marker in tested weapon contexts.
 
 ## Immediate next step
 
-Run a diagnostic hook pass before ownership counting:
+Classify the failure using `starsector.log` diagnostic lines:
 
-- add capped logs for provider registration, handling-priority params, `getIconName(...)`, and `getRankIconName(...)`;
-- temporarily force the test marker from icon/rank methods for all non-null cargo stacks;
-- inspect Demand Indicator bytecode only if cheap and only as behavioral evidence;
-- rebuild, redeploy, and manually retest;
-- use the visual result plus `starsector.log` to decide whether `CommodityIconProvider` can support weapon icons.
+- no `WIM_DIAG register`: mod loading or deployment problem;
+- register but no priority: tested UI is not querying this provider;
+- priority but no icon/rank method calls: provider likely not selected, test literal priority `100`;
+- icon/rank method calls plus sprite resolved but no visual marker: sprite visibility or render-path issue;
+- icon/rank method calls plus sprite failure: fix settings/path/deployed graphics.
 
 Ownership counting, storage scanning, generated number sprites, and tooltip changes remain blocked until a static marker visibly renders.
