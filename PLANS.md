@@ -118,3 +118,92 @@ Classify the post-priority-100 log result.
 If `WIM_DIAG priority` appears but `getRankIconName` / `getIconName` calls are absent, test provider-selection conflict by raising WIM diagnostic priority above `100`.
 
 Also run a no-code control test with Demand Indicators disabled.
+
+## Architecture decision (latest)
+
+- Public hook path cannot provide a weapon icon badge overlay.
+- Internal prototype path selected for proof only, with strict reversibility.
+
+## Immediate next step (latest)
+
+1. Keep commodity diagnostics disabled (no `CommodityIconProvider` registration).
+2. Run reversible core patch proof:
+   - patch only `CargoStackView.renderAtCenter(float,float,float)`;
+   - inject one static call `CargoWeaponMarkerHook.render(float)` in `WEAPONS` branch;
+   - pass only alpha;
+   - no ownership counts, no storage scan, no number sprites, no wings.
+3. Manual verify:
+   - no crash on game start/trade;
+   - no commodity red-box diagnostics;
+   - fixed marker visible on weapon cargo icons.
+
+## Current status (class visibility)
+
+The bytecode prototype reached the weapon cargo render path but failed class visibility.
+
+Observed crash:
+
+- entering market trade called patched `CargoStackView.renderAtCenter(...)`;
+- JVM could not resolve `weaponinventorymod.internal.CargoWeaponMarkerHook`;
+- result: `NoClassDefFoundError`.
+
+## Immediate next step (class visibility fix)
+
+- restore original `starfarer_obf.jar`;
+- rebuild WIM classes;
+- patch `CargoStackView.renderAtCenter(FFF)V`;
+- also embed `weaponinventorymod/internal/CargoWeaponMarkerHook.class` into patched `starfarer_obf.jar`;
+- verify both injected call and hook class are present;
+- redeploy WIM payload;
+- manually retest market trade.
+
+Ownership counting, storage scanning, number sprites, and wing support remain blocked until fixed marker renders without crashing.
+
+## Current status (render visibility)
+
+Class visibility crash is fixed, but marker visibility is still under diagnostic.
+
+Known facts:
+
+- patched hook is invoked from `CargoStackView.renderAtCenter(...)`;
+- previous sprite-based hook path failed because `Global.getSettings()` was `null` in hook context;
+- no crash now from class loading.
+
+## Immediate next step (render diagnostics)
+
+- keep primitive hook boundary (`render(float alpha)`);
+- log once at first line of hook entry;
+- draw large raw-GL diagnostic squares independent of sprite/settings lookup;
+- if entry logs appear but squares are still invisible, repatch hook boundary to `render(float x, float y, float alpha)` and draw using explicit coordinates.
+
+## Current status (raw GL failure)
+
+The hook reachability is proven, but raw hook-side GL rendering failed.
+
+Known facts:
+
+- `WIM_WEAPON_HOOK reached alpha=1.0` confirmed call entry;
+- hook-side `GL11` call failed with `No OpenGL context found in the current thread`;
+- no visible marker rendered from external hook call path.
+
+## Immediate next step (internal duplicate draw diagnostic)
+
+- remove injected `CargoWeaponMarkerHook.render(...)` call from patched `CargoStackView`;
+- inject a second call to existing internal `weaponIcon` draw method in `WEAPONS` branch;
+- use visible x-offset for duplicate icon proof;
+- keep patch deterministic/reversible and limited to `CargoStackView.renderAtCenter(FFF)V`;
+- keep ownership counts, storage scanning, number sprites, tooltip work, and fighter wings out of scope.
+
+## Current status (marker draw replacement)
+
+- Duplicate-weapon diagnostic has been replaced by a marker-style sprite draw injection in the WEAPONS branch.
+- Patch now uses `com/fs/graphics/Sprite` draw flow with marker asset path `graphics/ui/weapon_inventory_test_marker.png`.
+- Legacy external hook-call path remains disabled.
+
+## Immediate next step (manual verification)
+
+- launch game and open market trade;
+- confirm no crash;
+- confirm commodities remain vanilla (no WIM red boxes);
+- confirm duplicate-weapon icon is gone;
+- confirm fixed marker appears on weapon icons.

@@ -203,3 +203,94 @@ public void invalidate();
   - inspect post-priority-100 `WIM_DIAG` lines;
   - if priority is logged but rank/icon calls are absent, raise WIM diagnostic priority above `100` to test provider selection;
   - also run a manual no-code control test with Demand Indicators disabled.
+
+## Weapon icon overlay architecture decision (latest)
+
+- Public-safe weapon/wing icon overlay hook was not found.
+- `CommodityIconProvider` affects commodity/resource cargo icons only and is not usable for weapon icon overlays.
+- Weapon cargo icons are rendered through a private/internal `CargoStackView.weaponIcon` path inside `CargoStackView.renderAtCenter(float,float,float)`.
+- Fighter wings use a separate `FIGHTER_CHIP` path.
+- Sprite/spec mutation is rejected because it would likely affect global weapon visuals, not cargo-only visuals.
+- Reflection/member probing is not viable because Starsector blocks it at runtime.
+- The commodity diagnostic provider path has been disabled in runtime:
+  - `WeaponInventoryModPlugin` no longer registers `WeaponCargoTestIconProvider`;
+  - `WeaponCargoTestIconProvider` source was removed.
+- Risky internal prototype path introduced as a local reversible patch:
+  - target class: `com.fs.starfarer.campaign.ui.trade.CargoStackView`;
+  - target method: `renderAtCenter(float,float,float)` descriptor `(FFF)V`;
+  - injected call: `weaponinventorymod.internal.CargoWeaponMarkerHook.render(float)`;
+  - injected argument: existing method arg `alpha` (`fload_3`) only.
+- Local patch tooling:
+  - script: `tools/cargo-stack-view-patcher.ps1`;
+  - patch command: `powershell -ExecutionPolicy Bypass -File .\tools\cargo-stack-view-patcher.ps1 -Mode Patch`;
+  - restore command: `powershell -ExecutionPolicy Bypass -File .\tools\cargo-stack-view-patcher.ps1 -Mode Restore`;
+  - backup path: `C:\Games\Starsector\starsector-core\starfarer_obf.jar.wim_backup`.
+- Safeguards enforced by patcher:
+  - backup before patch if absent;
+  - refuse if target class/method missing;
+  - refuse if deterministic `WEAPONS` insertion point is not found;
+  - refuse if already patched;
+  - patch one class/method only.
+
+## Bytecode prototype classloading result
+
+- First bytecode-patch prototype reached `CargoStackView.renderAtCenter(...)` but crashed entering market trade with:
+  - `java.lang.NoClassDefFoundError: weaponinventorymod/internal/CargoWeaponMarkerHook`
+  - caused by `ClassNotFoundException: weaponinventorymod.internal.CargoWeaponMarkerHook`
+- Diagnosis: patched core class `CargoStackView` is loaded from `starfarer_obf.jar` and cannot assume classes in the WIM mod jar are visible.
+- Durable patcher invariant: a patched `starfarer_obf.jar` must contain both:
+  - the patched `CargoStackView` class with the injected call;
+  - `weaponinventorymod/internal/CargoWeaponMarkerHook.class`.
+- Atomic patch safeguards now enforced:
+  - refuse patch if hook class source is missing;
+  - refuse patch if method already patched;
+  - refuse patch on inconsistent state unless explicit `repair` mode;
+  - verify after patch that both injected call and embedded hook class exist.
+- Hook boundary remains primitive-only:
+  - `public static void render(float alpha)`;
+  - no runtime reflection;
+  - no dependency on mod plugin/helper classes;
+  - no ownership counting or cargo-stack access in static-marker proof.
+
+## Bytecode weapon-marker prototype status (visibility diagnostics)
+
+- Classloader/package visibility is now fixed (embedded hook class), and the hook is reached from patched `CargoStackView.renderAtCenter(...)`.
+- Latest log evidence in `starsector-core/starsector.log` shows:
+  - `WIM_HOOK sprite lookup failed for ui.weapon_inventory_test_marker`
+  - `NullPointerException` because `Global.getSettings()` returned `null` inside `CargoWeaponMarkerHook`.
+- Durable lesson: core-jar-invoked hook code should not rely on `Global.getSettings()` being initialized/available in this render context.
+- Diagnostic hook now logs once at method entry and draws raw GL colored quads independent of sprite/settings lookup to prove render-path visibility.
+- Patch descriptor currently remains `render:(F)V`; if hook-entry logs appear but raw quads stay invisible, next diagnostic step is to repatch to `render:(FFF)V` and pass primitive `x,y,alpha`.
+
+## Bytecode weapon-marker prototype status (current)
+
+- The embedded hook class is loadable and the injected weapon-branch call was reached.
+- Manual/log result for raw-GL hook pass:
+  - `WIM_WEAPON_HOOK reached alpha=1.0`
+  - raw `GL11` drawing failed with `No OpenGL context found in the current thread`.
+- Durable lesson: do not draw with raw LWJGL/OpenGL from the external embedded hook class in this path.
+- Current diagnostic approach:
+  - remove injected `CargoWeaponMarkerHook.render(...)` call from `CargoStackView`;
+  - inject a direct duplicate call to internal `weaponIcon` draw method with visible x-offset;
+  - keep patch to one method/class only and reversible via restore.
+- Current injected duplicate draw uses:
+  - field: `CargoStackView.weaponIcon` (owner `com/fs/starfarer/campaign/ui/trade/CargoStackView`);
+  - draw method owner: obfuscated weapon icon class in `com/fs/starfarer/ui/B/...`;
+  - draw descriptor: `(FFFF)V`;
+  - args: `x=18.0f`, `y=-local10`, `angle=local13`, `alpha=arg3`.
+- `CargoWeaponMarkerHook` class remains in source as harmless legacy no-op and is no longer called by patched core bytecode.
+
+## Bytecode weapon-marker prototype status (marker draw patch)
+
+- Duplicate weapon-icon diagnostic draw has been removed from the patcher path.
+- Current patch injects marker drawing directly in `CargoStackView.renderAtCenter(FFF)V` WEAPONS branch using `com/fs/graphics/Sprite`, not `weaponIcon` duplicate draw and not `CargoWeaponMarkerHook`.
+- Injected marker path:
+  - sprite path literal: `graphics/ui/weapon_inventory_test_marker.png`
+  - draw flow: `new Sprite(path) -> setNormalBlend() -> setAlphaMult(alpha) -> render(x, y)`
+  - coordinates mirror RESOURCES rank-marker layout math:
+    - `x = -width/2 + 5`
+    - `y = height/2 - markerHeight - 5`
+- Patcher safeguards now refuse:
+  - legacy hook-call patch present;
+  - old duplicate-weapon diagnostic patch present;
+  - marker patch already present.
