@@ -79,23 +79,23 @@ rg -n "CargoStackAvailability|AvailabilityIcon|RankIcon|getRankIcon|CargoStackVi
 
 ## Current status
 
-Phase 0/1 static marker hook is still under test.
+Phase 0/1 static marker hook is still not proven.
 
 Manual test results so far:
 
 1. Initial hook proof: no visible marker on weapon stacks.
-2. Follow-up hook proof: entering a planet trade screen crashed with Starsector runtime sandbox error:
+2. Follow-up hook proof: entering a planet trade screen crashed with:
    `File access and reflection are not allowed to scripts. (java.lang.reflect.Field)`
+3. Commit `3a8a998`: crash fixed, but still no visible marker.
 
 ## Immediate next step
 
-Fix the crash before any ownership-counting work:
+Run a diagnostic hook pass before ownership counting:
 
-- remove all Java reflection and wrapper-field probing from the hook provider;
-- keep top-level `graphics` sprite registration;
-- keep marker rendering in `CommodityIconProvider.getIconName(...)`;
-- keep vanilla/default rank behavior in `getRankIconName(...)`;
-- rebuild and redeploy;
-- manually retest entering trade screen, then marker visibility on weapon stacks.
+- add capped logs for provider registration, handling-priority params, `getIconName(...)`, and `getRankIconName(...)`;
+- temporarily force the test marker from icon/rank methods for all non-null cargo stacks;
+- inspect Demand Indicator bytecode only if cheap and only as behavioral evidence;
+- rebuild, redeploy, and manually retest;
+- use the visual result plus `starsector.log` to decide whether `CommodityIconProvider` can support weapon icons.
 
-Ownership counting, storage scanning, generated number sprites, and tooltip changes remain blocked until the static marker hook works without crashing.
+Ownership counting, storage scanning, generated number sprites, and tooltip changes remain blocked until a static marker visibly renders.

@@ -156,11 +156,17 @@ public void invalidate();
 
 ## Hook proof status update
 
-- First in-game hook proof failed: no visible test marker appeared on weapon stacks in market/storage/inventory/salvage contexts.
-- Updated hook proof now uses `getIconName(CargoStackAPI)` for weapon-only icon override and preserves vanilla rank behavior through `getRankIconName(CargoStackAPI)`.
-- Sprite registration is now expected to be defined in `data/config/settings.json` under top-level `graphics` (category `ui`), not top-level `sprites`.
-- Provider registration now logs once, and sprite lookup failure now logs once, to make validation in `starsector.log` straightforward.
-- `getHandlingPriority(Object params)` should treat unknown params as no-op (`-1`); API evidence shows vanilla may pass a wrapper object carrying `stack` rather than a bare `CargoStackAPI`.
+- Commit `3a8a998` fixed the trade-screen crash caused by forbidden runtime member probing.
+- Manual retest after `3a8a998`: no crash, but still no visible test marker on weapon stacks.
+- Current unresolved issue: the mod has not proven that weapon cargo stacks reach `CommodityIconProvider.getIconName(CargoStackAPI)` with `stack.isWeaponStack() == true`.
+- Do not assume Demand Indicator’s commodity overlay path applies to weapons. Demand Indicator is useful evidence for commodity cargo icons, but weapon cargo icons may use a different render path or stack representation.
+- Next hook-proof pass is diagnostic-only:
+  - log provider registration;
+  - log `getHandlingPriority(...)` params class;
+  - log capped calls to `getIconName(...)` and `getRankIconName(...)`;
+  - temporarily force the test marker from icon/rank methods for all non-null stacks to identify which render path is active;
+  - remove or narrow the diagnostic behavior after the render path is identified.
+- Durable rule remains: no Java runtime member probing in Starsector script code.
 - Confirmed local deploy target remains `C:\Games\Starsector\mods\Weapon Inventory Mod`.
 - Confirmed deploy payload for test updates: `mod_info.json`, `data`, `graphics`, `jars`.
 - Confirmed deploy command pattern used here: `robocopy <src> <dst> <selection> /E`.
