@@ -75,3 +75,27 @@ Targeted searches:
 
 ```sh
 rg -n "CargoStackAvailability|AvailabilityIcon|RankIcon|getRankIcon|CargoStackView|CargoStackAPI|addListener|ListenerManager" src data
+```
+
+## Current status
+
+Phase 0/1 static marker hook is still under test.
+
+Manual test results so far:
+
+1. Initial hook proof: no visible marker on weapon stacks.
+2. Follow-up hook proof: entering a planet trade screen crashed with Starsector runtime sandbox error:
+   `File access and reflection are not allowed to scripts. (java.lang.reflect.Field)`
+
+## Immediate next step
+
+Fix the crash before any ownership-counting work:
+
+- remove all Java reflection and wrapper-field probing from the hook provider;
+- keep top-level `graphics` sprite registration;
+- keep marker rendering in `CommodityIconProvider.getIconName(...)`;
+- keep vanilla/default rank behavior in `getRankIconName(...)`;
+- rebuild and redeploy;
+- manually retest entering trade screen, then marker visibility on weapon stacks.
+
+Ownership counting, storage scanning, generated number sprites, and tooltip changes remain blocked until the static marker hook works without crashing.

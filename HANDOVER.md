@@ -150,5 +150,26 @@ public void invalidate();
 - Build workflow:
   - command: `powershell -ExecutionPolicy Bypass -File .\build.ps1`
   - output jar: `jars/weapon-inventory-mod.jar`
+  - compile classpath must include both `starfarer.api.jar` and `log4j-1.2.9.jar` for `Global.getLogger(...)` usage.
 - Deployment workflow in this environment:
   - deploy payload (`mod_info.json`, `data`, `graphics`, `jars`) to `C:\Games\Starsector\mods\Weapon Inventory Mod` after rebuild.
+
+## Hook proof status update
+
+- First in-game hook proof failed: no visible test marker appeared on weapon stacks in market/storage/inventory/salvage contexts.
+- Updated hook proof now uses `getIconName(CargoStackAPI)` for weapon-only icon override and preserves vanilla rank behavior through `getRankIconName(CargoStackAPI)`.
+- Sprite registration is now expected to be defined in `data/config/settings.json` under top-level `graphics` (category `ui`), not top-level `sprites`.
+- Provider registration now logs once, and sprite lookup failure now logs once, to make validation in `starsector.log` straightforward.
+- `getHandlingPriority(Object params)` should treat unknown params as no-op (`-1`); API evidence shows vanilla may pass a wrapper object carrying `stack` rather than a bare `CargoStackAPI`.
+- Confirmed local deploy target remains `C:\Games\Starsector\mods\Weapon Inventory Mod`.
+- Confirmed deploy payload for test updates: `mod_info.json`, `data`, `graphics`, `jars`.
+- Confirmed deploy command pattern used here: `robocopy <src> <dst> <selection> /E`.
+
+## In-game verification notes
+
+- Phase 0/1 initial hook proof failed manual in-game testing: no UI marker was visible on weapon stacks in any checked context.
+- Follow-up hook pass changed sprite registration to top-level `graphics` and moved the test marker to `CommodityIconProvider.getIconName(...)`.
+- That follow-up crashed when entering a planet trade screen with:
+  - `Fatal: File access and reflection are not allowed to scripts. (java.lang.reflect.Field)`
+- Durable rule: do not use Java reflection, `java.lang.reflect.Field`, `getDeclaredField(...)`, `getField(...)`, or `setAccessible(...)` in Starsector runtime script code.
+- If `CommodityIconProvider.getHandlingPriority(Object params)` receives an unknown wrapper object, do not inspect internal members dynamically. Prefer public/type-safe checks and rely on `getIconName(CargoStackAPI)` to gate weapon-only rendering.
