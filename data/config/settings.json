@@ -1,0 +1,7 @@
+{
+    "sprites": {
+        "ui": {
+            "weapon_inventory_test_marker": "graphics/ui/weapon_inventory_test_marker.png"
+        }
+    }
+}
