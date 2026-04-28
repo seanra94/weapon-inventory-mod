@@ -19,16 +19,14 @@ $patcherSrcDir = Join-Path $PSScriptRoot "patcher\src"
 $patcherBuildDir = Join-Path $PSScriptRoot "patcher\build\classes"
 $modJarPath = Join-Path (Split-Path -Parent $PSScriptRoot) "jars\weapon-inventory-mod.jar"
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$requiredDiagSprites = @(
-    "graphics\\ui\\wim_diag_anchor.png",
-    "graphics\\ui\\wim_diag_player_0.png",
-    "graphics\\ui\\wim_diag_player_1.png",
-    "graphics\\ui\\wim_diag_player_2plus.png",
-    "graphics\\ui\\wim_diag_player_err.png",
-    "graphics\\ui\\wim_diag_storage_0.png",
-    "graphics\\ui\\wim_diag_storage_1.png",
-    "graphics\\ui\\wim_diag_storage_2plus.png",
-    "graphics\\ui\\wim_diag_storage_err.png"
+$requiredTotalSprites = @(
+    "graphics\\ui\\wim_total_red_0.png",
+    "graphics\\ui\\wim_total_yellow_1.png",
+    "graphics\\ui\\wim_total_yellow_9.png",
+    "graphics\\ui\\wim_total_green_10.png",
+    "graphics\\ui\\wim_total_green_98.png",
+    "graphics\\ui\\wim_total_green_99plus.png",
+    "graphics\\ui\\wim_total_err.png"
 )
 
 New-Item -ItemType Directory -Force -Path $patcherBuildDir | Out-Null
@@ -56,10 +54,10 @@ if ($modeArg -eq "patch") {
     if (-not (Test-Path -LiteralPath $modJarPath)) {
         throw "Patch mode requires built mod jar at '$modJarPath'. Run build.ps1 first."
     }
-    foreach ($relPath in $requiredDiagSprites) {
+    foreach ($relPath in $requiredTotalSprites) {
         $fullPath = Join-Path $repoRoot $relPath
         if (-not (Test-Path -LiteralPath $fullPath)) {
-            throw "Patch mode requires diagnostic sprite '$fullPath'."
+            throw "Patch mode requires total-badge sprite '$fullPath'."
         }
     }
     & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar $modJarPath

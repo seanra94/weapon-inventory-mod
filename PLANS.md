@@ -263,3 +263,17 @@ Known facts:
   - confirm updater logs (`registered`, periodic `updated`, `hhe_prickler` values);
   - confirm player/storage diagnostic squares react to buy/sell/move within about `0.25s`;
   - confirm commodities remain unaffected.
+
+## Current status (single-badge pass)
+
+- Three-square diagnostic phase is complete in architecture and no longer active in the patched render path.
+- Active weapon indicator is one bottom-left total badge driven by bridged updater data (`player + storage`).
+- Static thresholds are implemented:
+  - `0` red,
+  - `1..9` yellow,
+  - `10..98` green exact,
+  - `>=99` green `99+`.
+
+## Immediate next step
+
+- run manual in-game validation for exact total-badge behavior and dynamic updates during buy/sell/transfer actions.

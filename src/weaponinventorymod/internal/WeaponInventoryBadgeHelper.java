@@ -6,15 +6,12 @@ public class WeaponInventoryBadgeHelper {
     private static final Logger LOG = Logger.getLogger(WeaponInventoryBadgeHelper.class);
     private static final int MAX_CALL_LOGS = 20;
 
-    private static final String ANCHOR = "graphics/ui/wim_diag_anchor.png";
-    private static final String PLAYER_0 = "graphics/ui/wim_diag_player_0.png";
-    private static final String PLAYER_1 = "graphics/ui/wim_diag_player_1.png";
-    private static final String PLAYER_2PLUS = "graphics/ui/wim_diag_player_2plus.png";
-    private static final String PLAYER_ERR = "graphics/ui/wim_diag_player_err.png";
-    private static final String STORAGE_0 = "graphics/ui/wim_diag_storage_0.png";
-    private static final String STORAGE_1 = "graphics/ui/wim_diag_storage_1.png";
-    private static final String STORAGE_2PLUS = "graphics/ui/wim_diag_storage_2plus.png";
-    private static final String STORAGE_ERR = "graphics/ui/wim_diag_storage_err.png";
+    private static final String TOTAL_ERR = "graphics/ui/wim_total_err.png";
+    private static final String TOTAL_99PLUS = "graphics/ui/wim_total_green_99plus.png";
+    private static final String TOTAL_RED_PREFIX = "graphics/ui/wim_total_red_";
+    private static final String TOTAL_YELLOW_PREFIX = "graphics/ui/wim_total_yellow_";
+    private static final String TOTAL_GREEN_PREFIX = "graphics/ui/wim_total_green_";
+    private static final String TOTAL_SUFFIX = ".png";
 
     private static final String KEY_READY = "wim.counts.ready";
     private static final String KEY_PREFIX = "wim.weapon.";
@@ -28,53 +25,46 @@ public class WeaponInventoryBadgeHelper {
     private WeaponInventoryBadgeHelper() {
     }
 
-    public static String getAnchorSpritePath() {
-        logHelperReachedOnce();
-        return ANCHOR;
-    }
-
-    public static String getPlayerStatusSpritePath(String weaponId) {
-        logHelperReachedOnce();
-        if (!isReady() || weaponId == null || weaponId.isEmpty()) {
-            return PLAYER_ERR;
-        }
-        Integer playerCount = readCount(weaponId, true);
-        if (playerCount == null) {
-            return PLAYER_ERR;
-        }
-        return toPlayerSprite(playerCount.intValue());
-    }
-
-    public static String getStorageStatusSpritePath(String weaponId) {
+    public static String getTotalStatusSpritePath(String weaponId) {
         logHelperReachedOnce();
 
         boolean ready = isReady();
         Integer playerCount = null;
         Integer storageCount = null;
-        boolean playerError = true;
-        boolean storageError = true;
-        String playerSprite = PLAYER_ERR;
-        String storageSprite = STORAGE_ERR;
+        boolean playerError = false;
+        boolean storageError = false;
+        Integer totalCount = null;
+        String totalSprite = TOTAL_ERR;
 
         if (!ready || weaponId == null || weaponId.isEmpty()) {
-            logCallCapped(weaponId, playerCount, playerError, playerSprite, storageCount, storageError, storageSprite, ready);
-            return STORAGE_ERR;
+            logCallCapped(weaponId, playerCount, storageCount, totalCount, totalSprite, ready, true, true);
+            return TOTAL_ERR;
         }
 
         playerCount = readCount(weaponId, true);
-        if (playerCount != null) {
-            playerError = false;
-            playerSprite = toPlayerSprite(playerCount.intValue());
+        if (playerCount == null) {
+            playerError = true;
         }
-
         storageCount = readCount(weaponId, false);
-        if (storageCount != null) {
-            storageError = false;
-            storageSprite = toStorageSprite(storageCount.intValue());
+        if (storageCount == null) {
+            storageError = true;
         }
 
-        logCallCapped(weaponId, playerCount, playerError, playerSprite, storageCount, storageError, storageSprite, true);
-        return storageSprite;
+        if (!playerError && !storageError) {
+            int total = playerCount.intValue() + storageCount.intValue();
+            if (total >= 99) {
+                totalCount = Integer.valueOf(99);
+                totalSprite = TOTAL_99PLUS;
+            } else if (total >= 0) {
+                totalCount = Integer.valueOf(total);
+                totalSprite = toTotalSprite(total);
+            } else {
+                totalSprite = TOTAL_ERR;
+            }
+        }
+
+        logCallCapped(weaponId, playerCount, storageCount, totalCount, totalSprite, true, playerError, storageError);
+        return totalSprite;
     }
 
     private static boolean isReady() {
@@ -95,24 +85,14 @@ public class WeaponInventoryBadgeHelper {
         }
     }
 
-    private static String toPlayerSprite(int count) {
-        if (count <= 0) {
-            return PLAYER_0;
+    private static String toTotalSprite(int total) {
+        if (total == 0) {
+            return TOTAL_RED_PREFIX + "0" + TOTAL_SUFFIX;
         }
-        if (count == 1) {
-            return PLAYER_1;
+        if (total >= 1 && total <= 9) {
+            return TOTAL_YELLOW_PREFIX + total + TOTAL_SUFFIX;
         }
-        return PLAYER_2PLUS;
-    }
-
-    private static String toStorageSprite(int count) {
-        if (count <= 0) {
-            return STORAGE_0;
-        }
-        if (count == 1) {
-            return STORAGE_1;
-        }
-        return STORAGE_2PLUS;
+        return TOTAL_GREEN_PREFIX + total + TOTAL_SUFFIX;
     }
 
     private static void logHelperReachedOnce() {
@@ -123,8 +103,8 @@ public class WeaponInventoryBadgeHelper {
         LOG.info("WIM_DIAG_BADGE helper reached");
     }
 
-    private static void logCallCapped(String weaponId, Integer playerCount, boolean playerError, String playerSprite,
-                                      Integer storageCount, boolean storageError, String storageSprite, boolean ready) {
+    private static void logCallCapped(String weaponId, Integer playerCount, Integer storageCount, Integer totalCount,
+                                      String totalSprite, boolean ready, boolean playerError, boolean storageError) {
         if (loggedCalls >= MAX_CALL_LOGS) {
             return;
         }
@@ -132,11 +112,11 @@ public class WeaponInventoryBadgeHelper {
         LOG.info("WIM_DIAG_BADGE call weaponId=" + weaponId
                 + " ready=" + ready
                 + " playerCount=" + playerCount
-                + " playerError=" + playerError
-                + " playerSprite=" + playerSprite
                 + " storageCount=" + storageCount
+                + " totalCount=" + totalCount
+                + " totalSprite=" + totalSprite
+                + " playerError=" + playerError
                 + " storageError=" + storageError
-                + " storageSprite=" + storageSprite
         );
     }
 

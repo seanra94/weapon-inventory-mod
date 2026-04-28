@@ -276,6 +276,20 @@ public void invalidate();
   - `wim.weapon.<weaponId>.storage`
   - `wim.counts.ready`
   - `wim.counts.updatedAt`
+
+## Final single-badge display rule (latest)
+
+- Split diagnostics are retired from the active render path: no anchor square, no separate player/storage squares.
+- Active weapon-stack render path now requests one helper value:
+  - `WeaponInventoryBadgeHelper.getTotalStatusSpritePath(String weaponId)`.
+- Badge value is computed from bridged properties only:
+  - `total = player + storage`.
+- Current display mapping:
+  - `0`: red `0`
+  - `1..9`: yellow exact count
+  - `10..98`: green exact count
+  - `>=99`: green `99+`
+- Badge remains in the stable bottom-left pre-scale WEAPONS frame and updates at updater cadence (`0.20s`) while paused.
 - Durable lesson: core-jar-invoked hook code should not rely on `Global.getSettings()` being initialized/available in this render context.
 - Diagnostic hook now logs once at method entry and draws raw GL colored quads independent of sprite/settings lookup to prove render-path visibility.
 - Patch descriptor currently remains `render:(F)V`; if hook-entry logs appear but raw quads stay invisible, next diagnostic step is to repatch to `render:(FFF)V` and pass primitive `x,y,alpha`.
