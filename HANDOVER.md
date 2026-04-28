@@ -294,3 +294,28 @@ public void invalidate();
   - legacy hook-call patch present;
   - old duplicate-weapon diagnostic patch present;
   - marker patch already present.
+
+## Weapon marker placement status (slot-anchored)
+
+- Marker render is now injected near the existing rank-marker section in `CargoStackView.renderAtCenter(FFF)V`, not inside the earlier WEAPONS weapon-sprite draw loop.
+- Stable placement basis is confirmed from `CargoStackView` locals initialized from UI position:
+  - `local 5` = `getPosition().getWidth()` (slot/cell width)
+  - `local 6` = `getPosition().getHeight()` (slot/cell height)
+- Injected weapon-marker placement now mirrors RESOURCES rank-marker math using slot dimensions:
+  - `x = -width / 2 + 5`
+  - `y = height / 2 - markerHeight - 5`
+- WEAPONS-only gating is explicit at the new injection point:
+  - `stack.getType() == CargoAPI.CargoItemType.WEAPONS`
+- The old marker injection inside the WEAPONS branch is treated as stale and patch is refused if it is detected.
+
+## Count proof feasibility (inspection only)
+
+- Weapon id source candidates available in current render path:
+  - `CargoItemStack` (`stack` field) implements `CargoStackAPI` and exposes `getWeaponSpecIfWeapon()`;
+  - `WeaponSpecAPI.getWeaponId()` exists and is a safe public id source.
+- Player fleet cargo count source:
+  - `CargoAPI.getNumWeapons(String weaponId)` exists in public API and is suitable for first count proof (player-fleet cargo only).
+- In this render method, `Global.getSector()` is already used by vanilla commodity icon-provider code, so sector/player-cargo access is likely safe from this context.
+- Recommended first count proof (after placement stabilization):
+  - pre-generated small digit/count sprites selected by player-fleet count;
+  - avoid raw GL and avoid relying on external embedded hook classes.

@@ -37,12 +37,22 @@ public class CargoStackViewPatcher {
     private static final String TARGET_DESC = "(FFF)V";
 
     private static final String CARGO_ITEM_TYPE_OWNER = "com/fs/starfarer/api/campaign/CargoAPI$CargoItemType";
+    private static final String CARGO_ITEM_TYPE_DESC = "Lcom/fs/starfarer/api/campaign/CargoAPI$CargoItemType;";
     private static final String CARGO_ITEM_TYPE_WEAPONS = "WEAPONS";
 
     private static final String HIGHLIGHT_FADER_OWNER = "com/fs/graphics/util/Fader";
     private static final String HIGHLIGHT_BRIGHTNESS_METHOD = "getBrightness";
     private static final String HIGHLIGHT_BRIGHTNESS_DESC = "()F";
     private static final String HIGHLIGHT_FIELD_NAME = "highlightFader";
+    private static final String STACK_FIELD_NAME = "stack";
+    private static final String STACK_OWNER = "com/fs/starfarer/campaign/ui/trade/CargoItemStack";
+    private static final String STACK_TYPE_METHOD = "getType";
+    private static final String STACK_TYPE_DESC = "()Lcom/fs/starfarer/api/campaign/CargoAPI$CargoItemType;";
+
+    private static final String POSITION_OWNER = "com/fs/starfarer/ui/OO0O";
+    private static final String POSITION_GET_WIDTH = "getWidth";
+    private static final String POSITION_GET_HEIGHT = "getHeight";
+    private static final String POSITION_GET_DIM_DESC = "()F";
 
     private static final String OLD_HOOK_OWNER = "weaponinventorymod/internal/CargoWeaponMarkerHook";
     private static final String OLD_HOOK_METHOD = "render";
@@ -56,6 +66,8 @@ public class CargoStackViewPatcher {
     private static final String SPRITE_SET_NORMAL_BLEND_DESC = "()V";
     private static final String SPRITE_SET_ALPHA = "setAlphaMult";
     private static final String SPRITE_SET_ALPHA_DESC = "(F)V";
+    private static final String SPRITE_SET_ADDITIVE_BLEND = "setAdditiveBlend";
+    private static final String SPRITE_SET_ADDITIVE_BLEND_DESC = "()V";
     private static final String SPRITE_GET_HEIGHT = "getHeight";
     private static final String SPRITE_GET_HEIGHT_DESC = "()F";
     private static final String SPRITE_RENDER = "render";
@@ -63,14 +75,23 @@ public class CargoStackViewPatcher {
 
     private static final String MARKER_SPRITE_PATH = "graphics/ui/weapon_inventory_test_marker.png";
     private static final float MARKER_PADDING = 5f;
+    private static final float MARKER_GLOW_MULT = 0.5f;
 
     private static final String DRAW_DESC = "(FFFF)V";
     private static final float DIAG_X_OFFSET = 18f;
     private static final int DIAG_Y_LOCAL = 10;
     private static final int DIAG_ANGLE_LOCAL = 13;
     private static final int DIAG_ALPHA_LOCAL = 3;
-    private static final int STACK_WIDTH_LOCAL = 5;
-    private static final int STACK_HEIGHT_LOCAL = 6;
+
+    private static final class SlotDimensionLocals {
+        final int widthLocal;
+        final int heightLocal;
+
+        SlotDimensionLocals(int widthLocal, int heightLocal) {
+            this.widthLocal = widthLocal;
+            this.heightLocal = heightLocal;
+        }
+    }
 
     private static final class WeaponRenderInfo {
         final String weaponFieldName;
@@ -133,18 +154,22 @@ public class CargoStackViewPatcher {
 
         boolean oldHookCall = hasLegacyHookCall(method);
         boolean duplicateDraw = hasDiagnosticDuplicateDraw(method, classNode.name, renderInfo);
-        boolean markerDraw = hasMarkerDraw(method, weaponTypeGuard, nonWeaponLabel);
-        if (oldHookCall || duplicateDraw || markerDraw) {
+        boolean oldWeaponBranchMarkerDraw = hasMarkerDrawInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
+        boolean slotAnchoredMarkerDraw = hasSlotAnchoredMarkerPatch(method);
+        if (oldHookCall || duplicateDraw || oldWeaponBranchMarkerDraw || slotAnchoredMarkerDraw) {
             String reason = oldHookCall
                     ? "legacy hook call already present"
-                    : (duplicateDraw ? "diagnostic duplicate draw already present" : "marker draw patch already present");
+                    : (duplicateDraw
+                    ? "diagnostic duplicate draw already present"
+                    : (oldWeaponBranchMarkerDraw ? "old weapon-branch marker patch already present" : "slot-anchored marker patch already present"));
             throw new IllegalStateException("Patch refused: " + reason + ".");
         }
 
-        AbstractInsnNode insertionPoint = findInsertionPointBeforeHighlightBrightness(method, weaponTypeGuard, nonWeaponLabel);
+        AbstractInsnNode insertionPoint = findRankMarkerInsertionPoint(method);
         if (insertionPoint == null) {
-            throw new IllegalStateException("Patch refused: deterministic insertion point before highlight check not found.");
+            throw new IllegalStateException("Patch refused: deterministic insertion point before rank-marker block not found.");
         }
+        SlotDimensionLocals slotLocals = findSlotDimensionLocals(method);
 
         if (!Files.exists(backupPath)) {
             Files.copy(jarPath, backupPath, StandardCopyOption.COPY_ATTRIBUTES);
@@ -153,34 +178,80 @@ public class CargoStackViewPatcher {
             System.out.println("Backup already exists: " + backupPath);
         }
 
+        int markerSpriteLocal = method.maxLocals;
+        int markerXLocal = markerSpriteLocal + 1;
+        int markerYLocal = markerSpriteLocal + 2;
+        method.maxLocals += 3;
+
+        LabelNode skipMarker = new LabelNode();
+        LabelNode skipAdditive = new LabelNode();
+
         InsnList inject = new InsnList();
+        inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, STACK_FIELD_NAME, "L" + STACK_OWNER + ";"));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, STACK_OWNER, STACK_TYPE_METHOD, STACK_TYPE_DESC, false));
+        inject.add(new FieldInsnNode(Opcodes.GETSTATIC, CARGO_ITEM_TYPE_OWNER, CARGO_ITEM_TYPE_WEAPONS, CARGO_ITEM_TYPE_DESC));
+        inject.add(new JumpInsnNode(Opcodes.IF_ACMPNE, skipMarker));
+
         inject.add(new TypeInsnNode(Opcodes.NEW, SPRITE_OWNER));
         inject.add(new InsnNode(Opcodes.DUP));
         inject.add(new LdcInsnNode(MARKER_SPRITE_PATH));
         inject.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, SPRITE_OWNER, SPRITE_INIT, SPRITE_INIT_DESC, false));
-        inject.add(new InsnNode(Opcodes.DUP));
-        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_NORMAL_BLEND, SPRITE_SET_NORMAL_BLEND_DESC, false));
-        inject.add(new InsnNode(Opcodes.DUP));
-        inject.add(new VarInsnNode(Opcodes.FLOAD, DIAG_ALPHA_LOCAL));
-        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_ALPHA, SPRITE_SET_ALPHA_DESC, false));
-        inject.add(new VarInsnNode(Opcodes.FLOAD, STACK_WIDTH_LOCAL));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, markerSpriteLocal));
+
+        inject.add(new VarInsnNode(Opcodes.FLOAD, slotLocals.widthLocal));
         inject.add(new InsnNode(Opcodes.FNEG));
         inject.add(new InsnNode(Opcodes.FCONST_2));
         inject.add(new InsnNode(Opcodes.FDIV));
         inject.add(new LdcInsnNode(MARKER_PADDING));
         inject.add(new InsnNode(Opcodes.FADD));
-        inject.add(new VarInsnNode(Opcodes.FLOAD, STACK_HEIGHT_LOCAL));
+        inject.add(new VarInsnNode(Opcodes.FSTORE, markerXLocal));
+
+        inject.add(new VarInsnNode(Opcodes.FLOAD, slotLocals.heightLocal));
         inject.add(new InsnNode(Opcodes.FCONST_2));
         inject.add(new InsnNode(Opcodes.FDIV));
-        inject.add(new TypeInsnNode(Opcodes.NEW, SPRITE_OWNER));
-        inject.add(new InsnNode(Opcodes.DUP));
-        inject.add(new LdcInsnNode(MARKER_SPRITE_PATH));
-        inject.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, SPRITE_OWNER, SPRITE_INIT, SPRITE_INIT_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_GET_HEIGHT, SPRITE_GET_HEIGHT_DESC, false));
         inject.add(new InsnNode(Opcodes.FSUB));
         inject.add(new LdcInsnNode(MARKER_PADDING));
         inject.add(new InsnNode(Opcodes.FSUB));
+        inject.add(new VarInsnNode(Opcodes.FSTORE, markerYLocal));
+
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_NORMAL_BLEND, SPRITE_SET_NORMAL_BLEND_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
+        inject.add(new VarInsnNode(Opcodes.FLOAD, DIAG_ALPHA_LOCAL));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_ALPHA, SPRITE_SET_ALPHA_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
+        inject.add(new VarInsnNode(Opcodes.FLOAD, markerXLocal));
+        inject.add(new VarInsnNode(Opcodes.FLOAD, markerYLocal));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_RENDER, SPRITE_RENDER_DESC, false));
+
+        inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, HIGHLIGHT_FIELD_NAME, "L" + HIGHLIGHT_FADER_OWNER + ";"));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, HIGHLIGHT_FADER_OWNER, HIGHLIGHT_BRIGHTNESS_METHOD, HIGHLIGHT_BRIGHTNESS_DESC, false));
+        inject.add(new InsnNode(Opcodes.FCONST_0));
+        inject.add(new InsnNode(Opcodes.FCMPL));
+        inject.add(new JumpInsnNode(Opcodes.IFLE, skipAdditive));
+
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_ADDITIVE_BLEND, SPRITE_SET_ADDITIVE_BLEND_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
+        inject.add(new VarInsnNode(Opcodes.FLOAD, DIAG_ALPHA_LOCAL));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, HIGHLIGHT_FIELD_NAME, "L" + HIGHLIGHT_FADER_OWNER + ";"));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, HIGHLIGHT_FADER_OWNER, HIGHLIGHT_BRIGHTNESS_METHOD, HIGHLIGHT_BRIGHTNESS_DESC, false));
+        inject.add(new InsnNode(Opcodes.FMUL));
+        inject.add(new LdcInsnNode(MARKER_GLOW_MULT));
+        inject.add(new InsnNode(Opcodes.FMUL));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_ALPHA, SPRITE_SET_ALPHA_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, markerSpriteLocal));
+        inject.add(new VarInsnNode(Opcodes.FLOAD, markerXLocal));
+        inject.add(new VarInsnNode(Opcodes.FLOAD, markerYLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_RENDER, SPRITE_RENDER_DESC, false));
+
+        inject.add(skipAdditive);
+        inject.add(skipMarker);
         method.instructions.insertBefore(insertionPoint, inject);
 
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
@@ -191,7 +262,7 @@ public class CargoStackViewPatcher {
         writePatchedJar(jarPath, TARGET_CLASS_ENTRY, patchedBytes);
 
         System.out.println("Patched class: " + TARGET_CLASS_ENTRY);
-        System.out.println("Injected marker draw in WEAPONS branch using Sprite.render(FF).");
+        System.out.println("Injected slot-anchored marker draw near rank-marker block using Sprite.render(FF).");
         System.out.println("Patched jar: " + jarPath);
     }
 
@@ -234,10 +305,9 @@ public class CargoStackViewPatcher {
             if (!CARGO_ITEM_TYPE_OWNER.equals(field.owner) || !CARGO_ITEM_TYPE_WEAPONS.equals(field.name)) {
                 continue;
             }
-            if (found != null) {
-                throw new IllegalStateException("Patch refused: multiple WEAPONS branch guards matched.");
+            if (found == null) {
+                found = (JumpInsnNode) insn;
             }
-            found = (JumpInsnNode) insn;
         }
         return found;
     }
@@ -281,36 +351,60 @@ public class CargoStackViewPatcher {
         return new WeaponRenderInfo(weaponField.name, weaponField.desc, weaponTypeOwner, drawMethod.name);
     }
 
-    private static AbstractInsnNode findInsertionPointBeforeHighlightBrightness(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
-        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+    private static AbstractInsnNode findRankMarkerInsertionPoint(MethodNode method) {
+        for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
             if (!(insn instanceof MethodInsnNode)) {
                 continue;
             }
             MethodInsnNode methodInsn = (MethodInsnNode) insn;
-            if (methodInsn.getOpcode() != Opcodes.INVOKEVIRTUAL) {
-                continue;
-            }
-            if (!HIGHLIGHT_FADER_OWNER.equals(methodInsn.owner)
-                    || !HIGHLIGHT_BRIGHTNESS_METHOD.equals(methodInsn.name)
-                    || !HIGHLIGHT_BRIGHTNESS_DESC.equals(methodInsn.desc)) {
+            if (methodInsn.getOpcode() != Opcodes.INVOKEINTERFACE
+                    || !"com/fs/starfarer/api/campaign/listeners/CommodityIconProvider".equals(methodInsn.owner)
+                    || !"getRankIconName".equals(methodInsn.name)) {
                 continue;
             }
 
-            AbstractInsnNode prev = previousRealInsn(insn.getPrevious());
-            if (!(prev instanceof FieldInsnNode)) {
-                continue;
+            for (AbstractInsnNode back = previousRealInsn(insn.getPrevious()); back != null; back = previousRealInsn(back.getPrevious())) {
+                if (!(back instanceof JumpInsnNode) || back.getOpcode() != Opcodes.IFNULL) {
+                    continue;
+                }
+                AbstractInsnNode preload = previousRealInsn(back.getPrevious());
+                if (preload instanceof VarInsnNode && preload.getOpcode() == Opcodes.ALOAD) {
+                    return preload;
+                }
             }
-            FieldInsnNode field = (FieldInsnNode) prev;
-            if (field.getOpcode() != Opcodes.GETFIELD || !HIGHLIGHT_FIELD_NAME.equals(field.name)) {
-                continue;
-            }
-            AbstractInsnNode anchor = previousRealInsn(prev.getPrevious());
-            if (anchor == null || anchor.getOpcode() != Opcodes.ALOAD || !isAload0(anchor)) {
-                continue;
-            }
-            return anchor;
+            throw new IllegalStateException("Patch refused: could not locate rank-marker pre-check block.");
         }
         return null;
+    }
+
+    private static SlotDimensionLocals findSlotDimensionLocals(MethodNode method) {
+        Integer widthLocal = null;
+        Integer heightLocal = null;
+        for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (methodInsn.getOpcode() != Opcodes.INVOKEVIRTUAL || !POSITION_OWNER.equals(methodInsn.owner) || !POSITION_GET_DIM_DESC.equals(methodInsn.desc)) {
+                continue;
+            }
+
+            AbstractInsnNode store = nextRealInsn(insn.getNext());
+            if (!(store instanceof VarInsnNode) || store.getOpcode() != Opcodes.FSTORE) {
+                continue;
+            }
+            int local = ((VarInsnNode) store).var;
+            if (POSITION_GET_WIDTH.equals(methodInsn.name) && widthLocal == null) {
+                widthLocal = local;
+            } else if (POSITION_GET_HEIGHT.equals(methodInsn.name) && heightLocal == null) {
+                heightLocal = local;
+            }
+
+            if (widthLocal != null && heightLocal != null) {
+                return new SlotDimensionLocals(widthLocal, heightLocal);
+            }
+        }
+        throw new IllegalStateException("Patch refused: slot width/height locals not found from getPosition().getWidth()/getHeight().");
     }
 
     private static boolean isAload0(AbstractInsnNode insn) {
@@ -358,7 +452,7 @@ public class CargoStackViewPatcher {
         return false;
     }
 
-    private static boolean hasMarkerDraw(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+    private static boolean hasMarkerDrawInWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
         boolean sawMarkerPath = false;
         boolean sawMarkerRender = false;
         for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
@@ -379,6 +473,62 @@ public class CargoStackViewPatcher {
             }
         }
         return sawMarkerPath && sawMarkerRender;
+    }
+
+    private static boolean hasSlotAnchoredMarkerPatch(MethodNode method) {
+        for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+            if (!(insn instanceof LdcInsnNode) || !MARKER_SPRITE_PATH.equals(((LdcInsnNode) insn).cst)) {
+                continue;
+            }
+            if (!hasNearbySpriteRender(insn, 90)) {
+                continue;
+            }
+            if (!hasNearbyWeaponsTypeGuard(insn, 70)) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean hasNearbySpriteRender(AbstractInsnNode anchor, int maxForwardRealInsns) {
+        int seen = 0;
+        for (AbstractInsnNode next = nextRealInsn(anchor.getNext()); next != null && seen <= maxForwardRealInsns; next = nextRealInsn(next.getNext())) {
+            seen++;
+            if (!(next instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) next;
+            if (methodInsn.getOpcode() == Opcodes.INVOKEVIRTUAL
+                    && SPRITE_OWNER.equals(methodInsn.owner)
+                    && SPRITE_RENDER.equals(methodInsn.name)
+                    && SPRITE_RENDER_DESC.equals(methodInsn.desc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasNearbyWeaponsTypeGuard(AbstractInsnNode anchor, int maxBackwardRealInsns) {
+        int seen = 0;
+        for (AbstractInsnNode prev = previousRealInsn(anchor.getPrevious()); prev != null && seen <= maxBackwardRealInsns; prev = previousRealInsn(prev.getPrevious())) {
+            seen++;
+            if (!(prev instanceof JumpInsnNode) || prev.getOpcode() != Opcodes.IF_ACMPNE) {
+                continue;
+            }
+            AbstractInsnNode beforeJump = previousRealInsn(prev.getPrevious());
+            if (!(beforeJump instanceof FieldInsnNode)) {
+                continue;
+            }
+            FieldInsnNode field = (FieldInsnNode) beforeJump;
+            if (field.getOpcode() == Opcodes.GETSTATIC
+                    && CARGO_ITEM_TYPE_OWNER.equals(field.owner)
+                    && CARGO_ITEM_TYPE_WEAPONS.equals(field.name)
+                    && CARGO_ITEM_TYPE_DESC.equals(field.desc)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean matchesDiagnosticPattern(MethodInsnNode call, String classOwner, WeaponRenderInfo info) {
@@ -443,8 +593,11 @@ public class CargoStackViewPatcher {
         if (hasDiagnosticDuplicateDraw(method, classNode.name, info)) {
             throw new IllegalStateException("Patch verification failed: duplicate diagnostic weapon draw still present.");
         }
-        if (!hasMarkerDraw(method, weaponTypeGuard, nonWeaponLabel)) {
-            throw new IllegalStateException("Patch verification failed: marker draw patch not found.");
+        if (hasMarkerDrawInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
+            throw new IllegalStateException("Patch verification failed: old weapon-branch marker patch still present.");
+        }
+        if (!hasSlotAnchoredMarkerPatch(method)) {
+            throw new IllegalStateException("Patch verification failed: slot-anchored marker patch not found.");
         }
     }
 
@@ -459,6 +612,14 @@ public class CargoStackViewPatcher {
         AbstractInsnNode current = node;
         while (current != null && isStructuralNode(current)) {
             current = current.getPrevious();
+        }
+        return current;
+    }
+
+    private static AbstractInsnNode nextRealInsn(AbstractInsnNode node) {
+        AbstractInsnNode current = node;
+        while (current != null && isStructuralNode(current)) {
+            current = current.getNext();
         }
         return current;
     }

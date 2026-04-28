@@ -207,3 +207,15 @@ Known facts:
 - confirm commodities remain vanilla (no WIM red boxes);
 - confirm duplicate-weapon icon is gone;
 - confirm fixed marker appears on weapon icons.
+
+## Current status (placement stabilization pass)
+
+- Marker rendering is now injected near the rank-marker stage with explicit WEAPONS gating.
+- Placement math now uses slot/cell dimensions from `getPosition().getWidth()/getHeight()`, not weapon-sprite dimensions.
+- Duplicate-weapon diagnostic draw and external hook-call paths remain blocked/refused by patcher safeguards.
+
+## Immediate next step (manual placement verification)
+
+- manually verify marker consistency across mixed weapon sprite shapes/sizes in market trade;
+- if small drift remains, tune only fixed padding constants (`+5` / `-5`) while keeping slot-based anchors;
+- keep ownership counting/storage/99+/wings out of scope until placement is visually stable.
