@@ -290,6 +290,15 @@ public void invalidate();
   - `10..98`: green exact count
   - `>=99`: green `99+`
 - Badge remains in the stable bottom-left pre-scale WEAPONS frame and updates at updater cadence (`0.20s`) while paused.
+
+## 0926671 visual regression root cause
+
+- In commit `0926671`, render injection and helper calls were active and totals were correct, but the new `wim_total_*` sprites were not listed under `data/config/settings.json -> graphics -> ui`.
+- Old `wim_diag_*` sprites were listed and previously rendered; new total sprites existed on disk but were not declared in settings.
+- Fix applied:
+  - register all `wim_total_*` assets in `settings.json`;
+  - keep single-badge total helper path active;
+  - set explicit sprite size (`30x18`) before render in the patched WEAPONS draw path for consistent visibility.
 - Durable lesson: core-jar-invoked hook code should not rely on `Global.getSettings()` being initialized/available in this render context.
 - Diagnostic hook now logs once at method entry and draws raw GL colored quads independent of sprite/settings lookup to prove render-path visibility.
 - Patch descriptor currently remains `render:(F)V`; if hook-entry logs appear but raw quads stay invisible, next diagnostic step is to repatch to `render:(FFF)V` and pass primitive `x,y,alpha`.

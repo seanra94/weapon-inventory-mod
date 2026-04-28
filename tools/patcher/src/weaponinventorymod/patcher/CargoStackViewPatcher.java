@@ -83,6 +83,7 @@ public class CargoStackViewPatcher {
     private static final String HELPER_PLAYER_DESC = "(Ljava/lang/String;)Ljava/lang/String;";
     private static final String HELPER_STORAGE_METHOD = "getStorageStatusSpritePath";
     private static final String HELPER_STORAGE_DESC = "(Ljava/lang/String;)Ljava/lang/String;";
+    private static final boolean DEBUG_PROBE_MODE = false;
 
     private static final String SPRITE_OWNER = "com/fs/graphics/Sprite";
     private static final String SPRITE_INIT = "<init>";
@@ -91,6 +92,8 @@ public class CargoStackViewPatcher {
     private static final String SPRITE_SET_NORMAL_BLEND_DESC = "()V";
     private static final String SPRITE_SET_ALPHA = "setAlphaMult";
     private static final String SPRITE_SET_ALPHA_DESC = "(F)V";
+    private static final String SPRITE_SET_SIZE = "setSize";
+    private static final String SPRITE_SET_SIZE_DESC = "(FF)V";
     private static final String SPRITE_RENDER = "render";
     private static final String SPRITE_RENDER_DESC = "(FF)V";
     private static final String GL11_OWNER = "org/lwjgl/opengl/GL11";
@@ -99,6 +102,8 @@ public class CargoStackViewPatcher {
 
     private static final String MARKER_SPRITE_PATH = "graphics/ui/weapon_inventory_test_marker.png";
     private static final float BADGE_X_OFFSET = 6f;
+    private static final float PLAYER_X_OFFSET = 24f;
+    private static final float STORAGE_X_OFFSET = 42f;
     private static final float BADGE_Y_PADDING = 6f;
     private static final float POST_PROBE_X_OFFSET = 23f;
 
@@ -219,7 +224,9 @@ public class CargoStackViewPatcher {
         int weaponIdLocal = method.maxLocals;
         int totalPathLocal = method.maxLocals + 1;
         method.maxLocals += 2;
-        method.instructions.insertBefore(preScaleInsertionPoint, createTotalBadgeInjection(weaponIdLocal, totalPathLocal));
+        method.instructions.insertBefore(preScaleInsertionPoint, DEBUG_PROBE_MODE
+                ? createProbeInjection(weaponIdLocal, totalPathLocal)
+                : createTotalBadgeInjection(weaponIdLocal, totalPathLocal));
 
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(writer);
@@ -233,7 +240,9 @@ public class CargoStackViewPatcher {
         }
 
         System.out.println("Patched class: " + TARGET_CLASS_ENTRY);
-        System.out.println("Injected pre-scale WEAPONS total badge.");
+        System.out.println(DEBUG_PROBE_MODE
+                ? "Injected pre-scale WEAPONS probe badges (A/B/C)."
+                : "Injected pre-scale WEAPONS total badge.");
         System.out.println("Embedded helper class entries: " + helperClassEntries.keySet());
         System.out.println("Patched jar: " + jarPath);
     }
@@ -267,13 +276,59 @@ public class CargoStackViewPatcher {
         inject.add(new JumpInsnNode(Opcodes.IFNONNULL, drawTotal));
         inject.add(new JumpInsnNode(Opcodes.GOTO, done));
         inject.add(drawTotal);
-        inject.add(createRenderSpritePathBlock(totalPathLocal, BADGE_X_OFFSET));
+        inject.add(createRenderSpritePathBlock(totalPathLocal, BADGE_X_OFFSET, true));
 
         inject.add(done);
         return inject;
     }
 
-    private static InsnList createRenderSpritePathBlock(int pathLocal, float xOffset) {
+    private static InsnList createProbeInjection(int weaponIdLocal, int totalPathLocal) {
+        InsnList inject = new InsnList();
+        LabelNode haveSpec = new LabelNode();
+        LabelNode weaponReady = new LabelNode();
+        LabelNode drawTotal = new LabelNode();
+        LabelNode done = new LabelNode();
+
+        inject.add(new InsnNode(Opcodes.ACONST_NULL));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
+
+        // Probe A: hardcoded known-good old anchor sprite at old anchor position.
+        inject.add(new LdcInsnNode("graphics/ui/wim_diag_anchor.png"));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, totalPathLocal));
+        inject.add(createRenderSpritePathBlock(totalPathLocal, BADGE_X_OFFSET, true));
+
+        inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, STACK_FIELD_NAME, STACK_FIELD_DESC));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, CARGO_STACK_API_OWNER, CARGO_STACK_GET_WEAPON_SPEC_METHOD, CARGO_STACK_GET_WEAPON_SPEC_DESC, true));
+        inject.add(new InsnNode(Opcodes.DUP));
+        inject.add(new JumpInsnNode(Opcodes.IFNONNULL, haveSpec));
+        inject.add(new InsnNode(Opcodes.POP));
+        inject.add(new JumpInsnNode(Opcodes.GOTO, weaponReady));
+        inject.add(haveSpec);
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, WEAPON_SPEC_API_OWNER, WEAPON_SPEC_GET_ID_METHOD, WEAPON_SPEC_GET_ID_DESC, true));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
+        inject.add(weaponReady);
+
+        // Probe B: total helper path at old player slot.
+        inject.add(new VarInsnNode(Opcodes.ALOAD, weaponIdLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HELPER_CLASS, HELPER_TOTAL_METHOD, HELPER_TOTAL_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, totalPathLocal));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, totalPathLocal));
+        inject.add(new JumpInsnNode(Opcodes.IFNONNULL, drawTotal));
+        inject.add(new JumpInsnNode(Opcodes.GOTO, done));
+        inject.add(drawTotal);
+        inject.add(createRenderSpritePathBlock(totalPathLocal, PLAYER_X_OFFSET, true));
+
+        // Probe C: hardcoded known-good old player sprite at old storage slot.
+        inject.add(new LdcInsnNode("graphics/ui/wim_diag_player_1.png"));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, totalPathLocal));
+        inject.add(createRenderSpritePathBlock(totalPathLocal, STORAGE_X_OFFSET, true));
+
+        inject.add(done);
+        return inject;
+    }
+
+    private static InsnList createRenderSpritePathBlock(int pathLocal, float xOffset, boolean setSize) {
         InsnList inject = new InsnList();
         inject.add(new TypeInsnNode(Opcodes.NEW, SPRITE_OWNER));
         inject.add(new InsnNode(Opcodes.DUP));
@@ -284,6 +339,12 @@ public class CargoStackViewPatcher {
         inject.add(new InsnNode(Opcodes.DUP));
         inject.add(new VarInsnNode(Opcodes.FLOAD, DIAG_ALPHA_LOCAL));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_ALPHA, SPRITE_SET_ALPHA_DESC, false));
+        if (setSize) {
+            inject.add(new InsnNode(Opcodes.DUP));
+            inject.add(new LdcInsnNode(30f));
+            inject.add(new LdcInsnNode(18f));
+            inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_SET_SIZE, SPRITE_SET_SIZE_DESC, false));
+        }
         inject.add(new VarInsnNode(Opcodes.FLOAD, STACK_WIDTH_LOCAL));
         inject.add(new InsnNode(Opcodes.FNEG));
         inject.add(new InsnNode(Opcodes.FCONST_2));
@@ -734,16 +795,21 @@ public class CargoStackViewPatcher {
         if (!hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_DESC)) {
             throw new IllegalStateException("Patch verification failed: missing total helper call.");
         }
-        if (hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_ANCHOR_METHOD, HELPER_ANCHOR_DESC)
-                || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_PLAYER_METHOD, HELPER_PLAYER_DESC)
-                || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_STORAGE_METHOD, HELPER_STORAGE_DESC)) {
-            throw new IllegalStateException("Patch verification failed: old split-badge helper calls still present.");
+        if (!DEBUG_PROBE_MODE) {
+            if (hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_ANCHOR_METHOD, HELPER_ANCHOR_DESC)
+                    || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_PLAYER_METHOD, HELPER_PLAYER_DESC)
+                    || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_STORAGE_METHOD, HELPER_STORAGE_DESC)) {
+                throw new IllegalStateException("Patch verification failed: old split-badge helper calls still present.");
+            }
         }
         if (!hasSpriteRenderCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: badge sprite render call not found in WEAPONS branch.");
         }
-        if (countSpriteRenderCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel) != 1) {
+        if (!DEBUG_PROBE_MODE && countSpriteRenderCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel) != 1) {
             throw new IllegalStateException("Patch verification failed: expected exactly one total badge render call.");
+        }
+        if (DEBUG_PROBE_MODE && countSpriteRenderCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel) < 3) {
+            throw new IllegalStateException("Patch verification failed: probe mode expected at least three badge render calls.");
         }
         if (hasPostProbeOffsetInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: post-draw probe offset pattern still present.");

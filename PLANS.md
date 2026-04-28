@@ -277,3 +277,19 @@ Known facts:
 ## Immediate next step
 
 - run manual in-game validation for exact total-badge behavior and dynamic updates during buy/sell/transfer actions.
+
+## Current status (0926671 render regression)
+
+- Regression classified as render/resource path issue, not data bridge logic:
+  - helper reached;
+  - updater running;
+  - totals logged correctly;
+  - no visible badge.
+- Root-cause fix applied in code:
+  - `wim_total_*` badge assets are now declared in `settings.json`;
+  - single total-badge render path kept;
+  - explicit `setSize(30,18)` applied before render for the total badge.
+
+## Immediate next step
+
+- run manual in-game visual validation that single total badge is visible and thresholds update dynamically.
