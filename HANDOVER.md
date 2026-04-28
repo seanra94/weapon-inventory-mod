@@ -333,3 +333,28 @@ public void invalidate();
   - duplicate weaponIcon diagnostic patch;
   - stale marker patch outside the WEAPONS branch;
   - already-applied weapon marker patch.
+
+## Weapon marker visibility regression (b9fe9ec) and recovery
+
+- Runtime-visible behavior is authoritative: after `b9fe9ec`, marker bytecode existed but no marker was visible in-game.
+- Root cause:
+  - `b9fe9ec` inserted marker code with `insertBefore(nonWeaponLabel)`;
+  - in `CargoStackView.renderAtCenter(FFF)V`, that label is the `if_acmpne` jump target for non-WEAPONS flow;
+  - WEAPONS flow exited earlier via `goto` and skipped the injected marker block.
+- Recovery in current patch:
+  - marker injection moved to a deterministic WEAPONS-only exit point (inside WEAPONS branch, before the branch exit `goto`);
+  - marker is now gated by player-fleet weapon ownership count (`> 0`) for feasibility proof.
+- Apparent duplicate weapon images should not be treated as patch contamination unless confirmed on stack-size-1 or clean-baseline comparison; they may be vanilla stack visualization.
+
+## Count display feasibility (minimal proof implemented)
+
+- Weapon id source in injected WEAPONS path:
+  - `stack.getWeaponSpecIfWeapon().getWeaponId()`
+- Count source:
+  - `Global.getSector().getPlayerFleet().getCargo().getNumWeapons(weaponId)`
+- Current proof behavior:
+  - marker renders only when player fleet cargo count for that weapon is `> 0`;
+  - no storage aggregation;
+  - no `99+`;
+  - no wings;
+  - no tooltip work.

@@ -231,3 +231,20 @@ Known facts:
 - manually verify marker is visible again on weapon stacks (size 1 and size >1);
 - verify placement consistency across weapon sprite shapes;
 - keep count rendering blocked until marker visibility and placement are stable.
+
+## Current status (visibility recovery + count feasibility)
+
+- `b9fe9ec` marker invisibility was traced to insertion at the non-WEAPONS jump label; WEAPONS flow skipped that block.
+- Marker injection is now back in reachable WEAPONS flow.
+- Minimal count feasibility proof is now active:
+  - render marker only when player-fleet cargo `getNumWeapons(weaponId) > 0`.
+
+## Immediate next step
+
+- manual verify in market trade:
+  - no crash;
+  - commodities vanilla;
+  - marker visible for owned (`>0`) weapons and absent for unowned (`0`) weapons;
+  - stack-size-1 and stack-size->1 behavior;
+  - placement quality noted separately.
+- keep storage aggregation, `99+`, wing support, tooltip changes, and final styling out of scope.

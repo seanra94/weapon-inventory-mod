@@ -61,6 +61,28 @@ public class CargoStackViewPatcher {
     private static final String SPRITE_RENDER = "render";
     private static final String SPRITE_RENDER_DESC = "(FF)V";
 
+    private static final String STACK_FIELD_NAME = "stack";
+    private static final String STACK_FIELD_DESC = "Lcom/fs/starfarer/campaign/ui/trade/CargoItemStack;";
+    private static final String STACK_OWNER = "com/fs/starfarer/campaign/ui/trade/CargoItemStack";
+    private static final String STACK_GET_WEAPON_SPEC_METHOD = "getWeaponSpecIfWeapon";
+    private static final String STACK_GET_WEAPON_SPEC_DESC = "()Lcom/fs/starfarer/api/loading/WeaponSpecAPI;";
+    private static final String WEAPON_SPEC_OWNER = "com/fs/starfarer/api/loading/WeaponSpecAPI";
+    private static final String WEAPON_SPEC_GET_ID_METHOD = "getWeaponId";
+    private static final String WEAPON_SPEC_GET_ID_DESC = "()Ljava/lang/String;";
+
+    private static final String GLOBAL_OWNER = "com/fs/starfarer/api/Global";
+    private static final String GLOBAL_GET_SECTOR_METHOD = "getSector";
+    private static final String GLOBAL_GET_SECTOR_DESC = "()Lcom/fs/starfarer/api/campaign/SectorAPI;";
+    private static final String SECTOR_OWNER = "com/fs/starfarer/api/campaign/SectorAPI";
+    private static final String SECTOR_GET_PLAYER_FLEET_METHOD = "getPlayerFleet";
+    private static final String SECTOR_GET_PLAYER_FLEET_DESC = "()Lcom/fs/starfarer/api/fleet/CampaignFleetAPI;";
+    private static final String FLEET_OWNER = "com/fs/starfarer/api/fleet/CampaignFleetAPI";
+    private static final String FLEET_GET_CARGO_METHOD = "getCargo";
+    private static final String FLEET_GET_CARGO_DESC = "()Lcom/fs/starfarer/api/campaign/CargoAPI;";
+    private static final String CARGO_OWNER = "com/fs/starfarer/api/campaign/CargoAPI";
+    private static final String CARGO_GET_NUM_WEAPONS_METHOD = "getNumWeapons";
+    private static final String CARGO_GET_NUM_WEAPONS_DESC = "(Ljava/lang/String;)I";
+
     private static final String MARKER_SPRITE_PATH = "graphics/ui/weapon_inventory_test_marker.png";
     private static final float MARKER_PADDING = 5f;
 
@@ -151,6 +173,10 @@ public class CargoStackViewPatcher {
                     : (markerInWeaponsBranch ? "weapon marker patch already present" : "stale marker patch outside WEAPONS branch already present"));
             throw new IllegalStateException("Patch refused: " + reason + ".");
         }
+        AbstractInsnNode insertionPoint = findWeaponsExitInsertionPoint(method, weaponTypeGuard, nonWeaponLabel);
+        if (insertionPoint == null) {
+            throw new IllegalStateException("Patch refused: deterministic WEAPONS branch exit insertion point not found.");
+        }
 
         SlotDimensionLocals slotLocals = findSlotDimensionLocals(method);
 
@@ -164,9 +190,34 @@ public class CargoStackViewPatcher {
         int markerSpriteLocal = method.maxLocals;
         int markerXLocal = markerSpriteLocal + 1;
         int markerYLocal = markerSpriteLocal + 2;
-        method.maxLocals += 3;
+        int weaponSpecLocal = markerSpriteLocal + 3;
+        int weaponIdLocal = markerSpriteLocal + 4;
+        int ownedCountLocal = markerSpriteLocal + 5;
+        method.maxLocals += 6;
+
+        LabelNode skipMarker = new LabelNode();
 
         InsnList inject = new InsnList();
+        inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, STACK_FIELD_NAME, STACK_FIELD_DESC));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, STACK_OWNER, STACK_GET_WEAPON_SPEC_METHOD, STACK_GET_WEAPON_SPEC_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponSpecLocal));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, weaponSpecLocal));
+        inject.add(new JumpInsnNode(Opcodes.IFNULL, skipMarker));
+
+        inject.add(new VarInsnNode(Opcodes.ALOAD, weaponSpecLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, WEAPON_SPEC_OWNER, WEAPON_SPEC_GET_ID_METHOD, WEAPON_SPEC_GET_ID_DESC, true));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
+
+        inject.add(new MethodInsnNode(Opcodes.INVOKESTATIC, GLOBAL_OWNER, GLOBAL_GET_SECTOR_METHOD, GLOBAL_GET_SECTOR_DESC, false));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, SECTOR_OWNER, SECTOR_GET_PLAYER_FLEET_METHOD, SECTOR_GET_PLAYER_FLEET_DESC, true));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, FLEET_OWNER, FLEET_GET_CARGO_METHOD, FLEET_GET_CARGO_DESC, true));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, weaponIdLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, CARGO_OWNER, CARGO_GET_NUM_WEAPONS_METHOD, CARGO_GET_NUM_WEAPONS_DESC, true));
+        inject.add(new VarInsnNode(Opcodes.ISTORE, ownedCountLocal));
+        inject.add(new VarInsnNode(Opcodes.ILOAD, ownedCountLocal));
+        inject.add(new JumpInsnNode(Opcodes.IFLE, skipMarker));
+
         inject.add(new TypeInsnNode(Opcodes.NEW, SPRITE_OWNER));
         inject.add(new InsnNode(Opcodes.DUP));
         inject.add(new LdcInsnNode(MARKER_SPRITE_PATH));
@@ -200,7 +251,8 @@ public class CargoStackViewPatcher {
         inject.add(new VarInsnNode(Opcodes.FLOAD, markerXLocal));
         inject.add(new VarInsnNode(Opcodes.FLOAD, markerYLocal));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_RENDER, SPRITE_RENDER_DESC, false));
-        method.instructions.insertBefore(nonWeaponLabel, inject);
+        inject.add(skipMarker);
+        method.instructions.insertBefore(insertionPoint, inject);
 
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(writer);
@@ -210,7 +262,7 @@ public class CargoStackViewPatcher {
         writePatchedJar(jarPath, TARGET_CLASS_ENTRY, patchedBytes);
 
         System.out.println("Patched class: " + TARGET_CLASS_ENTRY);
-        System.out.println("Injected slot-anchored marker draw at end of WEAPONS branch using Sprite.render(FF).");
+        System.out.println("Injected WEAPONS-branch marker draw gated by player cargo count > 0.");
         System.out.println("Patched jar: " + jarPath);
     }
 
@@ -297,6 +349,27 @@ public class CargoStackViewPatcher {
             throw new IllegalStateException("Patch refused: weaponIcon type and draw method owner mismatch.");
         }
         return new WeaponRenderInfo(weaponField.name, weaponField.desc, weaponTypeOwner, drawMethod.name);
+    }
+
+    private static AbstractInsnNode findWeaponsExitInsertionPoint(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+        AbstractInsnNode found = null;
+        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+            if (!(insn instanceof JumpInsnNode) || insn.getOpcode() != Opcodes.GOTO) {
+                continue;
+            }
+            JumpInsnNode jump = (JumpInsnNode) insn;
+            if (jump.label == nonWeaponLabel) {
+                continue;
+            }
+            if (isInWeaponsBranch(jump.label, guard, nonWeaponLabel)) {
+                continue;
+            }
+            if (found != null) {
+                throw new IllegalStateException("Patch refused: multiple WEAPONS-branch exit gotos found.");
+            }
+            found = jump;
+        }
+        return found;
     }
 
     private static SlotDimensionLocals findSlotDimensionLocals(MethodNode method) {
@@ -416,6 +489,30 @@ public class CargoStackViewPatcher {
         return false;
     }
 
+    private static boolean hasCountPathInWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+        boolean sawWeaponId = false;
+        boolean sawCountCall = false;
+        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (methodInsn.getOpcode() == Opcodes.INVOKEINTERFACE
+                    && WEAPON_SPEC_OWNER.equals(methodInsn.owner)
+                    && WEAPON_SPEC_GET_ID_METHOD.equals(methodInsn.name)
+                    && WEAPON_SPEC_GET_ID_DESC.equals(methodInsn.desc)) {
+                sawWeaponId = true;
+            }
+            if (methodInsn.getOpcode() == Opcodes.INVOKEINTERFACE
+                    && CARGO_OWNER.equals(methodInsn.owner)
+                    && CARGO_GET_NUM_WEAPONS_METHOD.equals(methodInsn.name)
+                    && CARGO_GET_NUM_WEAPONS_DESC.equals(methodInsn.desc)) {
+                sawCountCall = true;
+            }
+        }
+        return sawWeaponId && sawCountCall;
+    }
+
     private static boolean hasNearbySpriteRender(AbstractInsnNode anchor, int maxForwardRealInsns) {
         int seen = 0;
         for (AbstractInsnNode next = nextRealInsn(anchor.getNext()); next != null && seen <= maxForwardRealInsns; next = nextRealInsn(next.getNext())) {
@@ -507,6 +604,9 @@ public class CargoStackViewPatcher {
         }
         if (!hasMarkerDrawInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: weapon-branch marker patch not found.");
+        }
+        if (!hasCountPathInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
+            throw new IllegalStateException("Patch verification failed: player-cargo count path not found in WEAPONS branch.");
         }
         if (hasMarkerDrawOutsideWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: stale marker patch outside WEAPONS branch still present.");
