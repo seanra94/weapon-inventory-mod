@@ -319,3 +319,17 @@ public void invalidate();
 - Recommended first count proof (after placement stabilization):
   - pre-generated small digit/count sprites selected by player-fleet count;
   - avoid raw GL and avoid relying on external embedded hook classes.
+
+## Weapon marker placement update
+
+- Apparent duplicate weapon images after `70e4c64` may be vanilla stack visualization when duplicate count tracks stack quantity; do not treat duplicates as WIM contamination without stack-size-1 or clean-baseline confirmation.
+- Root cause for marker disappearance after `70e4c64`: slot-marker injection was placed in code that WEAPONS flow does not execute (WEAPONS path branches away before the late rank-marker block).
+- Current fix repositions injection to the end of the reachable WEAPONS branch (just before non-WEAPONS branch label), while keeping slot/cell coordinate math:
+  - `x = -width / 2 + 5`
+  - `y = height / 2 - markerHeight - 5`
+  - `width`/`height` are locals from `getPosition().getWidth()/getHeight()`.
+- Patcher now refuses:
+  - legacy `CargoWeaponMarkerHook` call patch;
+  - duplicate weaponIcon diagnostic patch;
+  - stale marker patch outside the WEAPONS branch;
+  - already-applied weapon marker patch.

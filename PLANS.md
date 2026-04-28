@@ -219,3 +219,15 @@ Known facts:
 - manually verify marker consistency across mixed weapon sprite shapes/sizes in market trade;
 - if small drift remains, tune only fixed padding constants (`+5` / `-5`) while keeping slot-based anchors;
 - keep ownership counting/storage/99+/wings out of scope until placement is visually stable.
+
+## Current status (post-70e4c64 debug)
+
+- No crash; commodities remain vanilla.
+- Marker became invisible after `70e4c64` because injection landed in a late rank-marker section that WEAPONS flow does not reach.
+- Patch has been moved back to the reachable WEAPONS branch end, keeping slot-based coordinate math.
+
+## Immediate next step
+
+- manually verify marker is visible again on weapon stacks (size 1 and size >1);
+- verify placement consistency across weapon sprite shapes;
+- keep count rendering blocked until marker visibility and placement are stable.
