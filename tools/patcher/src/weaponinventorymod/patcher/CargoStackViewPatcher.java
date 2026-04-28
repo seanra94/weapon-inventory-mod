@@ -89,8 +89,6 @@ public class CargoStackViewPatcher {
     private static final String SPRITE_SET_NORMAL_BLEND_DESC = "()V";
     private static final String SPRITE_SET_ALPHA = "setAlphaMult";
     private static final String SPRITE_SET_ALPHA_DESC = "(F)V";
-    private static final String SPRITE_GET_HEIGHT = "getHeight";
-    private static final String SPRITE_GET_HEIGHT_DESC = "()F";
     private static final String SPRITE_RENDER = "render";
     private static final String SPRITE_RENDER_DESC = "(FF)V";
     private static final String GL11_OWNER = "org/lwjgl/opengl/GL11";
@@ -98,10 +96,10 @@ public class CargoStackViewPatcher {
     private static final String GL_SCALEF_DESC = "(FFF)V";
 
     private static final String MARKER_SPRITE_PATH = "graphics/ui/weapon_inventory_test_marker.png";
-    private static final float BADGE_X_OFFSET = 5f;
-    private static final float PLAYER_X_OFFSET = 17f;
-    private static final float STORAGE_X_OFFSET = 29f;
-    private static final float BADGE_Y_PADDING = 5f;
+    private static final float BADGE_X_OFFSET = 6f;
+    private static final float PLAYER_X_OFFSET = 24f;
+    private static final float STORAGE_X_OFFSET = 42f;
+    private static final float BADGE_Y_PADDING = 6f;
     private static final float POST_PROBE_X_OFFSET = 23f;
 
     private static final String DRAW_DESC = "(FFFF)V";
@@ -323,16 +321,11 @@ public class CargoStackViewPatcher {
         inject.add(new LdcInsnNode(xOffset));
         inject.add(new InsnNode(Opcodes.FADD));
         inject.add(new VarInsnNode(Opcodes.FLOAD, STACK_HEIGHT_LOCAL));
+        inject.add(new InsnNode(Opcodes.FNEG));
         inject.add(new InsnNode(Opcodes.FCONST_2));
         inject.add(new InsnNode(Opcodes.FDIV));
-        inject.add(new TypeInsnNode(Opcodes.NEW, SPRITE_OWNER));
-        inject.add(new InsnNode(Opcodes.DUP));
-        inject.add(new VarInsnNode(Opcodes.ALOAD, pathLocal));
-        inject.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, SPRITE_OWNER, SPRITE_INIT, SPRITE_INIT_DESC, false));
-        inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_GET_HEIGHT, SPRITE_GET_HEIGHT_DESC, false));
-        inject.add(new InsnNode(Opcodes.FSUB));
         inject.add(new LdcInsnNode(BADGE_Y_PADDING));
-        inject.add(new InsnNode(Opcodes.FSUB));
+        inject.add(new InsnNode(Opcodes.FADD));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_RENDER, SPRITE_RENDER_DESC, false));
         return inject;
     }

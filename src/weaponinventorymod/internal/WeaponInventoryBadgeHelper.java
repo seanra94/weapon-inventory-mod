@@ -29,11 +29,15 @@ public class WeaponInventoryBadgeHelper {
     private static final String STORAGE_ERR = "graphics/ui/wim_diag_storage_err.png";
 
     private static final Map<String, Integer> PLAYER_COUNT_CACHE = new HashMap<String, Integer>();
+    private static final Map<String, Boolean> PLAYER_ERROR_CACHE = new HashMap<String, Boolean>();
+    private static final Map<String, Long> PLAYER_CACHE_TIME_MS = new HashMap<String, Long>();
     private static final Map<String, Integer> STORAGE_COUNT_CACHE = new HashMap<String, Integer>();
-    private static final Map<String, Boolean> ERROR_CACHE = new HashMap<String, Boolean>();
-    private static final Map<String, Long> CACHE_TIME_MS = new HashMap<String, Long>();
+    private static final Map<String, Boolean> STORAGE_ERROR_CACHE = new HashMap<String, Boolean>();
+    private static final Map<String, Long> STORAGE_CACHE_TIME_MS = new HashMap<String, Long>();
+
     private static boolean helperReachedLogged = false;
-    private static boolean errorLogged = false;
+    private static boolean playerErrorLogged = false;
+    private static boolean storageErrorLogged = false;
     private static int loggedCalls = 0;
 
     private WeaponInventoryBadgeHelper() {
@@ -49,8 +53,8 @@ public class WeaponInventoryBadgeHelper {
         if (weaponId == null || weaponId.isEmpty()) {
             return PLAYER_ERR;
         }
-        ensureCounts(weaponId);
-        if (isError(weaponId)) {
+        ensurePlayerCount(weaponId);
+        if (isPlayerError(weaponId)) {
             return PLAYER_ERR;
         }
         return toPlayerSprite(getPlayerCount(weaponId));
@@ -59,33 +63,46 @@ public class WeaponInventoryBadgeHelper {
     public static String getStorageStatusSpritePath(String weaponId) {
         logHelperReachedOnce();
         if (weaponId == null || weaponId.isEmpty()) {
-            logCallCapped(weaponId, 0, 0, PLAYER_ERR, STORAGE_ERR, true);
+            logCallCapped(weaponId, 0, true, PLAYER_ERR, 0, true, STORAGE_ERR);
             return STORAGE_ERR;
         }
-        ensureCounts(weaponId);
-        boolean error = isError(weaponId);
+        ensureStorageCount(weaponId);
+        ensurePlayerCount(weaponId);
+
+        boolean playerError = isPlayerError(weaponId);
+        boolean storageError = isStorageError(weaponId);
         int playerCount = getPlayerCount(weaponId);
         int storageCount = getStorageCount(weaponId);
-        String playerSprite = error ? PLAYER_ERR : toPlayerSprite(playerCount);
-        String storageSprite = error ? STORAGE_ERR : toStorageSprite(storageCount);
-        logCallCapped(weaponId, playerCount, storageCount, playerSprite, storageSprite, error);
+        String playerSprite = playerError ? PLAYER_ERR : toPlayerSprite(playerCount);
+        String storageSprite = storageError ? STORAGE_ERR : toStorageSprite(storageCount);
+        logCallCapped(weaponId, playerCount, playerError, playerSprite, storageCount, storageError, storageSprite);
         return storageSprite;
     }
 
-    private static void ensureCounts(String weaponId) {
+    private static void ensurePlayerCount(String weaponId) {
         long now = System.currentTimeMillis();
-        Long cachedAt = CACHE_TIME_MS.get(weaponId);
+        Long cachedAt = PLAYER_CACHE_TIME_MS.get(weaponId);
         if (cachedAt != null && now - cachedAt <= CACHE_TTL_MS) {
             return;
         }
-        refreshCounts(weaponId, now);
+        refreshPlayerCount(weaponId, now);
     }
 
-    private static void refreshCounts(String weaponId, long now) {
+    private static void ensureStorageCount(String weaponId) {
+        long now = System.currentTimeMillis();
+        Long cachedAt = STORAGE_CACHE_TIME_MS.get(weaponId);
+        if (cachedAt != null && now - cachedAt <= CACHE_TTL_MS) {
+            return;
+        }
+        refreshStorageCount(weaponId, now);
+    }
+
+    private static void refreshPlayerCount(String weaponId, long now) {
         try {
             SectorAPI sector = Global.getSector();
             if (sector == null) {
-                setCounts(weaponId, 0, 0, true, now);
+                logPlayerErrorOnce(new IllegalStateException("Global.getSector() returned null while computing player count"));
+                setPlayerCount(weaponId, 0, true, now);
                 return;
             }
 
@@ -98,35 +115,60 @@ public class WeaponInventoryBadgeHelper {
                 }
             }
 
+            setPlayerCount(weaponId, playerCount, false, now);
+        } catch (Throwable t) {
+            logPlayerErrorOnce(t);
+            setPlayerCount(weaponId, 0, true, now);
+        }
+    }
+
+    private static void refreshStorageCount(String weaponId, long now) {
+        try {
+            SectorAPI sector = Global.getSector();
+            if (sector == null) {
+                logStorageErrorOnce(new IllegalStateException("Global.getSector() returned null while computing storage count"));
+                setStorageCount(weaponId, 0, true, now);
+                return;
+            }
+
             int storageCount = 0;
             EconomyAPI economy = sector.getEconomy();
-            if (economy != null) {
-                List<MarketAPI> markets = economy.getMarketsCopy();
-                if (markets != null) {
-                    for (MarketAPI market : markets) {
-                        if (market == null || !Misc.playerHasStorageAccess(market)) {
-                            continue;
-                        }
-                        CargoAPI storageCargo = Misc.getStorageCargo(market);
-                        if (storageCargo != null) {
-                            storageCount += storageCargo.getNumWeapons(weaponId);
-                        }
+            if (economy == null) {
+                logStorageErrorOnce(new IllegalStateException("SectorAPI.getEconomy() returned null while computing storage count"));
+                setStorageCount(weaponId, 0, true, now);
+                return;
+            }
+
+            List<MarketAPI> markets = economy.getMarketsCopy();
+            if (markets != null) {
+                for (MarketAPI market : markets) {
+                    if (market == null || !Misc.playerHasStorageAccess(market)) {
+                        continue;
+                    }
+                    CargoAPI storageCargo = Misc.getStorageCargo(market);
+                    if (storageCargo != null) {
+                        storageCount += storageCargo.getNumWeapons(weaponId);
                     }
                 }
             }
 
-            setCounts(weaponId, playerCount, storageCount, false, now);
+            setStorageCount(weaponId, storageCount, false, now);
         } catch (Throwable t) {
-            logErrorOnce(t);
-            setCounts(weaponId, 0, 0, true, now);
+            logStorageErrorOnce(t);
+            setStorageCount(weaponId, 0, true, now);
         }
     }
 
-    private static void setCounts(String weaponId, int playerCount, int storageCount, boolean error, long now) {
+    private static void setPlayerCount(String weaponId, int playerCount, boolean error, long now) {
         PLAYER_COUNT_CACHE.put(weaponId, playerCount);
+        PLAYER_ERROR_CACHE.put(weaponId, error);
+        PLAYER_CACHE_TIME_MS.put(weaponId, now);
+    }
+
+    private static void setStorageCount(String weaponId, int storageCount, boolean error, long now) {
         STORAGE_COUNT_CACHE.put(weaponId, storageCount);
-        ERROR_CACHE.put(weaponId, error);
-        CACHE_TIME_MS.put(weaponId, now);
+        STORAGE_ERROR_CACHE.put(weaponId, error);
+        STORAGE_CACHE_TIME_MS.put(weaponId, now);
     }
 
     private static int getPlayerCount(String weaponId) {
@@ -139,8 +181,13 @@ public class WeaponInventoryBadgeHelper {
         return value == null ? 0 : value.intValue();
     }
 
-    private static boolean isError(String weaponId) {
-        Boolean value = ERROR_CACHE.get(weaponId);
+    private static boolean isPlayerError(String weaponId) {
+        Boolean value = PLAYER_ERROR_CACHE.get(weaponId);
+        return value != null && value.booleanValue();
+    }
+
+    private static boolean isStorageError(String weaponId) {
+        Boolean value = STORAGE_ERROR_CACHE.get(weaponId);
         return value != null && value.booleanValue();
     }
 
@@ -172,24 +219,35 @@ public class WeaponInventoryBadgeHelper {
         LOG.info("WIM_DIAG_BADGE helper reached");
     }
 
-    private static void logCallCapped(String weaponId, int playerCount, int storageCount, String playerSprite, String storageSprite, boolean error) {
+    private static void logCallCapped(String weaponId, int playerCount, boolean playerError, String playerSprite,
+                                      int storageCount, boolean storageError, String storageSprite) {
         if (loggedCalls >= MAX_CALL_LOGS) {
             return;
         }
         loggedCalls++;
         LOG.info("WIM_DIAG_BADGE call weaponId=" + weaponId
                 + " playerCount=" + playerCount
-                + " storageCount=" + storageCount
+                + " playerError=" + playerError
                 + " playerSprite=" + playerSprite
+                + " storageCount=" + storageCount
+                + " storageError=" + storageError
                 + " storageSprite=" + storageSprite
-                + " error=" + error);
+        );
     }
 
-    private static void logErrorOnce(Throwable t) {
-        if (errorLogged) {
+    private static void logPlayerErrorOnce(Throwable t) {
+        if (playerErrorLogged) {
             return;
         }
-        errorLogged = true;
-        LOG.error("WIM_DIAG_BADGE helper error", t);
+        playerErrorLogged = true;
+        LOG.error("WIM_DIAG_BADGE player error", t);
+    }
+
+    private static void logStorageErrorOnce(Throwable t) {
+        if (storageErrorLogged) {
+            return;
+        }
+        storageErrorLogged = true;
+        LOG.error("WIM_DIAG_BADGE storage error", t);
     }
 }
