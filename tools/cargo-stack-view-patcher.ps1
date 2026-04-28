@@ -17,9 +17,12 @@ if (-not (Test-Path -LiteralPath $obfJar)) {
 
 $patcherSrcDir = Join-Path $PSScriptRoot "patcher\src"
 $patcherBuildDir = Join-Path $PSScriptRoot "patcher\build\classes"
+$modJarPath = Join-Path (Split-Path -Parent $PSScriptRoot) "jars\weapon-inventory-mod.jar"
 
 New-Item -ItemType Directory -Force -Path $patcherBuildDir | Out-Null
-Get-ChildItem -Path $patcherBuildDir -Recurse -File -ErrorAction SilentlyContinue | Remove-Item -Force
+Get-ChildItem -Path $patcherBuildDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Remove-Item -LiteralPath $_.FullName -Force -ErrorAction SilentlyContinue
+}
 
 $sources = @(Get-ChildItem -Path $patcherSrcDir -Recurse -Filter *.java | Select-Object -ExpandProperty FullName)
 if ($sources.Count -eq 0) {
@@ -37,7 +40,14 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $modeArg = $Mode.ToLowerInvariant()
-& java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
+if ($modeArg -eq "patch") {
+    if (-not (Test-Path -LiteralPath $modJarPath)) {
+        throw "Patch mode requires built mod jar at '$modJarPath'. Run build.ps1 first."
+    }
+    & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar $modJarPath
+} else {
+    & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
+}
 if ($LASTEXITCODE -ne 0) {
     throw "Patcher execution failed with exit code $LASTEXITCODE."
 }
