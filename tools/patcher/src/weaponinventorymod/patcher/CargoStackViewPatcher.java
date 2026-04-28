@@ -68,9 +68,14 @@ public class CargoStackViewPatcher {
     private static final String SPRITE_GET_HEIGHT_DESC = "()F";
     private static final String SPRITE_RENDER = "render";
     private static final String SPRITE_RENDER_DESC = "(FF)V";
+    private static final String GL11_OWNER = "org/lwjgl/opengl/GL11";
+    private static final String GL_SCALEF = "glScalef";
+    private static final String GL_SCALEF_DESC = "(FFF)V";
 
     private static final String MARKER_SPRITE_PATH = "graphics/ui/weapon_inventory_test_marker.png";
-    private static final float MARKER_PADDING = 5f;
+    private static final float PROBE_PRE_X_OFFSET = 5f;
+    private static final float PROBE_POST_X_OFFSET = 23f;
+    private static final float PROBE_Y_PADDING = 5f;
 
     private static final String DRAW_DESC = "(FFFF)V";
     private static final float DIAG_X_OFFSET = 18f;
@@ -157,8 +162,13 @@ public class CargoStackViewPatcher {
             throw new IllegalStateException("Patch refused: " + reason + ".");
         }
 
-        AbstractInsnNode insertionPoint = findInsertionPointBeforeHighlightBrightness(method, weaponTypeGuard, nonWeaponLabel);
-        if (insertionPoint == null) {
+        AbstractInsnNode preScaleInsertionPoint = findInsertionPointBeforeWeaponScale(method, weaponTypeGuard, nonWeaponLabel);
+        if (preScaleInsertionPoint == null) {
+            throw new IllegalStateException("Patch refused: deterministic insertion point before weapon scale not found.");
+        }
+
+        AbstractInsnNode postDrawInsertionPoint = findInsertionPointBeforeHighlightBrightness(method, weaponTypeGuard, nonWeaponLabel);
+        if (postDrawInsertionPoint == null) {
             throw new IllegalStateException("Patch refused: deterministic insertion point before highlight check not found.");
         }
 
@@ -169,6 +179,22 @@ public class CargoStackViewPatcher {
             System.out.println("Backup already exists: " + backupPath);
         }
 
+        method.instructions.insertBefore(preScaleInsertionPoint, createMarkerProbeDraw(PROBE_PRE_X_OFFSET));
+        method.instructions.insertBefore(postDrawInsertionPoint, createMarkerProbeDraw(PROBE_POST_X_OFFSET));
+
+        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        classNode.accept(writer);
+        byte[] patchedBytes = writer.toByteArray();
+
+        verifyPatchedState(patchedBytes);
+        writePatchedJar(jarPath, TARGET_CLASS_ENTRY, patchedBytes);
+
+        System.out.println("Patched class: " + TARGET_CLASS_ENTRY);
+        System.out.println("Injected WEAPONS coordinate-frame probe markers using Sprite.render(FF).");
+        System.out.println("Patched jar: " + jarPath);
+    }
+
+    private static InsnList createMarkerProbeDraw(float xOffset) {
         InsnList inject = new InsnList();
         inject.add(new TypeInsnNode(Opcodes.NEW, SPRITE_OWNER));
         inject.add(new InsnNode(Opcodes.DUP));
@@ -183,7 +209,7 @@ public class CargoStackViewPatcher {
         inject.add(new InsnNode(Opcodes.FNEG));
         inject.add(new InsnNode(Opcodes.FCONST_2));
         inject.add(new InsnNode(Opcodes.FDIV));
-        inject.add(new LdcInsnNode(MARKER_PADDING));
+        inject.add(new LdcInsnNode(xOffset));
         inject.add(new InsnNode(Opcodes.FADD));
         inject.add(new VarInsnNode(Opcodes.FLOAD, STACK_HEIGHT_LOCAL));
         inject.add(new InsnNode(Opcodes.FCONST_2));
@@ -194,21 +220,10 @@ public class CargoStackViewPatcher {
         inject.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, SPRITE_OWNER, SPRITE_INIT, SPRITE_INIT_DESC, false));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_GET_HEIGHT, SPRITE_GET_HEIGHT_DESC, false));
         inject.add(new InsnNode(Opcodes.FSUB));
-        inject.add(new LdcInsnNode(MARKER_PADDING));
+        inject.add(new LdcInsnNode(PROBE_Y_PADDING));
         inject.add(new InsnNode(Opcodes.FSUB));
         inject.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, SPRITE_OWNER, SPRITE_RENDER, SPRITE_RENDER_DESC, false));
-        method.instructions.insertBefore(insertionPoint, inject);
-
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        classNode.accept(writer);
-        byte[] patchedBytes = writer.toByteArray();
-
-        verifyPatchedState(patchedBytes);
-        writePatchedJar(jarPath, TARGET_CLASS_ENTRY, patchedBytes);
-
-        System.out.println("Patched class: " + TARGET_CLASS_ENTRY);
-        System.out.println("Injected visible static marker draw in WEAPONS branch using Sprite.render(FF).");
-        System.out.println("Patched jar: " + jarPath);
+        return inject;
     }
 
     private static void restore(Path jarPath, Path backupPath) throws IOException {
@@ -329,12 +344,49 @@ public class CargoStackViewPatcher {
         return null;
     }
 
+    private static AbstractInsnNode findInsertionPointBeforeWeaponScale(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (methodInsn.getOpcode() != Opcodes.INVOKESTATIC
+                    || !GL11_OWNER.equals(methodInsn.owner)
+                    || !GL_SCALEF.equals(methodInsn.name)
+                    || !GL_SCALEF_DESC.equals(methodInsn.desc)) {
+                continue;
+            }
+            AbstractInsnNode arg3 = previousRealInsn(insn.getPrevious());
+            AbstractInsnNode arg2 = previousRealInsn(arg3 == null ? null : arg3.getPrevious());
+            AbstractInsnNode arg1 = previousRealInsn(arg2 == null ? null : arg2.getPrevious());
+            if (arg3 == null || arg2 == null || arg1 == null) {
+                continue;
+            }
+            if (arg3.getOpcode() != Opcodes.FCONST_1) {
+                continue;
+            }
+            if (!isFloadLocal(arg2, 11) || !isFloadLocal(arg1, 11)) {
+                continue;
+            }
+            return arg1;
+        }
+        return null;
+    }
+
     private static boolean isAload0(AbstractInsnNode insn) {
         if (!(insn instanceof VarInsnNode)) {
             return false;
         }
         VarInsnNode varInsn = (VarInsnNode) insn;
         return varInsn.var == 0;
+    }
+
+    private static boolean isFloadLocal(AbstractInsnNode insn, int local) {
+        if (!(insn instanceof VarInsnNode)) {
+            return false;
+        }
+        VarInsnNode varInsn = (VarInsnNode) insn;
+        return varInsn.getOpcode() == Opcodes.FLOAD && varInsn.var == local;
     }
 
     private static boolean hasLegacyHookCall(MethodNode method) {
@@ -395,6 +447,42 @@ public class CargoStackViewPatcher {
             }
         }
         return sawMarkerPath && sawMarkerRender;
+    }
+
+    private static int countMarkerPathConstantsInWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+        int count = 0;
+        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+            if (!(insn instanceof LdcInsnNode)) {
+                continue;
+            }
+            LdcInsnNode ldc = (LdcInsnNode) insn;
+            if (MARKER_SPRITE_PATH.equals(ldc.cst)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int countMarkerRenderCallsInWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+        int count = 0;
+        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (methodInsn.getOpcode() == Opcodes.INVOKEVIRTUAL
+                    && SPRITE_OWNER.equals(methodInsn.owner)
+                    && SPRITE_RENDER.equals(methodInsn.name)
+                    && SPRITE_RENDER_DESC.equals(methodInsn.desc)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static boolean hasMarkerProbeDraw(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
+        return countMarkerPathConstantsInWeaponsBranch(method, guard, nonWeaponLabel) >= 4
+                && countMarkerRenderCallsInWeaponsBranch(method, guard, nonWeaponLabel) >= 2;
     }
 
     private static boolean hasMarkerDrawOutsideWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
@@ -531,6 +619,9 @@ public class CargoStackViewPatcher {
         }
         if (!hasMarkerDraw(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: marker draw patch not found.");
+        }
+        if (!hasMarkerProbeDraw(method, weaponTypeGuard, nonWeaponLabel)) {
+            throw new IllegalStateException("Patch verification failed: marker probe draw pattern not found.");
         }
         if (hasCountCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: count path calls still present in WEAPONS branch.");
