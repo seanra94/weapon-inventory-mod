@@ -258,6 +258,24 @@ public void invalidate();
 - Latest log evidence in `starsector-core/starsector.log` shows:
   - `WIM_HOOK sprite lookup failed for ui.weapon_inventory_test_marker`
   - `NullPointerException` because `Global.getSettings()` returned `null` inside `CargoWeaponMarkerHook`.
+
+## Count bridge architecture (latest)
+
+- Embedded helper code called from patched `starfarer_obf.jar` must not call campaign-state APIs directly.
+- Durable evidence: embedded helper-side campaign lookups returned null in trade render context.
+- Weapon ID extraction in the patched `WEAPONS` render path is working (including `weaponId=hhe_prickler` in logs).
+- Count computation now belongs in normal mod-side campaign code:
+  - `WeaponInventoryCountUpdater` runs as `EveryFrameScript`;
+  - `runWhilePaused()` is `true`;
+  - update cadence is `0.20s` for fluid trade-screen updates.
+- Cross-classloader bridge:
+  - updater publishes counts to JVM system properties;
+  - embedded helper reads those properties and maps diagnostic sprites.
+- Property namespace:
+  - `wim.weapon.<weaponId>.player`
+  - `wim.weapon.<weaponId>.storage`
+  - `wim.counts.ready`
+  - `wim.counts.updatedAt`
 - Durable lesson: core-jar-invoked hook code should not rely on `Global.getSettings()` being initialized/available in this render context.
 - Diagnostic hook now logs once at method entry and draws raw GL colored quads independent of sprite/settings lookup to prove render-path visibility.
 - Patch descriptor currently remains `render:(F)V`; if hook-entry logs appear but raw quads stay invisible, next diagnostic step is to repatch to `render:(FFF)V` and pass primitive `x,y,alpha`.

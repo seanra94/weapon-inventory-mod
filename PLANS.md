@@ -248,3 +248,18 @@ Known facts:
   - stack-size-1 and stack-size->1 behavior;
   - placement quality noted separately.
 - keep storage aggregation, `99+`, wing support, tooltip changes, and final styling out of scope.
+
+## Current status (count bridge implementation)
+
+- Rendering, placement, and weapon ID extraction are proven in WEAPONS flow.
+- Embedded helper-side campaign API access is not reliable in the patched core render context.
+- Count architecture now uses a bridge:
+  - normal mod-side paused updater computes counts;
+  - embedded helper is render/lookup-only via JVM `System` properties.
+
+## Immediate next step
+
+- run manual trade-screen retest after bridge deployment:
+  - confirm updater logs (`registered`, periodic `updated`, `hhe_prickler` values);
+  - confirm player/storage diagnostic squares react to buy/sell/move within about `0.25s`;
+  - confirm commodities remain unaffected.
