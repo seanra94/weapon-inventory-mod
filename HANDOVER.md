@@ -358,3 +358,16 @@ public void invalidate();
   - no `99+`;
   - no wings;
   - no tooltip work.
+
+## Bytecode count injection descriptor failure (durable)
+
+- A count-injection attempt crashed entering trade with:
+  - `java.lang.NoSuchMethodError: com.fs.starfarer.api.campaign.SectorAPI.getPlayerFleet()`
+  - attempted return type used `com.fs.starfarer.api.fleet.CampaignFleetAPI`, which does not match runtime API.
+- Durable rule: for bytecode injections, verify JVM owners/descriptors with `javap` against runtime jars before injecting calls.
+- Runtime descriptor facts (from `starfarer.api.jar`):
+  - `com/fs/starfarer/api/Global.getSector:()Lcom/fs/starfarer/api/campaign/SectorAPI;`
+  - `com/fs/starfarer/api/campaign/SectorAPI.getPlayerFleet:()Lcom/fs/starfarer/api/campaign/CampaignFleetAPI;`
+  - `com/fs/starfarer/api/campaign/SectorEntityToken.getCargo:()Lcom/fs/starfarer/api/campaign/CargoAPI;`
+  - `com/fs/starfarer/api/campaign/CargoAPI.getNumWeapons:(Ljava/lang/String;)I`
+- Current safe state after this failure: count injection is removed; static weapon marker proof is restored as the only active patch behavior.
