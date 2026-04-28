@@ -19,6 +19,7 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
     private static final int MAX_UPDATE_LOGS = 30;
     private static final int MAX_PRICKLER_LOGS = 30;
     private static final int MAX_FIGHTER_LOGS = 30;
+    private static final int MAX_FIGHTER_SUMMARY_LOGS = 30;
 
     private static final String KEY_READY = "wim.counts.ready";
     private static final String KEY_UPDATED_AT = "wim.counts.updatedAt";
@@ -32,6 +33,7 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
     private int updateLogs = 0;
     private int pricklerLogs = 0;
     private int fighterLogs = 0;
+    private int fighterSummaryLogs = 0;
     private boolean updaterErrorLogged = false;
 
     public WeaponInventoryCountUpdater() {
@@ -80,6 +82,9 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
             int sampledFighterPlayer = -1;
             int sampledFighterStorage = -1;
             String sampledFighterId = null;
+            int fighterWingCount = 0;
+            int fighterNonzeroPlayer = 0;
+            int fighterNonzeroStorage = 0;
             int totalKeysUpdated = 0;
 
             if (weaponIds != null) {
@@ -121,6 +126,7 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                     if (fighterId == null || fighterId.isEmpty()) {
                         continue;
                     }
+                    fighterWingCount++;
                     int playerCount = 0;
                     if (playerCargo != null) {
                         playerCount = playerCargo.getNumFighters(fighterId);
@@ -143,10 +149,21 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                     System.setProperty(KEY_FIGHTER_PREFIX + fighterId + KEY_STORAGE_SUFFIX, Integer.toString(storageCount));
                     totalKeysUpdated++;
 
+                    if (playerCount > 0) {
+                        fighterNonzeroPlayer++;
+                    }
+                    if (storageCount > 0) {
+                        fighterNonzeroStorage++;
+                    }
+
                     if (sampledFighterId == null) {
                         sampledFighterId = fighterId;
                         sampledFighterPlayer = playerCount;
                         sampledFighterStorage = storageCount;
+                    }
+                    if ((playerCount > 0 || storageCount > 0) && fighterLogs < MAX_FIGHTER_LOGS) {
+                        fighterLogs++;
+                        LOG.info("WIM_COUNT_UPDATER fighter wingId=" + fighterId + " player=" + playerCount + " storage=" + storageCount);
                     }
                 }
             }
@@ -160,9 +177,17 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                 pricklerLogs++;
                 LOG.info("WIM_COUNT_UPDATER hhe_prickler player=" + pricklerPlayer + " storage=" + pricklerStorage);
             }
+            if (fighterSummaryLogs < MAX_FIGHTER_SUMMARY_LOGS) {
+                fighterSummaryLogs++;
+                LOG.info("WIM_COUNT_UPDATER fighters wingCount=" + fighterWingCount
+                        + " nonzeroPlayer=" + fighterNonzeroPlayer
+                        + " nonzeroStorage=" + fighterNonzeroStorage);
+            }
             if (sampledFighterId != null && fighterLogs < MAX_FIGHTER_LOGS) {
                 fighterLogs++;
-                LOG.info("WIM_COUNT_UPDATER fighter sample id=" + sampledFighterId + " player=" + sampledFighterPlayer + " storage=" + sampledFighterStorage);
+                LOG.info("WIM_COUNT_UPDATER fighter sample id=" + sampledFighterId
+                        + " player=" + sampledFighterPlayer
+                        + " storage=" + sampledFighterStorage);
             }
         } catch (Throwable t) {
             System.setProperty(KEY_READY, "false");

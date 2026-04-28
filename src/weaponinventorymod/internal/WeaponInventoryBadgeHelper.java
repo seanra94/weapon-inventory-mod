@@ -5,6 +5,8 @@ import org.apache.log4j.Logger;
 public class WeaponInventoryBadgeHelper {
     private static final Logger LOG = Logger.getLogger(WeaponInventoryBadgeHelper.class);
     private static final int MAX_CALL_LOGS = 20;
+    private static final int MAX_FIGHTER_CALL_LOGS = 40;
+    private static final int MAX_STACK_PROBE_LOGS = 60;
 
     private static final String TOTAL_ERR = "graphics/ui/wim_total_err.png";
     private static final String TOTAL_99PLUS = "graphics/ui/wim_total_green_99plus.png";
@@ -22,6 +24,8 @@ public class WeaponInventoryBadgeHelper {
     private static boolean helperReachedLogged = false;
     private static boolean parseErrorLogged = false;
     private static int loggedCalls = 0;
+    private static int fighterLoggedCalls = 0;
+    private static int stackProbeLogs = 0;
 
     private WeaponInventoryBadgeHelper() {
     }
@@ -43,6 +47,7 @@ public class WeaponInventoryBadgeHelper {
 
         if (!ready || id == null || id.isEmpty()) {
             logCallCapped(kind, id, playerCount, storageCount, totalCount, totalSprite, ready, true, true);
+            logFighterCallCapped(kind, id, ready, playerCount, storageCount, totalCount, totalSprite, true, true);
             return TOTAL_ERR;
         }
 
@@ -69,6 +74,7 @@ public class WeaponInventoryBadgeHelper {
         }
 
         logCallCapped(kind, id, playerCount, storageCount, totalCount, totalSprite, true, playerError, storageError);
+        logFighterCallCapped(kind, id, ready, playerCount, storageCount, totalCount, totalSprite, playerError, storageError);
         return totalSprite;
     }
 
@@ -138,6 +144,41 @@ public class WeaponInventoryBadgeHelper {
                 + " playerError=" + playerError
                 + " storageError=" + storageError
         );
+    }
+
+    private static void logFighterCallCapped(String kind, String id, boolean ready, Integer playerCount, Integer storageCount,
+                                             Integer totalCount, String totalSprite, boolean playerError, boolean storageError) {
+        if (!"fighter".equals(kind) || fighterLoggedCalls >= MAX_FIGHTER_CALL_LOGS) {
+            return;
+        }
+        fighterLoggedCalls++;
+        LOG.info("WIM_BADGE_HELPER kind=fighter"
+                + " id=" + id
+                + " ready=" + ready
+                + " player=" + playerCount
+                + " storage=" + storageCount
+                + " total=" + totalCount
+                + " sprite=" + totalSprite
+                + " playerError=" + playerError
+                + " storageError=" + storageError);
+    }
+
+    public static void logStackProbe(String phase, boolean isWeaponStack, boolean isFighterWingStack,
+                                     boolean hasWeaponSpec, boolean hasFighterWingSpec,
+                                     String typeValue, Object dataValue, String displayName) {
+        if (stackProbeLogs >= MAX_STACK_PROBE_LOGS) {
+            return;
+        }
+        stackProbeLogs++;
+        String dataClass = dataValue == null ? "null" : dataValue.getClass().getName();
+        LOG.info("WIM_STACK_PROBE phase=" + phase
+                + " isWeaponStack=" + isWeaponStack
+                + " isFighterWingStack=" + isFighterWingStack
+                + " hasWeaponSpec=" + hasWeaponSpec
+                + " hasFighterWingSpec=" + hasFighterWingSpec
+                + " type=" + typeValue
+                + " dataClass=" + dataClass
+                + " displayName=" + displayName);
     }
 
     private static void logParseErrorOnce(String key, String value, Throwable t) {
