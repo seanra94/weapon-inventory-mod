@@ -291,6 +291,33 @@ public void invalidate();
   - `>=99`: green `99+`
 - Badge remains in the stable bottom-left pre-scale WEAPONS frame and updates at updater cadence (`0.20s`) while paused.
 
+## Fighter LPC extension + badge contrast (latest)
+
+- Single-badge render path now supports both weapons and fighter LPC stacks through the same helper API:
+  - patched `CargoStackView.renderAtCenter(FFF)V` resolves:
+    - weapon: `stack.getWeaponSpecIfWeapon().getWeaponId()`, kind=`"weapon"`;
+    - fighter: `stack.getFighterWingSpecIfWing().getId()`, kind=`"fighter"`.
+  - helper call in patched core path: `WeaponInventoryBadgeHelper.getTotalStatusSpritePath(String kind, String id)`.
+- Updater bridge remains the source of counts and still runs while paused at `0.20s`.
+- Count keys now include fighter LPC inventory/storage values:
+  - `wim.fighter.<wingId>.player`
+  - `wim.fighter.<wingId>.storage`
+- Weapon keys remain unchanged:
+  - `wim.weapon.<weaponId>.player`
+  - `wim.weapon.<weaponId>.storage`
+- Fighter inventory counts use cargo APIs (`getNumFighters`) and do not use `FighterWingSpecAPI.getNumFighters()` for ownership totals.
+- Total badge mapping remains shared for weapons and fighters:
+  - red `0`;
+  - yellow `1..9`;
+  - green `10..98`;
+  - green `99+` for `>=99`.
+- Badge assets were regenerated with improved contrast:
+  - red and green badges now use black text;
+  - yellow remains black text.
+- JSON encoding rule reinforced:
+  - `data/config/settings.json` is UTF-8 without BOM;
+  - validation checks now fail if any source/deployed JSON starts with `EF BB BF`.
+
 ## 0926671 visual regression root cause
 
 - In commit `0926671`, render injection and helper calls were active and totals were correct, but the new `wim_total_*` sprites were not listed under `data/config/settings.json -> graphics -> ui`.

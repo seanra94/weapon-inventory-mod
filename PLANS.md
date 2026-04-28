@@ -293,3 +293,18 @@ Known facts:
 ## Immediate next step
 
 - run manual in-game visual validation that single total badge is visible and thresholds update dynamically.
+
+## Current status (fighter LPC extension)
+
+- Updater/bridge architecture is preserved and now publishes both weapon and fighter LPC counts.
+- Single active badge render path is preserved and now supports weapon and fighter stack ids via a kind-aware helper call.
+- Badge thresholds and placement are unchanged from the validated weapon baseline.
+- Badge assets were regenerated with black text on red/green for readability.
+- Validation now includes UTF-8 BOM checks for JSON files in source and deployed mod folders.
+
+## Immediate next step (fighter validation)
+
+- manual in-game verification:
+  - weapon behavior remains unchanged;
+  - fighter LPC stacks show the same single total badge;
+  - fighter totals reflect player cargo + accessible storage and update dynamically while paused.

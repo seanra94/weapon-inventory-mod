@@ -14,7 +14,8 @@ public class WeaponInventoryBadgeHelper {
     private static final String TOTAL_SUFFIX = ".png";
 
     private static final String KEY_READY = "wim.counts.ready";
-    private static final String KEY_PREFIX = "wim.weapon.";
+    private static final String KEY_WEAPON_PREFIX = "wim.weapon.";
+    private static final String KEY_FIGHTER_PREFIX = "wim.fighter.";
     private static final String KEY_PLAYER_SUFFIX = ".player";
     private static final String KEY_STORAGE_SUFFIX = ".storage";
 
@@ -26,6 +27,10 @@ public class WeaponInventoryBadgeHelper {
     }
 
     public static String getTotalStatusSpritePath(String weaponId) {
+        return getTotalStatusSpritePath("weapon", weaponId);
+    }
+
+    public static String getTotalStatusSpritePath(String kind, String id) {
         logHelperReachedOnce();
 
         boolean ready = isReady();
@@ -36,16 +41,16 @@ public class WeaponInventoryBadgeHelper {
         Integer totalCount = null;
         String totalSprite = TOTAL_ERR;
 
-        if (!ready || weaponId == null || weaponId.isEmpty()) {
-            logCallCapped(weaponId, playerCount, storageCount, totalCount, totalSprite, ready, true, true);
+        if (!ready || id == null || id.isEmpty()) {
+            logCallCapped(kind, id, playerCount, storageCount, totalCount, totalSprite, ready, true, true);
             return TOTAL_ERR;
         }
 
-        playerCount = readCount(weaponId, true);
+        playerCount = readCount(kind, id, true);
         if (playerCount == null) {
             playerError = true;
         }
-        storageCount = readCount(weaponId, false);
+        storageCount = readCount(kind, id, false);
         if (storageCount == null) {
             storageError = true;
         }
@@ -63,7 +68,7 @@ public class WeaponInventoryBadgeHelper {
             }
         }
 
-        logCallCapped(weaponId, playerCount, storageCount, totalCount, totalSprite, true, playerError, storageError);
+        logCallCapped(kind, id, playerCount, storageCount, totalCount, totalSprite, true, playerError, storageError);
         return totalSprite;
     }
 
@@ -71,8 +76,12 @@ public class WeaponInventoryBadgeHelper {
         return "true".equalsIgnoreCase(System.getProperty(KEY_READY));
     }
 
-    private static Integer readCount(String weaponId, boolean player) {
-        String key = KEY_PREFIX + weaponId + (player ? KEY_PLAYER_SUFFIX : KEY_STORAGE_SUFFIX);
+    private static Integer readCount(String kind, String id, boolean player) {
+        String prefix = getPrefix(kind);
+        if (prefix == null) {
+            return null;
+        }
+        String key = prefix + id + (player ? KEY_PLAYER_SUFFIX : KEY_STORAGE_SUFFIX);
         String raw = System.getProperty(key);
         if (raw == null || raw.isEmpty()) {
             return null;
@@ -83,6 +92,16 @@ public class WeaponInventoryBadgeHelper {
             logParseErrorOnce(key, raw, t);
             return null;
         }
+    }
+
+    private static String getPrefix(String kind) {
+        if ("weapon".equals(kind)) {
+            return KEY_WEAPON_PREFIX;
+        }
+        if ("fighter".equals(kind)) {
+            return KEY_FIGHTER_PREFIX;
+        }
+        return null;
     }
 
     private static String toTotalSprite(int total) {
@@ -103,13 +122,14 @@ public class WeaponInventoryBadgeHelper {
         LOG.info("WIM_DIAG_BADGE helper reached");
     }
 
-    private static void logCallCapped(String weaponId, Integer playerCount, Integer storageCount, Integer totalCount,
+    private static void logCallCapped(String kind, String id, Integer playerCount, Integer storageCount, Integer totalCount,
                                       String totalSprite, boolean ready, boolean playerError, boolean storageError) {
         if (loggedCalls >= MAX_CALL_LOGS) {
             return;
         }
         loggedCalls++;
-        LOG.info("WIM_DIAG_BADGE call weaponId=" + weaponId
+        LOG.info("WIM_DIAG_BADGE call kind=" + kind
+                + " id=" + id
                 + " ready=" + ready
                 + " playerCount=" + playerCount
                 + " storageCount=" + storageCount

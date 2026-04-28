@@ -46,7 +46,24 @@ function Test-BadgeSet {
     }
 }
 
+function Test-JsonFilesNoBom {
+    param(
+        [string]$BasePath,
+        [string]$Label
+    )
+
+    $jsonFiles = Get-ChildItem -LiteralPath $BasePath -Recurse -File -Filter *.json
+    foreach ($file in $jsonFiles) {
+        $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            throw "$Label JSON has UTF-8 BOM: '$($file.FullName)'"
+        }
+    }
+}
+
 Test-BadgeSet -BasePath $RepoRoot -Label "SOURCE"
 Test-BadgeSet -BasePath $DeployRoot -Label "DEPLOY"
+Test-JsonFilesNoBom -BasePath $RepoRoot -Label "SOURCE"
+Test-JsonFilesNoBom -BasePath $DeployRoot -Label "DEPLOY"
 
-Write-Host "Total badge validation passed for source and deploy paths."
+Write-Host "Total badge + JSON BOM validation passed for source and deploy paths."

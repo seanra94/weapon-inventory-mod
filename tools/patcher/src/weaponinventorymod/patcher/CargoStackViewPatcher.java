@@ -53,9 +53,14 @@ public class CargoStackViewPatcher {
     private static final String CARGO_STACK_API_OWNER = "com/fs/starfarer/api/campaign/CargoStackAPI";
     private static final String CARGO_STACK_GET_WEAPON_SPEC_METHOD = "getWeaponSpecIfWeapon";
     private static final String CARGO_STACK_GET_WEAPON_SPEC_DESC = "()Lcom/fs/starfarer/api/loading/WeaponSpecAPI;";
+    private static final String CARGO_STACK_GET_FIGHTER_WING_SPEC_METHOD = "getFighterWingSpecIfWing";
+    private static final String CARGO_STACK_GET_FIGHTER_WING_SPEC_DESC = "()Lcom/fs/starfarer/api/loading/FighterWingSpecAPI;";
     private static final String WEAPON_SPEC_API_OWNER = "com/fs/starfarer/api/loading/WeaponSpecAPI";
     private static final String WEAPON_SPEC_GET_ID_METHOD = "getWeaponId";
     private static final String WEAPON_SPEC_GET_ID_DESC = "()Ljava/lang/String;";
+    private static final String FIGHTER_WING_SPEC_API_OWNER = "com/fs/starfarer/api/loading/FighterWingSpecAPI";
+    private static final String FIGHTER_WING_SPEC_GET_ID_METHOD = "getId";
+    private static final String FIGHTER_WING_SPEC_GET_ID_DESC = "()Ljava/lang/String;";
 
     private static final String GLOBAL_OWNER = "com/fs/starfarer/api/Global";
     private static final String GLOBAL_GET_SECTOR_METHOD = "getSector";
@@ -63,6 +68,7 @@ public class CargoStackViewPatcher {
     private static final String SECTOR_GET_PLAYER_FLEET_METHOD = "getPlayerFleet";
     private static final String CARGO_OWNER = "com/fs/starfarer/api/campaign/CargoAPI";
     private static final String CARGO_GET_NUM_WEAPONS_METHOD = "getNumWeapons";
+    private static final String CARGO_GET_NUM_FIGHTERS_METHOD = "getNumFighters";
     private static final String FLEET_GET_CARGO_METHOD = "getCargo";
 
     private static final String OLD_HOOK_OWNER = "weaponinventorymod/internal/CargoWeaponMarkerHook";
@@ -77,6 +83,7 @@ public class CargoStackViewPatcher {
     private static final String HELPER_OLD_DESC = "(Ljava/lang/String;)Ljava/lang/String;";
     private static final String HELPER_TOTAL_METHOD = "getTotalStatusSpritePath";
     private static final String HELPER_TOTAL_DESC = "(Ljava/lang/String;)Ljava/lang/String;";
+    private static final String HELPER_TOTAL_KIND_DESC = "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";
     private static final String HELPER_ANCHOR_METHOD = "getAnchorSpritePath";
     private static final String HELPER_ANCHOR_DESC = "()Ljava/lang/String;";
     private static final String HELPER_PLAYER_METHOD = "getPlayerStatusSpritePath";
@@ -106,6 +113,8 @@ public class CargoStackViewPatcher {
     private static final float STORAGE_X_OFFSET = 42f;
     private static final float BADGE_Y_PADDING = 6f;
     private static final float POST_PROBE_X_OFFSET = 23f;
+    private static final String KIND_WEAPON = "weapon";
+    private static final String KIND_FIGHTER = "fighter";
 
     private static final String DRAW_DESC = "(FFFF)V";
     private static final float DIAG_X_OFFSET = 18f;
@@ -221,12 +230,13 @@ public class CargoStackViewPatcher {
             System.out.println("Backup already exists: " + backupPath);
         }
 
-        int weaponIdLocal = method.maxLocals;
-        int totalPathLocal = method.maxLocals + 1;
-        method.maxLocals += 2;
+        int kindLocal = method.maxLocals;
+        int itemIdLocal = method.maxLocals + 1;
+        int totalPathLocal = method.maxLocals + 2;
+        method.maxLocals += 3;
         method.instructions.insertBefore(preScaleInsertionPoint, DEBUG_PROBE_MODE
-                ? createProbeInjection(weaponIdLocal, totalPathLocal)
-                : createTotalBadgeInjection(weaponIdLocal, totalPathLocal));
+                ? createProbeInjection(kindLocal, itemIdLocal, totalPathLocal)
+                : createTotalBadgeInjection(kindLocal, itemIdLocal, totalPathLocal));
 
         ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         classNode.accept(writer);
@@ -247,30 +257,50 @@ public class CargoStackViewPatcher {
         System.out.println("Patched jar: " + jarPath);
     }
 
-    private static InsnList createTotalBadgeInjection(int weaponIdLocal, int totalPathLocal) {
+    private static InsnList createTotalBadgeInjection(int kindLocal, int itemIdLocal, int totalPathLocal) {
         InsnList inject = new InsnList();
-        LabelNode haveSpec = new LabelNode();
-        LabelNode weaponReady = new LabelNode();
+        LabelNode haveWeaponSpec = new LabelNode();
+        LabelNode haveWingSpec = new LabelNode();
+        LabelNode idReady = new LabelNode();
         LabelNode drawTotal = new LabelNode();
         LabelNode done = new LabelNode();
 
         inject.add(new InsnNode(Opcodes.ACONST_NULL));
-        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, itemIdLocal));
+        inject.add(new InsnNode(Opcodes.ACONST_NULL));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, kindLocal));
 
         inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
         inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, STACK_FIELD_NAME, STACK_FIELD_DESC));
         inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, CARGO_STACK_API_OWNER, CARGO_STACK_GET_WEAPON_SPEC_METHOD, CARGO_STACK_GET_WEAPON_SPEC_DESC, true));
         inject.add(new InsnNode(Opcodes.DUP));
-        inject.add(new JumpInsnNode(Opcodes.IFNONNULL, haveSpec));
+        inject.add(new JumpInsnNode(Opcodes.IFNONNULL, haveWeaponSpec));
         inject.add(new InsnNode(Opcodes.POP));
-        inject.add(new JumpInsnNode(Opcodes.GOTO, weaponReady));
-        inject.add(haveSpec);
-        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, WEAPON_SPEC_API_OWNER, WEAPON_SPEC_GET_ID_METHOD, WEAPON_SPEC_GET_ID_DESC, true));
-        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
-        inject.add(weaponReady);
+        inject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+        inject.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET_CLASS, STACK_FIELD_NAME, STACK_FIELD_DESC));
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, CARGO_STACK_API_OWNER, CARGO_STACK_GET_FIGHTER_WING_SPEC_METHOD, CARGO_STACK_GET_FIGHTER_WING_SPEC_DESC, true));
+        inject.add(new InsnNode(Opcodes.DUP));
+        inject.add(new JumpInsnNode(Opcodes.IFNONNULL, haveWingSpec));
+        inject.add(new InsnNode(Opcodes.POP));
+        inject.add(new JumpInsnNode(Opcodes.GOTO, done));
 
-        inject.add(new VarInsnNode(Opcodes.ALOAD, weaponIdLocal));
-        inject.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HELPER_CLASS, HELPER_TOTAL_METHOD, HELPER_TOTAL_DESC, false));
+        inject.add(haveWeaponSpec);
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, WEAPON_SPEC_API_OWNER, WEAPON_SPEC_GET_ID_METHOD, WEAPON_SPEC_GET_ID_DESC, true));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, itemIdLocal));
+        inject.add(new LdcInsnNode(KIND_WEAPON));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, kindLocal));
+        inject.add(new JumpInsnNode(Opcodes.GOTO, idReady));
+
+        inject.add(haveWingSpec);
+        inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, FIGHTER_WING_SPEC_API_OWNER, FIGHTER_WING_SPEC_GET_ID_METHOD, FIGHTER_WING_SPEC_GET_ID_DESC, true));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, itemIdLocal));
+        inject.add(new LdcInsnNode(KIND_FIGHTER));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, kindLocal));
+        inject.add(idReady);
+
+        inject.add(new VarInsnNode(Opcodes.ALOAD, kindLocal));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, itemIdLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HELPER_CLASS, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC, false));
         inject.add(new VarInsnNode(Opcodes.ASTORE, totalPathLocal));
         inject.add(new VarInsnNode(Opcodes.ALOAD, totalPathLocal));
         inject.add(new JumpInsnNode(Opcodes.IFNONNULL, drawTotal));
@@ -282,15 +312,16 @@ public class CargoStackViewPatcher {
         return inject;
     }
 
-    private static InsnList createProbeInjection(int weaponIdLocal, int totalPathLocal) {
+    private static InsnList createProbeInjection(int kindLocal, int itemIdLocal, int totalPathLocal) {
         InsnList inject = new InsnList();
         LabelNode haveSpec = new LabelNode();
-        LabelNode weaponReady = new LabelNode();
         LabelNode drawTotal = new LabelNode();
         LabelNode done = new LabelNode();
 
         inject.add(new InsnNode(Opcodes.ACONST_NULL));
-        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, itemIdLocal));
+        inject.add(new LdcInsnNode(KIND_WEAPON));
+        inject.add(new VarInsnNode(Opcodes.ASTORE, kindLocal));
 
         // Probe A: hardcoded known-good old anchor sprite at old anchor position.
         inject.add(new LdcInsnNode("graphics/ui/wim_diag_anchor.png"));
@@ -303,15 +334,15 @@ public class CargoStackViewPatcher {
         inject.add(new InsnNode(Opcodes.DUP));
         inject.add(new JumpInsnNode(Opcodes.IFNONNULL, haveSpec));
         inject.add(new InsnNode(Opcodes.POP));
-        inject.add(new JumpInsnNode(Opcodes.GOTO, weaponReady));
+        inject.add(new JumpInsnNode(Opcodes.GOTO, done));
         inject.add(haveSpec);
         inject.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, WEAPON_SPEC_API_OWNER, WEAPON_SPEC_GET_ID_METHOD, WEAPON_SPEC_GET_ID_DESC, true));
-        inject.add(new VarInsnNode(Opcodes.ASTORE, weaponIdLocal));
-        inject.add(weaponReady);
+        inject.add(new VarInsnNode(Opcodes.ASTORE, itemIdLocal));
 
         // Probe B: total helper path at old player slot.
-        inject.add(new VarInsnNode(Opcodes.ALOAD, weaponIdLocal));
-        inject.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HELPER_CLASS, HELPER_TOTAL_METHOD, HELPER_TOTAL_DESC, false));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, kindLocal));
+        inject.add(new VarInsnNode(Opcodes.ALOAD, itemIdLocal));
+        inject.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HELPER_CLASS, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC, false));
         inject.add(new VarInsnNode(Opcodes.ASTORE, totalPathLocal));
         inject.add(new VarInsnNode(Opcodes.ALOAD, totalPathLocal));
         inject.add(new JumpInsnNode(Opcodes.IFNONNULL, drawTotal));
@@ -595,6 +626,7 @@ public class CargoStackViewPatcher {
             }
             if ((HELPER_OLD_METHOD.equals(methodInsn.name) && HELPER_OLD_DESC.equals(methodInsn.desc))
                     || (HELPER_TOTAL_METHOD.equals(methodInsn.name) && HELPER_TOTAL_DESC.equals(methodInsn.desc))
+                    || (HELPER_TOTAL_METHOD.equals(methodInsn.name) && HELPER_TOTAL_KIND_DESC.equals(methodInsn.desc))
                     || (HELPER_ANCHOR_METHOD.equals(methodInsn.name) && HELPER_ANCHOR_DESC.equals(methodInsn.desc))
                     || (HELPER_PLAYER_METHOD.equals(methodInsn.name) && HELPER_PLAYER_DESC.equals(methodInsn.desc))
                     || (HELPER_STORAGE_METHOD.equals(methodInsn.name) && HELPER_STORAGE_DESC.equals(methodInsn.desc))) {
@@ -690,7 +722,9 @@ public class CargoStackViewPatcher {
             if (FLEET_GET_CARGO_METHOD.equals(methodInsn.name)) {
                 return true;
             }
-            if (CARGO_OWNER.equals(methodInsn.owner) && CARGO_GET_NUM_WEAPONS_METHOD.equals(methodInsn.name)) {
+            if (CARGO_OWNER.equals(methodInsn.owner)
+                    && (CARGO_GET_NUM_WEAPONS_METHOD.equals(methodInsn.name)
+                    || CARGO_GET_NUM_FIGHTERS_METHOD.equals(methodInsn.name))) {
                 return true;
             }
         }
@@ -792,8 +826,8 @@ public class CargoStackViewPatcher {
         if (!hasHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel)) {
             throw new IllegalStateException("Patch verification failed: helper call not found in WEAPONS branch.");
         }
-        if (!hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_DESC)) {
-            throw new IllegalStateException("Patch verification failed: missing total helper call.");
+        if (!hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC)) {
+            throw new IllegalStateException("Patch verification failed: missing total helper(kind,id) call.");
         }
         if (!DEBUG_PROBE_MODE) {
             if (hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_ANCHOR_METHOD, HELPER_ANCHOR_DESC)
