@@ -2,16 +2,15 @@
     "graphics": {
         "ui": {
             "weapon_inventory_test_marker": "graphics/ui/weapon_inventory_test_marker.png",
-            "wim_badge_1": "graphics/ui/wim_badge_1.png",
-            "wim_badge_2": "graphics/ui/wim_badge_2.png",
-            "wim_badge_3": "graphics/ui/wim_badge_3.png",
-            "wim_badge_4": "graphics/ui/wim_badge_4.png",
-            "wim_badge_5": "graphics/ui/wim_badge_5.png",
-            "wim_badge_6": "graphics/ui/wim_badge_6.png",
-            "wim_badge_7": "graphics/ui/wim_badge_7.png",
-            "wim_badge_8": "graphics/ui/wim_badge_8.png",
-            "wim_badge_9": "graphics/ui/wim_badge_9.png",
-            "wim_badge_9plus": "graphics/ui/wim_badge_9plus.png"
+            "wim_diag_anchor": "graphics/ui/wim_diag_anchor.png",
+            "wim_diag_player_0": "graphics/ui/wim_diag_player_0.png",
+            "wim_diag_player_1": "graphics/ui/wim_diag_player_1.png",
+            "wim_diag_player_2plus": "graphics/ui/wim_diag_player_2plus.png",
+            "wim_diag_player_err": "graphics/ui/wim_diag_player_err.png",
+            "wim_diag_storage_0": "graphics/ui/wim_diag_storage_0.png",
+            "wim_diag_storage_1": "graphics/ui/wim_diag_storage_1.png",
+            "wim_diag_storage_2plus": "graphics/ui/wim_diag_storage_2plus.png",
+            "wim_diag_storage_err": "graphics/ui/wim_diag_storage_err.png"
         }
     }
 }
