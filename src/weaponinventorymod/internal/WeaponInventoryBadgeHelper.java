@@ -28,7 +28,10 @@ public class WeaponInventoryBadgeHelper {
     private static final String STORAGE_2PLUS = "graphics/ui/wim_diag_storage_2plus.png";
     private static final String STORAGE_ERR = "graphics/ui/wim_diag_storage_err.png";
 
-    private static final Map<String, CountsSnapshot> CACHE = new HashMap<String, CountsSnapshot>();
+    private static final Map<String, Integer> PLAYER_COUNT_CACHE = new HashMap<String, Integer>();
+    private static final Map<String, Integer> STORAGE_COUNT_CACHE = new HashMap<String, Integer>();
+    private static final Map<String, Boolean> ERROR_CACHE = new HashMap<String, Boolean>();
+    private static final Map<String, Long> CACHE_TIME_MS = new HashMap<String, Long>();
     private static boolean helperReachedLogged = false;
     private static boolean errorLogged = false;
     private static int loggedCalls = 0;
@@ -43,43 +46,47 @@ public class WeaponInventoryBadgeHelper {
 
     public static String getPlayerStatusSpritePath(String weaponId) {
         logHelperReachedOnce();
-        CountsSnapshot snapshot = getCountsSnapshot(weaponId);
-        if (snapshot.error) {
+        if (weaponId == null || weaponId.isEmpty()) {
             return PLAYER_ERR;
         }
-        return toPlayerSprite(snapshot.playerCount);
+        ensureCounts(weaponId);
+        if (isError(weaponId)) {
+            return PLAYER_ERR;
+        }
+        return toPlayerSprite(getPlayerCount(weaponId));
     }
 
     public static String getStorageStatusSpritePath(String weaponId) {
         logHelperReachedOnce();
-        CountsSnapshot snapshot = getCountsSnapshot(weaponId);
-        String playerSprite = snapshot.error ? PLAYER_ERR : toPlayerSprite(snapshot.playerCount);
-        String storageSprite = snapshot.error ? STORAGE_ERR : toStorageSprite(snapshot.storageCount);
-        logCallCapped(weaponId, snapshot.playerCount, snapshot.storageCount, playerSprite, storageSprite, snapshot.error);
+        if (weaponId == null || weaponId.isEmpty()) {
+            logCallCapped(weaponId, 0, 0, PLAYER_ERR, STORAGE_ERR, true);
+            return STORAGE_ERR;
+        }
+        ensureCounts(weaponId);
+        boolean error = isError(weaponId);
+        int playerCount = getPlayerCount(weaponId);
+        int storageCount = getStorageCount(weaponId);
+        String playerSprite = error ? PLAYER_ERR : toPlayerSprite(playerCount);
+        String storageSprite = error ? STORAGE_ERR : toStorageSprite(storageCount);
+        logCallCapped(weaponId, playerCount, storageCount, playerSprite, storageSprite, error);
         return storageSprite;
     }
 
-    private static CountsSnapshot getCountsSnapshot(String weaponId) {
-        if (weaponId == null || weaponId.isEmpty()) {
-            return CountsSnapshot.error();
-        }
-
+    private static void ensureCounts(String weaponId) {
         long now = System.currentTimeMillis();
-        CountsSnapshot cached = CACHE.get(weaponId);
-        if (cached != null && now - cached.timestampMs <= CACHE_TTL_MS) {
-            return cached;
+        Long cachedAt = CACHE_TIME_MS.get(weaponId);
+        if (cachedAt != null && now - cachedAt <= CACHE_TTL_MS) {
+            return;
         }
-
-        CountsSnapshot computed = computeCounts(weaponId, now);
-        CACHE.put(weaponId, computed);
-        return computed;
+        refreshCounts(weaponId, now);
     }
 
-    private static CountsSnapshot computeCounts(String weaponId, long now) {
+    private static void refreshCounts(String weaponId, long now) {
         try {
             SectorAPI sector = Global.getSector();
             if (sector == null) {
-                return CountsSnapshot.error(now);
+                setCounts(weaponId, 0, 0, true, now);
+                return;
             }
 
             int playerCount = 0;
@@ -108,11 +115,33 @@ public class WeaponInventoryBadgeHelper {
                 }
             }
 
-            return new CountsSnapshot(playerCount, storageCount, false, now);
+            setCounts(weaponId, playerCount, storageCount, false, now);
         } catch (Throwable t) {
             logErrorOnce(t);
-            return CountsSnapshot.error(now);
+            setCounts(weaponId, 0, 0, true, now);
         }
+    }
+
+    private static void setCounts(String weaponId, int playerCount, int storageCount, boolean error, long now) {
+        PLAYER_COUNT_CACHE.put(weaponId, playerCount);
+        STORAGE_COUNT_CACHE.put(weaponId, storageCount);
+        ERROR_CACHE.put(weaponId, error);
+        CACHE_TIME_MS.put(weaponId, now);
+    }
+
+    private static int getPlayerCount(String weaponId) {
+        Integer value = PLAYER_COUNT_CACHE.get(weaponId);
+        return value == null ? 0 : value.intValue();
+    }
+
+    private static int getStorageCount(String weaponId) {
+        Integer value = STORAGE_COUNT_CACHE.get(weaponId);
+        return value == null ? 0 : value.intValue();
+    }
+
+    private static boolean isError(String weaponId) {
+        Boolean value = ERROR_CACHE.get(weaponId);
+        return value != null && value.booleanValue();
     }
 
     private static String toPlayerSprite(int count) {
@@ -162,27 +191,5 @@ public class WeaponInventoryBadgeHelper {
         }
         errorLogged = true;
         LOG.error("WIM_DIAG_BADGE helper error", t);
-    }
-
-    private static final class CountsSnapshot {
-        final int playerCount;
-        final int storageCount;
-        final boolean error;
-        final long timestampMs;
-
-        private CountsSnapshot(int playerCount, int storageCount, boolean error, long timestampMs) {
-            this.playerCount = playerCount;
-            this.storageCount = storageCount;
-            this.error = error;
-            this.timestampMs = timestampMs;
-        }
-
-        static CountsSnapshot error() {
-            return error(System.currentTimeMillis());
-        }
-
-        static CountsSnapshot error(long now) {
-            return new CountsSnapshot(0, 0, true, now);
-        }
     }
 }

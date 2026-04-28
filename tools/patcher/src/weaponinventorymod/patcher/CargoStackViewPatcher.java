@@ -25,6 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
@@ -67,6 +71,7 @@ public class CargoStackViewPatcher {
     private static final String OLD_HOOK_DESC_3 = "(FFF)V";
 
     private static final String HELPER_CLASS = "weaponinventorymod/internal/WeaponInventoryBadgeHelper";
+    private static final String HELPER_CLASS_PREFIX = HELPER_CLASS;
     private static final String HELPER_CLASS_ENTRY = HELPER_CLASS + ".class";
     private static final String HELPER_OLD_METHOD = "getBadgeSpritePath";
     private static final String HELPER_OLD_DESC = "(Ljava/lang/String;)Ljava/lang/String;";
@@ -153,8 +158,8 @@ public class CargoStackViewPatcher {
         if (!Files.exists(modJarPath)) {
             throw new IllegalStateException("Mod jar does not exist: " + modJarPath);
         }
-        byte[] helperClassBytes = readClassBytes(modJarPath, HELPER_CLASS_ENTRY);
-        if (helperClassBytes == null) {
+        Map<String, byte[]> helperClassEntries = readClassEntriesByPrefix(modJarPath, HELPER_CLASS_PREFIX);
+        if (!helperClassEntries.containsKey(HELPER_CLASS_ENTRY)) {
             throw new IllegalStateException("Patch refused: helper class not found in mod jar: " + HELPER_CLASS_ENTRY);
         }
 
@@ -230,14 +235,15 @@ public class CargoStackViewPatcher {
         byte[] patchedBytes = writer.toByteArray();
 
         verifyPatchedState(patchedBytes);
-        writePatchedJar(jarPath, TARGET_CLASS_ENTRY, patchedBytes, HELPER_CLASS_ENTRY, helperClassBytes);
-        if (readClassBytes(jarPath, HELPER_CLASS_ENTRY) == null) {
-            throw new IllegalStateException("Patch failed: helper class missing after write: " + HELPER_CLASS_ENTRY);
+        writePatchedJar(jarPath, TARGET_CLASS_ENTRY, patchedBytes, helperClassEntries);
+        Set<String> missingHelpers = findMissingEntries(jarPath, helperClassEntries.keySet());
+        if (!missingHelpers.isEmpty()) {
+            throw new IllegalStateException("Patch failed: missing embedded helper class entries: " + missingHelpers);
         }
 
         System.out.println("Patched class: " + TARGET_CLASS_ENTRY);
         System.out.println("Injected pre-scale WEAPONS diagnostic anchor/player/storage squares.");
-        System.out.println("Embedded helper class: " + HELPER_CLASS_ENTRY);
+        System.out.println("Embedded helper class entries: " + helperClassEntries.keySet());
         System.out.println("Patched jar: " + jarPath);
     }
 
@@ -822,7 +828,35 @@ public class CargoStackViewPatcher {
         }
     }
 
-    private static void writePatchedJar(Path jarPath, String entryName, byte[] replacementBytes, String helperEntryName, byte[] helperBytes) throws IOException {
+    private static Map<String, byte[]> readClassEntriesByPrefix(Path jarPath, String classPrefix) throws IOException {
+        Map<String, byte[]> entries = new LinkedHashMap<String, byte[]>();
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+            Enumeration<JarEntry> all = jarFile.entries();
+            while (all.hasMoreElements()) {
+                JarEntry entry = all.nextElement();
+                String name = entry.getName();
+                if (!name.endsWith(".class") || !name.startsWith(classPrefix)) {
+                    continue;
+                }
+                try (InputStream in = jarFile.getInputStream(entry)) {
+                    entries.put(name, readAll(in));
+                }
+            }
+        }
+        return entries;
+    }
+
+    private static Set<String> findMissingEntries(Path jarPath, Set<String> expectedEntries) throws IOException {
+        Set<String> missing = new HashSet<String>();
+        for (String entry : expectedEntries) {
+            if (readClassBytes(jarPath, entry) == null) {
+                missing.add(entry);
+            }
+        }
+        return missing;
+    }
+
+    private static void writePatchedJar(Path jarPath, String entryName, byte[] replacementBytes, Map<String, byte[]> helperEntries) throws IOException {
         Path tempPath = jarPath.resolveSibling(jarPath.getFileName().toString() + ".wim_tmp");
 
         try (JarFile inputJar = new JarFile(jarPath.toFile())) {
@@ -832,7 +866,7 @@ public class CargoStackViewPatcher {
                     : new JarOutputStream(Files.newOutputStream(tempPath), manifest)) {
                 Enumeration<JarEntry> entries = inputJar.entries();
                 boolean replaced = false;
-                boolean helperWritten = false;
+                Set<String> helperWritten = new HashSet<String>();
                 while (entries.hasMoreElements()) {
                     JarEntry entry = entries.nextElement();
                     if (JarFile.MANIFEST_NAME.equalsIgnoreCase(entry.getName())) {
@@ -846,9 +880,9 @@ public class CargoStackViewPatcher {
                     if (entryName.equals(entry.getName())) {
                         output.write(replacementBytes);
                         replaced = true;
-                    } else if (helperEntryName.equals(entry.getName())) {
-                        output.write(helperBytes);
-                        helperWritten = true;
+                    } else if (helperEntries.containsKey(entry.getName())) {
+                        output.write(helperEntries.get(entry.getName()));
+                        helperWritten.add(entry.getName());
                     } else {
                         try (InputStream in = inputJar.getInputStream(entry)) {
                             copy(in, output);
@@ -861,10 +895,13 @@ public class CargoStackViewPatcher {
                 if (!replaced) {
                     throw new IllegalStateException("Patch refused: target class entry not replaced: " + entryName);
                 }
-                if (!helperWritten) {
-                    JarEntry helperEntry = new JarEntry(helperEntryName);
+                for (Map.Entry<String, byte[]> helper : helperEntries.entrySet()) {
+                    if (helperWritten.contains(helper.getKey())) {
+                        continue;
+                    }
+                    JarEntry helperEntry = new JarEntry(helper.getKey());
                     output.putNextEntry(helperEntry);
-                    output.write(helperBytes);
+                    output.write(helper.getValue());
                     output.closeEntry();
                 }
             }
