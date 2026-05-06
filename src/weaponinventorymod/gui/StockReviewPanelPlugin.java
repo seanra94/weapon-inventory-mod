@@ -180,7 +180,13 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         }
         if (!result.isSuccess()) {
             reportPurchaseFailure(result);
-            reopen();
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
+        if (!StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE) {
+            rebuildSnapshot();
+            rebuildContent();
             return;
         }
         StockReviewHotkeyScript.requestReopen(currentMarket(Global.getSector()), state);

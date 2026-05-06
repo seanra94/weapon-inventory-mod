@@ -8,6 +8,7 @@ import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
+import weaponinventorymod.core.MarketStockService;
 
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
@@ -75,8 +76,9 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
         }
 
         MarketAPI market = sector.getCurrentlyOpenMarket();
-        if (market == null && dialog.getInteractionTarget() != null) {
-            market = dialog.getInteractionTarget().getMarket();
+        if (!canOpenAtCurrentMarket(market)) {
+            ui.addMessage("Weapon Stock Review is only available while shopping at a market with weapons for sale.");
+            return;
         }
         try {
             openDialog(market, null);
@@ -84,6 +86,18 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             dialogOpen = false;
             LOG.error("WIM_STOCK_REVIEW open failed", t);
             ui.addMessage("Weapon Stock Review failed to open. Check starsector.log.");
+        }
+    }
+
+    private static boolean canOpenAtCurrentMarket(MarketAPI market) {
+        if (market == null) {
+            return false;
+        }
+        try {
+            MarketStockService.MarketStock stock = new MarketStockService().collectCurrentMarketWeaponStock(market, true);
+            return stock.weaponIds().iterator().hasNext();
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 

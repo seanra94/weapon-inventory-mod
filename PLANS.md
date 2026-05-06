@@ -57,6 +57,14 @@
   - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
 - Restored `StockReviewButtonBinding` as a narrow fallback registry after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
+- Ported the accepted ACG GUI palette into `StockReviewStyle` and applied it to the stock review popup:
+  - top stock category headings use red/yellow/green fills with white text;
+  - nested toggle headings use the dark-gray collapsible heading color;
+  - Buy buttons use the ACG load/yellow fill with white text;
+  - ordinary popup text uses white/default font, with gray reserved for disabled/locked controls.
+- Filtered stock review category counts and weapon rows to currently buyable market weapons only.
+- Gated `F8` popup opening to an active current market with weapon stock for sale, avoiding looting and non-trade planet contexts.
+- Changed successful popup purchases to rebuild the popup snapshot in place by default instead of force-refreshing the vanilla cargo core UI. The forced refresh fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
 - Added first purchase flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;

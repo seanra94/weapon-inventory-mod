@@ -31,13 +31,13 @@ final class StockReviewRenderer {
         TooltipMakerAPI title = header.createUIElement(header.getPosition().getWidth() - 2f * StockReviewStyle.PAD, 22f, false);
         title.setParaFontDefault();
         title.setParaFontColor(StockReviewStyle.TEXT);
-        title.addTitle("Weapon Stock Review");
+        title.addPara("Weapon Stock Review", 0f, StockReviewStyle.TEXT);
         header.addUIElement(title).inTL(StockReviewStyle.PAD, 2f);
 
         TooltipMakerAPI status = header.createUIElement(header.getPosition().getWidth() - 2f * StockReviewStyle.PAD, 28f, false);
         status.setParaFontDefault();
-        status.setParaFontColor(StockReviewStyle.MUTED);
-        status.addPara(statusLine(snapshot), 0f, StockReviewStyle.MUTED);
+        status.setParaFontColor(StockReviewStyle.TEXT);
+        status.addPara(statusLine(snapshot), 0f, StockReviewStyle.TEXT);
         header.addUIElement(status).inTL(StockReviewStyle.PAD, 28f);
     }
 
@@ -131,7 +131,9 @@ final class StockReviewRenderer {
                                   StockReviewAction action,
                                   boolean enabled,
                                   List<StockReviewButtonBinding> buttons) {
-        addSmallButton(parent, x, y, label, action, enabled, buttons, width);
+        Color fill = enabled ? StockReviewStyle.ACTION_BACKGROUND : StockReviewStyle.DISABLED_BACKGROUND;
+        Color text = enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT;
+        addButton(parent, x, y, width, label, text, action, enabled, Alignment.MID, buttons, fill);
         return x + width + StockReviewStyle.BUTTON_GAP;
     }
 
@@ -153,7 +155,7 @@ final class StockReviewRenderer {
                                 boolean enabled,
                                 List<StockReviewButtonBinding> buttons,
                                 float width) {
-        Color fill = enabled ? StockReviewStyle.ACTION_BACKGROUND : StockReviewStyle.DISABLED_BACKGROUND;
+        Color fill = enabled ? StockReviewStyle.BUY_BUTTON : StockReviewStyle.DISABLED_BACKGROUND;
         Color text = enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT;
         addButton(parent, x, y, width, label, text, action, enabled, Alignment.MID, buttons, fill);
     }
@@ -183,6 +185,7 @@ final class StockReviewRenderer {
                                 List<StockReviewButtonBinding> buttons,
                                 Color backgroundColor) {
         TooltipMakerAPI element = parent.createUIElement(width, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
+        element.setButtonFontDefault();
         int maxChars = Math.max(4, (int) ((width - StockReviewStyle.TEXT_LEFT_PAD) / 6.2f));
         ButtonAPI button = element.addButton(
                 StockReviewText.fit(label, maxChars),

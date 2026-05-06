@@ -31,6 +31,16 @@
   - stock categories start collapsed;
   - headings are flat full-width peer rows, not nested checkboxes;
   - weapon rows, nested section rows, seller rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
+- Popup visual rules:
+  - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No stock, yellow/load for Insufficient and Buy buttons, green/confirm for Sufficient, dark gray collapsible headings, black neutral action rows, and gray text only for disabled controls.
+  - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
+  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon data` and `Sellers` use the ACG dark-gray collapsible heading fill.
+- Popup list filtering:
+  - Category counts and weapon rows are filtered to records with at least one currently buyable unit at the open market. The popup is for shopping, not for showing unavailable desired weapons.
+- Popup availability:
+  - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently visible for sale. It should not open from looting or non-trade planet contexts.
+- Purchase refresh:
+  - The current preferred buy path does not force-close/reopen the vanilla cargo core after purchase; it mutates cargo, then rebuilds the popup snapshot in place. The old forced core refresh remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE` in case vanilla trade-grid stale-slot corruption still reproduces.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.

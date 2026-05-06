@@ -47,7 +47,7 @@ final class StockReviewListRow {
     }
 
     static StockReviewListRow category(String label, Color textColor, StockReviewAction action, boolean topGap) {
-        return new StockReviewListRow(Kind.CATEGORY, label, textColor, StockReviewStyle.HEADING_BACKGROUND,
+        return new StockReviewListRow(Kind.CATEGORY, label, StockReviewStyle.TEXT, textColor,
                 0f, action, null, null, false, topGap);
     }
 
@@ -62,7 +62,7 @@ final class StockReviewListRow {
     }
 
     static StockReviewListRow section(String label, StockReviewAction action) {
-        return new StockReviewListRow(Kind.SECTION, label, StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK,
+        return new StockReviewListRow(Kind.SECTION, label, StockReviewStyle.TEXT, StockReviewStyle.HEADING_BACKGROUND,
                 StockReviewStyle.SECTION_INDENT, action, null, null, false, false);
     }
 

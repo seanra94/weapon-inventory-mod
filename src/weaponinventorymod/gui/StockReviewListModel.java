@@ -15,31 +15,44 @@ final class StockReviewListModel {
 
     static List<StockReviewListRow> build(WeaponStockSnapshot snapshot, StockReviewState state) {
         List<StockReviewListRow> rows = new ArrayList<StockReviewListRow>();
-        addCategory(rows, snapshot, state, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
-        addCategory(rows, snapshot, state, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
-        addCategory(rows, snapshot, state, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
-        if (snapshot.getTotalRecords() == 0) {
-            rows.add(StockReviewListRow.empty("No tracked, owned, or currently purchasable weapons were found here."));
+        int displayed = 0;
+        displayed += addCategory(rows, snapshot, state, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
+        displayed += addCategory(rows, snapshot, state, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
+        displayed += addCategory(rows, snapshot, state, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
+        if (displayed == 0) {
+            rows.add(StockReviewListRow.empty("No currently buyable weapons were found at this market."));
         }
         return rows;
     }
 
-    private static void addCategory(List<StockReviewListRow> rows,
-                                    WeaponStockSnapshot snapshot,
-                                    StockReviewState state,
-                                    StockCategory category,
-                                    Color color,
-                                    boolean topGap) {
-        List<WeaponStockRecord> records = snapshot.getRecords(category);
+    private static int addCategory(List<StockReviewListRow> rows,
+                                   WeaponStockSnapshot snapshot,
+                                   StockReviewState state,
+                                   StockCategory category,
+                                   Color color,
+                                   boolean topGap) {
+        List<WeaponStockRecord> records = buyableRecords(snapshot.getRecords(category));
         boolean expanded = state.isExpanded(category);
         String label = category.getLabel() + " [" + records.size() + "] " + (expanded ? "(-)" : "(+)");
         rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap));
         if (!expanded) {
-            return;
+            return records.size();
         }
         for (int i = 0; i < records.size(); i++) {
             addWeapon(rows, records.get(i), color, state);
         }
+        return records.size();
+    }
+
+    private static List<WeaponStockRecord> buyableRecords(List<WeaponStockRecord> records) {
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        for (int i = 0; i < records.size(); i++) {
+            WeaponStockRecord record = records.get(i);
+            if (record.getBuyableCount() > 0) {
+                result.add(record);
+            }
+        }
+        return result;
     }
 
     private static void addWeapon(List<StockReviewListRow> rows,
@@ -51,7 +64,7 @@ final class StockReviewListModel {
         boolean canBuy = record.getBuyableCount() > 0;
         rows.add(StockReviewListRow.weapon(
                 label,
-                color,
+                StockReviewStyle.TEXT,
                 StockReviewAction.toggleWeapon(record.getWeaponId()),
                 StockReviewAction.buyBest(record.getWeaponId(), 1),
                 StockReviewAction.buyBest(record.getWeaponId(), 10),
