@@ -6,7 +6,6 @@ public class WeaponInventoryBadgeHelper {
     private static final Logger LOG = Logger.getLogger(WeaponInventoryBadgeHelper.class);
     private static final int MAX_CALL_LOGS = 20;
     private static final int MAX_FIGHTER_CALL_LOGS = 40;
-    private static final int MAX_STACK_PROBE_LOGS = 60;
 
     private static final String TOTAL_ERR = "graphics/ui/wim_total_err.png";
     private static final String TOTAL_99PLUS = "graphics/ui/wim_total_green_99plus.png";
@@ -25,7 +24,6 @@ public class WeaponInventoryBadgeHelper {
     private static boolean parseErrorLogged = false;
     private static int loggedCalls = 0;
     private static int fighterLoggedCalls = 0;
-    private static int stackProbeLogs = 0;
 
     private WeaponInventoryBadgeHelper() {
     }
@@ -161,24 +159,6 @@ public class WeaponInventoryBadgeHelper {
                 + " sprite=" + totalSprite
                 + " playerError=" + playerError
                 + " storageError=" + storageError);
-    }
-
-    public static void logStackProbe(String phase, boolean isWeaponStack, boolean isFighterWingStack,
-                                     boolean hasWeaponSpec, boolean hasFighterWingSpec,
-                                     String typeValue, Object dataValue, String displayName) {
-        if (stackProbeLogs >= MAX_STACK_PROBE_LOGS) {
-            return;
-        }
-        stackProbeLogs++;
-        String dataClass = dataValue == null ? "null" : dataValue.getClass().getName();
-        LOG.info("WIM_STACK_PROBE phase=" + phase
-                + " isWeaponStack=" + isWeaponStack
-                + " isFighterWingStack=" + isFighterWingStack
-                + " hasWeaponSpec=" + hasWeaponSpec
-                + " hasFighterWingSpec=" + hasFighterWingSpec
-                + " type=" + typeValue
-                + " dataClass=" + dataClass
-                + " displayName=" + displayName);
     }
 
     private static void logParseErrorOnce(String key, String value, Throwable t) {

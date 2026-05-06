@@ -6,5 +6,8 @@
     "description": "Phase 1 test build: adds a fixed rank-icon marker for weapon cargo stacks.",
     "gameVersion": "0.98a",
     "jars": ["jars/weapon-inventory-mod.jar"],
-    "modPlugin": "weaponinventorymod.plugins.WeaponInventoryModPlugin"
+    "modPlugin": "weaponinventorymod.plugins.WeaponInventoryModPlugin",
+    "dependencies": [
+        { "id": "lunalib", "name": "LunaLib" }
+    ]
 }

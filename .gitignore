@@ -1,0 +1,4 @@
+build/
+tools/patcher/build/
+*.class
+*.wim_tmp

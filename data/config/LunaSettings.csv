@@ -1,0 +1,3 @@
+fieldID,fieldName,fieldType,defaultValue,secondaryValue,fieldDescription,minValue,maxValue,tab
+wim_header,Weapon Inventory Mod,Header,Settings,,,,,
+wim_update_interval_seconds,Update interval (seconds),Double,0.20,,"How often counts refresh while paused/open trade. Lower is more responsive but can cost more CPU.",0.05,2.00,

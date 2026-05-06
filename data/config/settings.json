@@ -1,16 +1,6 @@
 {
     "graphics":  {
                      "ui":  {
-                                "weapon_inventory_test_marker":  "graphics/ui/weapon_inventory_test_marker.png",
-                                "wim_diag_anchor":  "graphics/ui/wim_diag_anchor.png",
-                                "wim_diag_player_0":  "graphics/ui/wim_diag_player_0.png",
-                                "wim_diag_player_1":  "graphics/ui/wim_diag_player_1.png",
-                                "wim_diag_player_2plus":  "graphics/ui/wim_diag_player_2plus.png",
-                                "wim_diag_player_err":  "graphics/ui/wim_diag_player_err.png",
-                                "wim_diag_storage_0":  "graphics/ui/wim_diag_storage_0.png",
-                                "wim_diag_storage_1":  "graphics/ui/wim_diag_storage_1.png",
-                                "wim_diag_storage_2plus":  "graphics/ui/wim_diag_storage_2plus.png",
-                                "wim_diag_storage_err":  "graphics/ui/wim_diag_storage_err.png",
                                 "wim_total_red_0":  "graphics/ui/wim_total_red_0.png",
                                 "wim_total_yellow_1":  "graphics/ui/wim_total_yellow_1.png",
                                 "wim_total_yellow_2":  "graphics/ui/wim_total_yellow_2.png",

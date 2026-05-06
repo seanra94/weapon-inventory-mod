@@ -9,6 +9,7 @@ if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
 $apiJar = Join-Path $StarsectorDir "starsector-core\starfarer.api.jar"
 $log4jJar = Join-Path $StarsectorDir "starsector-core\log4j-1.2.9.jar"
 $lwjglJar = Join-Path $StarsectorDir "starsector-core\lwjgl.jar"
+$modsDir = Join-Path $StarsectorDir "mods"
 if (-not (Test-Path -LiteralPath $apiJar)) {
     throw "Could not find starfarer.api.jar at '$apiJar'. Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
 }
@@ -17,6 +18,24 @@ if (-not (Test-Path -LiteralPath $log4jJar)) {
 }
 if (-not (Test-Path -LiteralPath $lwjglJar)) {
     throw "Could not find lwjgl.jar at '$lwjglJar'. Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
+}
+
+$lunaJar = $null
+$preferredLunaJar = Join-Path $modsDir "LunaLib-2.0.5\jars\LunaLib.jar"
+if (Test-Path -LiteralPath $preferredLunaJar) {
+    $lunaJar = $preferredLunaJar
+} else {
+    $found = Get-ChildItem -Path $modsDir -Directory -Filter "LunaLib-*" -ErrorAction SilentlyContinue |
+        Sort-Object Name -Descending |
+        ForEach-Object { Join-Path $_.FullName "jars\LunaLib.jar" } |
+        Where-Object { Test-Path -LiteralPath $_ } |
+        Select-Object -First 1
+    if ($found) {
+        $lunaJar = $found
+    }
+}
+if (-not $lunaJar) {
+    throw "Could not find LunaLib.jar under '$modsDir'."
 }
 
 $srcDir = Join-Path $PSScriptRoot "src"
@@ -34,7 +53,7 @@ if ($sources.Count -eq 0) {
     throw "No Java sources found under '$srcDir'."
 }
 
-$compileClasspath = "$apiJar;$log4jJar;$lwjglJar"
+$compileClasspath = "$apiJar;$log4jJar;$lwjglJar;$lunaJar"
 & javac -cp $compileClasspath -d $classesDir $sources
 if ($LASTEXITCODE -ne 0) {
     throw "javac failed with exit code $LASTEXITCODE."

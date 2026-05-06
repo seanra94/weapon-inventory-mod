@@ -10,7 +10,9 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.util.Misc;
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WeaponInventoryCountUpdater implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(WeaponInventoryCountUpdater.class);
@@ -30,6 +32,7 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
     private static final String PRICKLER_ID = "hhe_prickler";
 
     private float elapsedSinceUpdate = 0f;
+    private float updateIntervalSec = UPDATE_INTERVAL_SEC;
     private int updateLogs = 0;
     private int pricklerLogs = 0;
     private int fighterLogs = 0;
@@ -52,8 +55,9 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
 
     @Override
     public void advance(float amount) {
+        updateIntervalSec = WeaponInventoryConfig.refreshAndPublishUpdateIntervalSeconds();
         elapsedSinceUpdate += amount;
-        if (elapsedSinceUpdate < UPDATE_INTERVAL_SEC) {
+        if (elapsedSinceUpdate < updateIntervalSec) {
             return;
         }
         elapsedSinceUpdate = 0f;
@@ -76,12 +80,14 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
             CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
             EconomyAPI economy = sector.getEconomy();
             List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
+            Map<String, Integer> playerWeapons = collectWeaponCounts(playerCargo);
+            Map<String, Integer> playerFighters = collectFighterCounts(playerCargo);
+            Map<String, Integer> storageWeapons = new HashMap<String, Integer>();
+            Map<String, Integer> storageFighters = new HashMap<String, Integer>();
+            collectAccessibleStorageCounts(markets, storageWeapons, storageFighters);
 
             int pricklerPlayer = -1;
             int pricklerStorage = -1;
-            int sampledFighterPlayer = -1;
-            int sampledFighterStorage = -1;
-            String sampledFighterId = null;
             int fighterWingCount = 0;
             int fighterNonzeroPlayer = 0;
             int fighterNonzeroStorage = 0;
@@ -92,24 +98,8 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                     if (weaponId == null || weaponId.isEmpty()) {
                         continue;
                     }
-                    int playerCount = 0;
-                    if (playerCargo != null) {
-                        playerCount = playerCargo.getNumWeapons(weaponId);
-                    }
-
-                    int storageCount = 0;
-                    if (markets != null) {
-                        for (MarketAPI market : markets) {
-                            if (market == null || !Misc.playerHasStorageAccess(market)) {
-                                continue;
-                            }
-                            CargoAPI storageCargo = Misc.getStorageCargo(market);
-                            if (storageCargo != null) {
-                                storageCount += storageCargo.getNumWeapons(weaponId);
-                            }
-                        }
-                    }
-
+                    int playerCount = getCount(playerWeapons, weaponId);
+                    int storageCount = getCount(storageWeapons, weaponId);
                     System.setProperty(KEY_WEAPON_PREFIX + weaponId + KEY_PLAYER_SUFFIX, Integer.toString(playerCount));
                     System.setProperty(KEY_WEAPON_PREFIX + weaponId + KEY_STORAGE_SUFFIX, Integer.toString(storageCount));
                     totalKeysUpdated++;
@@ -127,24 +117,8 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                         continue;
                     }
                     fighterWingCount++;
-                    int playerCount = 0;
-                    if (playerCargo != null) {
-                        playerCount = playerCargo.getNumFighters(fighterId);
-                    }
-
-                    int storageCount = 0;
-                    if (markets != null) {
-                        for (MarketAPI market : markets) {
-                            if (market == null || !Misc.playerHasStorageAccess(market)) {
-                                continue;
-                            }
-                            CargoAPI storageCargo = Misc.getStorageCargo(market);
-                            if (storageCargo != null) {
-                                storageCount += storageCargo.getNumFighters(fighterId);
-                            }
-                        }
-                    }
-
+                    int playerCount = getCount(playerFighters, fighterId);
+                    int storageCount = getCount(storageFighters, fighterId);
                     System.setProperty(KEY_FIGHTER_PREFIX + fighterId + KEY_PLAYER_SUFFIX, Integer.toString(playerCount));
                     System.setProperty(KEY_FIGHTER_PREFIX + fighterId + KEY_STORAGE_SUFFIX, Integer.toString(storageCount));
                     totalKeysUpdated++;
@@ -156,11 +130,6 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                         fighterNonzeroStorage++;
                     }
 
-                    if (sampledFighterId == null) {
-                        sampledFighterId = fighterId;
-                        sampledFighterPlayer = playerCount;
-                        sampledFighterStorage = storageCount;
-                    }
                     if ((playerCount > 0 || storageCount > 0) && fighterLogs < MAX_FIGHTER_LOGS) {
                         fighterLogs++;
                         LOG.info("WIM_COUNT_UPDATER fighter wingId=" + fighterId + " player=" + playerCount + " storage=" + storageCount);
@@ -183,12 +152,6 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
                         + " nonzeroPlayer=" + fighterNonzeroPlayer
                         + " nonzeroStorage=" + fighterNonzeroStorage);
             }
-            if (sampledFighterId != null && fighterLogs < MAX_FIGHTER_LOGS) {
-                fighterLogs++;
-                LOG.info("WIM_COUNT_UPDATER fighter sample id=" + sampledFighterId
-                        + " player=" + sampledFighterPlayer
-                        + " storage=" + sampledFighterStorage);
-            }
         } catch (Throwable t) {
             System.setProperty(KEY_READY, "false");
             if (!updaterErrorLogged) {
@@ -203,6 +166,67 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
             return;
         }
         updateLogs++;
-        LOG.info("WIM_COUNT_UPDATER updated weaponCount=" + weaponCount + " elapsedMs=" + elapsedMs);
+            LOG.info("WIM_COUNT_UPDATER updated weaponCount=" + weaponCount + " elapsedMs=" + elapsedMs);
+    }
+
+    private static Map<String, Integer> collectWeaponCounts(CargoAPI cargo) {
+        Map<String, Integer> counts = new HashMap<String, Integer>();
+        if (cargo == null || cargo.getWeapons() == null) {
+            return counts;
+        }
+        for (CargoAPI.CargoItemQuantity<String> quantity : cargo.getWeapons()) {
+            if (quantity != null) {
+                addCount(counts, quantity.getItem(), quantity.getCount());
+            }
+        }
+        return counts;
+    }
+
+    private static Map<String, Integer> collectFighterCounts(CargoAPI cargo) {
+        Map<String, Integer> counts = new HashMap<String, Integer>();
+        if (cargo == null || cargo.getFighters() == null) {
+            return counts;
+        }
+        for (CargoAPI.CargoItemQuantity<String> quantity : cargo.getFighters()) {
+            if (quantity != null) {
+                addCount(counts, quantity.getItem(), quantity.getCount());
+            }
+        }
+        return counts;
+    }
+
+    private static void collectAccessibleStorageCounts(List<MarketAPI> markets,
+                                                       Map<String, Integer> weaponCounts,
+                                                       Map<String, Integer> fighterCounts) {
+        if (markets == null) {
+            return;
+        }
+        for (MarketAPI market : markets) {
+            if (market == null || !Misc.playerHasStorageAccess(market)) {
+                continue;
+            }
+            CargoAPI storageCargo = Misc.getStorageCargo(market);
+            mergeCounts(weaponCounts, collectWeaponCounts(storageCargo));
+            mergeCounts(fighterCounts, collectFighterCounts(storageCargo));
+        }
+    }
+
+    private static void mergeCounts(Map<String, Integer> target, Map<String, Integer> source) {
+        for (Map.Entry<String, Integer> entry : source.entrySet()) {
+            addCount(target, entry.getKey(), entry.getValue().intValue());
+        }
+    }
+
+    private static void addCount(Map<String, Integer> counts, String id, int count) {
+        if (id == null || id.isEmpty() || count == 0) {
+            return;
+        }
+        Integer existing = counts.get(id);
+        counts.put(id, Integer.valueOf((existing == null ? 0 : existing.intValue()) + count));
+    }
+
+    private static int getCount(Map<String, Integer> counts, String id) {
+        Integer count = counts.get(id);
+        return count == null ? 0 : count.intValue();
     }
 }
