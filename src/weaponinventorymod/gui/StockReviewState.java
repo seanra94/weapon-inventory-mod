@@ -16,6 +16,7 @@ public final class StockReviewState {
     private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
     private boolean includeBlackMarket;
+    private int listScrollOffset = 0;
     private final Set<String> expandedWeapons = new HashSet<String>();
     private final Set<String> expandedWeaponData = new HashSet<String>();
     private final Set<String> expandedSellers = new HashSet<String>();
@@ -36,6 +37,7 @@ public final class StockReviewState {
         this.sortMode = source.sortMode;
         this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
         this.includeBlackMarket = source.includeBlackMarket;
+        this.listScrollOffset = source.listScrollOffset;
         this.expandedWeapons.addAll(source.expandedWeapons);
         this.expandedWeaponData.addAll(source.expandedWeaponData);
         this.expandedSellers.addAll(source.expandedSellers);
@@ -104,6 +106,19 @@ public final class StockReviewState {
 
     public void toggleBlackMarket() {
         includeBlackMarket = !includeBlackMarket;
+    }
+
+    public int getListScrollOffset() {
+        return listScrollOffset;
+    }
+
+    public void setListScrollOffset(int listScrollOffset) {
+        this.listScrollOffset = Math.max(0, listScrollOffset);
+    }
+
+    public void adjustListScrollOffset(int delta, int maxOffset) {
+        int max = Math.max(0, maxOffset);
+        listScrollOffset = Math.max(0, Math.min(max, listScrollOffset + delta));
     }
 
     private static void toggleSet(Set<String> set, String key) {

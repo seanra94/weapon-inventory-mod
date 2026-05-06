@@ -13,8 +13,9 @@
   - desired stock defaults by weapon size;
   - per-weapon desired/ignored overrides.
 - Popup redraw rule:
-  - Starsector custom visual dialog content should not be rebuilt by removing/recreating the same tooltip inside the same panel.
-  - State-changing buttons dismiss and reopen the custom visual dialog with copied `StockReviewState` to avoid stale text/control layering.
+  - The clean popup now renders through an explicit custom-panel shell, not one long tooltip row pile.
+  - `StockReviewRenderer` builds fixed-height custom row panels from `StockReviewListModel`; `StockReviewPanelPlugin` removes/recreates one root content panel for state changes.
+  - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
 - Popup button rule:
   - Use `buttonPressed(...)` for row/section actions. Polling `ButtonAPI.isChecked()` alone was not reliable for nested weapon rows.
 - Popup default scope:
@@ -27,7 +28,8 @@
   - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
 - Popup category layout:
   - stock categories start collapsed;
-  - headings are flat full-width button rows, not nested checkboxes.
+  - headings are flat full-width peer rows, not nested checkboxes;
+  - weapon rows, nested section rows, seller rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
@@ -129,9 +131,10 @@ Manual validation:
 - Press `F8` to open Weapon Stock Review.
 - Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
 - Confirm row counts are `owned / currently purchasable at this market`.
-- Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text.
+- Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
 - Confirm `Sort` cycles ordering without collapsing headings.
 - Confirm weapon rows expand into Weapon Data and Sellers sections.
+- Confirm mouse-wheel scrolling and clickable `^     ^     ^     ^     ^` / `v     v     v     v     v` indicators preserve state and do not appear when all rows fit.
 - Confirm `Buy 1`/`Buy 10` works from top-level rows and specific seller rows, with credits/space failures blocked.
 - Confirm no crash.
 - Confirm commodities remain vanilla.

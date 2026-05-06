@@ -11,7 +11,6 @@ import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.input.InputEventAPI;
 import com.fs.starfarer.api.ui.CustomPanelAPI;
-import com.fs.starfarer.api.ui.TooltipMakerAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import weaponinventorymod.core.StockReviewConfig;
@@ -35,8 +34,9 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
 
     private CustomPanelAPI root;
     private CustomVisualDialogDelegate.DialogCallbacks callbacks;
-    private TooltipMakerAPI content;
+    private CustomPanelAPI content;
     private WeaponStockSnapshot snapshot;
+    private int renderedMaxScrollOffset = 0;
 
     public StockReviewPanelPlugin(MarketAPI initialMarket, StockReviewState initialState) {
         this.initialMarket = initialMarket;
@@ -64,22 +64,18 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
                 close();
                 return;
             }
+            if (event.isMouseScrollEvent() && event.getEventValue() != 0 && isMouseInList(event)) {
+                int delta = event.getEventValue() > 0 ? -StockReviewStyle.SCROLL_STEP : StockReviewStyle.SCROLL_STEP;
+                state.adjustListScrollOffset(delta, renderedMaxScrollOffset);
+                event.consume();
+                rebuildContent();
+                return;
+            }
         }
     }
 
     @Override
     public void advance(float amount) {
-        if (callbacks == null) {
-            return;
-        }
-        for (int i = 0; i < buttons.size(); i++) {
-            StockReviewButtonBinding binding = buttons.get(i);
-            if (!binding.consumeIfPressed()) {
-                continue;
-            }
-            handleAction(binding.getAction());
-            return;
-        }
     }
 
     @Override
@@ -96,17 +92,17 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         StockReviewAction.Type type = action.getType();
         if (StockReviewAction.Type.TOGGLE_CATEGORY.equals(type)) {
             state.toggle(action.getCategory());
-            reopen();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.TOGGLE_WEAPON.equals(type)) {
             state.toggleWeapon(action.getWeaponId());
-            reopen();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.TOGGLE_WEAPON_SECTION.equals(type)) {
             state.toggleWeaponSection(action.getWeaponId(), action.getSection());
-            reopen();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.BUY_BEST.equals(type)) {
@@ -119,26 +115,36 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         }
         if (StockReviewAction.Type.CYCLE_DISPLAY_MODE.equals(type)) {
             state.cycleDisplayMode();
-            reopen();
+            rebuildSnapshot();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.CYCLE_SORT_MODE.equals(type)) {
             state.cycleSortMode();
-            reopen();
+            rebuildSnapshot();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.TOGGLE_CURRENT_MARKET_STORAGE.equals(type)) {
             state.toggleCurrentMarketStorage();
-            reopen();
+            rebuildSnapshot();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
             state.toggleBlackMarket();
-            reopen();
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.SCROLL_LIST.equals(type)) {
+            state.adjustListScrollOffset(action.getQuantity(), renderedMaxScrollOffset);
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.REFRESH.equals(type)) {
-            reopen();
+            rebuildSnapshot();
+            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.CLOSE.equals(type)) {
@@ -202,13 +208,25 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
                 root.removeComponent(content);
             }
             buttons.clear();
-            content = root.createUIElement(StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, true);
-            renderer.render(content, snapshot, state, buttons);
-            root.addUIElement(content).inTL(0f, 0f);
+            content = root.createCustomPanel(StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, null);
+            StockReviewRenderer.RenderResult result = renderer.render(content, snapshot, state, buttons);
+            renderedMaxScrollOffset = result.getMaxScrollOffset();
+            root.addComponent(content).inTL(0f, 0f);
         } catch (Throwable t) {
             LOG.error("WIM_STOCK_REVIEW rebuild failed", t);
             close();
         }
+    }
+
+    private boolean isMouseInList(InputEventAPI event) {
+        if (root == null || root.getPosition() == null || renderedMaxScrollOffset <= 0) {
+            return false;
+        }
+        float left = root.getPosition().getX() + StockReviewStyle.PAD;
+        float right = left + StockReviewStyle.LIST_WIDTH;
+        float top = root.getPosition().getY() + root.getPosition().getHeight() - StockReviewStyle.LIST_TOP;
+        float bottom = top - StockReviewStyle.LIST_HEIGHT;
+        return event.getX() >= left && event.getX() <= right && event.getY() >= bottom && event.getY() <= top;
     }
 
     private void close() {

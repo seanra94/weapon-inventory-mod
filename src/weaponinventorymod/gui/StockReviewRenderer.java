@@ -1,181 +1,215 @@
 package weaponinventorymod.gui;
 
-import com.fs.starfarer.api.ui.Alignment;
 import com.fs.starfarer.api.ui.ButtonAPI;
-import com.fs.starfarer.api.ui.CutStyle;
+import com.fs.starfarer.api.ui.CustomPanelAPI;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
-import com.fs.starfarer.api.util.Misc;
-import weaponinventorymod.core.StockCategory;
-import weaponinventorymod.core.SubmarketWeaponStock;
-import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.List;
 
 final class StockReviewRenderer {
-    void render(TooltipMakerAPI tooltip,
-                WeaponStockSnapshot snapshot,
-                StockReviewState state,
-                List<StockReviewButtonBinding> buttons) {
-        tooltip.setParaFontDefault();
-        tooltip.setParaFontColor(StockReviewStyle.TEXT);
-        tooltip.addTitle("Weapon Stock Review");
-        tooltip.addPara("Market: " + snapshot.getMarketName()
-                + " | Mode: " + snapshot.getDisplayMode().getLabel()
-                + " | Sort: " + snapshot.getSortMode().getLabel()
-                + " | Owned source: " + ownedSourceLabel(snapshot)
-                + " | Black market: " + onOff(snapshot.isIncludeBlackMarket()), StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED,
-                "Market:", "Mode:", "Sort:", "Owned source:", "Black market:");
-
-        addActionRow(tooltip, snapshot, buttons);
-        addCategory(tooltip, snapshot, state, buttons, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK);
-        addCategory(tooltip, snapshot, state, buttons, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT);
-        addCategory(tooltip, snapshot, state, buttons, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT);
-
-        if (snapshot.getTotalRecords() == 0) {
-            tooltip.addPara("No owned or currently purchasable weapons were found for this market context.", StockReviewStyle.PAD, StockReviewStyle.MUTED);
-        }
+    RenderResult render(CustomPanelAPI root,
+                        WeaponStockSnapshot snapshot,
+                        StockReviewState state,
+                        List<StockReviewButtonBinding> buttons) {
+        buttons.clear();
+        renderHeader(root, snapshot);
+        renderActionRow(root, snapshot, buttons);
+        return renderList(root, snapshot, state, buttons);
     }
 
-    private void addActionRow(TooltipMakerAPI tooltip, WeaponStockSnapshot snapshot, List<StockReviewButtonBinding> buttons) {
-        ButtonAPI refresh = tooltip.addButton("Refresh", StockReviewAction.refresh(), Misc.getBasePlayerColor(),
-                Misc.getDarkPlayerColor(), StockReviewStyle.ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.PAD);
-        buttons.add(new StockReviewButtonBinding(refresh, StockReviewAction.refresh()));
-        ButtonAPI mode = tooltip.addButton("Mode: " + snapshot.getDisplayMode().getLabel(), StockReviewAction.cycleDisplayMode(), Misc.getBasePlayerColor(),
-                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(mode, StockReviewAction.cycleDisplayMode()));
-        ButtonAPI sort = tooltip.addButton("Sort: " + snapshot.getSortMode().getLabel(), StockReviewAction.cycleSortMode(), Misc.getBasePlayerColor(),
-                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(sort, StockReviewAction.cycleSortMode()));
-        ButtonAPI storage = tooltip.addButton("Market Storage: " + onOff(snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")),
-                StockReviewAction.toggleCurrentMarketStorage(), Misc.getBasePlayerColor(),
-                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(storage, StockReviewAction.toggleCurrentMarketStorage()));
-        ButtonAPI blackMarket = tooltip.addButton("Black Market: " + onOff(snapshot.isIncludeBlackMarket()), StockReviewAction.toggleBlackMarket(), Misc.getBasePlayerColor(),
-                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(blackMarket, StockReviewAction.toggleBlackMarket()));
-        ButtonAPI close = tooltip.addButton("Close", StockReviewAction.close(), Misc.getBasePlayerColor(),
-                Misc.getDarkPlayerColor(), StockReviewStyle.ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(close, StockReviewAction.close()));
+    private void renderHeader(CustomPanelAPI root, WeaponStockSnapshot snapshot) {
+        CustomPanelAPI header = root.createCustomPanel(
+                StockReviewStyle.WIDTH - 2f * StockReviewStyle.PAD,
+                StockReviewStyle.HEADER_HEIGHT,
+                new StockReviewPanelBoxPlugin(StockReviewStyle.PANEL_BACKGROUND, StockReviewStyle.PANEL_BORDER));
+        root.addComponent(header).inTL(StockReviewStyle.PAD, StockReviewStyle.PAD);
+
+        TooltipMakerAPI title = header.createUIElement(header.getPosition().getWidth() - 2f * StockReviewStyle.PAD, 22f, false);
+        title.setParaFontDefault();
+        title.setParaFontColor(StockReviewStyle.TEXT);
+        title.addTitle("Weapon Stock Review");
+        header.addUIElement(title).inTL(StockReviewStyle.PAD, 2f);
+
+        TooltipMakerAPI status = header.createUIElement(header.getPosition().getWidth() - 2f * StockReviewStyle.PAD, 28f, false);
+        status.setParaFontDefault();
+        status.setParaFontColor(StockReviewStyle.MUTED);
+        status.addPara(statusLine(snapshot), 0f, StockReviewStyle.MUTED);
+        header.addUIElement(status).inTL(StockReviewStyle.PAD, 28f);
     }
 
-    private void addCategory(TooltipMakerAPI tooltip,
-                             WeaponStockSnapshot snapshot,
-                             StockReviewState state,
-                             List<StockReviewButtonBinding> buttons,
-                             StockCategory category,
-                             Color color) {
-        List<WeaponStockRecord> records = snapshot.getRecords(category);
-        boolean expanded = state.isExpanded(category);
-        String suffix = expanded ? " (-)" : " (+)";
-        String label = category.getLabel() + " [" + records.size() + "]" + suffix;
-        ButtonAPI button = tooltip.addButton(label, StockReviewAction.toggle(category), color,
-                StockReviewStyle.HEADING_BACKGROUND, Alignment.LMID, CutStyle.NONE,
-                StockReviewStyle.CATEGORY_BUTTON_WIDTH, StockReviewStyle.CATEGORY_BUTTON_HEIGHT, StockReviewStyle.CATEGORY_GAP);
-        buttons.add(new StockReviewButtonBinding(button, StockReviewAction.toggle(category)));
+    private void renderActionRow(CustomPanelAPI root, WeaponStockSnapshot snapshot, List<StockReviewButtonBinding> buttons) {
+        float y = StockReviewStyle.PAD + StockReviewStyle.HEADER_HEIGHT + StockReviewStyle.SMALL_PAD;
+        float x = StockReviewStyle.PAD;
+        x = addActionButton(root, x, y, StockReviewStyle.REFRESH_BUTTON_WIDTH, "Refresh", StockReviewAction.refresh(), true, buttons);
+        x = addActionButton(root, x, y, StockReviewStyle.MODE_BUTTON_WIDTH, "Mode: " + snapshot.getDisplayMode().getLabel(),
+                StockReviewAction.cycleDisplayMode(), true, buttons);
+        x = addActionButton(root, x, y, StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
+                StockReviewAction.cycleSortMode(), true, buttons);
+        x = addActionButton(root, x, y, StockReviewStyle.STORAGE_BUTTON_WIDTH, "Market Storage: " + onOff(snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")),
+                StockReviewAction.toggleCurrentMarketStorage(), true, buttons);
+        x = addActionButton(root, x, y, StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
+                StockReviewAction.toggleBlackMarket(), true, buttons);
+        addActionButton(root, x, y, StockReviewStyle.CLOSE_BUTTON_WIDTH, "Close", StockReviewAction.close(), true, buttons);
+    }
 
-        if (!expanded) {
-            return;
+    private RenderResult renderList(CustomPanelAPI root,
+                                    WeaponStockSnapshot snapshot,
+                                    StockReviewState state,
+                                    List<StockReviewButtonBinding> buttons) {
+        CustomPanelAPI listPanel = root.createCustomPanel(
+                StockReviewStyle.LIST_WIDTH,
+                StockReviewStyle.LIST_HEIGHT,
+                new StockReviewPanelBoxPlugin(StockReviewStyle.PANEL_BACKGROUND, StockReviewStyle.PANEL_BORDER));
+        root.addComponent(listPanel).inTL(StockReviewStyle.PAD, StockReviewStyle.LIST_TOP);
+
+        List<StockReviewListRow> rows = StockReviewListModel.build(snapshot, state);
+        ScrollSlice slice = ScrollSlice.compute(rows, state.getListScrollOffset());
+        state.setListScrollOffset(slice.offset);
+
+        float y = StockReviewStyle.SMALL_PAD;
+        if (slice.hasAbove) {
+            renderRow(listPanel, StockReviewListRow.scroll("^     ^     ^     ^     ^",
+                    StockReviewAction.scrollList(-StockReviewStyle.SCROLL_STEP)), y, buttons);
+            y += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.ROW_GAP;
         }
-        int shown = 0;
-        for (WeaponStockRecord record : records) {
-            if (shown >= StockReviewStyle.MAX_VISIBLE_ROWS_PER_CATEGORY) {
-                tooltip.addPara("... " + (records.size() - shown) + " more", StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED);
-                break;
+        for (int i = 0; i < slice.visibleRows.size(); i++) {
+            StockReviewListRow row = slice.visibleRows.get(i);
+            if (row.hasTopGap()) {
+                y += StockReviewStyle.CATEGORY_TOP_GAP;
             }
-            addRecord(tooltip, record, color, state, buttons);
-            shown++;
+            renderRow(listPanel, row, y, buttons);
+            y += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.ROW_GAP;
         }
+        if (slice.hasBelow) {
+            renderRow(listPanel, StockReviewListRow.scroll("v     v     v     v     v",
+                    StockReviewAction.scrollList(StockReviewStyle.SCROLL_STEP)), y, buttons);
+        }
+        return new RenderResult(slice.maxOffset);
     }
 
-    private void addRecord(TooltipMakerAPI tooltip,
-                           WeaponStockRecord record,
-                           Color categoryColor,
-                           StockReviewState state,
+    private void renderRow(CustomPanelAPI parent,
+                           StockReviewListRow row,
+                           float y,
                            List<StockReviewButtonBinding> buttons) {
-        boolean expanded = state.isWeaponExpanded(record.getWeaponId());
-        String suffix = expanded ? " (-)" : " (+)";
-        String label = "    " + record.getDisplayName() + " (" + record.getCountLabel() + ")" + suffix;
-        ButtonAPI toggle = tooltip.addButton(label, StockReviewAction.toggleWeapon(record.getWeaponId()), categoryColor,
-                StockReviewStyle.ROW_BACKGROUND, Alignment.LMID, CutStyle.NONE,
-                StockReviewStyle.WEAPON_ROW_WIDTH, StockReviewStyle.WEAPON_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(toggle, StockReviewAction.toggleWeapon(record.getWeaponId())));
+        float width = parent.getPosition().getWidth() - 2f * StockReviewStyle.SMALL_PAD;
+        CustomPanelAPI rowPanel = parent.createCustomPanel(
+                width,
+                StockReviewStyle.ROW_HEIGHT,
+                new StockReviewPanelBoxPlugin(row.getFillColor(), null));
+        parent.addComponent(rowPanel).inTL(StockReviewStyle.SMALL_PAD, y);
 
-        ButtonAPI buyOne = addBuyButton(tooltip, "Buy 1", StockReviewAction.buyBest(record.getWeaponId(), 1), record.getBuyableCount() > 0, buttons);
-        buyOne.getPosition().rightOfTop(toggle, StockReviewStyle.SMALL_PAD);
-        ButtonAPI buyTen = addBuyButton(tooltip, "Buy 10", StockReviewAction.buyBest(record.getWeaponId(), 10), record.getBuyableCount() > 0, buttons);
-        buyTen.getPosition().rightOfTop(buyOne, StockReviewStyle.SMALL_PAD);
-
-        if (!expanded) {
-            return;
+        float buyBlockWidth = row.getBuyOneAction() == null ? 0f :
+                2f * StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP + StockReviewStyle.BUTTON_GAP;
+        float labelLeft = row.getIndent();
+        float labelWidth = Math.max(80f, width - labelLeft - buyBlockWidth - StockReviewStyle.TEXT_LEFT_PAD);
+        if (row.getMainAction() != null) {
+            addInvisibleButton(rowPanel, labelLeft, 0f, labelWidth, row.getMainAction(), true, buttons);
         }
+        addLabel(rowPanel, row.getLabel(), row.getTextColor(), labelLeft + StockReviewStyle.TEXT_LEFT_PAD, labelWidth);
 
-        addWeaponDataSection(tooltip, record, state, buttons);
-        addSellersSection(tooltip, record, state, buttons);
+        if (row.getBuyOneAction() != null) {
+            float buttonX = width - 2f * StockReviewStyle.BUY_BUTTON_WIDTH - StockReviewStyle.BUTTON_GAP;
+            addSmallButton(rowPanel, buttonX, 0f, "Buy 1", row.getBuyOneAction(), row.isBuyEnabled(), buttons);
+            addSmallButton(rowPanel, buttonX + StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP, 0f,
+                    "Buy 10", row.getBuyTenAction(), row.isBuyEnabled(), buttons);
+        }
     }
 
-    private ButtonAPI addBuyButton(TooltipMakerAPI tooltip,
-                                   String label,
-                                   StockReviewAction action,
-                                   boolean enabled,
-                                   List<StockReviewButtonBinding> buttons) {
-        ButtonAPI button = tooltip.addButton(label, action, Misc.getBasePlayerColor(), Misc.getDarkPlayerColor(),
-                StockReviewStyle.BUY_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, 0f);
+    private float addActionButton(CustomPanelAPI parent,
+                                  float x,
+                                  float y,
+                                  float width,
+                                  String label,
+                                  StockReviewAction action,
+                                  boolean enabled,
+                                  List<StockReviewButtonBinding> buttons) {
+        addSmallButton(parent, x, y, label, action, enabled, buttons, width);
+        return x + width + StockReviewStyle.BUTTON_GAP;
+    }
+
+    private void addSmallButton(CustomPanelAPI parent,
+                                float x,
+                                float y,
+                                String label,
+                                StockReviewAction action,
+                                boolean enabled,
+                                List<StockReviewButtonBinding> buttons) {
+        addSmallButton(parent, x, y, label, action, enabled, buttons, StockReviewStyle.BUY_BUTTON_WIDTH);
+    }
+
+    private void addSmallButton(CustomPanelAPI parent,
+                                float x,
+                                float y,
+                                String label,
+                                StockReviewAction action,
+                                boolean enabled,
+                                List<StockReviewButtonBinding> buttons,
+                                float width) {
+        Color fill = enabled ? StockReviewStyle.ACTION_BACKGROUND : StockReviewStyle.DISABLED_BACKGROUND;
+        Color text = enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT;
+        CustomPanelAPI buttonPanel = parent.createCustomPanel(
+                width,
+                StockReviewStyle.ACTION_BUTTON_HEIGHT,
+                new StockReviewPanelBoxPlugin(fill, null));
+        parent.addComponent(buttonPanel).inTL(x, y);
+        addInvisibleButton(buttonPanel, 0f, 0f, width, action, enabled, buttons);
+        addCenteredLabel(buttonPanel, label, text, width);
+    }
+
+    private ButtonAPI addInvisibleButton(CustomPanelAPI parent,
+                                         float x,
+                                         float y,
+                                         float width,
+                                         StockReviewAction action,
+                                         boolean enabled,
+                                         List<StockReviewButtonBinding> buttons) {
+        TooltipMakerAPI element = parent.createUIElement(width, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
+        ButtonAPI button = element.addAreaCheckbox(
+                "",
+                action,
+                StockReviewStyle.TEXT,
+                StockReviewStyle.ACTION_BACKGROUND,
+                StockReviewStyle.ACTION_HOVER,
+                width,
+                StockReviewStyle.ACTION_BUTTON_HEIGHT,
+                0f);
         button.setEnabled(enabled);
+        button.setQuickMode(true);
+        parent.addUIElement(element).inTL(x, y);
         buttons.add(new StockReviewButtonBinding(button, action));
         return button;
     }
 
-    private void addWeaponDataSection(TooltipMakerAPI tooltip,
-                                      WeaponStockRecord record,
-                                      StockReviewState state,
-                                      List<StockReviewButtonBinding> buttons) {
-        boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
-        ButtonAPI heading = tooltip.addButton("        Weapon data " + (expanded ? "(-)" : "(+)"),
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA),
-                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, Alignment.LMID, CutStyle.NONE,
-                StockReviewStyle.SECTION_ROW_WIDTH, StockReviewStyle.SECTION_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(heading,
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA)));
-        if (!expanded) {
-            return;
-        }
-        tooltip.addPara("            Size: " + record.getSizeLabel(), 0f, StockReviewStyle.MUTED);
-        tooltip.addPara("            Type: " + record.getTypeLabel(), 0f, StockReviewStyle.MUTED);
-        tooltip.addPara("            Damage: " + record.getDamageLabel(), 0f, StockReviewStyle.MUTED);
-        tooltip.addPara("            EMP: " + record.getEmpLabel(), 0f, StockReviewStyle.MUTED);
-        tooltip.addPara("            Range: " + record.getRangeLabel(), 0f, StockReviewStyle.MUTED);
-        tooltip.addPara("            Flux/Second: " + record.getFluxPerSecondLabel(), 0f, StockReviewStyle.MUTED);
-        tooltip.addPara("            Flux/Damage: " + record.getFluxPerDamageLabel(), 0f, StockReviewStyle.MUTED);
+    private void addLabel(CustomPanelAPI parent, String text, Color color, float x, float width) {
+        TooltipMakerAPI label = parent.createUIElement(width, StockReviewStyle.ROW_HEIGHT, false);
+        label.setParaFontDefault();
+        label.setParaFontColor(color);
+        int maxChars = Math.max(8, (int) (width / 6.2f));
+        label.addPara(StockReviewText.fit(text, maxChars), 0f, color);
+        parent.addUIElement(label).inTL(x, StockReviewStyle.TEXT_TOP_PAD);
     }
 
-    private void addSellersSection(TooltipMakerAPI tooltip,
-                                   WeaponStockRecord record,
-                                   StockReviewState state,
-                                   List<StockReviewButtonBinding> buttons) {
-        boolean expanded = state.isSellersExpanded(record.getWeaponId());
-        ButtonAPI heading = tooltip.addButton("        Sellers " + (expanded ? "(-)" : "(+)"),
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS),
-                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, Alignment.LMID, CutStyle.NONE,
-                StockReviewStyle.SECTION_ROW_WIDTH, StockReviewStyle.SECTION_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
-        buttons.add(new StockReviewButtonBinding(heading,
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));
-        if (!expanded) {
-            return;
-        }
-        for (SubmarketWeaponStock stock : record.getSubmarketStocks()) {
-            String label = "            " + stock.getSubmarketName() + ": " + stock.getCount() + " @ " + stock.getUnitPrice() + "cr"
-                    + (stock.isPurchasable() ? "" : " (locked)");
-            tooltip.addPara(label, StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED);
-            ButtonAPI buyOne = addBuyButton(tooltip, "Buy 1",
-                    StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 1),
-                    stock.isPurchasable() && stock.getCount() > 0, buttons);
-            ButtonAPI buyTen = addBuyButton(tooltip, "Buy 10",
-                    StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 10),
-                    stock.isPurchasable() && stock.getCount() > 0, buttons);
-            buyTen.getPosition().rightOfTop(buyOne, StockReviewStyle.SMALL_PAD);
-        }
+    private void addCenteredLabel(CustomPanelAPI parent, String text, Color color, float width) {
+        int maxChars = Math.max(4, (int) (width / 6.2f));
+        String fitted = StockReviewText.fit(text, maxChars);
+        float estimatedWidth = Math.min(width - 4f, fitted.length() * 6.2f);
+        float x = Math.max(2f, (width - estimatedWidth) / 2f);
+        TooltipMakerAPI label = parent.createUIElement(width - x, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
+        label.setParaFontDefault();
+        label.setParaFontColor(color);
+        label.addPara(fitted, 0f, color);
+        parent.addUIElement(label).inTL(x, StockReviewStyle.TEXT_TOP_PAD);
+    }
+
+    private static String statusLine(WeaponStockSnapshot snapshot) {
+        return "Market: " + snapshot.getMarketName()
+                + " | Mode: " + snapshot.getDisplayMode().getLabel()
+                + " | Sort: " + snapshot.getSortMode().getLabel()
+                + " | Owned source: " + ownedSourceLabel(snapshot)
+                + " | Black market: " + onOff(snapshot.isIncludeBlackMarket());
     }
 
     private static String ownedSourceLabel(WeaponStockSnapshot snapshot) {
@@ -187,5 +221,71 @@ final class StockReviewRenderer {
 
     private static String onOff(boolean enabled) {
         return enabled ? "On" : "Off";
+    }
+
+    static final class RenderResult {
+        private final int maxScrollOffset;
+
+        RenderResult(int maxScrollOffset) {
+            this.maxScrollOffset = maxScrollOffset;
+        }
+
+        int getMaxScrollOffset() {
+            return maxScrollOffset;
+        }
+    }
+
+    private static final class ScrollSlice {
+        final int offset;
+        final List<StockReviewListRow> visibleRows;
+        final boolean hasAbove;
+        final boolean hasBelow;
+        final int maxOffset;
+
+        private ScrollSlice(int offset,
+                            List<StockReviewListRow> visibleRows,
+                            boolean hasAbove,
+                            boolean hasBelow,
+                            int maxOffset) {
+            this.offset = offset;
+            this.visibleRows = visibleRows;
+            this.hasAbove = hasAbove;
+            this.hasBelow = hasBelow;
+            this.maxOffset = maxOffset;
+        }
+
+        static ScrollSlice compute(List<StockReviewListRow> rows, int requestedOffset) {
+            int totalSlots = Math.max(1, (int) Math.floor((StockReviewStyle.LIST_HEIGHT - 2f * StockReviewStyle.SMALL_PAD + StockReviewStyle.ROW_GAP)
+                    / (StockReviewStyle.ROW_HEIGHT + StockReviewStyle.ROW_GAP)));
+            if (rows.size() <= totalSlots) {
+                return new ScrollSlice(0, rows, false, false, 0);
+            }
+
+            int offset = Math.max(0, Math.min(requestedOffset, rows.size() - 1));
+            int visibleSlots = totalSlots;
+            boolean hasAbove = false;
+            boolean hasBelow = false;
+            for (int i = 0; i < 3; i++) {
+                hasAbove = offset > 0;
+                visibleSlots = totalSlots - (hasAbove ? 1 : 0);
+                hasBelow = offset + visibleSlots < rows.size();
+                if (hasBelow) {
+                    visibleSlots -= 1;
+                }
+                visibleSlots = Math.max(1, visibleSlots);
+                int maxOffsetForSlots = Math.max(0, rows.size() - visibleSlots);
+                int clamped = Math.min(offset, maxOffsetForSlots);
+                if (clamped == offset) {
+                    break;
+                }
+                offset = clamped;
+            }
+            int maxOffset = Math.max(0, rows.size() - visibleSlots);
+            offset = Math.min(offset, maxOffset);
+            hasAbove = offset > 0;
+            int end = Math.min(rows.size(), offset + visibleSlots);
+            hasBelow = end < rows.size();
+            return new ScrollSlice(offset, new ArrayList<StockReviewListRow>(rows.subList(offset, end)), hasAbove, hasBelow, maxOffset);
+        }
     }
 }

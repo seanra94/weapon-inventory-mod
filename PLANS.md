@@ -47,9 +47,15 @@
 - Added optional patched-badge feature flag:
   - clean popup is unaffected;
   - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
-- Fixed popup redraw layering by replacing in-place tooltip rebuilds with a dismiss-and-reopen lifecycle that preserves review state.
+- Earlier popup redraw layering was mitigated by dismissing/reopening the tooltip dialog; the current cleaner foundation supersedes that with in-place custom-panel content replacement.
 - Fixed row action routing by handling Starsector `buttonPressed(...)` callbacks directly; checkbox/button polling alone was not reliable for nested row toggles.
 - Changed stock categories to start collapsed and render as flat full-width heading rows, so `No stock`, `Insufficient stock`, and `Sufficient stock` are visually peer sections.
+- Replaced the tooltip-row popup renderer with an explicit custom-panel/list foundation:
+  - `StockReviewListModel` builds render-ready row descriptors from the snapshot and state;
+  - `StockReviewRenderer` renders fixed-height custom row panels for category headings, weapon rows, nested sections, sellers, and scroll indicators;
+  - `StockReviewPanelBoxPlugin` owns reusable row/container fill and border drawing;
+  - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
+  - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
 - Added first purchase flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;

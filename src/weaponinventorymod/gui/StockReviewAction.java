@@ -13,6 +13,7 @@ final class StockReviewAction {
         CYCLE_SORT_MODE,
         TOGGLE_CURRENT_MARKET_STORAGE,
         TOGGLE_BLACK_MARKET,
+        SCROLL_LIST,
         REFRESH,
         CLOSE
     }
@@ -76,6 +77,10 @@ final class StockReviewAction {
 
     static StockReviewAction toggleBlackMarket() {
         return new StockReviewAction(Type.TOGGLE_BLACK_MARKET, null, null, null, null, 0);
+    }
+
+    static StockReviewAction scrollList(int delta) {
+        return new StockReviewAction(Type.SCROLL_LIST, null, null, null, null, delta);
     }
 
     static StockReviewAction close() {
