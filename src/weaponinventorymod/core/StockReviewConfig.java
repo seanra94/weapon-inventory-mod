@@ -64,7 +64,7 @@ public final class StockReviewConfig {
                 DEFAULT_LARGE_WEAPON_COUNT,
                 true,
                 true,
-                StockDisplayMode.OWNED_OR_FOR_SALE,
+                StockDisplayMode.ALL_TRACKED,
                 StockSortMode.NEED,
                 Collections.<String, Integer>emptyMap(),
                 Collections.<String, Boolean>emptyMap());

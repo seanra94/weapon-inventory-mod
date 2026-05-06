@@ -30,7 +30,7 @@ public final class MarketStockService {
                 continue;
             }
             for (CargoStackAPI stack : cargo.getStacksCopy()) {
-                if (!isPurchasableWeaponStack(submarket, stack)) {
+                if (!isVisibleWeaponStack(stack)) {
                     continue;
                 }
                 String weaponId = stack.getWeaponSpecIfWeapon().getWeaponId();
@@ -49,7 +49,8 @@ public final class MarketStockService {
                         submarket.getNameOneLine(),
                         count,
                         unitPrice(submarket, stack),
-                        unitCargoSpace(stack)));
+                        unitCargoSpace(stack),
+                        isPurchasableWeaponStack(submarket, stack)));
             }
         }
 
@@ -68,6 +69,10 @@ public final class MarketStockService {
             return false;
         }
         return submarket.getCargoNullOk() != null;
+    }
+
+    public static boolean isVisibleWeaponStack(CargoStackAPI stack) {
+        return stack != null && stack.isWeaponStack() && stack.getWeaponSpecIfWeapon() != null && stack.getSize() > 0f;
     }
 
     public static boolean isPurchasableWeaponStack(SubmarketAPI submarket, CargoStackAPI stack) {

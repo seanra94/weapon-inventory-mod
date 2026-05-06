@@ -1,6 +1,6 @@
 {
   "display": {
-    "defaultMode": "OWNED_OR_FOR_SALE",
+    "defaultMode": "ALL_TRACKED",
     "defaultSort": "NEED"
   },
   "sources": {

@@ -15,6 +15,10 @@
 - Popup redraw rule:
   - Starsector custom visual dialog content should not be rebuilt by removing/recreating the same tooltip inside the same panel.
   - State-changing buttons dismiss and reopen the custom visual dialog with copied `StockReviewState` to avoid stale text/control layering.
+- Popup button rule:
+  - Use `buttonPressed(...)` for row/section actions. Polling `ButtonAPI.isChecked()` alone was not reliable for nested weapon rows.
+- Popup default scope:
+  - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
 - Popup purchase flow:
   - top-level row buttons buy from cheapest eligible current-market seller stock;
   - expanded Seller rows buy from a specific submarket;

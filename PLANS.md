@@ -12,6 +12,7 @@
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
   - rows show `owned / currently purchasable at this market`.
   - popup has config-backed desired stock defaults, display mode, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
+  - popup defaults to `All Tracked` so the review starts from all enabled weapon specs instead of only owned/currently sold weapons.
   - popup has sort modes for need, name, for-sale count, and owned count.
   - popup row actions now support weapon expansion, nested Weapon Data/Sellers sections, cheapest-first `Buy 1`/`Buy 10`, and submarket-specific buys.
 - Current visual baseline:
@@ -47,6 +48,7 @@
   - clean popup is unaffected;
   - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
 - Fixed popup redraw layering by replacing in-place tooltip rebuilds with a dismiss-and-reopen lifecycle that preserves review state.
+- Fixed row action routing by handling Starsector `buttonPressed(...)` callbacks directly; checkbox/button polling alone was not reliable for nested row toggles.
 - Added first purchase flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;

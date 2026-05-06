@@ -25,6 +25,8 @@ final class StockReviewStyle {
     static final Color NO_STOCK = new Color(242, 90, 90);
     static final Color INSUFFICIENT = new Color(255, 216, 61);
     static final Color SUFFICIENT = new Color(75, 203, 99);
+    static final Color ROW_BACKGROUND = new Color(38, 38, 38);
+    static final Color ROW_BACKGROUND_DARK = new Color(24, 24, 24);
     static final Color TEXT = Misc.getTextColor();
     static final Color MUTED = Misc.getGrayColor();
 

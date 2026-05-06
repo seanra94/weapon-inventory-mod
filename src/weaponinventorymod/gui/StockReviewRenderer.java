@@ -2,6 +2,7 @@ package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.ui.Alignment;
 import com.fs.starfarer.api.ui.ButtonAPI;
+import com.fs.starfarer.api.ui.CutStyle;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
 import com.fs.starfarer.api.util.Misc;
 import weaponinventorymod.core.StockCategory;
@@ -95,13 +96,14 @@ final class StockReviewRenderer {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
         String suffix = expanded ? " (-)" : " (+)";
         String label = "    " + record.getDisplayName() + " (" + record.getCountLabel() + ")" + suffix;
-        ButtonAPI toggle = tooltip.addAreaCheckbox(label, StockReviewAction.toggleWeapon(record.getWeaponId()), categoryColor,
-                new Color(10, 10, 10), categoryColor, StockReviewStyle.WEAPON_ROW_WIDTH, StockReviewStyle.WEAPON_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
+        ButtonAPI toggle = tooltip.addButton(label, StockReviewAction.toggleWeapon(record.getWeaponId()), categoryColor,
+                StockReviewStyle.ROW_BACKGROUND, Alignment.LMID, CutStyle.NONE,
+                StockReviewStyle.WEAPON_ROW_WIDTH, StockReviewStyle.WEAPON_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(toggle, StockReviewAction.toggleWeapon(record.getWeaponId())));
 
-        ButtonAPI buyOne = addBuyButton(tooltip, "Buy 1", StockReviewAction.buyBest(record.getWeaponId(), 1), record.getPurchasableCount() > 0, buttons);
+        ButtonAPI buyOne = addBuyButton(tooltip, "Buy 1", StockReviewAction.buyBest(record.getWeaponId(), 1), record.getBuyableCount() > 0, buttons);
         buyOne.getPosition().rightOfTop(toggle, StockReviewStyle.SMALL_PAD);
-        ButtonAPI buyTen = addBuyButton(tooltip, "Buy 10", StockReviewAction.buyBest(record.getWeaponId(), 10), record.getPurchasableCount() > 0, buttons);
+        ButtonAPI buyTen = addBuyButton(tooltip, "Buy 10", StockReviewAction.buyBest(record.getWeaponId(), 10), record.getBuyableCount() > 0, buttons);
         buyTen.getPosition().rightOfTop(buyOne, StockReviewStyle.SMALL_PAD);
 
         if (!expanded) {
@@ -131,7 +133,7 @@ final class StockReviewRenderer {
         boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
         ButtonAPI heading = tooltip.addAreaCheckbox("        Weapon data " + (expanded ? "(-)" : "(+)"),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA),
-                StockReviewStyle.MUTED, new Color(8, 8, 8), StockReviewStyle.MUTED,
+                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.MUTED,
                 StockReviewStyle.SECTION_ROW_WIDTH, StockReviewStyle.SECTION_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(heading,
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA)));
@@ -154,7 +156,7 @@ final class StockReviewRenderer {
         boolean expanded = state.isSellersExpanded(record.getWeaponId());
         ButtonAPI heading = tooltip.addAreaCheckbox("        Sellers " + (expanded ? "(-)" : "(+)"),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS),
-                StockReviewStyle.MUTED, new Color(8, 8, 8), StockReviewStyle.MUTED,
+                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.MUTED,
                 StockReviewStyle.SECTION_ROW_WIDTH, StockReviewStyle.SECTION_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(heading,
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));
@@ -162,14 +164,15 @@ final class StockReviewRenderer {
             return;
         }
         for (SubmarketWeaponStock stock : record.getSubmarketStocks()) {
-            String label = "            " + stock.getSubmarketName() + ": " + stock.getCount() + " @ " + stock.getUnitPrice() + "cr";
+            String label = "            " + stock.getSubmarketName() + ": " + stock.getCount() + " @ " + stock.getUnitPrice() + "cr"
+                    + (stock.isPurchasable() ? "" : " (locked)");
             tooltip.addPara(label, StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED);
             ButtonAPI buyOne = addBuyButton(tooltip, "Buy 1",
                     StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 1),
-                    stock.getCount() > 0, buttons);
+                    stock.isPurchasable() && stock.getCount() > 0, buttons);
             ButtonAPI buyTen = addBuyButton(tooltip, "Buy 10",
                     StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 10),
-                    stock.getCount() > 0, buttons);
+                    stock.isPurchasable() && stock.getCount() > 0, buttons);
             buyTen.getPosition().rightOfTop(buyOne, StockReviewStyle.SMALL_PAD);
         }
     }

@@ -55,6 +55,16 @@ public final class WeaponStockRecord {
         return purchasableCount;
     }
 
+    public int getBuyableCount() {
+        int count = 0;
+        for (SubmarketWeaponStock stock : submarketStocks) {
+            if (stock.isPurchasable()) {
+                count += stock.getCount();
+            }
+        }
+        return count;
+    }
+
     public int getDesiredCount() {
         return desiredCount;
     }

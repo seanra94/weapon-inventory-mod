@@ -65,6 +65,9 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
 
     @Override
     public void advance(float amount) {
+        if (callbacks == null) {
+            return;
+        }
         for (int i = 0; i < buttons.size(); i++) {
             StockReviewButtonBinding binding = buttons.get(i);
             if (!binding.consumeIfPressed()) {
@@ -77,8 +80,9 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
 
     @Override
     public void buttonPressed(Object buttonId) {
-        // Tooltip buttons are polled in advance() so one click cannot toggle twice
-        // if Starsector also routes buttonPressed() for this custom panel.
+        if (buttonId instanceof StockReviewAction) {
+            handleAction((StockReviewAction) buttonId);
+        }
     }
 
     private void handleAction(StockReviewAction action) {
@@ -197,7 +201,9 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
 
     private void close() {
         if (callbacks != null) {
-            callbacks.dismissDialog();
+            CustomVisualDialogDelegate.DialogCallbacks currentCallbacks = callbacks;
+            callbacks = null;
+            currentCallbacks.dismissDialog();
         }
     }
 
