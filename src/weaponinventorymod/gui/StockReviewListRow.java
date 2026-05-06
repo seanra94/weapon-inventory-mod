@@ -26,7 +26,10 @@ final class StockReviewListRow {
     private final StockReviewAction buyOneAction;
     private final StockReviewAction buyTenAction;
     private final StockReviewAction buyUntilAction;
-    private final int tally;
+    private final int currentCount;
+    private final int forSaleCount;
+    private final int planQuantity;
+    private final int transactionCost;
     private final boolean sellEnabled;
     private final boolean buyEnabled;
     private final boolean buyUntilEnabled;
@@ -45,7 +48,10 @@ final class StockReviewListRow {
                                StockReviewAction buyOneAction,
                                StockReviewAction buyTenAction,
                                StockReviewAction buyUntilAction,
-                               int tally,
+                               int currentCount,
+                               int forSaleCount,
+                               int planQuantity,
+                               int transactionCost,
                                boolean sellEnabled,
                                boolean buyEnabled,
                                boolean buyUntilEnabled,
@@ -63,7 +69,10 @@ final class StockReviewListRow {
         this.buyOneAction = buyOneAction;
         this.buyTenAction = buyTenAction;
         this.buyUntilAction = buyUntilAction;
-        this.tally = tally;
+        this.currentCount = currentCount;
+        this.forSaleCount = forSaleCount;
+        this.planQuantity = planQuantity;
+        this.transactionCost = transactionCost;
         this.sellEnabled = sellEnabled;
         this.buyEnabled = buyEnabled;
         this.buyUntilEnabled = buyUntilEnabled;
@@ -72,7 +81,7 @@ final class StockReviewListRow {
 
     static StockReviewListRow category(String label, Color textColor, StockReviewAction action, boolean topGap) {
         return new StockReviewListRow(Kind.CATEGORY, label, StockReviewStyle.TEXT, textColor, textColor, null,
-                0f, action, null, null, null, null, null, 0, false, false, false, topGap);
+                0f, action, null, null, null, null, null, 0, 0, 0, 0, false, false, false, topGap);
     }
 
     static StockReviewListRow weapon(String label,
@@ -83,23 +92,26 @@ final class StockReviewListRow {
                                      StockReviewAction buyOneAction,
                                      StockReviewAction buyTenAction,
                                      StockReviewAction buyUntilAction,
-                                     int tally,
+                                     int currentCount,
+                                     int forSaleCount,
+                                     int planQuantity,
+                                     int transactionCost,
                                      boolean sellEnabled,
                                      boolean buyEnabled,
                                      boolean buyUntilEnabled) {
         return new StockReviewListRow(Kind.WEAPON, label, textColor, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
                 StockReviewStyle.WEAPON_INDENT, action, sellTenAction, sellOneAction, buyOneAction, buyTenAction, buyUntilAction,
-                tally, sellEnabled, buyEnabled, buyUntilEnabled, false);
+                currentCount, forSaleCount, planQuantity, transactionCost, sellEnabled, buyEnabled, buyUntilEnabled, false);
     }
 
     static StockReviewListRow section(String label, StockReviewAction action) {
         return new StockReviewListRow(Kind.SECTION, label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.HEADING_BACKGROUND, null,
-                StockReviewStyle.SECTION_INDENT, action, null, null, null, null, null, 0, false, false, false, false);
+                StockReviewStyle.SECTION_INDENT, action, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
     }
 
     static StockReviewListRow detail(String label) {
         return new StockReviewListRow(Kind.DETAIL, label, StockReviewStyle.MUTED, null, null, null,
-                StockReviewStyle.DETAIL_INDENT, null, null, null, null, null, null, 0, false, false, false, false);
+                StockReviewStyle.DETAIL_INDENT, null, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
     }
 
     static StockReviewListRow seller(String label,
@@ -108,22 +120,22 @@ final class StockReviewListRow {
                                      StockReviewAction buyTenAction) {
         Color textColor = buyEnabled ? StockReviewStyle.MUTED : StockReviewStyle.DISABLED_TEXT;
         return new StockReviewListRow(Kind.SELLER, label, textColor, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.SELLER_INDENT, null, null, null, buyOneAction, buyTenAction, null, 0, false, buyEnabled, false, false);
+                StockReviewStyle.SELLER_INDENT, null, null, null, buyOneAction, buyTenAction, null, 0, 0, 0, 0, false, buyEnabled, false, false);
     }
 
     static StockReviewListRow empty(String label) {
         return new StockReviewListRow(Kind.EMPTY, label, StockReviewStyle.MUTED, null, null, null,
-                0f, null, null, null, null, null, null, 0, false, false, false, false);
+                0f, null, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
     }
 
     static StockReviewListRow scroll(String label, StockReviewAction action) {
         return new StockReviewListRow(Kind.SCROLL, label, StockReviewStyle.SCROLL, StockReviewStyle.HEADING_BACKGROUND, StockReviewStyle.HEADING_BACKGROUND, null,
-                0f, action, null, null, null, null, null, 0, false, false, false, false);
+                0f, action, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
     }
 
     static StockReviewListRow review(String label) {
         return new StockReviewListRow(Kind.WEAPON, label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.WEAPON_INDENT, null, null, null, null, null, null, 0, false, false, false, false);
+                StockReviewStyle.WEAPON_INDENT, null, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
     }
 
     Kind getKind() {
@@ -178,8 +190,20 @@ final class StockReviewListRow {
         return buyUntilAction;
     }
 
-    int getTally() {
-        return tally;
+    int getPlanQuantity() {
+        return planQuantity;
+    }
+
+    int getCurrentCount() {
+        return currentCount;
+    }
+
+    int getForSaleCount() {
+        return forSaleCount;
+    }
+
+    int getTransactionCost() {
+        return transactionCost;
     }
 
     boolean isSellEnabled() {

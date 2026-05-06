@@ -146,7 +146,7 @@ public final class StockReviewConfig {
     }
 
     public OwnedSourcePolicy ownedSourcePolicy(boolean includeStorage) {
-        return includeStorage ? OwnedSourcePolicy.FLEET_AND_CURRENT_MARKET_STORAGE : OwnedSourcePolicy.FLEET_ONLY;
+        return includeStorage ? OwnedSourcePolicy.FLEET_AND_ACCESSIBLE_STORAGE : OwnedSourcePolicy.FLEET_ONLY;
     }
 
     private static int optInt(JSONObject json, String key, int defaultValue) {

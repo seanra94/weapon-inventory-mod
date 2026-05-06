@@ -32,6 +32,25 @@ final class StockReviewPurchasePreview {
         return total;
     }
 
+    static int totalCostForWeapon(WeaponStockSnapshot snapshot, List<StockReviewPendingPurchase> pendingPurchases, String weaponId) {
+        int total = 0;
+        if (pendingPurchases == null || weaponId == null) {
+            return total;
+        }
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (!weaponId.equals(purchase.getWeaponId())) {
+                continue;
+            }
+            int cost = quoteCost(snapshot, purchase);
+            if (cost == PRICE_UNAVAILABLE) {
+                return PRICE_UNAVAILABLE;
+            }
+            total += cost;
+        }
+        return total;
+    }
+
     static int quoteCost(WeaponStockSnapshot snapshot, StockReviewPendingPurchase purchase) {
         if (purchase.isSell()) {
             int unitPrice = playerSellUnitPrice(purchase.getWeaponId());

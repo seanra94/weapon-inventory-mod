@@ -8,12 +8,12 @@
 - The popup is independent of the `CargoStackView` patcher. The clean UI should keep working if the patcher is removed.
 - Terminology:
   - `Buy GUI` means the main `F8` stock-review screen.
-  - `Review GUI` means the purchase/tally review screen opened from the Buy GUI.
+  - `Review GUI` means the planned-trade review screen opened from the Buy GUI.
   - `main headings` / `top level headings` means `No stock`, `Insufficient stock`, and `Sufficient stock`.
-  - `weapon entries` means rows under those main headings, such as `Light Needler (0/4) (+)` plus tally and buy/sell controls.
+  - `weapon entries` means rows under those main headings, such as `Light Needler (-)` plus stock, plan, cost/profit, and buy/sell controls.
 - Popup configuration lives in `data/config/weapon_inventory_stock.json`:
   - default display mode;
-  - include/exclude current market storage;
+  - include/exclude accessible storage in current stock calculations;
   - include/exclude black market stock;
   - desired stock defaults by weapon size;
   - per-weapon desired/ignored overrides.
@@ -28,11 +28,12 @@
 - Popup default scope:
   - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
 - Popup purchase flow:
-  - weapon entries in the Buy GUI use a signed `Tally`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
+  - weapon entries in the Buy GUI use a signed `Plan`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
   - top-level buy buttons queue pending buys from cheapest eligible current-market seller stock;
   - expanded Seller rows may still queue a pending buy from that specific submarket;
   - sell buttons queue pending sells from player cargo only, not broader owned stock that may include market storage;
   - queued buys/sells are held in the popup until the user opens `Review Purchase`;
+  - `Purchase Until Sufficient` queues every possible current-market buy needed to bring each listed weapon up to desired stock, without buying beyond desired stock, then opens the Review GUI immediately;
   - the Review GUI lists each weapon trade, per-line cost or credit gain, net total cost/credits gained, and current credits, then uses `Confirm Purchase` / `Go Back`;
   - only `Confirm Purchase` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - this avoids the awkward immediate recategorization where buying one `No stock` weapon moves it out of that category before the user finishes shopping;
@@ -48,10 +49,13 @@
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon data` and `Sellers` use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Nested `Weapon data` / `Sellers` heading buttons start after the indent so the left indent remains black.
-  - Weapon entries should keep this order: weapon label, `Tally`, `Sell 10`, `Sell 1`, `Buy 1`, `Buy 10`, `Buy Until Sufficient`. The `Tally` label is white; positive tally values are green, negative values are red, and zero is pale yellow. Sell buttons are purple and buy buttons are yellow, with disabled buttons using gray text.
+  - Weapon entries should keep this order: weapon label, `Current`, `For Sale`, `Plan`, `Cost`/`Profit`, `Sell 10`, `Sell 1`, `Buy 1`, `Buy 10`, `Buy Until Sufficient`.
+  - `Current` is the snapshot stock count across the enabled owned source, normally fleet plus all accessible storage. It should not change while the user clicks buy/sell buttons in the Buy GUI.
+  - `For Sale` is the snapshot buyable quantity at the current market. It should not change while the user clicks buy/sell buttons in the Buy GUI.
+  - The `Plan` label is white; positive plan values are green, negative values are red, and zero is pale yellow. `Cost` uses the red/cancel background; net-profit rows become `Profit` with the green/confirm background. Sell buttons are purple and buy buttons are yellow, with disabled buttons using gray text.
 - Popup list filtering:
   - Category counts and weapon rows are filtered to records with at least one currently buyable unit at the open market. The popup is for shopping, not for showing unavailable desired weapons.
-  - Weapon row count text is `owned / buyable here`, not `owned / visible including locked stock`. Locked seller rows may still appear inside the expanded Sellers section for context.
+  - Weapon stock summary text is split into `Current` and `For Sale`, not an overloaded `owned / buyable here` label. Locked seller rows may still appear inside the expanded Sellers section for context.
 - Popup availability:
   - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently buyable under the current black-market setting. It should not open from looting, non-trade planet contexts, or markets with only locked/unbuyable weapon stock.
 - Purchase refresh:
@@ -202,8 +206,8 @@ Manual validation:
 - Open a market trade screen.
 - Press `F8` to open Weapon Stock Review.
 - Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
-- Confirm row counts are `owned / currently purchasable at this market`.
-- Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
+- Confirm weapon entries show stable `Current`, `For Sale`, `Plan`, and `Cost`/`Profit` cells while queued changes are adjusted.
+- Confirm `Mode`, `Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
 - Confirm `Sort` cycles ordering without collapsing headings.
 - Confirm weapon rows expand into Weapon Data and Sellers sections.
 - Confirm mouse-wheel scrolling and clickable `^     ^     ^     ^     ^` / `v     v     v     v     v` indicators preserve state and do not appear when all rows fit.

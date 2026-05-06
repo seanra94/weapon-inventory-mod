@@ -40,7 +40,7 @@ final class StockReviewListModel {
             return records.size();
         }
         for (int i = 0; i < records.size(); i++) {
-            addWeapon(rows, records.get(i), color, state, pendingPurchases);
+            addWeapon(rows, snapshot, records.get(i), color, state, pendingPurchases);
         }
         return records.size();
     }
@@ -57,26 +57,31 @@ final class StockReviewListModel {
     }
 
     private static void addWeapon(List<StockReviewListRow> rows,
+                                  WeaponStockSnapshot snapshot,
                                   WeaponStockRecord record,
                                   Color color,
                                   StockReviewState state,
                                   List<StockReviewPendingPurchase> pendingPurchases) {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
-        String label = record.getDisplayName() + " (" + record.getOwnedCount() + "/" + record.getBuyableCount() + ") " + (expanded ? "(-)" : "(+)");
-        int tally = pendingTally(record.getWeaponId(), pendingPurchases);
+        String label = record.getDisplayName() + " " + (expanded ? "(-)" : "(+)");
+        int planQuantity = pendingPlanQuantity(record.getWeaponId(), pendingPurchases);
         int buyRemaining = Math.max(0, record.getBuyableCount() - pendingBuyQuantity(record.getWeaponId(), pendingPurchases));
         int sellRemaining = Math.max(0, record.getPlayerCargoCount() - pendingSellQuantity(record.getWeaponId(), pendingPurchases));
-        int buyUntilQuantity = Math.min(buyRemaining, Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + tally)));
+        int buyUntilQuantity = Math.min(buyRemaining, Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + planQuantity)));
+        int transactionCost = StockReviewPurchasePreview.totalCostForWeapon(snapshot, pendingPurchases, record.getWeaponId());
         rows.add(StockReviewListRow.weapon(
                 label,
                 StockReviewStyle.TEXT,
                 StockReviewAction.toggleWeapon(record.getWeaponId()),
-                StockReviewAction.adjustTally(record.getWeaponId(), -10),
-                StockReviewAction.adjustTally(record.getWeaponId(), -1),
-                StockReviewAction.adjustTally(record.getWeaponId(), 1),
-                StockReviewAction.adjustTally(record.getWeaponId(), 10),
-                StockReviewAction.adjustTally(record.getWeaponId(), buyUntilQuantity),
-                tally,
+                StockReviewAction.adjustPlan(record.getWeaponId(), -10),
+                StockReviewAction.adjustPlan(record.getWeaponId(), -1),
+                StockReviewAction.adjustPlan(record.getWeaponId(), 1),
+                StockReviewAction.adjustPlan(record.getWeaponId(), 10),
+                StockReviewAction.adjustPlan(record.getWeaponId(), buyUntilQuantity),
+                record.getOwnedCount(),
+                record.getBuyableCount(),
+                planQuantity,
+                transactionCost,
                 sellRemaining > 0,
                 buyRemaining > 0,
                 buyUntilQuantity > 0));
@@ -87,7 +92,7 @@ final class StockReviewListModel {
         addSellers(rows, record, state);
     }
 
-    private static int pendingTally(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
+    private static int pendingPlanQuantity(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
         int total = 0;
         if (pendingPurchases == null) {
             return total;

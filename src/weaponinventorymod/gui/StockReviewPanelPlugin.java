@@ -120,7 +120,7 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             rebuildContent();
             return;
         }
-        if (StockReviewAction.Type.BUY_BEST.equals(type)) {
+        if (StockReviewAction.Type.ADJUST_PLAN.equals(type)) {
             addPendingTrade(action);
             return;
         }
@@ -157,6 +157,10 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.PURCHASE_UNTIL_SUFFICIENT.equals(type)) {
+            purchaseUntilSufficient();
+            return;
+        }
         if (StockReviewAction.Type.REVIEW_PURCHASE.equals(type)) {
             if (!pendingPurchases.isEmpty()) {
                 reviewMode = true;
@@ -188,7 +192,7 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private void addPendingTrade(StockReviewAction action) {
         int available = availableFor(action);
         if (available <= 0) {
-            reportMessage(action.getQuantity() < 0 ? "No more player-cargo stock is available to sell." : "No more buyable stock is available for that tally.");
+            reportMessage(action.getQuantity() < 0 ? "No more player-cargo stock is available to sell." : "No more buyable stock is available for that plan.");
             rebuildContent();
             return;
         }
@@ -206,6 +210,38 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         if (Math.abs(quantity) < Math.abs(requested)) {
             reportMessage("Only " + Math.abs(quantity) + " more can be tallied for that weapon.");
         }
+        rebuildContent();
+    }
+
+    private void purchaseUntilSufficient() {
+        if (snapshot == null) {
+            return;
+        }
+        int added = 0;
+        for (int i = 0; i < snapshot.getAllRecords().size(); i++) {
+            WeaponStockRecord record = snapshot.getAllRecords().get(i);
+            int planQuantity = pendingNetQuantityForWeapon(record.getWeaponId());
+            int needed = Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + planQuantity));
+            int buyRemaining = Math.max(0, record.getBuyableCount() - pendingBuyQuantityForWeapon(record.getWeaponId()));
+            int quantity = Math.min(needed, buyRemaining);
+            if (quantity <= 0) {
+                continue;
+            }
+            StockReviewPendingPurchase existing = findPending(record.getWeaponId(), null);
+            if (existing == null) {
+                pendingPurchases.add(new StockReviewPendingPurchase(record.getWeaponId(), null, quantity));
+            } else {
+                existing.addQuantity(quantity);
+            }
+            added += quantity;
+        }
+        if (added <= 0) {
+            reportMessage("No additional sufficient-stock purchases are available.");
+            rebuildContent();
+            return;
+        }
+        reviewMode = true;
+        state.setListScrollOffset(0);
         rebuildContent();
     }
 
@@ -236,6 +272,17 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         for (int i = 0; i < pendingPurchases.size(); i++) {
             StockReviewPendingPurchase purchase = pendingPurchases.get(i);
             if (weaponId != null && weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() > 0) {
+                count += purchase.getQuantity();
+            }
+        }
+        return count;
+    }
+
+    private int pendingNetQuantityForWeapon(String weaponId) {
+        int count = 0;
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (weaponId != null && weaponId.equals(purchase.getWeaponId())) {
                 count += purchase.getQuantity();
             }
         }

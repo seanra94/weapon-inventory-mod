@@ -3,7 +3,7 @@ package weaponinventorymod.gui;
 import java.awt.Color;
 
 final class StockReviewStyle {
-    static final float WIDTH = 880f;
+    static final float WIDTH = 1180f;
     static final float HEIGHT = 640f;
     static final float PAD = 10f;
     static final float SMALL_PAD = 4f;
@@ -22,7 +22,9 @@ final class StockReviewStyle {
     static final float SELL_BUTTON_WIDTH = 54f;
     static final float BUY_BUTTON_WIDTH = 54f;
     static final float BUY_UNTIL_BUTTON_WIDTH = 132f;
-    static final float TALLY_WIDTH = 74f;
+    static final float COUNT_CELL_WIDTH = 78f;
+    static final float PLAN_CELL_WIDTH = 70f;
+    static final float COST_CELL_WIDTH = 88f;
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float ROW_HEIGHT = 22f;
     static final float ROW_GAP = 3f;
@@ -35,6 +37,7 @@ final class StockReviewStyle {
     static final float SELLER_INDENT = 52f;
     static final float BUTTON_GAP = 5f;
     static final float FOOTER_BUTTON_WIDTH = 180f;
+    static final float PURCHASE_UNTIL_BUTTON_WIDTH = 220f;
     static final int SCROLL_STEP = 3;
     static final boolean REFRESH_VANILLA_CORE_AFTER_PURCHASE = false;
 
@@ -73,9 +76,11 @@ final class StockReviewStyle {
     static final Color ACTION_HOVER = UNCOLOURED_BUTTON;
     static final Color BUY_BUTTON = LOAD_BUTTON;
     static final Color SELL_BUTTON = SAVE_BUTTON;
-    static final Color TALLY_POSITIVE = CONFIRM_BUTTON;
-    static final Color TALLY_NEGATIVE = CANCEL_BUTTON;
-    static final Color TALLY_ZERO = LOAD_BUTTON;
+    static final Color PLAN_POSITIVE = CONFIRM_BUTTON;
+    static final Color PLAN_NEGATIVE = CANCEL_BUTTON;
+    static final Color PLAN_ZERO = LOAD_BUTTON;
+    static final Color COST_BUTTON = CANCEL_BUTTON;
+    static final Color PROFIT_BUTTON = CONFIRM_BUTTON;
     static final Color SCROLL = DEFAULT_TEXT;
     static final Color TEXT = WHITE_TEXT;
     static final Color MUTED = WHITE_TEXT;

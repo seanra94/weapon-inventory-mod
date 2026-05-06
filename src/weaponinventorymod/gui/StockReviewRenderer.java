@@ -6,6 +6,7 @@ import com.fs.starfarer.api.ui.CustomPanelAPI;
 import com.fs.starfarer.api.ui.CutStyle;
 import com.fs.starfarer.api.ui.LabelAPI;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
+import weaponinventorymod.core.OwnedSourcePolicy;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
 import java.awt.Color;
@@ -58,7 +59,7 @@ final class StockReviewRenderer {
                 StockReviewAction.cycleDisplayMode(), true, buttons);
         x = addActionButton(root, x, y, StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                 StockReviewAction.cycleSortMode(), true, buttons);
-        x = addActionButton(root, x, y, StockReviewStyle.STORAGE_BUTTON_WIDTH, "Market Storage: " + onOff(snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")),
+        x = addActionButton(root, x, y, StockReviewStyle.STORAGE_BUTTON_WIDTH, "Storage: " + onOff(!OwnedSourcePolicy.FLEET_ONLY.equals(snapshot.getOwnedSourcePolicy())),
                 StockReviewAction.toggleCurrentMarketStorage(), true, buttons);
         x = addActionButton(root, x, y, StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                 StockReviewAction.toggleBlackMarket(), true, buttons);
@@ -170,8 +171,16 @@ final class StockReviewRenderer {
 
         if (row.getSellOneAction() != null) {
             float x = width - actionBlockWidth;
-            addTallyLabel(rowPanel, row.getTally(), x, StockReviewStyle.TALLY_WIDTH);
-            x += StockReviewStyle.TALLY_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addInfoCell(rowPanel, "Current: " + row.getCurrentCount(), x, StockReviewStyle.COUNT_CELL_WIDTH,
+                    StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.TEXT);
+            x += StockReviewStyle.COUNT_CELL_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addInfoCell(rowPanel, "For Sale: " + row.getForSaleCount(), x, StockReviewStyle.COUNT_CELL_WIDTH,
+                    StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.TEXT);
+            x += StockReviewStyle.COUNT_CELL_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addPlanCell(rowPanel, row.getPlanQuantity(), x, StockReviewStyle.PLAN_CELL_WIDTH);
+            x += StockReviewStyle.PLAN_CELL_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addCostCell(rowPanel, row.getTransactionCost(), x, StockReviewStyle.COST_CELL_WIDTH);
+            x += StockReviewStyle.COST_CELL_WIDTH + StockReviewStyle.BUTTON_GAP;
             addSmallButton(rowPanel, x, 0f, "Sell 10", row.getSellTenAction(), row.isSellEnabled(), buttons,
                     StockReviewStyle.SELL_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON);
             x += StockReviewStyle.SELL_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
@@ -197,11 +206,13 @@ final class StockReviewRenderer {
 
     private float actionBlockWidth(StockReviewListRow row) {
         if (row.getSellOneAction() != null) {
-            return StockReviewStyle.TALLY_WIDTH
+            return 2f * StockReviewStyle.COUNT_CELL_WIDTH
+                    + StockReviewStyle.PLAN_CELL_WIDTH
+                    + StockReviewStyle.COST_CELL_WIDTH
                     + 2f * StockReviewStyle.SELL_BUTTON_WIDTH
                     + 2f * StockReviewStyle.BUY_BUTTON_WIDTH
                     + StockReviewStyle.BUY_UNTIL_BUTTON_WIDTH
-                    + 5f * StockReviewStyle.BUTTON_GAP;
+                    + 8f * StockReviewStyle.BUTTON_GAP;
         }
         if (row.getBuyOneAction() != null) {
             return 2f * StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
@@ -258,12 +269,31 @@ final class StockReviewRenderer {
         addButton(parent, x, y, width, label, text, action, enabled, Alignment.MID, buttons, fill);
     }
 
-    private void addTallyLabel(CustomPanelAPI parent, int tally, float x, float width) {
-        float labelWidth = 38f;
-        addLabel(parent, "Tally:", StockReviewStyle.TEXT, x, labelWidth);
-        String value = tally > 0 ? "+" + tally : String.valueOf(tally);
-        Color color = tally > 0 ? StockReviewStyle.TALLY_POSITIVE : (tally < 0 ? StockReviewStyle.TALLY_NEGATIVE : StockReviewStyle.TALLY_ZERO);
-        addLabel(parent, value, color, x + labelWidth, Math.max(8f, width - labelWidth));
+    private void addPlanCell(CustomPanelAPI parent, int planQuantity, float x, float width) {
+        String value = planQuantity > 0 ? "+" + planQuantity : String.valueOf(planQuantity);
+        Color color = planQuantity > 0 ? StockReviewStyle.PLAN_POSITIVE : (planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.PLAN_ZERO);
+        addInfoCell(parent, "Plan: " + value, x, width, StockReviewStyle.ROW_BACKGROUND, color);
+    }
+
+    private void addCostCell(CustomPanelAPI parent, int transactionCost, float x, float width) {
+        if (transactionCost == StockReviewPurchasePreview.PRICE_UNAVAILABLE) {
+            addInfoCell(parent, "Cost: ?", x, width, StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
+            return;
+        }
+        if (transactionCost < 0) {
+            addInfoCell(parent, "Profit: $" + (-transactionCost), x, width, StockReviewStyle.PROFIT_BUTTON, StockReviewStyle.TEXT);
+            return;
+        }
+        addInfoCell(parent, "Cost: $" + transactionCost, x, width,
+                transactionCost == 0 ? StockReviewStyle.PLAN_ZERO : StockReviewStyle.COST_BUTTON,
+                StockReviewStyle.TEXT);
+    }
+
+    private void addInfoCell(CustomPanelAPI parent, String label, float x, float width, Color background, Color textColor) {
+        CustomPanelAPI cell = parent.createCustomPanel(width, StockReviewStyle.ACTION_BUTTON_HEIGHT,
+                new StockReviewPanelBoxPlugin(background, StockReviewStyle.ROW_BORDER));
+        parent.addComponent(cell).inTL(x, 0f);
+        addButtonLabel(parent, label, textColor, x, 0f, width, Alignment.MID);
     }
 
     private ButtonAPI addButton(CustomPanelAPI parent,
@@ -332,6 +362,17 @@ final class StockReviewRenderer {
         }
         addFooterButton(root, StockReviewStyle.PAD, y, "Review Purchase", StockReviewAction.reviewPurchase(),
                 pendingPurchases != null && !pendingPurchases.isEmpty(), StockReviewStyle.CONFIRM_BUTTON, buttons);
+        addButton(root,
+                StockReviewStyle.PAD + StockReviewStyle.FOOTER_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP,
+                y,
+                StockReviewStyle.PURCHASE_UNTIL_BUTTON_WIDTH,
+                "Purchase Until Sufficient",
+                StockReviewStyle.TEXT,
+                StockReviewAction.purchaseUntilSufficient(),
+                true,
+                Alignment.MID,
+                buttons,
+                StockReviewStyle.BUY_BUTTON);
         addFooterButton(root, StockReviewStyle.WIDTH - StockReviewStyle.PAD - StockReviewStyle.FOOTER_BUTTON_WIDTH, y, "Cancel",
                 StockReviewAction.close(), true, StockReviewStyle.CANCEL_BUTTON, buttons);
     }
@@ -409,6 +450,9 @@ final class StockReviewRenderer {
     }
 
     private static String ownedSourceLabel(WeaponStockSnapshot snapshot) {
+        if (snapshot.getOwnedSourcePolicy().name().contains("ACCESSIBLE_STORAGE")) {
+            return "fleet + all accessible storage";
+        }
         if (snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")) {
             return "fleet + current market storage";
         }

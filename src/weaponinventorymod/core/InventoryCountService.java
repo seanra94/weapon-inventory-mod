@@ -3,6 +3,7 @@ package weaponinventorymod.core;
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
+import com.fs.starfarer.api.campaign.econ.EconomyAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.util.Misc;
 
@@ -20,11 +21,27 @@ public final class InventoryCountService {
         CampaignFleetAPI fleet = sector.getPlayerFleet();
         merge(counts, collectCargoWeaponCounts(fleet == null ? null : fleet.getCargo()));
 
-        if (OwnedSourcePolicy.FLEET_AND_CURRENT_MARKET_STORAGE.equals(policy) && market != null && Misc.playerHasStorageAccess(market)) {
+        if (OwnedSourcePolicy.FLEET_AND_ACCESSIBLE_STORAGE.equals(policy)) {
+            mergeAccessibleStorage(counts, sector);
+        } else if (OwnedSourcePolicy.FLEET_AND_CURRENT_MARKET_STORAGE.equals(policy) && market != null && Misc.playerHasStorageAccess(market)) {
             merge(counts, collectCargoWeaponCounts(Misc.getStorageCargo(market)));
         }
 
         return counts;
+    }
+
+    private static void mergeAccessibleStorage(Map<String, Integer> counts, SectorAPI sector) {
+        EconomyAPI economy = sector.getEconomy();
+        List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
+        if (markets == null) {
+            return;
+        }
+        for (MarketAPI storageMarket : markets) {
+            if (storageMarket == null || !Misc.playerHasStorageAccess(storageMarket)) {
+                continue;
+            }
+            merge(counts, collectCargoWeaponCounts(Misc.getStorageCargo(storageMarket)));
+        }
     }
 
     public static Map<String, Integer> collectCargoWeaponCounts(CargoAPI cargo) {

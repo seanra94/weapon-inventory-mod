@@ -7,13 +7,14 @@ final class StockReviewAction {
         TOGGLE_CATEGORY,
         TOGGLE_WEAPON,
         TOGGLE_WEAPON_SECTION,
-        BUY_BEST,
+        ADJUST_PLAN,
         BUY_FROM_SUBMARKET,
         CYCLE_DISPLAY_MODE,
         CYCLE_SORT_MODE,
         TOGGLE_CURRENT_MARKET_STORAGE,
         TOGGLE_BLACK_MARKET,
         SCROLL_LIST,
+        PURCHASE_UNTIL_SUFFICIENT,
         REVIEW_PURCHASE,
         CONFIRM_PURCHASE,
         GO_BACK,
@@ -55,11 +56,11 @@ final class StockReviewAction {
     }
 
     static StockReviewAction buyBest(String weaponId, int quantity) {
-        return new StockReviewAction(Type.BUY_BEST, null, null, weaponId, null, quantity);
+        return adjustPlan(weaponId, quantity);
     }
 
-    static StockReviewAction adjustTally(String weaponId, int delta) {
-        return new StockReviewAction(Type.BUY_BEST, null, null, weaponId, null, delta);
+    static StockReviewAction adjustPlan(String weaponId, int delta) {
+        return new StockReviewAction(Type.ADJUST_PLAN, null, null, weaponId, null, delta);
     }
 
     static StockReviewAction buyFromSubmarket(String weaponId, String submarketId, int quantity) {
@@ -92,6 +93,10 @@ final class StockReviewAction {
 
     static StockReviewAction reviewPurchase() {
         return new StockReviewAction(Type.REVIEW_PURCHASE, null, null, null, null, 0);
+    }
+
+    static StockReviewAction purchaseUntilSufficient() {
+        return new StockReviewAction(Type.PURCHASE_UNTIL_SUFFICIENT, null, null, null, null, 0);
     }
 
     static StockReviewAction confirmPurchase() {
