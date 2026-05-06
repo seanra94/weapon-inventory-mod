@@ -9,6 +9,7 @@ if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
 $apiJar = Join-Path $StarsectorDir "starsector-core\starfarer.api.jar"
 $log4jJar = Join-Path $StarsectorDir "starsector-core\log4j-1.2.9.jar"
 $lwjglJar = Join-Path $StarsectorDir "starsector-core\lwjgl.jar"
+$jsonJar = Join-Path $StarsectorDir "starsector-core\json.jar"
 $modsDir = Join-Path $StarsectorDir "mods"
 if (-not (Test-Path -LiteralPath $apiJar)) {
     throw "Could not find starfarer.api.jar at '$apiJar'. Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
@@ -18,6 +19,9 @@ if (-not (Test-Path -LiteralPath $log4jJar)) {
 }
 if (-not (Test-Path -LiteralPath $lwjglJar)) {
     throw "Could not find lwjgl.jar at '$lwjglJar'. Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
+}
+if (-not (Test-Path -LiteralPath $jsonJar)) {
+    throw "Could not find json.jar at '$jsonJar'. Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
 }
 
 $lunaJar = $null
@@ -53,7 +57,7 @@ if ($sources.Count -eq 0) {
     throw "No Java sources found under '$srcDir'."
 }
 
-$compileClasspath = "$apiJar;$log4jJar;$lwjglJar;$lunaJar"
+$compileClasspath = "$apiJar;$log4jJar;$lwjglJar;$jsonJar;$lunaJar"
 & javac -cp $compileClasspath -d $classesDir $sources
 if ($LASTEXITCODE -ne 0) {
     throw "javac failed with exit code $LASTEXITCODE."

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class MarketStockService {
-    public MarketStock collectCurrentMarketWeaponStock(MarketAPI market) {
+    public MarketStock collectCurrentMarketWeaponStock(MarketAPI market, boolean includeBlackMarket) {
         Map<String, Integer> totals = new HashMap<String, Integer>();
         Map<String, List<SubmarketWeaponStock>> byWeapon = new HashMap<String, List<SubmarketWeaponStock>>();
         if (market == null || market.getSubmarketsCopy() == null) {
@@ -20,7 +20,7 @@ public final class MarketStockService {
         }
 
         for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
-            if (!isPurchasableSubmarket(submarket)) {
+            if (!isPurchasableSubmarket(submarket, includeBlackMarket)) {
                 continue;
             }
             CargoAPI cargo = submarket.getCargoNullOk();
@@ -43,12 +43,15 @@ public final class MarketStockService {
         return new MarketStock(totals, byWeapon);
     }
 
-    private static boolean isPurchasableSubmarket(SubmarketAPI submarket) {
+    private static boolean isPurchasableSubmarket(SubmarketAPI submarket, boolean includeBlackMarket) {
         if (submarket == null) {
             return false;
         }
         String id = submarket.getSpecId();
         if (Submarkets.SUBMARKET_STORAGE.equals(id) || Submarkets.LOCAL_RESOURCES.equals(id)) {
+            return false;
+        }
+        if (!includeBlackMarket && Submarkets.SUBMARKET_BLACK.equals(id)) {
             return false;
         }
         return submarket.getCargoNullOk() != null;

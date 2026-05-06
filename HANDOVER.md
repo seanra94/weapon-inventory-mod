@@ -6,6 +6,12 @@
 - Exact in-cell rendering is implemented by deterministically patching `com/fs/starfarer/campaign/ui/trade/CargoStackView.renderAtCenter(FFF)V` in `starfarer_obf.jar`.
 - A clean normal-mod frontend is now being added as the primary product: `F8` opens a read-only Weapon Stock Review popup from an active market/storage interaction dialog.
 - The popup is independent of the `CargoStackView` patcher. The clean UI should keep working if the patcher is removed.
+- Popup configuration lives in `data/config/weapon_inventory_stock.json`:
+  - default display mode;
+  - include/exclude current market storage;
+  - include/exclude black market stock;
+  - desired stock defaults by weapon size;
+  - per-weapon desired/ignored overrides.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
@@ -104,6 +110,7 @@ Manual validation:
 - Press `F8` to open Weapon Stock Review.
 - Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
 - Confirm row counts are `owned / currently purchasable at this market`.
+- Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without closing the popup.
 - Confirm no crash.
 - Confirm commodities remain vanilla.
 - Confirm weapon and fighter LPC stacks show one bottom-right badge.

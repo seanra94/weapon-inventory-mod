@@ -21,10 +21,12 @@ final class StockReviewRenderer {
         tooltip.setParaFontColor(StockReviewStyle.TEXT);
         tooltip.addTitle("Weapon Stock Review");
         tooltip.addPara("Market: " + snapshot.getMarketName()
-                + " | Showing weapons owned or currently for sale"
-                + " | Owned source: fleet + current market storage", StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED, "Market:", "Owned source:");
+                + " | Mode: " + snapshot.getDisplayMode().getLabel()
+                + " | Owned source: " + ownedSourceLabel(snapshot)
+                + " | Black market: " + onOff(snapshot.isIncludeBlackMarket()), StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED,
+                "Market:", "Mode:", "Owned source:", "Black market:");
 
-        addActionRow(tooltip, buttons);
+        addActionRow(tooltip, snapshot, buttons);
         addCategory(tooltip, snapshot, state, buttons, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK);
         addCategory(tooltip, snapshot, state, buttons, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT);
         addCategory(tooltip, snapshot, state, buttons, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT);
@@ -34,10 +36,20 @@ final class StockReviewRenderer {
         }
     }
 
-    private void addActionRow(TooltipMakerAPI tooltip, List<StockReviewButtonBinding> buttons) {
+    private void addActionRow(TooltipMakerAPI tooltip, WeaponStockSnapshot snapshot, List<StockReviewButtonBinding> buttons) {
         ButtonAPI refresh = tooltip.addButton("Refresh", StockReviewAction.refresh(), Misc.getBasePlayerColor(),
                 Misc.getDarkPlayerColor(), StockReviewStyle.ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.PAD);
         buttons.add(new StockReviewButtonBinding(refresh, StockReviewAction.refresh()));
+        ButtonAPI mode = tooltip.addButton("Mode: " + snapshot.getDisplayMode().getLabel(), StockReviewAction.cycleDisplayMode(), Misc.getBasePlayerColor(),
+                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
+        buttons.add(new StockReviewButtonBinding(mode, StockReviewAction.cycleDisplayMode()));
+        ButtonAPI storage = tooltip.addButton("Market Storage: " + onOff(snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")),
+                StockReviewAction.toggleCurrentMarketStorage(), Misc.getBasePlayerColor(),
+                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
+        buttons.add(new StockReviewButtonBinding(storage, StockReviewAction.toggleCurrentMarketStorage()));
+        ButtonAPI blackMarket = tooltip.addButton("Black Market: " + onOff(snapshot.isIncludeBlackMarket()), StockReviewAction.toggleBlackMarket(), Misc.getBasePlayerColor(),
+                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
+        buttons.add(new StockReviewButtonBinding(blackMarket, StockReviewAction.toggleBlackMarket()));
         ButtonAPI close = tooltip.addButton("Close", StockReviewAction.close(), Misc.getBasePlayerColor(),
                 Misc.getDarkPlayerColor(), StockReviewStyle.ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(close, StockReviewAction.close()));
@@ -94,5 +106,16 @@ final class StockReviewRenderer {
             result.append(stock.getSubmarketName()).append(": ").append(stock.getCount());
         }
         return result.toString();
+    }
+
+    private static String ownedSourceLabel(WeaponStockSnapshot snapshot) {
+        if (snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")) {
+            return "fleet + current market storage";
+        }
+        return "fleet only";
+    }
+
+    private static String onOff(boolean enabled) {
+        return enabled ? "On" : "Off";
     }
 }

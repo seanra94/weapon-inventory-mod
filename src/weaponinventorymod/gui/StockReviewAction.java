@@ -5,6 +5,9 @@ import weaponinventorymod.core.StockCategory;
 final class StockReviewAction {
     enum Type {
         TOGGLE_CATEGORY,
+        CYCLE_DISPLAY_MODE,
+        TOGGLE_CURRENT_MARKET_STORAGE,
+        TOGGLE_BLACK_MARKET,
         REFRESH,
         CLOSE
     }
@@ -23,6 +26,18 @@ final class StockReviewAction {
 
     static StockReviewAction refresh() {
         return new StockReviewAction(Type.REFRESH, null);
+    }
+
+    static StockReviewAction cycleDisplayMode() {
+        return new StockReviewAction(Type.CYCLE_DISPLAY_MODE, null);
+    }
+
+    static StockReviewAction toggleCurrentMarketStorage() {
+        return new StockReviewAction(Type.TOGGLE_CURRENT_MARKET_STORAGE, null);
+    }
+
+    static StockReviewAction toggleBlackMarket() {
+        return new StockReviewAction(Type.TOGGLE_BLACK_MARKET, null);
     }
 
     static StockReviewAction close() {

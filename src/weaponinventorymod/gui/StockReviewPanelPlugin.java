@@ -10,7 +10,7 @@ import com.fs.starfarer.api.ui.CustomPanelAPI;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
-import weaponinventorymod.core.OwnedSourcePolicy;
+import weaponinventorymod.core.StockReviewConfig;
 import weaponinventorymod.core.WeaponStockSnapshot;
 import weaponinventorymod.core.WeaponStockSnapshotBuilder;
 
@@ -20,7 +20,8 @@ import java.util.List;
 public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private static final Logger LOG = Logger.getLogger(StockReviewPanelPlugin.class);
 
-    private final StockReviewState state = new StockReviewState();
+    private final StockReviewConfig config = StockReviewConfig.load();
+    private final StockReviewState state = new StockReviewState(config);
     private final StockReviewRenderer renderer = new StockReviewRenderer();
     private final WeaponStockSnapshotBuilder snapshotBuilder = new WeaponStockSnapshotBuilder();
     private final List<StockReviewButtonBinding> buttons = new ArrayList<StockReviewButtonBinding>();
@@ -87,6 +88,24 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.CYCLE_DISPLAY_MODE.equals(type)) {
+            state.cycleDisplayMode();
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.TOGGLE_CURRENT_MARKET_STORAGE.equals(type)) {
+            state.toggleCurrentMarketStorage();
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
+            state.toggleBlackMarket();
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
         if (StockReviewAction.Type.REFRESH.equals(type)) {
             rebuildSnapshot();
             rebuildContent();
@@ -100,7 +119,8 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private void rebuildSnapshot() {
         SectorAPI sector = Global.getSector();
         MarketAPI market = currentMarket(sector);
-        snapshot = snapshotBuilder.build(sector, market, OwnedSourcePolicy.FLEET_AND_CURRENT_MARKET_STORAGE);
+        snapshot = snapshotBuilder.build(sector, market, config, state.getDisplayMode(),
+                state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket());
     }
 
     private MarketAPI currentMarket(SectorAPI sector) {

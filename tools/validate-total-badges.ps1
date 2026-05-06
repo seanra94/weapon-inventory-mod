@@ -61,9 +61,45 @@ function Test-JsonFilesNoBom {
     }
 }
 
+function Test-StockReviewConfig {
+    param(
+        [string]$BasePath,
+        [string]$Label
+    )
+
+    $configPath = Join-Path $BasePath "data\\config\\weapon_inventory_stock.json"
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        throw "$Label missing stock review config '$configPath'"
+    }
+
+    $raw = Get-Content -LiteralPath $configPath -Raw
+    try {
+        $json = $raw | ConvertFrom-Json
+    } catch {
+        throw "$Label invalid stock review JSON '$configPath': $($_.Exception.Message)"
+    }
+
+    foreach ($section in @("display", "sources", "desiredDefaults", "perWeapon")) {
+        if (-not $json.PSObject.Properties.Name.Contains($section)) {
+            throw "$Label stock review config missing '$section'"
+        }
+    }
+    foreach ($field in @("smallWeapon", "mediumWeapon", "largeWeapon")) {
+        if (-not $json.desiredDefaults.PSObject.Properties.Name.Contains($field)) {
+            throw "$Label stock review config missing desiredDefaults.$field"
+        }
+        $value = [int]$json.desiredDefaults.$field
+        if ($value -lt 0 -or $value -gt 999) {
+            throw "$Label stock review config desiredDefaults.$field out of range: $value"
+        }
+    }
+}
+
 Test-BadgeSet -BasePath $RepoRoot -Label "SOURCE"
 Test-BadgeSet -BasePath $DeployRoot -Label "DEPLOY"
 Test-JsonFilesNoBom -BasePath $RepoRoot -Label "SOURCE"
 Test-JsonFilesNoBom -BasePath $DeployRoot -Label "DEPLOY"
+Test-StockReviewConfig -BasePath $RepoRoot -Label "SOURCE"
+Test-StockReviewConfig -BasePath $DeployRoot -Label "DEPLOY"
 
-Write-Host "Total badge + JSON BOM validation passed for source and deploy paths."
+Write-Host "Total badge, stock config, and JSON BOM validation passed for source and deploy paths."

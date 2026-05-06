@@ -17,18 +17,21 @@ import java.util.Set;
 public final class WeaponStockSnapshotBuilder {
     private final InventoryCountService inventoryCountService = new InventoryCountService();
     private final MarketStockService marketStockService = new MarketStockService();
-    private final DesiredStockService desiredStockService = new DesiredStockService();
     private final StockStatusClassifier classifier = new StockStatusClassifier();
 
-    public WeaponStockSnapshot build(SectorAPI sector, MarketAPI market, OwnedSourcePolicy ownedSourcePolicy) {
+    public WeaponStockSnapshot build(SectorAPI sector,
+                                     MarketAPI market,
+                                     StockReviewConfig config,
+                                     StockDisplayMode displayMode,
+                                     boolean includeCurrentMarketStorage,
+                                     boolean includeBlackMarket) {
+        OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
+        DesiredStockService desiredStockService = new DesiredStockService(config);
         Map<String, Integer> owned = inventoryCountService.collectOwnedWeaponCounts(sector, market, ownedSourcePolicy);
-        MarketStockService.MarketStock marketStock = marketStockService.collectCurrentMarketWeaponStock(market);
+        MarketStockService.MarketStock marketStock = marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
 
         Set<String> ids = new HashSet<String>();
-        ids.addAll(owned.keySet());
-        for (String id : marketStock.weaponIds()) {
-            ids.add(id);
-        }
+        addIdsForDisplayMode(ids, sector, owned, marketStock, displayMode);
 
         Map<StockCategory, List<WeaponStockRecord>> grouped = new EnumMap<StockCategory, List<WeaponStockRecord>>(StockCategory.class);
         for (StockCategory category : StockCategory.values()) {
@@ -40,12 +43,15 @@ public final class WeaponStockSnapshotBuilder {
             if (spec == null) {
                 continue;
             }
-            int ownedCount = getCount(owned, weaponId);
-            int purchasableCount = marketStock.getTotal(weaponId);
-            if (ownedCount <= 0 && purchasableCount <= 0) {
+            if (config.isIgnored(weaponId)) {
                 continue;
             }
-            int desiredCount = desiredStockService.desiredCount(spec);
+            int ownedCount = getCount(owned, weaponId);
+            int purchasableCount = marketStock.getTotal(weaponId);
+            if (!shouldInclude(displayMode, ownedCount, purchasableCount)) {
+                continue;
+            }
+            int desiredCount = desiredStockService.desiredCount(weaponId, spec);
             StockCategory category = classifier.classify(ownedCount, desiredCount);
             grouped.get(category).add(new WeaponStockRecord(
                     weaponId,
@@ -62,7 +68,47 @@ public final class WeaponStockSnapshotBuilder {
             Collections.sort(records, RECORD_ORDER);
         }
 
-        return new WeaponStockSnapshot(market, ownedSourcePolicy, grouped);
+        return new WeaponStockSnapshot(market, ownedSourcePolicy, displayMode, includeBlackMarket, grouped);
+    }
+
+    private static void addIdsForDisplayMode(Set<String> ids,
+                                             SectorAPI sector,
+                                             Map<String, Integer> owned,
+                                             MarketStockService.MarketStock marketStock,
+                                             StockDisplayMode displayMode) {
+        if (StockDisplayMode.CURRENTLY_FOR_SALE.equals(displayMode)) {
+            for (String id : marketStock.weaponIds()) {
+                ids.add(id);
+            }
+            return;
+        }
+        if (StockDisplayMode.OWNED_ONLY.equals(displayMode)) {
+            ids.addAll(owned.keySet());
+            return;
+        }
+        if (StockDisplayMode.ALL_TRACKED.equals(displayMode)) {
+            if (sector != null && sector.getAllWeaponIds() != null) {
+                ids.addAll(sector.getAllWeaponIds());
+            }
+            return;
+        }
+        ids.addAll(owned.keySet());
+        for (String id : marketStock.weaponIds()) {
+            ids.add(id);
+        }
+    }
+
+    private static boolean shouldInclude(StockDisplayMode displayMode, int ownedCount, int purchasableCount) {
+        if (StockDisplayMode.CURRENTLY_FOR_SALE.equals(displayMode)) {
+            return purchasableCount > 0;
+        }
+        if (StockDisplayMode.OWNED_ONLY.equals(displayMode)) {
+            return ownedCount > 0;
+        }
+        if (StockDisplayMode.ALL_TRACKED.equals(displayMode)) {
+            return true;
+        }
+        return ownedCount > 0 || purchasableCount > 0;
     }
 
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {

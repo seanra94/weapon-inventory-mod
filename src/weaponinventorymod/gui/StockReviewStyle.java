@@ -11,6 +11,7 @@ final class StockReviewStyle {
     static final float SMALL_PAD = 4f;
     static final float HEADING_HEIGHT = 24f;
     static final float ACTION_BUTTON_WIDTH = 110f;
+    static final float WIDE_ACTION_BUTTON_WIDTH = 230f;
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float CATEGORY_BUTTON_WIDTH = 820f;
     static final float CATEGORY_BUTTON_HEIGHT = 24f;

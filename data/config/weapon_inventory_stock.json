@@ -1,0 +1,16 @@
+{
+  "display": {
+    "defaultMode": "OWNED_OR_FOR_SALE"
+  },
+  "sources": {
+    "includeCurrentMarketStorage": true,
+    "includeBlackMarket": true
+  },
+  "desiredDefaults": {
+    "smallWeapon": 8,
+    "mediumWeapon": 4,
+    "largeWeapon": 2
+  },
+  "perWeapon": {
+  }
+}

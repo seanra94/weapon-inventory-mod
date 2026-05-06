@@ -11,14 +11,20 @@ import java.util.Map;
 public final class WeaponStockSnapshot {
     private final MarketAPI market;
     private final OwnedSourcePolicy ownedSourcePolicy;
+    private final StockDisplayMode displayMode;
+    private final boolean includeBlackMarket;
     private final Map<StockCategory, List<WeaponStockRecord>> recordsByCategory;
     private final int totalRecords;
 
     public WeaponStockSnapshot(MarketAPI market,
                                OwnedSourcePolicy ownedSourcePolicy,
+                               StockDisplayMode displayMode,
+                               boolean includeBlackMarket,
                                Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
         this.market = market;
         this.ownedSourcePolicy = ownedSourcePolicy;
+        this.displayMode = displayMode;
+        this.includeBlackMarket = includeBlackMarket;
         this.recordsByCategory = immutableCategoryMap(recordsByCategory);
         int total = 0;
         for (List<WeaponStockRecord> records : this.recordsByCategory.values()) {
@@ -33,6 +39,14 @@ public final class WeaponStockSnapshot {
 
     public OwnedSourcePolicy getOwnedSourcePolicy() {
         return ownedSourcePolicy;
+    }
+
+    public StockDisplayMode getDisplayMode() {
+        return displayMode;
+    }
+
+    public boolean isIncludeBlackMarket() {
+        return includeBlackMarket;
     }
 
     public List<WeaponStockRecord> getRecords(StockCategory category) {

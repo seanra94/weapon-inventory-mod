@@ -11,6 +11,7 @@
   - `F8` opens a normal read-only Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
   - rows show `owned / currently purchasable at this market`.
+  - popup has config-backed desired stock defaults, display mode, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -38,7 +39,8 @@
   - current-market sale counts;
   - fleet + current-market-storage owned counts;
   - desired-count classifier;
-  - three toggle headings.
+  - three toggle headings;
+  - runtime buttons for display mode, current-market storage, and black-market inclusion.
 
 ## Active Manual Validation
 
@@ -47,6 +49,8 @@
   - `F8` opens the Weapon Stock Review popup;
   - `Esc` and `Close` dismiss the popup;
   - category headings expand/collapse and preserve current state across refresh;
+  - Mode cycles through `Owned or For Sale`, `Currently For Sale`, `Owned Only`, and `All Tracked`;
+  - Market Storage and Black Market toggles update counts/categories;
   - no-weapons and many-weapons markets remain responsive;
   - commodities remain vanilla;
   - weapon badges still render bottom-right;
