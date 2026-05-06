@@ -19,6 +19,7 @@
 - Popup button rule:
   - Buttons use real Starsector button labels plus a small `StockReviewButtonBinding` registry as a polling fallback. In runtime, nested custom-panel controls did not reliably arrive through `buttonPressed(...)` alone.
   - Keep row/button actions as explicit `StockReviewAction` ids; do not return to inferred checkbox state as the source of truth.
+  - Clickable rows/buttons now use blank Starsector button text with WIM-rendered labels layered separately, so hover/base colors stay ACG-like while visible text remains white/gray under WIM control.
 - Popup default scope:
   - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
 - Popup purchase flow:
@@ -38,8 +39,9 @@
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon data` and `Sellers` use the ACG dark-gray collapsible heading fill.
 - Popup list filtering:
   - Category counts and weapon rows are filtered to records with at least one currently buyable unit at the open market. The popup is for shopping, not for showing unavailable desired weapons.
+  - Weapon row count text is `owned / buyable here`, not `owned / visible including locked stock`. Locked seller rows may still appear inside the expanded Sellers section for context.
 - Popup availability:
-  - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently visible for sale. It should not open from looting or non-trade planet contexts.
+  - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently buyable under the current black-market setting. It should not open from looting, non-trade planet contexts, or markets with only locked/unbuyable weapon stock.
 - Purchase refresh:
   - The current preferred buy path does not force-close/reopen the vanilla cargo core after purchase; it mutates cargo, then rebuilds the popup snapshot in place. The old forced core refresh remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE` in case vanilla trade-grid stale-slot corruption still reproduces.
 - Normal mod-side code owns all campaign state:

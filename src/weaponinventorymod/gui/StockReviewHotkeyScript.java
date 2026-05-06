@@ -9,6 +9,8 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import weaponinventorymod.core.MarketStockService;
+import weaponinventorymod.core.StockReviewConfig;
+import weaponinventorymod.core.SubmarketWeaponStock;
 
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
@@ -94,8 +96,16 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             return false;
         }
         try {
-            MarketStockService.MarketStock stock = new MarketStockService().collectCurrentMarketWeaponStock(market, true);
-            return stock.weaponIds().iterator().hasNext();
+            StockReviewConfig config = StockReviewConfig.load();
+            MarketStockService.MarketStock stock = new MarketStockService().collectCurrentMarketWeaponStock(market, config.isIncludeBlackMarket());
+            for (String weaponId : stock.weaponIds()) {
+                for (SubmarketWeaponStock submarketStock : stock.getSubmarketStocks(weaponId)) {
+                    if (submarketStock.isPurchasable() && submarketStock.getCount() > 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         } catch (Throwable ignored) {
             return false;
         }

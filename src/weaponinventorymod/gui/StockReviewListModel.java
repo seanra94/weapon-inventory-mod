@@ -60,7 +60,7 @@ final class StockReviewListModel {
                                   Color color,
                                   StockReviewState state) {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
-        String label = record.getDisplayName() + " (" + record.getCountLabel() + ") " + (expanded ? "(-)" : "(+)");
+        String label = record.getDisplayName() + " (" + record.getOwnedCount() + "/" + record.getBuyableCount() + ") " + (expanded ? "(-)" : "(+)");
         boolean canBuy = record.getBuyableCount() > 0;
         rows.add(StockReviewListRow.weapon(
                 label,

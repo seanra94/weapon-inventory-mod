@@ -4,6 +4,7 @@ import com.fs.starfarer.api.ui.Alignment;
 import com.fs.starfarer.api.ui.ButtonAPI;
 import com.fs.starfarer.api.ui.CustomPanelAPI;
 import com.fs.starfarer.api.ui.CutStyle;
+import com.fs.starfarer.api.ui.LabelAPI;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
@@ -186,11 +187,10 @@ final class StockReviewRenderer {
                                 Color backgroundColor) {
         TooltipMakerAPI element = parent.createUIElement(width, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
         element.setButtonFontDefault();
-        int maxChars = Math.max(4, (int) ((width - StockReviewStyle.TEXT_LEFT_PAD) / 6.2f));
         ButtonAPI button = element.addButton(
-                StockReviewText.fit(label, maxChars),
+                "",
                 action,
-                textColor,
+                backgroundColor,
                 backgroundColor,
                 alignment,
                 CutStyle.NONE,
@@ -200,8 +200,33 @@ final class StockReviewRenderer {
         button.setEnabled(enabled);
         button.setQuickMode(true);
         parent.addUIElement(element).inTL(x, y);
-        buttons.add(new StockReviewButtonBinding(button, action));
+        addButtonLabel(parent, label, textColor, x, y, width, alignment);
+        if (enabled) {
+            buttons.add(new StockReviewButtonBinding(button, action));
+        }
         return button;
+    }
+
+    private void addButtonLabel(CustomPanelAPI parent,
+                                String text,
+                                Color color,
+                                float x,
+                                float y,
+                                float width,
+                                Alignment alignment) {
+        float labelX = x;
+        float labelWidth = width;
+        if (Alignment.LMID.equals(alignment)) {
+            labelX += StockReviewStyle.TEXT_LEFT_PAD;
+            labelWidth = Math.max(8f, width - StockReviewStyle.TEXT_LEFT_PAD);
+        }
+        TooltipMakerAPI label = parent.createUIElement(labelWidth, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
+        label.setParaFontDefault();
+        label.setParaFontColor(color);
+        int maxChars = Math.max(4, (int) (labelWidth / 6.2f));
+        LabelAPI line = label.addPara(StockReviewText.fit(text, maxChars), 0f, color);
+        line.setAlignment(alignment);
+        parent.addUIElement(label).inTL(labelX, y + StockReviewStyle.TEXT_TOP_PAD);
     }
 
     private void addLabel(CustomPanelAPI parent, String text, Color color, float x, float width) {
