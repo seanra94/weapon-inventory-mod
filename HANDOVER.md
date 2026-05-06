@@ -25,7 +25,8 @@
   - top-level row buttons buy from cheapest eligible current-market seller stock;
   - expanded Seller rows buy from a specific submarket;
   - buys check player credits and cargo space before moving stock;
-  - after a successful buy, the popup asks the vanilla cargo core UI to close/reopen because direct cargo mutation while the trade grid is open can leave stale slot views behind;
+  - after a successful buy, the preferred path mutates cargo and rebuilds the popup snapshot in place;
+  - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
 - Popup category layout:
   - stock categories start collapsed;
@@ -58,6 +59,52 @@
   - published property: `wim.config.patchedBadgesEnabled`;
   - default: `0.20`, clamped to `0.05..2.00`.
 - `wim_enable_patched_badges=false` makes the embedded helper return `null`, so a patched core jar will skip badge rendering while the normal popup continues to work.
+
+## ACG-Derived GUI Rules For WIM
+
+These are the ACG Starsector UI lessons that matter for the Weapon Stock Review popup. Keep them in mind when extending WIM; they are runtime-tested Starsector GUI behavior, not just style preference.
+
+- Keep the clean popup architecture explicit:
+  - services build immutable-ish stock snapshots;
+  - state stores expansion, scroll, filters, sort, and source toggles;
+  - renderers draw from state plus snapshot only;
+  - controllers mutate cargo or state and request targeted refreshes.
+- Do not return to long, nested `TooltipMakerAPI` row piles for the main popup. The ACG lesson is that one explicit custom-panel/list model is easier to refresh, scroll, and reason about than removing and recreating tooltip content inside the same visual stack.
+- Share the same popup/list/control foundation across trade, storage, and any future market host. Host differences should be thin adapters for opening, closing, market discovery, vanilla UI refresh, and input forwarding. Duplicating the GUI per host is expected to drift.
+- Buttons and toggle rows should be centralized through shared helpers/templates. A row caller should choose a semantic action/color/enabled state; the helper should own label color, disabled behavior, guarded callbacks, hover behavior, sounds, tooltip suppression, and action registration.
+- Starsector area-checkbox colors are counterintuitive:
+  - `base` behaves like hover/glow;
+  - `bg` behaves like checked fill/border;
+  - built-in label coloring is limited, so WIM should keep using controlled row text instead of relying on checkbox labels for complex rows.
+- Starsector dims idle button interiors heavily. Raw RGB values can look much darker in game, while hover/glow is closer to raw RGB. For WIM, keep hover/glow equal to the idle/base color unless a runtime-tested exception is deliberately accepted.
+- Avoid bare `addAreaCheckbox(...)` visuals for action rows. If WIM uses area checkboxes for a future row type, give the row an owned background/fill so idle colors do not degrade into only a border or ring.
+- Use the imported ACG palette consistently:
+  - No stock category rows: cancel red;
+  - Insufficient and Buy rows/buttons: load yellow;
+  - Sufficient category rows: confirm green;
+  - nested toggle headings: dark gray;
+  - neutral available rows: black/dark action background;
+  - disabled/locked rows: gray text with disabled/dark shell and no meaningful hover.
+- Ordinary WIM popup text should stay white/default-font. Use gray text only for disabled, locked, or unavailable states unless the user explicitly asks for another convention.
+- Scrollable lists need one shared math path:
+  - preserve scroll offsets and expanded headings across rebuilds;
+  - consume wheel/input events when the custom list handles them;
+  - never reserve scroll indicators when all rows fit;
+  - page/indicator movement should use actual visible row capacity;
+  - indicators should share the same row width, padding, and vertical rhythm as the list they scroll;
+  - ASCII indicators are safer than arrow glyphs in this UI.
+- State-changing filters, source toggles, and sort changes should refresh the existing content shell and preserve expansion state. Replacing the full root popup should be reserved for real host/lifecycle changes.
+- If WIM adds modal popups, use the ACG three-section template: heading, body, bottom buttons. Width, padding, heading height, button height, section gaps, and the 80%-of-screen max-height cap should be shared constants; only body content and computed body height should vary.
+- Do not rely on click-out-to-close for modals. Escape and explicit Close/Cancel are sufficient. If outside-click behavior is added later, use raw-coordinate inside/outside checks rather than binding a full-screen backdrop directly to Cancel.
+- Modal/background input shielding matters in Starsector. Input consumption alone can be too late to stop hover sounds/tooltips behind a modal, so future WIM modals should disable or mute non-modal controls while open and restore their previous enabled state afterward.
+- Avoid `addParaWithMarkup()` and highlighted `addPara(...)` overloads for row labels and weapon text. `%` can be treated as formatter syntax, and markup paths caused literal markup/clipping problems in ACG. Prefer shared plain-text fitting/wrapping helpers.
+- Text wrapping should avoid weak line endings such as `as`, `as the`, `and`, `of`, and `to`. Long body copy should use one shared wrapping helper rather than local fixes in each popup.
+- Prefer Starsector-owned/default font selectors over raw font asset paths. A raw font path can compile and still crash in a specific custom UI entry point.
+- Keep button order consistent if WIM adds confirmation modals: `Confirm` green, `Apply`/secondary purple where applicable, `Delete`/destructive-yellow where applicable, `Cancel` red, left to right.
+- Left click should cycle forward and right click should cycle backward for future cycling option buttons, with both directions routed through the same button/action abstraction and sound handling.
+- For performance, build render-ready data during snapshot creation. Do not repeatedly call settings/spec lookups, classify stock, or scan cargo inside row rendering loops.
+- Clean code should still respect Starsector classloading reality. Compile/jar success is not enough after GUI helper extraction. Prefer stable explicit classes over anonymous/local/lambda-generated classes in runtime-sensitive UI or patched-helper paths, and inspect/test affected entry points after helper placement changes.
+- The patched badge path must remain isolated from the popup. The badge helper should keep asking only for precomputed badge sprite state; it must not own stock logic, desired-stock logic, market scanning, buying, or GUI behavior.
 
 ## Count Bridge
 
