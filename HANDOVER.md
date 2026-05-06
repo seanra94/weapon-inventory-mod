@@ -4,7 +4,7 @@
 
 - The mod renders ownership-count badges directly inside vanilla market/trade cargo cells for weapon stacks and fighter LPC stacks.
 - Exact in-cell rendering is implemented by deterministically patching `com/fs/starfarer/campaign/ui/trade/CargoStackView.renderAtCenter(FFF)V` in `starfarer_obf.jar`.
-- A clean normal-mod frontend is now being added as the primary product: `F8` opens a read-only Weapon Stock Review popup from an active market/storage interaction dialog.
+- A clean normal-mod frontend is now being added as the primary product: `F8` opens a Weapon Stock Review popup from an active market/storage interaction dialog.
 - The popup is independent of the `CargoStackView` patcher. The clean UI should keep working if the patcher is removed.
 - Popup configuration lives in `data/config/weapon_inventory_stock.json`:
   - default display mode;
@@ -12,6 +12,14 @@
   - include/exclude black market stock;
   - desired stock defaults by weapon size;
   - per-weapon desired/ignored overrides.
+- Popup redraw rule:
+  - Starsector custom visual dialog content should not be rebuilt by removing/recreating the same tooltip inside the same panel.
+  - State-changing buttons dismiss and reopen the custom visual dialog with copied `StockReviewState` to avoid stale text/control layering.
+- Popup purchase flow:
+  - top-level row buttons buy from cheapest eligible current-market seller stock;
+  - expanded Seller rows buy from a specific submarket;
+  - buys check player credits and cargo space before moving stock;
+  - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
@@ -113,8 +121,10 @@ Manual validation:
 - Press `F8` to open Weapon Stock Review.
 - Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
 - Confirm row counts are `owned / currently purchasable at this market`.
-- Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without closing the popup.
+- Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text.
 - Confirm `Sort` cycles ordering without collapsing headings.
+- Confirm weapon rows expand into Weapon Data and Sellers sections.
+- Confirm `Buy 1`/`Buy 10` works from top-level rows and specific seller rows, with credits/space failures blocked.
 - Confirm no crash.
 - Confirm commodities remain vanilla.
 - Confirm weapon and fighter LPC stacks show one bottom-right badge.

@@ -1,6 +1,8 @@
 package weaponinventorymod.core;
 
 import com.fs.starfarer.api.campaign.CargoAPI;
+import com.fs.starfarer.api.campaign.CargoStackAPI;
+import com.fs.starfarer.api.campaign.SubmarketPlugin;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets;
@@ -24,19 +26,30 @@ public final class MarketStockService {
                 continue;
             }
             CargoAPI cargo = submarket.getCargoNullOk();
-            Map<String, Integer> counts = InventoryCountService.collectCargoWeaponCounts(cargo);
-            for (Map.Entry<String, Integer> entry : counts.entrySet()) {
-                int count = entry.getValue().intValue();
+            if (cargo == null || cargo.getStacksCopy() == null) {
+                continue;
+            }
+            for (CargoStackAPI stack : cargo.getStacksCopy()) {
+                if (!isPurchasableWeaponStack(submarket, stack)) {
+                    continue;
+                }
+                String weaponId = stack.getWeaponSpecIfWeapon().getWeaponId();
+                int count = Math.round(stack.getSize());
                 if (count <= 0) {
                     continue;
                 }
-                InventoryCountService.add(totals, entry.getKey(), count);
-                List<SubmarketWeaponStock> stocks = byWeapon.get(entry.getKey());
+                InventoryCountService.add(totals, weaponId, count);
+                List<SubmarketWeaponStock> stocks = byWeapon.get(weaponId);
                 if (stocks == null) {
                     stocks = new ArrayList<SubmarketWeaponStock>();
-                    byWeapon.put(entry.getKey(), stocks);
+                    byWeapon.put(weaponId, stocks);
                 }
-                stocks.add(new SubmarketWeaponStock(submarket.getSpecId(), submarket.getNameOneLine(), count));
+                stocks.add(new SubmarketWeaponStock(
+                        submarket.getSpecId(),
+                        submarket.getNameOneLine(),
+                        count,
+                        unitPrice(submarket, stack),
+                        unitCargoSpace(stack)));
             }
         }
 
@@ -55,6 +68,37 @@ public final class MarketStockService {
             return false;
         }
         return submarket.getCargoNullOk() != null;
+    }
+
+    public static boolean isPurchasableWeaponStack(SubmarketAPI submarket, CargoStackAPI stack) {
+        if (submarket == null || stack == null || !stack.isWeaponStack() || stack.getWeaponSpecIfWeapon() == null) {
+            return false;
+        }
+        SubmarketPlugin plugin = submarket.getPlugin();
+        if (plugin != null && plugin.isIllegalOnSubmarket(stack, SubmarketPlugin.TransferAction.PLAYER_BUY)) {
+            return false;
+        }
+        return stack.getSize() > 0f;
+    }
+
+    public static int unitPrice(SubmarketAPI submarket, CargoStackAPI stack) {
+        if (stack == null) {
+            return 0;
+        }
+        float tariff = 0f;
+        if (submarket != null) {
+            SubmarketPlugin plugin = submarket.getPlugin();
+            tariff = plugin == null ? submarket.getTariff() : plugin.getTariff();
+        }
+        return Math.max(0, Math.round(stack.getBaseValuePerUnit() * (1f + Math.max(0f, tariff))));
+    }
+
+    public static float unitCargoSpace(CargoStackAPI stack) {
+        if (stack == null) {
+            return 1f;
+        }
+        float value = stack.getCargoSpacePerUnit();
+        return value <= 0f ? 1f : value;
     }
 
     public static final class MarketStock {

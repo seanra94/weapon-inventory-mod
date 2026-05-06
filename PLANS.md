@@ -8,11 +8,12 @@
   - JVM `System` property bridge between updater and embedded helper;
   - one precomposed badge sprite per weapon or fighter LPC stack.
 - Clean frontend work has started:
-  - `F8` opens a normal read-only Weapon Stock Review popup from active market/storage interaction dialogs;
+  - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
   - rows show `owned / currently purchasable at this market`.
   - popup has config-backed desired stock defaults, display mode, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup has sort modes for need, name, for-sale count, and owned count.
+  - popup row actions now support weapon expansion, nested Weapon Data/Sellers sections, cheapest-first `Buy 1`/`Buy 10`, and submarket-specific buys.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -45,6 +46,11 @@
 - Added optional patched-badge feature flag:
   - clean popup is unaffected;
   - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
+- Fixed popup redraw layering by replacing in-place tooltip rebuilds with a dismiss-and-reopen lifecycle that preserves review state.
+- Added first purchase flow:
+  - top-level buy buttons plan from the cheapest eligible current-market submarkets;
+  - seller rows can buy from a specific submarket;
+  - purchases check credits and cargo space before mutating cargo.
 
 ## Active Manual Validation
 
@@ -56,6 +62,12 @@
   - Mode cycles through `Owned or For Sale`, `Currently For Sale`, `Owned Only`, and `All Tracked`;
   - Sort cycles through `Need`, `Name`, `For Sale`, and `Owned`;
   - Market Storage and Black Market toggles update counts/categories;
+  - Mode/Sort/toggle actions no longer leave old text layered under new text;
+  - weapon rows expand/collapse;
+  - expanded rows show Weapon Data and Sellers sections;
+  - top-level `Buy 1`/`Buy 10` buys from cheapest eligible seller stock;
+  - seller-specific `Buy 1`/`Buy 10` only buys from that submarket;
+  - failed buys show a message instead of mutating cargo;
   - no-weapons and many-weapons markets remain responsive;
   - commodities remain vanilla;
   - weapon badges still render bottom-right;
@@ -68,6 +80,10 @@
 
 - Remove or reduce capped runtime diagnostic logs once the latest cleanup is manually validated.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
+- Harden purchase side effects after runtime validation:
+  - transaction reporting/suspicion behavior;
+  - tariff parity with vanilla;
+  - clearer failure text for commission/illegal-market cases.
 - Add a small validation command that checks patched `CargoStackView` helper-call counts and renders a concise report, instead of relying on ad hoc `javap` inspection.
 - Consider publishing packaging notes for forum users that clearly explain the core-jar patch/restore requirement.
 

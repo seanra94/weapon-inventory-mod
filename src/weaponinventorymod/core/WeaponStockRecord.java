@@ -85,6 +85,45 @@ public final class WeaponStockRecord {
                 + " | Damage: " + valueOrUnknown(damageType);
     }
 
+    public String getSizeLabel() {
+        return valueOrUnknown(spec == null ? null : spec.getSize());
+    }
+
+    public String getTypeLabel() {
+        return valueOrUnknown(spec == null ? null : spec.getType());
+    }
+
+    public String getDamageTypeLabel() {
+        return valueOrUnknown(spec == null ? null : spec.getDamageType());
+    }
+
+    public String getDamageLabel() {
+        return spec == null || spec.getDerivedStats() == null ? "?" : String.valueOf(Math.round(spec.getDerivedStats().getDamagePerShot()));
+    }
+
+    public String getEmpLabel() {
+        return spec == null || spec.getDerivedStats() == null ? "?" : String.valueOf(Math.round(spec.getDerivedStats().getEmpPerShot()));
+    }
+
+    public String getRangeLabel() {
+        return spec == null ? "?" : String.valueOf(Math.round(spec.getMaxRange()));
+    }
+
+    public String getFluxPerSecondLabel() {
+        return spec == null || spec.getDerivedStats() == null ? "?" : String.valueOf(Math.round(spec.getDerivedStats().getFluxPerSecond()));
+    }
+
+    public String getFluxPerDamageLabel() {
+        return spec == null || spec.getDerivedStats() == null ? "?" : formatOneDecimal(spec.getDerivedStats().getFluxPerDam());
+    }
+
+    private static String formatOneDecimal(float value) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            return "?";
+        }
+        return String.valueOf(Math.round(value * 10f) / 10f);
+    }
+
     private static String valueOrUnknown(Object value) {
         return value == null ? "?" : String.valueOf(value);
     }
