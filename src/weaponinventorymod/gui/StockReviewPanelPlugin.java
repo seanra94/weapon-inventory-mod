@@ -18,7 +18,6 @@ import weaponinventorymod.core.StockPurchaseService;
 import weaponinventorymod.core.WeaponStockSnapshot;
 import weaponinventorymod.core.WeaponStockSnapshotBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
@@ -29,7 +28,6 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private final StockReviewRenderer renderer = new StockReviewRenderer();
     private final WeaponStockSnapshotBuilder snapshotBuilder = new WeaponStockSnapshotBuilder();
     private final StockPurchaseService purchaseService = new StockPurchaseService();
-    private final List<StockReviewButtonBinding> buttons = new ArrayList<StockReviewButtonBinding>();
     private final MarketAPI initialMarket;
 
     private CustomPanelAPI root;
@@ -207,9 +205,8 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             if (content != null) {
                 root.removeComponent(content);
             }
-            buttons.clear();
             content = root.createCustomPanel(StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, null);
-            StockReviewRenderer.RenderResult result = renderer.render(content, snapshot, state, buttons);
+            StockReviewRenderer.RenderResult result = renderer.render(content, snapshot, state);
             renderedMaxScrollOffset = result.getMaxScrollOffset();
             root.addComponent(content).inTL(0f, 0f);
         } catch (Throwable t) {

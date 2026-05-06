@@ -17,7 +17,7 @@
   - `StockReviewRenderer` builds fixed-height custom row panels from `StockReviewListModel`; `StockReviewPanelPlugin` removes/recreates one root content panel for state changes.
   - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
 - Popup button rule:
-  - Use `buttonPressed(...)` for row/section actions. Polling `ButtonAPI.isChecked()` alone was not reliable for nested weapon rows.
+  - Use `buttonPressed(...)` for row/section actions. Polling `ButtonAPI.isChecked()` alone was not reliable for nested weapon rows, and the old `StockReviewButtonBinding` polling path has been removed.
 - Popup default scope:
   - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
 - Popup purchase flow:

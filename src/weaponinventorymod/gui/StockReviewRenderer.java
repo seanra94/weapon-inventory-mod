@@ -12,12 +12,10 @@ import java.util.List;
 final class StockReviewRenderer {
     RenderResult render(CustomPanelAPI root,
                         WeaponStockSnapshot snapshot,
-                        StockReviewState state,
-                        List<StockReviewButtonBinding> buttons) {
-        buttons.clear();
+                        StockReviewState state) {
         renderHeader(root, snapshot);
-        renderActionRow(root, snapshot, buttons);
-        return renderList(root, snapshot, state, buttons);
+        renderActionRow(root, snapshot);
+        return renderList(root, snapshot, state);
     }
 
     private void renderHeader(CustomPanelAPI root, WeaponStockSnapshot snapshot) {
@@ -40,25 +38,24 @@ final class StockReviewRenderer {
         header.addUIElement(status).inTL(StockReviewStyle.PAD, 28f);
     }
 
-    private void renderActionRow(CustomPanelAPI root, WeaponStockSnapshot snapshot, List<StockReviewButtonBinding> buttons) {
+    private void renderActionRow(CustomPanelAPI root, WeaponStockSnapshot snapshot) {
         float y = StockReviewStyle.PAD + StockReviewStyle.HEADER_HEIGHT + StockReviewStyle.SMALL_PAD;
         float x = StockReviewStyle.PAD;
-        x = addActionButton(root, x, y, StockReviewStyle.REFRESH_BUTTON_WIDTH, "Refresh", StockReviewAction.refresh(), true, buttons);
+        x = addActionButton(root, x, y, StockReviewStyle.REFRESH_BUTTON_WIDTH, "Refresh", StockReviewAction.refresh(), true);
         x = addActionButton(root, x, y, StockReviewStyle.MODE_BUTTON_WIDTH, "Mode: " + snapshot.getDisplayMode().getLabel(),
-                StockReviewAction.cycleDisplayMode(), true, buttons);
+                StockReviewAction.cycleDisplayMode(), true);
         x = addActionButton(root, x, y, StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
-                StockReviewAction.cycleSortMode(), true, buttons);
+                StockReviewAction.cycleSortMode(), true);
         x = addActionButton(root, x, y, StockReviewStyle.STORAGE_BUTTON_WIDTH, "Market Storage: " + onOff(snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")),
-                StockReviewAction.toggleCurrentMarketStorage(), true, buttons);
+                StockReviewAction.toggleCurrentMarketStorage(), true);
         x = addActionButton(root, x, y, StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
-                StockReviewAction.toggleBlackMarket(), true, buttons);
-        addActionButton(root, x, y, StockReviewStyle.CLOSE_BUTTON_WIDTH, "Close", StockReviewAction.close(), true, buttons);
+                StockReviewAction.toggleBlackMarket(), true);
+        addActionButton(root, x, y, StockReviewStyle.CLOSE_BUTTON_WIDTH, "Close", StockReviewAction.close(), true);
     }
 
     private RenderResult renderList(CustomPanelAPI root,
                                     WeaponStockSnapshot snapshot,
-                                    StockReviewState state,
-                                    List<StockReviewButtonBinding> buttons) {
+                                    StockReviewState state) {
         CustomPanelAPI listPanel = root.createCustomPanel(
                 StockReviewStyle.LIST_WIDTH,
                 StockReviewStyle.LIST_HEIGHT,
@@ -72,7 +69,7 @@ final class StockReviewRenderer {
         float y = StockReviewStyle.SMALL_PAD;
         if (slice.hasAbove) {
             renderRow(listPanel, StockReviewListRow.scroll("^     ^     ^     ^     ^",
-                    StockReviewAction.scrollList(-StockReviewStyle.SCROLL_STEP)), y, buttons);
+                    StockReviewAction.scrollList(-StockReviewStyle.SCROLL_STEP)), y);
             y += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.ROW_GAP;
         }
         for (int i = 0; i < slice.visibleRows.size(); i++) {
@@ -80,20 +77,19 @@ final class StockReviewRenderer {
             if (row.hasTopGap()) {
                 y += StockReviewStyle.CATEGORY_TOP_GAP;
             }
-            renderRow(listPanel, row, y, buttons);
+            renderRow(listPanel, row, y);
             y += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.ROW_GAP;
         }
         if (slice.hasBelow) {
             renderRow(listPanel, StockReviewListRow.scroll("v     v     v     v     v",
-                    StockReviewAction.scrollList(StockReviewStyle.SCROLL_STEP)), y, buttons);
+                    StockReviewAction.scrollList(StockReviewStyle.SCROLL_STEP)), y);
         }
         return new RenderResult(slice.maxOffset);
     }
 
     private void renderRow(CustomPanelAPI parent,
                            StockReviewListRow row,
-                           float y,
-                           List<StockReviewButtonBinding> buttons) {
+                           float y) {
         float width = parent.getPosition().getWidth() - 2f * StockReviewStyle.SMALL_PAD;
         CustomPanelAPI rowPanel = parent.createCustomPanel(
                 width,
@@ -106,15 +102,15 @@ final class StockReviewRenderer {
         float labelLeft = row.getIndent();
         float labelWidth = Math.max(80f, width - labelLeft - buyBlockWidth - StockReviewStyle.TEXT_LEFT_PAD);
         if (row.getMainAction() != null) {
-            addInvisibleButton(rowPanel, labelLeft, 0f, labelWidth, row.getMainAction(), true, buttons);
+            addInvisibleButton(rowPanel, labelLeft, 0f, labelWidth, row.getMainAction(), true);
         }
         addLabel(rowPanel, row.getLabel(), row.getTextColor(), labelLeft + StockReviewStyle.TEXT_LEFT_PAD, labelWidth);
 
         if (row.getBuyOneAction() != null) {
             float buttonX = width - 2f * StockReviewStyle.BUY_BUTTON_WIDTH - StockReviewStyle.BUTTON_GAP;
-            addSmallButton(rowPanel, buttonX, 0f, "Buy 1", row.getBuyOneAction(), row.isBuyEnabled(), buttons);
+            addSmallButton(rowPanel, buttonX, 0f, "Buy 1", row.getBuyOneAction(), row.isBuyEnabled());
             addSmallButton(rowPanel, buttonX + StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP, 0f,
-                    "Buy 10", row.getBuyTenAction(), row.isBuyEnabled(), buttons);
+                    "Buy 10", row.getBuyTenAction(), row.isBuyEnabled());
         }
     }
 
@@ -124,9 +120,8 @@ final class StockReviewRenderer {
                                   float width,
                                   String label,
                                   StockReviewAction action,
-                                  boolean enabled,
-                                  List<StockReviewButtonBinding> buttons) {
-        addSmallButton(parent, x, y, label, action, enabled, buttons, width);
+                                  boolean enabled) {
+        addSmallButton(parent, x, y, label, action, enabled, width);
         return x + width + StockReviewStyle.BUTTON_GAP;
     }
 
@@ -135,9 +130,8 @@ final class StockReviewRenderer {
                                 float y,
                                 String label,
                                 StockReviewAction action,
-                                boolean enabled,
-                                List<StockReviewButtonBinding> buttons) {
-        addSmallButton(parent, x, y, label, action, enabled, buttons, StockReviewStyle.BUY_BUTTON_WIDTH);
+                                boolean enabled) {
+        addSmallButton(parent, x, y, label, action, enabled, StockReviewStyle.BUY_BUTTON_WIDTH);
     }
 
     private void addSmallButton(CustomPanelAPI parent,
@@ -146,7 +140,6 @@ final class StockReviewRenderer {
                                 String label,
                                 StockReviewAction action,
                                 boolean enabled,
-                                List<StockReviewButtonBinding> buttons,
                                 float width) {
         Color fill = enabled ? StockReviewStyle.ACTION_BACKGROUND : StockReviewStyle.DISABLED_BACKGROUND;
         Color text = enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT;
@@ -155,7 +148,7 @@ final class StockReviewRenderer {
                 StockReviewStyle.ACTION_BUTTON_HEIGHT,
                 new StockReviewPanelBoxPlugin(fill, null));
         parent.addComponent(buttonPanel).inTL(x, y);
-        addInvisibleButton(buttonPanel, 0f, 0f, width, action, enabled, buttons);
+        addInvisibleButton(buttonPanel, 0f, 0f, width, action, enabled);
         addCenteredLabel(buttonPanel, label, text, width);
     }
 
@@ -164,8 +157,7 @@ final class StockReviewRenderer {
                                          float y,
                                          float width,
                                          StockReviewAction action,
-                                         boolean enabled,
-                                         List<StockReviewButtonBinding> buttons) {
+                                         boolean enabled) {
         TooltipMakerAPI element = parent.createUIElement(width, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
         ButtonAPI button = element.addAreaCheckbox(
                 "",
@@ -179,7 +171,6 @@ final class StockReviewRenderer {
         button.setEnabled(enabled);
         button.setQuickMode(true);
         parent.addUIElement(element).inTL(x, y);
-        buttons.add(new StockReviewButtonBinding(button, action));
         return button;
     }
 

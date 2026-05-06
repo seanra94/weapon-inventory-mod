@@ -56,6 +56,7 @@
   - `StockReviewPanelBoxPlugin` owns reusable row/container fill and border drawing;
   - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
+- Removed the obsolete `StockReviewButtonBinding` polling path; popup actions now rely on explicit button ids handled by `buttonPressed(...)`.
 - Added first purchase flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;
