@@ -1,6 +1,9 @@
 package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.campaign.CargoAPI;
+import com.fs.starfarer.api.campaign.CargoStackAPI;
+import weaponinventorymod.core.MarketStockService;
 import weaponinventorymod.core.SubmarketWeaponStock;
 import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
@@ -9,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class StockReviewPurchasePreview {
+    static final int PRICE_UNAVAILABLE = Integer.MIN_VALUE;
+
     private StockReviewPurchasePreview() {
     }
 
@@ -19,8 +24,8 @@ final class StockReviewPurchasePreview {
         }
         for (int i = 0; i < pendingPurchases.size(); i++) {
             int cost = quoteCost(snapshot, pendingPurchases.get(i));
-            if (cost < 0) {
-                return -1;
+            if (cost == PRICE_UNAVAILABLE) {
+                return PRICE_UNAVAILABLE;
             }
             total += cost;
         }
@@ -28,9 +33,13 @@ final class StockReviewPurchasePreview {
     }
 
     static int quoteCost(WeaponStockSnapshot snapshot, StockReviewPendingPurchase purchase) {
+        if (purchase.isSell()) {
+            int unitPrice = playerSellUnitPrice(purchase.getWeaponId());
+            return unitPrice < 0 ? PRICE_UNAVAILABLE : purchase.getQuantity() * unitPrice;
+        }
         WeaponStockRecord record = findRecord(snapshot, purchase.getWeaponId());
         if (record == null) {
-            return -1;
+            return PRICE_UNAVAILABLE;
         }
         int remaining = purchase.getQuantity();
         int total = 0;
@@ -48,7 +57,7 @@ final class StockReviewPurchasePreview {
             total += quantity * stock.getUnitPrice();
             remaining -= quantity;
         }
-        return remaining > 0 ? -1 : total;
+        return remaining > 0 ? PRICE_UNAVAILABLE : total;
     }
 
     static String displayName(WeaponStockSnapshot snapshot, String weaponId) {
@@ -92,6 +101,24 @@ final class StockReviewPurchasePreview {
         } catch (Throwable ignored) {
             return 0f;
         }
+    }
+
+    private static int playerSellUnitPrice(String weaponId) {
+        CargoAPI cargo;
+        try {
+            cargo = Global.getSector().getPlayerFleet().getCargo();
+        } catch (Throwable ignored) {
+            return -1;
+        }
+        if (cargo == null || cargo.getStacksCopy() == null) {
+            return -1;
+        }
+        for (CargoStackAPI stack : cargo.getStacksCopy()) {
+            if (MarketStockService.isVisibleWeaponStack(stack) && weaponId.equals(stack.getWeaponSpecIfWeapon().getWeaponId())) {
+                return Math.max(0, Math.round(stack.getBaseValuePerUnit()));
+            }
+        }
+        return -1;
     }
 
     private static void sortByPrice(List<SubmarketWeaponStock> stocks) {

@@ -1,6 +1,7 @@
 package weaponinventorymod.core;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
@@ -29,6 +30,7 @@ public final class WeaponStockSnapshotBuilder {
         OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
         DesiredStockService desiredStockService = new DesiredStockService(config);
         Map<String, Integer> owned = inventoryCountService.collectOwnedWeaponCounts(sector, market, ownedSourcePolicy);
+        Map<String, Integer> playerCargoCounts = InventoryCountService.collectCargoWeaponCounts(playerCargo(sector));
         MarketStockService.MarketStock marketStock = marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
 
         Set<String> ids = new HashSet<String>();
@@ -59,6 +61,7 @@ public final class WeaponStockSnapshotBuilder {
                     spec.getWeaponName(),
                     spec,
                     ownedCount,
+                    getCount(playerCargoCounts, weaponId),
                     purchasableCount,
                     desiredCount,
                     category,
@@ -118,6 +121,11 @@ public final class WeaponStockSnapshotBuilder {
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    private static com.fs.starfarer.api.campaign.CargoAPI playerCargo(SectorAPI sector) {
+        CampaignFleetAPI fleet = sector == null ? null : sector.getPlayerFleet();
+        return fleet == null ? null : fleet.getCargo();
     }
 
     private static int getCount(Map<String, Integer> counts, String id) {

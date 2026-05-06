@@ -19,7 +19,10 @@ final class StockReviewStyle {
     static final float STORAGE_BUTTON_WIDTH = 178f;
     static final float BLACK_MARKET_BUTTON_WIDTH = 160f;
     static final float CLOSE_BUTTON_WIDTH = 82f;
-    static final float BUY_BUTTON_WIDTH = 68f;
+    static final float SELL_BUTTON_WIDTH = 54f;
+    static final float BUY_BUTTON_WIDTH = 54f;
+    static final float BUY_UNTIL_BUTTON_WIDTH = 132f;
+    static final float TALLY_WIDTH = 74f;
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float ROW_HEIGHT = 22f;
     static final float ROW_GAP = 3f;
@@ -69,6 +72,10 @@ final class StockReviewStyle {
     static final Color ACTION_BACKGROUND = UNCOLOURED_BUTTON;
     static final Color ACTION_HOVER = UNCOLOURED_BUTTON;
     static final Color BUY_BUTTON = LOAD_BUTTON;
+    static final Color SELL_BUTTON = SAVE_BUTTON;
+    static final Color TALLY_POSITIVE = CONFIRM_BUTTON;
+    static final Color TALLY_NEGATIVE = CANCEL_BUTTON;
+    static final Color TALLY_ZERO = LOAD_BUTTON;
     static final Color SCROLL = DEFAULT_TEXT;
     static final Color TEXT = WHITE_TEXT;
     static final Color MUTED = WHITE_TEXT;

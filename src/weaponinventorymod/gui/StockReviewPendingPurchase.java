@@ -8,7 +8,7 @@ final class StockReviewPendingPurchase {
     StockReviewPendingPurchase(String weaponId, String submarketId, int quantity) {
         this.weaponId = weaponId;
         this.submarketId = submarketId;
-        this.quantity = Math.max(0, quantity);
+        this.quantity = quantity;
     }
 
     String getWeaponId() {
@@ -24,7 +24,19 @@ final class StockReviewPendingPurchase {
     }
 
     void addQuantity(int amount) {
-        quantity = Math.max(0, quantity + amount);
+        quantity += amount;
+    }
+
+    boolean isBuy() {
+        return quantity > 0;
+    }
+
+    boolean isSell() {
+        return quantity < 0;
+    }
+
+    boolean isZero() {
+        return quantity == 0;
     }
 
     boolean matches(String otherWeaponId, String otherSubmarketId) {

@@ -58,6 +58,10 @@ final class StockReviewAction {
         return new StockReviewAction(Type.BUY_BEST, null, null, weaponId, null, quantity);
     }
 
+    static StockReviewAction adjustTally(String weaponId, int delta) {
+        return new StockReviewAction(Type.BUY_BEST, null, null, weaponId, null, delta);
+    }
+
     static StockReviewAction buyFromSubmarket(String weaponId, String submarketId, int quantity) {
         return new StockReviewAction(Type.BUY_FROM_SUBMARKET, null, null, weaponId, submarketId, quantity);
     }

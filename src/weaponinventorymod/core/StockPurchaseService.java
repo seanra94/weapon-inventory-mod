@@ -5,6 +5,7 @@ import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.CargoStackAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
+import com.fs.starfarer.api.campaign.SubmarketPlugin;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets;
@@ -30,6 +31,55 @@ public final class StockPurchaseService {
                                            int requestedQuantity,
                                            boolean includeBlackMarket) {
         return buy(sector, market, weaponId, submarketId, requestedQuantity, includeBlackMarket);
+    }
+
+    public PurchaseResult sellToMarket(SectorAPI sector,
+                                       MarketAPI market,
+                                       String weaponId,
+                                       int requestedQuantity,
+                                       boolean includeBlackMarket) {
+        if (sector == null || market == null) {
+            return PurchaseResult.failure("No active market context.");
+        }
+        if (weaponId == null || weaponId.isEmpty()) {
+            return PurchaseResult.failure("No weapon selected.");
+        }
+        if (requestedQuantity <= 0) {
+            return PurchaseResult.failure("Nothing to sell.");
+        }
+
+        CampaignFleetAPI fleet = sector.getPlayerFleet();
+        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
+        if (playerCargo == null) {
+            return PurchaseResult.failure("Player cargo is unavailable.");
+        }
+        CargoStackAPI playerStack = playerWeaponStack(playerCargo, weaponId);
+        int available = playerWeaponCount(playerCargo, weaponId);
+        if (playerStack == null || available <= 0) {
+            return PurchaseResult.failure("No player-cargo stock is available to sell.");
+        }
+        int quantity = Math.min(requestedQuantity, available);
+        SellTarget target = sellTarget(market, playerStack, includeBlackMarket);
+        if (target == null) {
+            return PurchaseResult.failure("No valid market buyer is available.");
+        }
+
+        int credits = target.unitPrice * quantity;
+        playerCargo.removeWeapons(weaponId, quantity);
+        playerCargo.getCredits().add(credits);
+        playerCargo.removeEmptyStacks();
+        playerCargo.sort();
+        playerCargo.updateSpaceUsed();
+        target.cargo.addWeapons(weaponId, quantity);
+        target.cargo.removeEmptyStacks();
+        target.cargo.sort();
+        target.cargo.updateSpaceUsed();
+
+        String message = "Sold " + quantity + " " + weaponDisplayName(weaponId) + " for " + credits + " credits.";
+        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
+            Global.getSector().getCampaignUI().addMessage(message);
+        }
+        return PurchaseResult.success(message, quantity, -credits);
     }
 
     private PurchaseResult buy(SectorAPI sector,
@@ -149,6 +199,62 @@ public final class StockPurchaseService {
         return result;
     }
 
+    private static SellTarget sellTarget(MarketAPI market, CargoStackAPI playerStack, boolean includeBlackMarket) {
+        if (market == null || market.getSubmarketsCopy() == null || playerStack == null) {
+            return null;
+        }
+        SellTarget best = null;
+        for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
+            if (submarket == null) {
+                continue;
+            }
+            if (Submarkets.SUBMARKET_STORAGE.equals(submarket.getSpecId()) || Submarkets.LOCAL_RESOURCES.equals(submarket.getSpecId())) {
+                continue;
+            }
+            if (!includeBlackMarket && Submarkets.SUBMARKET_BLACK.equals(submarket.getSpecId())) {
+                continue;
+            }
+            CargoAPI cargo = submarket.getCargoNullOk();
+            if (cargo == null) {
+                continue;
+            }
+            SubmarketPlugin plugin = submarket.getPlugin();
+            if (plugin != null && plugin.isIllegalOnSubmarket(playerStack, SubmarketPlugin.TransferAction.PLAYER_SELL)) {
+                continue;
+            }
+            SellTarget candidate = new SellTarget(cargo, Math.max(0, Math.round(playerStack.getBaseValuePerUnit())));
+            if (best == null || candidate.unitPrice > best.unitPrice) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    private static CargoStackAPI playerWeaponStack(CargoAPI playerCargo, String weaponId) {
+        if (playerCargo == null || playerCargo.getStacksCopy() == null) {
+            return null;
+        }
+        for (CargoStackAPI stack : playerCargo.getStacksCopy()) {
+            if (MarketStockService.isVisibleWeaponStack(stack) && weaponId.equals(stack.getWeaponSpecIfWeapon().getWeaponId())) {
+                return stack;
+            }
+        }
+        return null;
+    }
+
+    private static int playerWeaponCount(CargoAPI playerCargo, String weaponId) {
+        int count = 0;
+        if (playerCargo == null || playerCargo.getStacksCopy() == null) {
+            return count;
+        }
+        for (CargoStackAPI stack : playerCargo.getStacksCopy()) {
+            if (MarketStockService.isVisibleWeaponStack(stack) && weaponId.equals(stack.getWeaponSpecIfWeapon().getWeaponId())) {
+                count += Math.round(stack.getSize());
+            }
+        }
+        return count;
+    }
+
     private static String weaponDisplayName(String weaponId) {
         try {
             return Global.getSettings().getWeaponSpec(weaponId).getWeaponName();
@@ -191,6 +297,16 @@ public final class StockPurchaseService {
         PurchaseLine(PurchaseSource source, int quantity) {
             this.source = source;
             this.quantity = quantity;
+        }
+    }
+
+    private static final class SellTarget {
+        final CargoAPI cargo;
+        final int unitPrice;
+
+        SellTarget(CargoAPI cargo, int unitPrice) {
+            this.cargo = cargo;
+            this.unitPrice = unitPrice;
         }
     }
 

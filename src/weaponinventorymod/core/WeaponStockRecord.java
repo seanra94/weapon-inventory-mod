@@ -12,6 +12,7 @@ public final class WeaponStockRecord {
     private final String displayName;
     private final WeaponSpecAPI spec;
     private final int ownedCount;
+    private final int playerCargoCount;
     private final int purchasableCount;
     private final int desiredCount;
     private final StockCategory category;
@@ -21,6 +22,7 @@ public final class WeaponStockRecord {
                              String displayName,
                              WeaponSpecAPI spec,
                              int ownedCount,
+                             int playerCargoCount,
                              int purchasableCount,
                              int desiredCount,
                              StockCategory category,
@@ -29,6 +31,7 @@ public final class WeaponStockRecord {
         this.displayName = displayName;
         this.spec = spec;
         this.ownedCount = ownedCount;
+        this.playerCargoCount = playerCargoCount;
         this.purchasableCount = purchasableCount;
         this.desiredCount = desiredCount;
         this.category = category;
@@ -49,6 +52,10 @@ public final class WeaponStockRecord {
 
     public int getOwnedCount() {
         return ownedCount;
+    }
+
+    public int getPlayerCargoCount() {
+        return playerCargoCount;
     }
 
     public int getPurchasableCount() {

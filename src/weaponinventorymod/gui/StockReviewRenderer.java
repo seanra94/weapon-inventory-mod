@@ -23,7 +23,7 @@ final class StockReviewRenderer {
         renderActionRow(root, snapshot, buttons);
         RenderResult result = reviewMode
                 ? renderReviewList(root, snapshot, pendingPurchases, state, buttons)
-                : renderStockList(root, snapshot, state, buttons);
+                : renderStockList(root, snapshot, state, pendingPurchases, buttons);
         renderFooter(root, snapshot, pendingPurchases, reviewMode, buttons);
         return result;
     }
@@ -68,8 +68,9 @@ final class StockReviewRenderer {
     private RenderResult renderStockList(CustomPanelAPI root,
                                          WeaponStockSnapshot snapshot,
                                          StockReviewState state,
+                                         List<StockReviewPendingPurchase> pendingPurchases,
                                          List<StockReviewButtonBinding> buttons) {
-        List<StockReviewListRow> rows = StockReviewListModel.build(snapshot, state);
+        List<StockReviewListRow> rows = StockReviewListModel.build(snapshot, state, pendingPurchases);
         return renderRows(root, rows, state, buttons);
     }
 
@@ -123,17 +124,24 @@ final class StockReviewRenderer {
             rows.add(StockReviewListRow.empty("No weapons queued for purchase."));
             return rows;
         }
-        int totalCost = 0;
         for (int i = 0; i < pendingPurchases.size(); i++) {
             StockReviewPendingPurchase purchase = pendingPurchases.get(i);
             int cost = StockReviewPurchasePreview.quoteCost(snapshot, purchase);
-            totalCost += Math.max(0, cost);
-            rows.add(StockReviewListRow.review(StockReviewPurchasePreview.displayName(snapshot, purchase.getWeaponId())
-                    + " x" + purchase.getQuantity()
+            int quantity = Math.abs(purchase.getQuantity());
+            String verb = purchase.isSell() ? "Sell " : "Buy ";
+            String costText = cost == StockReviewPurchasePreview.PRICE_UNAVAILABLE
+                    ? "price unavailable"
+                    : (cost < 0 ? "+" + (-cost) + "cr" : (cost == 0 ? "0cr" : "-" + cost + "cr"));
+            rows.add(StockReviewListRow.review(verb + StockReviewPurchasePreview.displayName(snapshot, purchase.getWeaponId())
+                    + " x" + quantity
                     + StockReviewPurchasePreview.sourceSuffix(snapshot, purchase)
-                    + " - " + (cost < 0 ? "price unavailable" : cost + "cr")));
+                    + " - " + costText));
         }
-        rows.add(StockReviewListRow.detail("Total cost: " + totalCost + "cr"));
+        int netCost = StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases);
+        String netText = netCost == StockReviewPurchasePreview.PRICE_UNAVAILABLE
+                ? "Total cost: price unavailable"
+                : (netCost < 0 ? "Net credits gained: " + (-netCost) + "cr" : "Total cost: " + netCost + "cr");
+        rows.add(StockReviewListRow.detail(netText));
         rows.add(StockReviewListRow.detail("Credits available: " + Math.round(StockReviewPurchasePreview.currentCredits()) + "cr"));
         return rows;
     }
@@ -149,10 +157,9 @@ final class StockReviewRenderer {
                 new StockReviewPanelBoxPlugin(row.getFillColor(), row.getBorderColor()));
         parent.addComponent(rowPanel).inTL(StockReviewStyle.SMALL_PAD, y);
 
-        float buyBlockWidth = row.getBuyOneAction() == null ? 0f :
-                2f * StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP + StockReviewStyle.BUTTON_GAP;
+        float actionBlockWidth = actionBlockWidth(row);
         float labelLeft = row.getIndent();
-        float labelWidth = Math.max(80f, width - labelLeft - buyBlockWidth - StockReviewStyle.TEXT_LEFT_PAD);
+        float labelWidth = Math.max(80f, width - labelLeft - actionBlockWidth - StockReviewStyle.TEXT_LEFT_PAD);
         if (row.getMainAction() != null) {
             Alignment alignment = StockReviewListRow.Kind.SCROLL.equals(row.getKind()) ? Alignment.MID : Alignment.LMID;
             addButton(rowPanel, labelLeft, 0f, labelWidth, row.getLabel(), row.getTextColor(),
@@ -161,12 +168,45 @@ final class StockReviewRenderer {
             addLabel(rowPanel, row.getLabel(), row.getTextColor(), labelLeft + StockReviewStyle.TEXT_LEFT_PAD, labelWidth);
         }
 
-        if (row.getBuyOneAction() != null) {
+        if (row.getSellOneAction() != null) {
+            float x = width - actionBlockWidth;
+            addTallyLabel(rowPanel, row.getTally(), x, StockReviewStyle.TALLY_WIDTH);
+            x += StockReviewStyle.TALLY_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addSmallButton(rowPanel, x, 0f, "Sell 10", row.getSellTenAction(), row.isSellEnabled(), buttons,
+                    StockReviewStyle.SELL_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON);
+            x += StockReviewStyle.SELL_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addSmallButton(rowPanel, x, 0f, "Sell 1", row.getSellOneAction(), row.isSellEnabled(), buttons,
+                    StockReviewStyle.SELL_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON);
+            x += StockReviewStyle.SELL_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addSmallButton(rowPanel, x, 0f, "Buy 1", row.getBuyOneAction(), row.isBuyEnabled(), buttons,
+                    StockReviewStyle.BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON);
+            x += StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addSmallButton(rowPanel, x, 0f, "Buy 10", row.getBuyTenAction(), row.isBuyEnabled(), buttons,
+                    StockReviewStyle.BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON);
+            x += StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
+            addSmallButton(rowPanel, x, 0f, "Buy Until Sufficient", row.getBuyUntilAction(), row.isBuyUntilEnabled(), buttons,
+                    StockReviewStyle.BUY_UNTIL_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON);
+        } else if (row.getBuyOneAction() != null) {
             float buttonX = width - 2f * StockReviewStyle.BUY_BUTTON_WIDTH - StockReviewStyle.BUTTON_GAP;
-            addSmallButton(rowPanel, buttonX, 0f, "Buy 1", row.getBuyOneAction(), row.isBuyEnabled(), buttons);
+            addSmallButton(rowPanel, buttonX, 0f, "Buy 1", row.getBuyOneAction(), row.isBuyEnabled(), buttons,
+                    StockReviewStyle.BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON);
             addSmallButton(rowPanel, buttonX + StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP, 0f,
-                    "Buy 10", row.getBuyTenAction(), row.isBuyEnabled(), buttons);
+                    "Buy 10", row.getBuyTenAction(), row.isBuyEnabled(), buttons, StockReviewStyle.BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON);
         }
+    }
+
+    private float actionBlockWidth(StockReviewListRow row) {
+        if (row.getSellOneAction() != null) {
+            return StockReviewStyle.TALLY_WIDTH
+                    + 2f * StockReviewStyle.SELL_BUTTON_WIDTH
+                    + 2f * StockReviewStyle.BUY_BUTTON_WIDTH
+                    + StockReviewStyle.BUY_UNTIL_BUTTON_WIDTH
+                    + 5f * StockReviewStyle.BUTTON_GAP;
+        }
+        if (row.getBuyOneAction() != null) {
+            return 2f * StockReviewStyle.BUY_BUTTON_WIDTH + StockReviewStyle.BUTTON_GAP;
+        }
+        return 0f;
     }
 
     private float addActionButton(CustomPanelAPI parent,
@@ -201,9 +241,29 @@ final class StockReviewRenderer {
                                 boolean enabled,
                                 List<StockReviewButtonBinding> buttons,
                                 float width) {
-        Color fill = enabled ? StockReviewStyle.BUY_BUTTON : StockReviewStyle.DISABLED_BACKGROUND;
+        addSmallButton(parent, x, y, label, action, enabled, buttons, width, StockReviewStyle.BUY_BUTTON);
+    }
+
+    private void addSmallButton(CustomPanelAPI parent,
+                                float x,
+                                float y,
+                                String label,
+                                StockReviewAction action,
+                                boolean enabled,
+                                List<StockReviewButtonBinding> buttons,
+                                float width,
+                                Color enabledFill) {
+        Color fill = enabled ? enabledFill : StockReviewStyle.DISABLED_BACKGROUND;
         Color text = enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT;
         addButton(parent, x, y, width, label, text, action, enabled, Alignment.MID, buttons, fill);
+    }
+
+    private void addTallyLabel(CustomPanelAPI parent, int tally, float x, float width) {
+        float labelWidth = 38f;
+        addLabel(parent, "Tally:", StockReviewStyle.TEXT, x, labelWidth);
+        String value = tally > 0 ? "+" + tally : String.valueOf(tally);
+        Color color = tally > 0 ? StockReviewStyle.TALLY_POSITIVE : (tally < 0 ? StockReviewStyle.TALLY_NEGATIVE : StockReviewStyle.TALLY_ZERO);
+        addLabel(parent, value, color, x + labelWidth, Math.max(8f, width - labelWidth));
     }
 
     private ButtonAPI addButton(CustomPanelAPI parent,
@@ -264,9 +324,7 @@ final class StockReviewRenderer {
         float y = StockReviewStyle.HEIGHT - StockReviewStyle.PAD - StockReviewStyle.ACTION_BUTTON_HEIGHT;
         if (reviewMode) {
             addFooterButton(root, StockReviewStyle.PAD, y, "Confirm Purchase", StockReviewAction.confirmPurchase(),
-                    pendingPurchases != null && !pendingPurchases.isEmpty()
-                            && StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases) >= 0
-                            && StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases) <= StockReviewPurchasePreview.currentCredits(),
+                    canConfirmReview(snapshot, pendingPurchases),
                     StockReviewStyle.CONFIRM_BUTTON, buttons);
             addFooterButton(root, StockReviewStyle.WIDTH - StockReviewStyle.PAD - StockReviewStyle.FOOTER_BUTTON_WIDTH, y, "Go Back",
                     StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON, buttons);
@@ -289,6 +347,15 @@ final class StockReviewRenderer {
         addButton(parent, x, y, StockReviewStyle.FOOTER_BUTTON_WIDTH, label,
                 enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT,
                 action, enabled, Alignment.MID, buttons, enabled ? fill : StockReviewStyle.DISABLED_BACKGROUND);
+    }
+
+    private static boolean canConfirmReview(WeaponStockSnapshot snapshot, List<StockReviewPendingPurchase> pendingPurchases) {
+        if (pendingPurchases == null || pendingPurchases.isEmpty()) {
+            return false;
+        }
+        int totalCost = StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases);
+        return totalCost != StockReviewPurchasePreview.PRICE_UNAVAILABLE
+                && totalCost <= StockReviewPurchasePreview.currentCredits();
     }
 
     private void addButtonLabel(CustomPanelAPI parent,

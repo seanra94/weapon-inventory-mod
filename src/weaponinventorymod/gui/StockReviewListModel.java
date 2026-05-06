@@ -13,12 +13,12 @@ final class StockReviewListModel {
     private StockReviewListModel() {
     }
 
-    static List<StockReviewListRow> build(WeaponStockSnapshot snapshot, StockReviewState state) {
+    static List<StockReviewListRow> build(WeaponStockSnapshot snapshot, StockReviewState state, List<StockReviewPendingPurchase> pendingPurchases) {
         List<StockReviewListRow> rows = new ArrayList<StockReviewListRow>();
         int displayed = 0;
-        displayed += addCategory(rows, snapshot, state, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
-        displayed += addCategory(rows, snapshot, state, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
-        displayed += addCategory(rows, snapshot, state, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
+        displayed += addCategory(rows, snapshot, state, pendingPurchases, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
+        displayed += addCategory(rows, snapshot, state, pendingPurchases, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
+        displayed += addCategory(rows, snapshot, state, pendingPurchases, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
         if (displayed == 0) {
             rows.add(StockReviewListRow.empty("No currently buyable weapons were found at this market."));
         }
@@ -28,6 +28,7 @@ final class StockReviewListModel {
     private static int addCategory(List<StockReviewListRow> rows,
                                    WeaponStockSnapshot snapshot,
                                    StockReviewState state,
+                                   List<StockReviewPendingPurchase> pendingPurchases,
                                    StockCategory category,
                                    Color color,
                                    boolean topGap) {
@@ -39,7 +40,7 @@ final class StockReviewListModel {
             return records.size();
         }
         for (int i = 0; i < records.size(); i++) {
-            addWeapon(rows, records.get(i), color, state);
+            addWeapon(rows, records.get(i), color, state, pendingPurchases);
         }
         return records.size();
     }
@@ -58,22 +59,74 @@ final class StockReviewListModel {
     private static void addWeapon(List<StockReviewListRow> rows,
                                   WeaponStockRecord record,
                                   Color color,
-                                  StockReviewState state) {
+                                  StockReviewState state,
+                                  List<StockReviewPendingPurchase> pendingPurchases) {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
         String label = record.getDisplayName() + " (" + record.getOwnedCount() + "/" + record.getBuyableCount() + ") " + (expanded ? "(-)" : "(+)");
-        boolean canBuy = record.getBuyableCount() > 0;
+        int tally = pendingTally(record.getWeaponId(), pendingPurchases);
+        int buyRemaining = Math.max(0, record.getBuyableCount() - pendingBuyQuantity(record.getWeaponId(), pendingPurchases));
+        int sellRemaining = Math.max(0, record.getPlayerCargoCount() - pendingSellQuantity(record.getWeaponId(), pendingPurchases));
+        int buyUntilQuantity = Math.min(buyRemaining, Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + tally)));
         rows.add(StockReviewListRow.weapon(
                 label,
                 StockReviewStyle.TEXT,
                 StockReviewAction.toggleWeapon(record.getWeaponId()),
-                StockReviewAction.buyBest(record.getWeaponId(), 1),
-                StockReviewAction.buyBest(record.getWeaponId(), 10),
-                canBuy));
+                StockReviewAction.adjustTally(record.getWeaponId(), -10),
+                StockReviewAction.adjustTally(record.getWeaponId(), -1),
+                StockReviewAction.adjustTally(record.getWeaponId(), 1),
+                StockReviewAction.adjustTally(record.getWeaponId(), 10),
+                StockReviewAction.adjustTally(record.getWeaponId(), buyUntilQuantity),
+                tally,
+                sellRemaining > 0,
+                buyRemaining > 0,
+                buyUntilQuantity > 0));
         if (!expanded) {
             return;
         }
         addWeaponData(rows, record, state);
         addSellers(rows, record, state);
+    }
+
+    private static int pendingTally(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
+        int total = 0;
+        if (pendingPurchases == null) {
+            return total;
+        }
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (weaponId.equals(purchase.getWeaponId())) {
+                total += purchase.getQuantity();
+            }
+        }
+        return total;
+    }
+
+    private static int pendingBuyQuantity(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
+        int total = 0;
+        if (pendingPurchases == null) {
+            return total;
+        }
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() > 0) {
+                total += purchase.getQuantity();
+            }
+        }
+        return total;
+    }
+
+    private static int pendingSellQuantity(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
+        int total = 0;
+        if (pendingPurchases == null) {
+            return total;
+        }
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() < 0) {
+                total += -purchase.getQuantity();
+            }
+        }
+        return total;
     }
 
     private static void addWeaponData(List<StockReviewListRow> rows, WeaponStockRecord record, StockReviewState state) {

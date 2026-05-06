@@ -121,11 +121,11 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             return;
         }
         if (StockReviewAction.Type.BUY_BEST.equals(type)) {
-            addPendingPurchase(action);
+            addPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
-            addPendingPurchase(action);
+            addPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.CYCLE_DISPLAY_MODE.equals(type)) {
@@ -185,22 +185,26 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         }
     }
 
-    private void addPendingPurchase(StockReviewAction action) {
+    private void addPendingTrade(StockReviewAction action) {
         int available = availableFor(action);
         if (available <= 0) {
-            reportMessage("No more buyable stock is available for that queued purchase.");
+            reportMessage(action.getQuantity() < 0 ? "No more player-cargo stock is available to sell." : "No more buyable stock is available for that tally.");
             rebuildContent();
             return;
         }
-        int quantity = Math.min(action.getQuantity(), available);
+        int requested = action.getQuantity();
+        int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
         StockReviewPendingPurchase existing = findPending(action.getWeaponId(), action.getSubmarketId());
         if (existing == null) {
             pendingPurchases.add(new StockReviewPendingPurchase(action.getWeaponId(), action.getSubmarketId(), quantity));
         } else {
             existing.addQuantity(quantity);
+            if (existing.isZero()) {
+                pendingPurchases.remove(existing);
+            }
         }
-        if (quantity < action.getQuantity()) {
-            reportMessage("Only " + quantity + " more can be queued for that weapon.");
+        if (Math.abs(quantity) < Math.abs(requested)) {
+            reportMessage("Only " + Math.abs(quantity) + " more can be tallied for that weapon.");
         }
         rebuildContent();
     }
@@ -210,7 +214,10 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         if (record == null) {
             return 0;
         }
-        int totalRemaining = Math.max(0, record.getBuyableCount() - pendingQuantityForWeapon(action.getWeaponId()));
+        if (action.getQuantity() < 0) {
+            return Math.max(0, record.getPlayerCargoCount() - pendingSellQuantityForWeapon(action.getWeaponId()));
+        }
+        int totalRemaining = Math.max(0, record.getBuyableCount() - pendingBuyQuantityForWeapon(action.getWeaponId()));
         if (action.getSubmarketId() == null) {
             return totalRemaining;
         }
@@ -224,12 +231,23 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         return Math.max(0, Math.min(totalRemaining, sourceRemaining - pendingQuantityForSource(action.getWeaponId(), action.getSubmarketId())));
     }
 
-    private int pendingQuantityForWeapon(String weaponId) {
+    private int pendingBuyQuantityForWeapon(String weaponId) {
         int count = 0;
         for (int i = 0; i < pendingPurchases.size(); i++) {
             StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-            if (weaponId != null && weaponId.equals(purchase.getWeaponId())) {
+            if (weaponId != null && weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() > 0) {
                 count += purchase.getQuantity();
+            }
+        }
+        return count;
+    }
+
+    private int pendingSellQuantityForWeapon(String weaponId) {
+        int count = 0;
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (weaponId != null && weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() < 0) {
+                count += -purchase.getQuantity();
             }
         }
         return count;
@@ -263,13 +281,13 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             return;
         }
         int estimatedCost = StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases);
-        if (estimatedCost < 0) {
+        if (estimatedCost == StockReviewPurchasePreview.PRICE_UNAVAILABLE) {
             reportMessage("Could not price every queued weapon. Refresh and try again.");
             rebuildContent();
             return;
         }
         float credits = StockReviewPurchasePreview.currentCredits();
-        if (credits + 0.01f < estimatedCost) {
+        if (estimatedCost > 0 && credits + 0.01f < estimatedCost) {
             reportMessage("Need " + estimatedCost + " credits for this purchase.");
             rebuildContent();
             return;
@@ -278,7 +296,9 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         while (!pendingPurchases.isEmpty()) {
             int index = firstSellerSpecificPurchaseIndex();
             StockReviewPendingPurchase purchase = pendingPurchases.remove(index);
-            StockPurchaseService.PurchaseResult result = purchase.getSubmarketId() == null
+            StockPurchaseService.PurchaseResult result = purchase.isSell()
+                    ? purchaseService.sellToMarket(Global.getSector(), currentMarket(Global.getSector()), purchase.getWeaponId(), -purchase.getQuantity(), state.isIncludeBlackMarket())
+                    : purchase.getSubmarketId() == null
                     ? purchaseService.buyCheapest(Global.getSector(), currentMarket(Global.getSector()), purchase.getWeaponId(), purchase.getQuantity(), state.isIncludeBlackMarket())
                     : purchaseService.buyFromSubmarket(Global.getSector(), currentMarket(Global.getSector()), purchase.getWeaponId(), purchase.getSubmarketId(), purchase.getQuantity(), state.isIncludeBlackMarket());
             if (result == null || !result.isSuccess()) {
@@ -294,6 +314,12 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         reviewMode = false;
         state.setListScrollOffset(0);
         rebuildSnapshot();
+        if (StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE) {
+            StockReviewHotkeyScript.requestReopen(currentMarket(Global.getSector()), state);
+            refreshVanillaCargoScreen();
+            close();
+            return;
+        }
         rebuildContent();
     }
 
@@ -304,37 +330,6 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             }
         }
         return 0;
-    }
-
-    private StockPurchaseService.PurchaseResult buyBest(StockReviewAction action) {
-        return purchaseService.buyCheapest(
-                Global.getSector(), currentMarket(Global.getSector()), action.getWeaponId(), action.getQuantity(), state.isIncludeBlackMarket());
-    }
-
-    private StockPurchaseService.PurchaseResult buyFromSubmarket(StockReviewAction action) {
-        return purchaseService.buyFromSubmarket(
-                Global.getSector(), currentMarket(Global.getSector()), action.getWeaponId(), action.getSubmarketId(), action.getQuantity(), state.isIncludeBlackMarket());
-    }
-
-    private void handlePurchase(StockPurchaseService.PurchaseResult result) {
-        if (result == null) {
-            reopen();
-            return;
-        }
-        if (!result.isSuccess()) {
-            reportPurchaseFailure(result);
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
-        if (!StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE) {
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
-        StockReviewHotkeyScript.requestReopen(currentMarket(Global.getSector()), state);
-        refreshVanillaCargoScreen();
-        close();
     }
 
     private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {
@@ -399,11 +394,6 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             callbacks = null;
             currentCallbacks.dismissDialog();
         }
-    }
-
-    private void reopen() {
-        StockReviewHotkeyScript.requestReopen(currentMarket(Global.getSector()), state);
-        close();
     }
 
     private void refreshVanillaCargoScreen() {
