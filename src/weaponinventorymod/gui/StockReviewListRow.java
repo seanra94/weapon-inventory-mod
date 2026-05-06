@@ -17,6 +17,8 @@ final class StockReviewListRow {
     private final String label;
     private final Color textColor;
     private final Color fillColor;
+    private final Color buttonFillColor;
+    private final Color borderColor;
     private final float indent;
     private final StockReviewAction mainAction;
     private final StockReviewAction buyOneAction;
@@ -28,6 +30,8 @@ final class StockReviewListRow {
                                String label,
                                Color textColor,
                                Color fillColor,
+                               Color buttonFillColor,
+                               Color borderColor,
                                float indent,
                                StockReviewAction mainAction,
                                StockReviewAction buyOneAction,
@@ -38,6 +42,8 @@ final class StockReviewListRow {
         this.label = label;
         this.textColor = textColor;
         this.fillColor = fillColor;
+        this.buttonFillColor = buttonFillColor;
+        this.borderColor = borderColor;
         this.indent = indent;
         this.mainAction = mainAction;
         this.buyOneAction = buyOneAction;
@@ -47,7 +53,7 @@ final class StockReviewListRow {
     }
 
     static StockReviewListRow category(String label, Color textColor, StockReviewAction action, boolean topGap) {
-        return new StockReviewListRow(Kind.CATEGORY, label, StockReviewStyle.TEXT, textColor,
+        return new StockReviewListRow(Kind.CATEGORY, label, StockReviewStyle.TEXT, textColor, textColor, null,
                 0f, action, null, null, false, topGap);
     }
 
@@ -57,17 +63,17 @@ final class StockReviewListRow {
                                      StockReviewAction buyOneAction,
                                      StockReviewAction buyTenAction,
                                      boolean buyEnabled) {
-        return new StockReviewListRow(Kind.WEAPON, label, textColor, StockReviewStyle.ROW_BACKGROUND,
+        return new StockReviewListRow(Kind.WEAPON, label, textColor, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
                 StockReviewStyle.WEAPON_INDENT, action, buyOneAction, buyTenAction, buyEnabled, false);
     }
 
     static StockReviewListRow section(String label, StockReviewAction action) {
-        return new StockReviewListRow(Kind.SECTION, label, StockReviewStyle.TEXT, StockReviewStyle.HEADING_BACKGROUND,
+        return new StockReviewListRow(Kind.SECTION, label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.HEADING_BACKGROUND, null,
                 StockReviewStyle.SECTION_INDENT, action, null, null, false, false);
     }
 
     static StockReviewListRow detail(String label) {
-        return new StockReviewListRow(Kind.DETAIL, label, StockReviewStyle.MUTED, null,
+        return new StockReviewListRow(Kind.DETAIL, label, StockReviewStyle.MUTED, null, null, null,
                 StockReviewStyle.DETAIL_INDENT, null, null, null, false, false);
     }
 
@@ -76,18 +82,23 @@ final class StockReviewListRow {
                                      StockReviewAction buyOneAction,
                                      StockReviewAction buyTenAction) {
         Color textColor = buyEnabled ? StockReviewStyle.MUTED : StockReviewStyle.DISABLED_TEXT;
-        return new StockReviewListRow(Kind.SELLER, label, textColor, StockReviewStyle.ROW_BACKGROUND_DARK,
+        return new StockReviewListRow(Kind.SELLER, label, textColor, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BORDER,
                 StockReviewStyle.SELLER_INDENT, null, buyOneAction, buyTenAction, buyEnabled, false);
     }
 
     static StockReviewListRow empty(String label) {
-        return new StockReviewListRow(Kind.EMPTY, label, StockReviewStyle.MUTED, null,
+        return new StockReviewListRow(Kind.EMPTY, label, StockReviewStyle.MUTED, null, null, null,
                 0f, null, null, null, false, false);
     }
 
     static StockReviewListRow scroll(String label, StockReviewAction action) {
-        return new StockReviewListRow(Kind.SCROLL, label, StockReviewStyle.SCROLL, StockReviewStyle.HEADING_BACKGROUND,
+        return new StockReviewListRow(Kind.SCROLL, label, StockReviewStyle.SCROLL, StockReviewStyle.HEADING_BACKGROUND, StockReviewStyle.HEADING_BACKGROUND, null,
                 0f, action, null, null, false, false);
+    }
+
+    static StockReviewListRow review(String label) {
+        return new StockReviewListRow(Kind.WEAPON, label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
+                StockReviewStyle.WEAPON_INDENT, null, null, null, false, false);
     }
 
     Kind getKind() {
@@ -104,6 +115,14 @@ final class StockReviewListRow {
 
     Color getFillColor() {
         return fillColor;
+    }
+
+    Color getButtonFillColor() {
+        return buttonFillColor == null ? fillColor : buttonFillColor;
+    }
+
+    Color getBorderColor() {
+        return borderColor;
     }
 
     float getIndent() {

@@ -15,6 +15,8 @@ import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import weaponinventorymod.core.StockReviewConfig;
 import weaponinventorymod.core.StockPurchaseService;
+import weaponinventorymod.core.SubmarketWeaponStock;
+import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 import weaponinventorymod.core.WeaponStockSnapshotBuilder;
 
@@ -30,6 +32,7 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private final WeaponStockSnapshotBuilder snapshotBuilder = new WeaponStockSnapshotBuilder();
     private final StockPurchaseService purchaseService = new StockPurchaseService();
     private final List<StockReviewButtonBinding> buttons = new ArrayList<StockReviewButtonBinding>();
+    private final List<StockReviewPendingPurchase> pendingPurchases = new ArrayList<StockReviewPendingPurchase>();
     private final MarketAPI initialMarket;
 
     private CustomPanelAPI root;
@@ -37,6 +40,7 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private CustomPanelAPI content;
     private WeaponStockSnapshot snapshot;
     private int renderedMaxScrollOffset = 0;
+    private boolean reviewMode = false;
 
     public StockReviewPanelPlugin(MarketAPI initialMarket, StockReviewState initialState) {
         this.initialMarket = initialMarket;
@@ -117,11 +121,11 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             return;
         }
         if (StockReviewAction.Type.BUY_BEST.equals(type)) {
-            handlePurchase(buyBest(action));
+            addPendingPurchase(action);
             return;
         }
         if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
-            handlePurchase(buyFromSubmarket(action));
+            addPendingPurchase(action);
             return;
         }
         if (StockReviewAction.Type.CYCLE_DISPLAY_MODE.equals(type)) {
@@ -153,6 +157,24 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.REVIEW_PURCHASE.equals(type)) {
+            if (!pendingPurchases.isEmpty()) {
+                reviewMode = true;
+                state.setListScrollOffset(0);
+                rebuildContent();
+            }
+            return;
+        }
+        if (StockReviewAction.Type.GO_BACK.equals(type)) {
+            reviewMode = false;
+            state.setListScrollOffset(0);
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.CONFIRM_PURCHASE.equals(type)) {
+            confirmPendingPurchases();
+            return;
+        }
         if (StockReviewAction.Type.REFRESH.equals(type)) {
             rebuildSnapshot();
             rebuildContent();
@@ -161,6 +183,127 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         if (StockReviewAction.Type.CLOSE.equals(type)) {
             close();
         }
+    }
+
+    private void addPendingPurchase(StockReviewAction action) {
+        int available = availableFor(action);
+        if (available <= 0) {
+            reportMessage("No more buyable stock is available for that queued purchase.");
+            rebuildContent();
+            return;
+        }
+        int quantity = Math.min(action.getQuantity(), available);
+        StockReviewPendingPurchase existing = findPending(action.getWeaponId(), action.getSubmarketId());
+        if (existing == null) {
+            pendingPurchases.add(new StockReviewPendingPurchase(action.getWeaponId(), action.getSubmarketId(), quantity));
+        } else {
+            existing.addQuantity(quantity);
+        }
+        if (quantity < action.getQuantity()) {
+            reportMessage("Only " + quantity + " more can be queued for that weapon.");
+        }
+        rebuildContent();
+    }
+
+    private int availableFor(StockReviewAction action) {
+        WeaponStockRecord record = StockReviewPurchasePreview.findRecord(snapshot, action.getWeaponId());
+        if (record == null) {
+            return 0;
+        }
+        int totalRemaining = Math.max(0, record.getBuyableCount() - pendingQuantityForWeapon(action.getWeaponId()));
+        if (action.getSubmarketId() == null) {
+            return totalRemaining;
+        }
+        int sourceRemaining = 0;
+        for (int i = 0; i < record.getSubmarketStocks().size(); i++) {
+            SubmarketWeaponStock stock = record.getSubmarketStocks().get(i);
+            if (action.getSubmarketId().equals(stock.getSubmarketId()) && stock.isPurchasable()) {
+                sourceRemaining += stock.getCount();
+            }
+        }
+        return Math.max(0, Math.min(totalRemaining, sourceRemaining - pendingQuantityForSource(action.getWeaponId(), action.getSubmarketId())));
+    }
+
+    private int pendingQuantityForWeapon(String weaponId) {
+        int count = 0;
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (weaponId != null && weaponId.equals(purchase.getWeaponId())) {
+                count += purchase.getQuantity();
+            }
+        }
+        return count;
+    }
+
+    private int pendingQuantityForSource(String weaponId, String submarketId) {
+        int count = 0;
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (purchase.matches(weaponId, submarketId)) {
+                count += purchase.getQuantity();
+            }
+        }
+        return count;
+    }
+
+    private StockReviewPendingPurchase findPending(String weaponId, String submarketId) {
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            if (purchase.matches(weaponId, submarketId)) {
+                return purchase;
+            }
+        }
+        return null;
+    }
+
+    private void confirmPendingPurchases() {
+        if (pendingPurchases.isEmpty()) {
+            reviewMode = false;
+            rebuildContent();
+            return;
+        }
+        int estimatedCost = StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases);
+        if (estimatedCost < 0) {
+            reportMessage("Could not price every queued weapon. Refresh and try again.");
+            rebuildContent();
+            return;
+        }
+        float credits = StockReviewPurchasePreview.currentCredits();
+        if (credits + 0.01f < estimatedCost) {
+            reportMessage("Need " + estimatedCost + " credits for this purchase.");
+            rebuildContent();
+            return;
+        }
+
+        while (!pendingPurchases.isEmpty()) {
+            int index = firstSellerSpecificPurchaseIndex();
+            StockReviewPendingPurchase purchase = pendingPurchases.remove(index);
+            StockPurchaseService.PurchaseResult result = purchase.getSubmarketId() == null
+                    ? purchaseService.buyCheapest(Global.getSector(), currentMarket(Global.getSector()), purchase.getWeaponId(), purchase.getQuantity(), state.isIncludeBlackMarket())
+                    : purchaseService.buyFromSubmarket(Global.getSector(), currentMarket(Global.getSector()), purchase.getWeaponId(), purchase.getSubmarketId(), purchase.getQuantity(), state.isIncludeBlackMarket());
+            if (result == null || !result.isSuccess()) {
+                if (result != null) {
+                    reportPurchaseFailure(result);
+                }
+                pendingPurchases.add(0, purchase);
+                rebuildSnapshot();
+                rebuildContent();
+                return;
+            }
+        }
+        reviewMode = false;
+        state.setListScrollOffset(0);
+        rebuildSnapshot();
+        rebuildContent();
+    }
+
+    private int firstSellerSpecificPurchaseIndex() {
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            if (pendingPurchases.get(i).getSubmarketId() != null) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     private StockPurchaseService.PurchaseResult buyBest(StockReviewAction action) {
@@ -195,11 +338,15 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     }
 
     private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {
+        reportMessage(result.getMessage());
+        LOG.info("WIM_STOCK_REVIEW purchase blocked: " + result.getMessage());
+    }
+
+    private void reportMessage(String message) {
         SectorAPI sector = Global.getSector();
         if (sector != null && sector.getCampaignUI() != null) {
-            sector.getCampaignUI().addMessage(result.getMessage());
+            sector.getCampaignUI().addMessage(message);
         }
-        LOG.info("WIM_STOCK_REVIEW purchase blocked: " + result.getMessage());
     }
 
     private void rebuildSnapshot() {
@@ -226,7 +373,7 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             }
             buttons.clear();
             content = root.createCustomPanel(StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, null);
-            StockReviewRenderer.RenderResult result = renderer.render(content, snapshot, state, buttons);
+            StockReviewRenderer.RenderResult result = renderer.render(content, snapshot, state, pendingPurchases, reviewMode, buttons);
             renderedMaxScrollOffset = result.getMaxScrollOffset();
             root.addComponent(content).inTL(0f, 0f);
         } catch (Throwable t) {

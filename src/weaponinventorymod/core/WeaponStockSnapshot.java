@@ -69,6 +69,14 @@ public final class WeaponStockSnapshot {
         return totalRecords;
     }
 
+    public List<WeaponStockRecord> getAllRecords() {
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        for (StockCategory category : StockCategory.values()) {
+            result.addAll(getRecords(category));
+        }
+        return Collections.unmodifiableList(result);
+    }
+
     public String getMarketName() {
         return market == null ? "No market context" : market.getName();
     }

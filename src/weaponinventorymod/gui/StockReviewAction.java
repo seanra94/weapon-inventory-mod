@@ -14,6 +14,9 @@ final class StockReviewAction {
         TOGGLE_CURRENT_MARKET_STORAGE,
         TOGGLE_BLACK_MARKET,
         SCROLL_LIST,
+        REVIEW_PURCHASE,
+        CONFIRM_PURCHASE,
+        GO_BACK,
         REFRESH,
         CLOSE
     }
@@ -81,6 +84,18 @@ final class StockReviewAction {
 
     static StockReviewAction scrollList(int delta) {
         return new StockReviewAction(Type.SCROLL_LIST, null, null, null, null, delta);
+    }
+
+    static StockReviewAction reviewPurchase() {
+        return new StockReviewAction(Type.REVIEW_PURCHASE, null, null, null, null, 0);
+    }
+
+    static StockReviewAction confirmPurchase() {
+        return new StockReviewAction(Type.CONFIRM_PURCHASE, null, null, null, null, 0);
+    }
+
+    static StockReviewAction goBack() {
+        return new StockReviewAction(Type.GO_BACK, null, null, null, null, 0);
     }
 
     static StockReviewAction close() {

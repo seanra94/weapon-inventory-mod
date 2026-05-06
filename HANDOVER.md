@@ -23,10 +23,12 @@
 - Popup default scope:
   - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
 - Popup purchase flow:
-  - top-level row buttons buy from cheapest eligible current-market seller stock;
-  - expanded Seller rows buy from a specific submarket;
-  - buys check player credits and cargo space before moving stock;
-  - after a successful buy, the preferred path mutates cargo and rebuilds the popup snapshot in place;
+  - top-level row buttons queue a pending purchase from cheapest eligible current-market seller stock;
+  - expanded Seller rows queue a pending purchase from that specific submarket;
+  - queued purchases are held in the popup until the user opens `Review Purchase`;
+  - the review screen lists each weapon purchase, per-line cost, total cost, and current credits, then uses `Confirm Purchase` / `Go Back`;
+  - only `Confirm Purchase` mutates cargo, checks player credits and cargo space, and rebuilds the popup snapshot afterward;
+  - this avoids the awkward immediate recategorization where buying one `No stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
 - Popup category layout:
@@ -37,6 +39,8 @@
   - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No stock, yellow/load for Insufficient and Buy buttons, green/confirm for Sufficient, dark gray collapsible headings, black neutral action rows, and gray text only for disabled controls.
   - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon data` and `Sellers` use the ACG dark-gray collapsible heading fill.
+  - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
+  - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Nested `Weapon data` / `Sellers` heading buttons start after the indent so the left indent remains black.
 - Popup list filtering:
   - Category counts and weapon rows are filtered to records with at least one currently buyable unit at the open market. The popup is for shopping, not for showing unavailable desired weapons.
   - Weapon row count text is `owned / buyable here`, not `owned / visible including locked stock`. Locked seller rows may still appear inside the expanded Sellers section for context.

@@ -9,8 +9,9 @@ final class StockReviewStyle {
     static final float SMALL_PAD = 4f;
     static final float HEADER_HEIGHT = 58f;
     static final float ACTION_ROW_HEIGHT = 28f;
+    static final float FOOTER_HEIGHT = 34f;
     static final float LIST_TOP = PAD + HEADER_HEIGHT + SMALL_PAD + ACTION_ROW_HEIGHT + PAD;
-    static final float LIST_HEIGHT = HEIGHT - LIST_TOP - PAD;
+    static final float LIST_HEIGHT = HEIGHT - LIST_TOP - FOOTER_HEIGHT - PAD;
     static final float LIST_WIDTH = WIDTH - 2f * PAD;
     static final float REFRESH_BUTTON_WIDTH = 82f;
     static final float MODE_BUTTON_WIDTH = 168f;
@@ -30,6 +31,7 @@ final class StockReviewStyle {
     static final float DETAIL_INDENT = 52f;
     static final float SELLER_INDENT = 52f;
     static final float BUTTON_GAP = 5f;
+    static final float FOOTER_BUTTON_WIDTH = 180f;
     static final int SCROLL_STEP = 3;
     static final boolean REFRESH_VANILLA_CORE_AFTER_PURCHASE = false;
 
@@ -63,6 +65,7 @@ final class StockReviewStyle {
     static final Color HEADING_BACKGROUND = COLLAPSIBLE_HEADING;
     static final Color PANEL_BACKGROUND = new Color(0, 0, 0, 220);
     static final Color PANEL_BORDER = new Color(210, 210, 210, 220);
+    static final Color ROW_BORDER = new Color(210, 210, 210, 220);
     static final Color ACTION_BACKGROUND = UNCOLOURED_BUTTON;
     static final Color ACTION_HOVER = UNCOLOURED_BUTTON;
     static final Color BUY_BUTTON = LOAD_BUTTON;

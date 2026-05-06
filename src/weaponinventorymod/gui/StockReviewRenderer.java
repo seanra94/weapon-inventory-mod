@@ -16,10 +16,16 @@ final class StockReviewRenderer {
     RenderResult render(CustomPanelAPI root,
                         WeaponStockSnapshot snapshot,
                         StockReviewState state,
+                        List<StockReviewPendingPurchase> pendingPurchases,
+                        boolean reviewMode,
                         List<StockReviewButtonBinding> buttons) {
         renderHeader(root, snapshot);
         renderActionRow(root, snapshot, buttons);
-        return renderList(root, snapshot, state, buttons);
+        RenderResult result = reviewMode
+                ? renderReviewList(root, snapshot, pendingPurchases, state, buttons)
+                : renderStockList(root, snapshot, state, buttons);
+        renderFooter(root, snapshot, pendingPurchases, reviewMode, buttons);
+        return result;
     }
 
     private void renderHeader(CustomPanelAPI root, WeaponStockSnapshot snapshot) {
@@ -59,8 +65,25 @@ final class StockReviewRenderer {
         addActionButton(root, x, y, StockReviewStyle.CLOSE_BUTTON_WIDTH, "Close", StockReviewAction.close(), true, buttons);
     }
 
-    private RenderResult renderList(CustomPanelAPI root,
-                                    WeaponStockSnapshot snapshot,
+    private RenderResult renderStockList(CustomPanelAPI root,
+                                         WeaponStockSnapshot snapshot,
+                                         StockReviewState state,
+                                         List<StockReviewButtonBinding> buttons) {
+        List<StockReviewListRow> rows = StockReviewListModel.build(snapshot, state);
+        return renderRows(root, rows, state, buttons);
+    }
+
+    private RenderResult renderReviewList(CustomPanelAPI root,
+                                          WeaponStockSnapshot snapshot,
+                                          List<StockReviewPendingPurchase> pendingPurchases,
+                                          StockReviewState state,
+                                          List<StockReviewButtonBinding> buttons) {
+        List<StockReviewListRow> rows = buildReviewRows(snapshot, pendingPurchases);
+        return renderRows(root, rows, state, buttons);
+    }
+
+    private RenderResult renderRows(CustomPanelAPI root,
+                                    List<StockReviewListRow> rows,
                                     StockReviewState state,
                                     List<StockReviewButtonBinding> buttons) {
         CustomPanelAPI listPanel = root.createCustomPanel(
@@ -69,7 +92,6 @@ final class StockReviewRenderer {
                 new StockReviewPanelBoxPlugin(StockReviewStyle.PANEL_BACKGROUND, StockReviewStyle.PANEL_BORDER));
         root.addComponent(listPanel).inTL(StockReviewStyle.PAD, StockReviewStyle.LIST_TOP);
 
-        List<StockReviewListRow> rows = StockReviewListModel.build(snapshot, state);
         ScrollSlice slice = ScrollSlice.compute(rows, state.getListScrollOffset());
         state.setListScrollOffset(slice.offset);
 
@@ -94,6 +116,28 @@ final class StockReviewRenderer {
         return new RenderResult(slice.maxOffset);
     }
 
+    private List<StockReviewListRow> buildReviewRows(WeaponStockSnapshot snapshot,
+                                                     List<StockReviewPendingPurchase> pendingPurchases) {
+        List<StockReviewListRow> rows = new ArrayList<StockReviewListRow>();
+        if (pendingPurchases == null || pendingPurchases.isEmpty()) {
+            rows.add(StockReviewListRow.empty("No weapons queued for purchase."));
+            return rows;
+        }
+        int totalCost = 0;
+        for (int i = 0; i < pendingPurchases.size(); i++) {
+            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
+            int cost = StockReviewPurchasePreview.quoteCost(snapshot, purchase);
+            totalCost += Math.max(0, cost);
+            rows.add(StockReviewListRow.review(StockReviewPurchasePreview.displayName(snapshot, purchase.getWeaponId())
+                    + " x" + purchase.getQuantity()
+                    + StockReviewPurchasePreview.sourceSuffix(snapshot, purchase)
+                    + " - " + (cost < 0 ? "price unavailable" : cost + "cr")));
+        }
+        rows.add(StockReviewListRow.detail("Total cost: " + totalCost + "cr"));
+        rows.add(StockReviewListRow.detail("Credits available: " + Math.round(StockReviewPurchasePreview.currentCredits()) + "cr"));
+        return rows;
+    }
+
     private void renderRow(CustomPanelAPI parent,
                            StockReviewListRow row,
                            float y,
@@ -102,7 +146,7 @@ final class StockReviewRenderer {
         CustomPanelAPI rowPanel = parent.createCustomPanel(
                 width,
                 StockReviewStyle.ROW_HEIGHT,
-                new StockReviewPanelBoxPlugin(row.getFillColor(), null));
+                new StockReviewPanelBoxPlugin(row.getFillColor(), row.getBorderColor()));
         parent.addComponent(rowPanel).inTL(StockReviewStyle.SMALL_PAD, y);
 
         float buyBlockWidth = row.getBuyOneAction() == null ? 0f :
@@ -110,8 +154,9 @@ final class StockReviewRenderer {
         float labelLeft = row.getIndent();
         float labelWidth = Math.max(80f, width - labelLeft - buyBlockWidth - StockReviewStyle.TEXT_LEFT_PAD);
         if (row.getMainAction() != null) {
+            Alignment alignment = StockReviewListRow.Kind.SCROLL.equals(row.getKind()) ? Alignment.MID : Alignment.LMID;
             addButton(rowPanel, labelLeft, 0f, labelWidth, row.getLabel(), row.getTextColor(),
-                    row.getMainAction(), true, Alignment.LMID, buttons, row.getFillColor());
+                    row.getMainAction(), true, alignment, buttons, row.getButtonFillColor());
         } else {
             addLabel(rowPanel, row.getLabel(), row.getTextColor(), labelLeft + StockReviewStyle.TEXT_LEFT_PAD, labelWidth);
         }
@@ -187,11 +232,15 @@ final class StockReviewRenderer {
                                 Color backgroundColor) {
         TooltipMakerAPI element = parent.createUIElement(width, StockReviewStyle.ACTION_BUTTON_HEIGHT, false);
         element.setButtonFontDefault();
+        Color buttonBackground = enabled ? dimForButton(backgroundColor) : StockReviewStyle.DISABLED_DARK;
+        CustomPanelAPI border = parent.createCustomPanel(width, StockReviewStyle.ACTION_BUTTON_HEIGHT,
+                new StockReviewPanelBoxPlugin(null, StockReviewStyle.ROW_BORDER));
+        parent.addComponent(border).inTL(x, y);
         ButtonAPI button = element.addButton(
                 "",
                 action,
                 backgroundColor,
-                backgroundColor,
+                buttonBackground,
                 alignment,
                 CutStyle.NONE,
                 width,
@@ -205,6 +254,41 @@ final class StockReviewRenderer {
             buttons.add(new StockReviewButtonBinding(button, action));
         }
         return button;
+    }
+
+    private void renderFooter(CustomPanelAPI root,
+                              WeaponStockSnapshot snapshot,
+                              List<StockReviewPendingPurchase> pendingPurchases,
+                              boolean reviewMode,
+                              List<StockReviewButtonBinding> buttons) {
+        float y = StockReviewStyle.HEIGHT - StockReviewStyle.PAD - StockReviewStyle.ACTION_BUTTON_HEIGHT;
+        if (reviewMode) {
+            addFooterButton(root, StockReviewStyle.PAD, y, "Confirm Purchase", StockReviewAction.confirmPurchase(),
+                    pendingPurchases != null && !pendingPurchases.isEmpty()
+                            && StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases) >= 0
+                            && StockReviewPurchasePreview.totalCost(snapshot, pendingPurchases) <= StockReviewPurchasePreview.currentCredits(),
+                    StockReviewStyle.CONFIRM_BUTTON, buttons);
+            addFooterButton(root, StockReviewStyle.WIDTH - StockReviewStyle.PAD - StockReviewStyle.FOOTER_BUTTON_WIDTH, y, "Go Back",
+                    StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON, buttons);
+            return;
+        }
+        addFooterButton(root, StockReviewStyle.PAD, y, "Review Purchase", StockReviewAction.reviewPurchase(),
+                pendingPurchases != null && !pendingPurchases.isEmpty(), StockReviewStyle.CONFIRM_BUTTON, buttons);
+        addFooterButton(root, StockReviewStyle.WIDTH - StockReviewStyle.PAD - StockReviewStyle.FOOTER_BUTTON_WIDTH, y, "Cancel",
+                StockReviewAction.close(), true, StockReviewStyle.CANCEL_BUTTON, buttons);
+    }
+
+    private void addFooterButton(CustomPanelAPI parent,
+                                 float x,
+                                 float y,
+                                 String label,
+                                 StockReviewAction action,
+                                 boolean enabled,
+                                 Color fill,
+                                 List<StockReviewButtonBinding> buttons) {
+        addButton(parent, x, y, StockReviewStyle.FOOTER_BUTTON_WIDTH, label,
+                enabled ? StockReviewStyle.TEXT : StockReviewStyle.DISABLED_TEXT,
+                action, enabled, Alignment.MID, buttons, enabled ? fill : StockReviewStyle.DISABLED_BACKGROUND);
     }
 
     private void addButtonLabel(CustomPanelAPI parent,
@@ -236,6 +320,17 @@ final class StockReviewRenderer {
         int maxChars = Math.max(8, (int) (width / 6.2f));
         label.addPara(StockReviewText.fit(text, maxChars), 0f, color);
         parent.addUIElement(label).inTL(x, StockReviewStyle.TEXT_TOP_PAD);
+    }
+
+    private static Color dimForButton(Color color) {
+        if (color == null) {
+            return StockReviewStyle.DISABLED_DARK;
+        }
+        return new Color(
+                Math.max(0, Math.round(color.getRed() * 0.55f)),
+                Math.max(0, Math.round(color.getGreen() * 0.55f)),
+                Math.max(0, Math.round(color.getBlue() * 0.55f)),
+                color.getAlpha());
     }
 
     private static String statusLine(WeaponStockSnapshot snapshot) {
