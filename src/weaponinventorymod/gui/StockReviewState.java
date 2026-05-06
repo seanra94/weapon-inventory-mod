@@ -3,6 +3,7 @@ package weaponinventorymod.gui;
 import weaponinventorymod.core.StockCategory;
 import weaponinventorymod.core.StockDisplayMode;
 import weaponinventorymod.core.StockReviewConfig;
+import weaponinventorymod.core.StockSortMode;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map;
 public final class StockReviewState {
     private final Map<StockCategory, Boolean> expanded = new EnumMap<StockCategory, Boolean>(StockCategory.class);
     private StockDisplayMode displayMode;
+    private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
     private boolean includeBlackMarket;
 
@@ -18,6 +20,7 @@ public final class StockReviewState {
         expanded.put(StockCategory.INSUFFICIENT, Boolean.TRUE);
         expanded.put(StockCategory.SUFFICIENT, Boolean.FALSE);
         this.displayMode = config.getDisplayMode();
+        this.sortMode = config.getSortMode();
         this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
         this.includeBlackMarket = config.isIncludeBlackMarket();
     }
@@ -37,6 +40,14 @@ public final class StockReviewState {
 
     public void cycleDisplayMode() {
         displayMode = displayMode.next();
+    }
+
+    public StockSortMode getSortMode() {
+        return sortMode;
+    }
+
+    public void cycleSortMode() {
+        sortMode = sortMode.next();
     }
 
     public boolean isIncludeCurrentMarketStorage() {

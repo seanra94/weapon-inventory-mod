@@ -23,6 +23,7 @@ public final class WeaponStockSnapshotBuilder {
                                      MarketAPI market,
                                      StockReviewConfig config,
                                      StockDisplayMode displayMode,
+                                     StockSortMode sortMode,
                                      boolean includeCurrentMarketStorage,
                                      boolean includeBlackMarket) {
         OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
@@ -65,10 +66,10 @@ public final class WeaponStockSnapshotBuilder {
         }
 
         for (List<WeaponStockRecord> records : grouped.values()) {
-            Collections.sort(records, RECORD_ORDER);
+            Collections.sort(records, comparatorFor(sortMode));
         }
 
-        return new WeaponStockSnapshot(market, ownedSourcePolicy, displayMode, includeBlackMarket, grouped);
+        return new WeaponStockSnapshot(market, ownedSourcePolicy, displayMode, sortMode, includeBlackMarket, grouped);
     }
 
     private static void addIdsForDisplayMode(Set<String> ids,
@@ -124,9 +125,22 @@ public final class WeaponStockSnapshotBuilder {
         return count == null ? 0 : count.intValue();
     }
 
-    private static final Comparator<WeaponStockRecord> RECORD_ORDER = new WeaponStockRecordComparator();
+    private static Comparator<WeaponStockRecord> comparatorFor(StockSortMode sortMode) {
+        if (StockSortMode.NAME.equals(sortMode)) {
+            return NameComparator.INSTANCE;
+        }
+        if (StockSortMode.PURCHASABLE.equals(sortMode)) {
+            return PurchasableComparator.INSTANCE;
+        }
+        if (StockSortMode.OWNED.equals(sortMode)) {
+            return OwnedComparator.INSTANCE;
+        }
+        return NeedComparator.INSTANCE;
+    }
 
-    private static final class WeaponStockRecordComparator implements Comparator<WeaponStockRecord> {
+    private static final class NeedComparator implements Comparator<WeaponStockRecord> {
+        static final NeedComparator INSTANCE = new NeedComparator();
+
         @Override
         public int compare(WeaponStockRecord left, WeaponStockRecord right) {
             int desiredGap = Integer.compare(
@@ -134,6 +148,41 @@ public final class WeaponStockSnapshotBuilder {
                     left.getDesiredCount() - left.getOwnedCount());
             if (desiredGap != 0) {
                 return desiredGap;
+            }
+            return left.getDisplayName().compareToIgnoreCase(right.getDisplayName());
+        }
+    }
+
+    private static final class NameComparator implements Comparator<WeaponStockRecord> {
+        static final NameComparator INSTANCE = new NameComparator();
+
+        @Override
+        public int compare(WeaponStockRecord left, WeaponStockRecord right) {
+            return left.getDisplayName().compareToIgnoreCase(right.getDisplayName());
+        }
+    }
+
+    private static final class PurchasableComparator implements Comparator<WeaponStockRecord> {
+        static final PurchasableComparator INSTANCE = new PurchasableComparator();
+
+        @Override
+        public int compare(WeaponStockRecord left, WeaponStockRecord right) {
+            int result = Integer.compare(right.getPurchasableCount(), left.getPurchasableCount());
+            if (result != 0) {
+                return result;
+            }
+            return left.getDisplayName().compareToIgnoreCase(right.getDisplayName());
+        }
+    }
+
+    private static final class OwnedComparator implements Comparator<WeaponStockRecord> {
+        static final OwnedComparator INSTANCE = new OwnedComparator();
+
+        @Override
+        public int compare(WeaponStockRecord left, WeaponStockRecord right) {
+            int result = Integer.compare(right.getOwnedCount(), left.getOwnedCount());
+            if (result != 0) {
+                return result;
             }
             return left.getDisplayName().compareToIgnoreCase(right.getDisplayName());
         }

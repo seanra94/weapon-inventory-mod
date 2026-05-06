@@ -6,6 +6,7 @@ final class StockReviewAction {
     enum Type {
         TOGGLE_CATEGORY,
         CYCLE_DISPLAY_MODE,
+        CYCLE_SORT_MODE,
         TOGGLE_CURRENT_MARKET_STORAGE,
         TOGGLE_BLACK_MARKET,
         REFRESH,
@@ -30,6 +31,10 @@ final class StockReviewAction {
 
     static StockReviewAction cycleDisplayMode() {
         return new StockReviewAction(Type.CYCLE_DISPLAY_MODE, null);
+    }
+
+    static StockReviewAction cycleSortMode() {
+        return new StockReviewAction(Type.CYCLE_SORT_MODE, null);
     }
 
     static StockReviewAction toggleCurrentMarketStorage() {

@@ -94,6 +94,12 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.CYCLE_SORT_MODE.equals(type)) {
+            state.cycleSortMode();
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
         if (StockReviewAction.Type.TOGGLE_CURRENT_MARKET_STORAGE.equals(type)) {
             state.toggleCurrentMarketStorage();
             rebuildSnapshot();
@@ -120,7 +126,7 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         SectorAPI sector = Global.getSector();
         MarketAPI market = currentMarket(sector);
         snapshot = snapshotBuilder.build(sector, market, config, state.getDisplayMode(),
-                state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket());
+                state.getSortMode(), state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket());
     }
 
     private MarketAPI currentMarket(SectorAPI sector) {

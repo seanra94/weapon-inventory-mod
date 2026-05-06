@@ -23,6 +23,7 @@ public final class StockReviewConfig {
     private final boolean includeCurrentMarketStorage;
     private final boolean includeBlackMarket;
     private final StockDisplayMode displayMode;
+    private final StockSortMode sortMode;
     private final Map<String, Integer> desiredOverrides;
     private final Map<String, Boolean> ignoredWeapons;
 
@@ -32,6 +33,7 @@ public final class StockReviewConfig {
                               boolean includeCurrentMarketStorage,
                               boolean includeBlackMarket,
                               StockDisplayMode displayMode,
+                              StockSortMode sortMode,
                               Map<String, Integer> desiredOverrides,
                               Map<String, Boolean> ignoredWeapons) {
         this.smallWeaponDesired = smallWeaponDesired;
@@ -40,6 +42,7 @@ public final class StockReviewConfig {
         this.includeCurrentMarketStorage = includeCurrentMarketStorage;
         this.includeBlackMarket = includeBlackMarket;
         this.displayMode = displayMode;
+        this.sortMode = sortMode;
         this.desiredOverrides = Collections.unmodifiableMap(new HashMap<String, Integer>(desiredOverrides));
         this.ignoredWeapons = Collections.unmodifiableMap(new HashMap<String, Boolean>(ignoredWeapons));
     }
@@ -62,6 +65,7 @@ public final class StockReviewConfig {
                 true,
                 true,
                 StockDisplayMode.OWNED_OR_FOR_SALE,
+                StockSortMode.NEED,
                 Collections.<String, Integer>emptyMap(),
                 Collections.<String, Boolean>emptyMap());
     }
@@ -78,6 +82,7 @@ public final class StockReviewConfig {
 
         JSONObject display = json.optJSONObject("display");
         StockDisplayMode displayMode = StockDisplayMode.fromConfig(optString(display, "defaultMode", "OWNED_OR_FOR_SALE"));
+        StockSortMode sortMode = StockSortMode.fromConfig(optString(display, "defaultSort", "NEED"));
 
         Map<String, Integer> overrides = new HashMap<String, Integer>();
         Map<String, Boolean> ignored = new HashMap<String, Boolean>();
@@ -99,7 +104,7 @@ public final class StockReviewConfig {
             }
         }
 
-        return new StockReviewConfig(small, medium, large, includeStorage, includeBlackMarket, displayMode, overrides, ignored);
+        return new StockReviewConfig(small, medium, large, includeStorage, includeBlackMarket, displayMode, sortMode, overrides, ignored);
     }
 
     public int desiredCount(String weaponId, WeaponAPI.WeaponSize size) {
@@ -134,6 +139,10 @@ public final class StockReviewConfig {
 
     public StockDisplayMode getDisplayMode() {
         return displayMode;
+    }
+
+    public StockSortMode getSortMode() {
+        return sortMode;
     }
 
     public OwnedSourcePolicy ownedSourcePolicy(boolean includeStorage) {

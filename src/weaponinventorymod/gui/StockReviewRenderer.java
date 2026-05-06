@@ -22,9 +22,10 @@ final class StockReviewRenderer {
         tooltip.addTitle("Weapon Stock Review");
         tooltip.addPara("Market: " + snapshot.getMarketName()
                 + " | Mode: " + snapshot.getDisplayMode().getLabel()
+                + " | Sort: " + snapshot.getSortMode().getLabel()
                 + " | Owned source: " + ownedSourceLabel(snapshot)
                 + " | Black market: " + onOff(snapshot.isIncludeBlackMarket()), StockReviewStyle.SMALL_PAD, StockReviewStyle.MUTED,
-                "Market:", "Mode:", "Owned source:", "Black market:");
+                "Market:", "Mode:", "Sort:", "Owned source:", "Black market:");
 
         addActionRow(tooltip, snapshot, buttons);
         addCategory(tooltip, snapshot, state, buttons, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK);
@@ -43,6 +44,9 @@ final class StockReviewRenderer {
         ButtonAPI mode = tooltip.addButton("Mode: " + snapshot.getDisplayMode().getLabel(), StockReviewAction.cycleDisplayMode(), Misc.getBasePlayerColor(),
                 Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(mode, StockReviewAction.cycleDisplayMode()));
+        ButtonAPI sort = tooltip.addButton("Sort: " + snapshot.getSortMode().getLabel(), StockReviewAction.cycleSortMode(), Misc.getBasePlayerColor(),
+                Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);
+        buttons.add(new StockReviewButtonBinding(sort, StockReviewAction.cycleSortMode()));
         ButtonAPI storage = tooltip.addButton("Market Storage: " + onOff(snapshot.getOwnedSourcePolicy().name().contains("CURRENT_MARKET_STORAGE")),
                 StockReviewAction.toggleCurrentMarketStorage(), Misc.getBasePlayerColor(),
                 Misc.getDarkPlayerColor(), StockReviewStyle.WIDE_ACTION_BUTTON_WIDTH, StockReviewStyle.ACTION_BUTTON_HEIGHT, StockReviewStyle.SMALL_PAD);

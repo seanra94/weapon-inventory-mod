@@ -15,6 +15,7 @@ public class WeaponInventoryBadgeHelper {
     private static final String TOTAL_SUFFIX = ".png";
 
     private static final String KEY_READY = "wim.counts.ready";
+    private static final String KEY_PATCHED_BADGES_ENABLED = "wim.config.patchedBadgesEnabled";
     private static final String KEY_WEAPON_PREFIX = "wim.weapon.";
     private static final String KEY_FIGHTER_PREFIX = "wim.fighter.";
     private static final String KEY_PLAYER_SUFFIX = ".player";
@@ -34,6 +35,10 @@ public class WeaponInventoryBadgeHelper {
 
     public static String getTotalStatusSpritePath(String kind, String id) {
         logHelperReachedOnce();
+
+        if (!isPatchedBadgesEnabled()) {
+            return null;
+        }
 
         boolean ready = isReady();
         Integer playerCount = null;
@@ -78,6 +83,11 @@ public class WeaponInventoryBadgeHelper {
 
     private static boolean isReady() {
         return "true".equalsIgnoreCase(System.getProperty(KEY_READY));
+    }
+
+    private static boolean isPatchedBadgesEnabled() {
+        String raw = System.getProperty(KEY_PATCHED_BADGES_ENABLED);
+        return raw == null || "true".equalsIgnoreCase(raw);
     }
 
     private static Integer readCount(String kind, String id, boolean player) {

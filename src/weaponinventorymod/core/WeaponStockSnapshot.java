@@ -12,6 +12,7 @@ public final class WeaponStockSnapshot {
     private final MarketAPI market;
     private final OwnedSourcePolicy ownedSourcePolicy;
     private final StockDisplayMode displayMode;
+    private final StockSortMode sortMode;
     private final boolean includeBlackMarket;
     private final Map<StockCategory, List<WeaponStockRecord>> recordsByCategory;
     private final int totalRecords;
@@ -19,11 +20,13 @@ public final class WeaponStockSnapshot {
     public WeaponStockSnapshot(MarketAPI market,
                                OwnedSourcePolicy ownedSourcePolicy,
                                StockDisplayMode displayMode,
+                               StockSortMode sortMode,
                                boolean includeBlackMarket,
                                Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
         this.market = market;
         this.ownedSourcePolicy = ownedSourcePolicy;
         this.displayMode = displayMode;
+        this.sortMode = sortMode;
         this.includeBlackMarket = includeBlackMarket;
         this.recordsByCategory = immutableCategoryMap(recordsByCategory);
         int total = 0;
@@ -43,6 +46,10 @@ public final class WeaponStockSnapshot {
 
     public StockDisplayMode getDisplayMode() {
         return displayMode;
+    }
+
+    public StockSortMode getSortMode() {
+        return sortMode;
     }
 
     public boolean isIncludeBlackMarket() {

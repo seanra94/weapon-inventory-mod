@@ -12,6 +12,7 @@
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
   - rows show `owned / currently purchasable at this market`.
   - popup has config-backed desired stock defaults, display mode, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
+  - popup has sort modes for need, name, for-sale count, and owned count.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -19,7 +20,7 @@
   - no layered text/background rendering.
 - Current config baseline:
   - LunaLib dependency is present;
-  - Luna setting currently controls updater interval only.
+  - Luna settings control updater interval and whether optional patched cargo-cell badges are enabled.
 
 ## Completed Meaningful Work
 
@@ -41,6 +42,9 @@
   - desired-count classifier;
   - three toggle headings;
   - runtime buttons for display mode, current-market storage, and black-market inclusion.
+- Added optional patched-badge feature flag:
+  - clean popup is unaffected;
+  - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
 
 ## Active Manual Validation
 
@@ -50,6 +54,7 @@
   - `Esc` and `Close` dismiss the popup;
   - category headings expand/collapse and preserve current state across refresh;
   - Mode cycles through `Owned or For Sale`, `Currently For Sale`, `Owned Only`, and `All Tracked`;
+  - Sort cycles through `Need`, `Name`, `For Sale`, and `Owned`;
   - Market Storage and Black Market toggles update counts/categories;
   - no-weapons and many-weapons markets remain responsive;
   - commodities remain vanilla;

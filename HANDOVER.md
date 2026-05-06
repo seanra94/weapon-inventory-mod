@@ -24,8 +24,11 @@
   - no late over-icon render anchor.
 - LunaLib is used only by normal mod-side config code for update interval:
   - setting id: `wim_update_interval_seconds`;
+  - setting id: `wim_enable_patched_badges`;
   - published property: `wim.config.updateIntervalSeconds`;
+  - published property: `wim.config.patchedBadgesEnabled`;
   - default: `0.20`, clamped to `0.05..2.00`.
+- `wim_enable_patched_badges=false` makes the embedded helper return `null`, so a patched core jar will skip badge rendering while the normal popup continues to work.
 
 ## Count Bridge
 
@@ -111,6 +114,7 @@ Manual validation:
 - Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
 - Confirm row counts are `owned / currently purchasable at this market`.
 - Confirm `Mode`, `Market Storage`, and `Black Market` buttons rebuild the snapshot without closing the popup.
+- Confirm `Sort` cycles ordering without collapsing headings.
 - Confirm no crash.
 - Confirm commodities remain vanilla.
 - Confirm weapon and fighter LPC stacks show one bottom-right badge.

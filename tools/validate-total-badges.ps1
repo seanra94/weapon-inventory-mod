@@ -84,6 +84,17 @@ function Test-StockReviewConfig {
             throw "$Label stock review config missing '$section'"
         }
     }
+    if (-not $json.display.PSObject.Properties.Name.Contains("defaultMode")) {
+        throw "$Label stock review config missing display.defaultMode"
+    }
+    if (-not $json.display.PSObject.Properties.Name.Contains("defaultSort")) {
+        throw "$Label stock review config missing display.defaultSort"
+    }
+    foreach ($field in @("includeCurrentMarketStorage", "includeBlackMarket")) {
+        if (-not $json.sources.PSObject.Properties.Name.Contains($field)) {
+            throw "$Label stock review config missing sources.$field"
+        }
+    }
     foreach ($field in @("smallWeapon", "mediumWeapon", "largeWeapon")) {
         if (-not $json.desiredDefaults.PSObject.Properties.Name.Contains($field)) {
             throw "$Label stock review config missing desiredDefaults.$field"

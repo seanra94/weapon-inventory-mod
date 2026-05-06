@@ -1,6 +1,7 @@
 {
   "display": {
-    "defaultMode": "OWNED_OR_FOR_SALE"
+    "defaultMode": "OWNED_OR_FOR_SALE",
+    "defaultSort": "NEED"
   },
   "sources": {
     "includeCurrentMarketStorage": true,
