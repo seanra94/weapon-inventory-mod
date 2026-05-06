@@ -49,10 +49,12 @@
   - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
 - Fixed popup redraw layering by replacing in-place tooltip rebuilds with a dismiss-and-reopen lifecycle that preserves review state.
 - Fixed row action routing by handling Starsector `buttonPressed(...)` callbacks directly; checkbox/button polling alone was not reliable for nested row toggles.
+- Changed stock categories to start collapsed and render as flat full-width heading rows, so `No stock`, `Insufficient stock`, and `Sufficient stock` are visually peer sections.
 - Added first purchase flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;
   - purchases check credits and cargo space before mutating cargo.
+  - successful purchases close/reopen the underlying vanilla cargo core screen to avoid stale cargo-cell overlap after direct cargo mutation.
 
 ## Active Manual Validation
 

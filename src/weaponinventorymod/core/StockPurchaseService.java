@@ -93,11 +93,13 @@ public final class StockPurchaseService {
         for (PurchaseLine line : plan) {
             line.source.cargo.removeWeapons(weaponId, line.quantity);
             line.source.cargo.removeEmptyStacks();
+            line.source.cargo.sort();
             line.source.cargo.updateSpaceUsed();
-            line.source.cargo.getCredits().add(line.source.unitPrice * line.quantity);
         }
         playerCargo.addWeapons(weaponId, totalQuantity);
         playerCargo.getCredits().subtract(totalCost);
+        playerCargo.removeEmptyStacks();
+        playerCargo.sort();
         playerCargo.updateSpaceUsed();
 
         String message = "Bought " + totalQuantity + " " + weaponDisplayName(weaponId) + " for " + totalCost + " credits.";

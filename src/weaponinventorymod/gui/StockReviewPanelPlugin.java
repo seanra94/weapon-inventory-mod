@@ -2,7 +2,11 @@ package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.BaseCustomUIPanelPlugin;
+import com.fs.starfarer.api.campaign.CampaignUIAPI;
+import com.fs.starfarer.api.campaign.CoreInteractionListener;
+import com.fs.starfarer.api.campaign.CoreUITabId;
 import com.fs.starfarer.api.campaign.CustomVisualDialogDelegate;
+import com.fs.starfarer.api.campaign.InteractionDialogAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.input.InputEventAPI;
@@ -106,13 +110,11 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
             return;
         }
         if (StockReviewAction.Type.BUY_BEST.equals(type)) {
-            buyBest(action);
-            reopen();
+            handlePurchase(buyBest(action));
             return;
         }
         if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
-            buyFromSubmarket(action);
-            reopen();
+            handlePurchase(buyFromSubmarket(action));
             return;
         }
         if (StockReviewAction.Type.CYCLE_DISPLAY_MODE.equals(type)) {
@@ -144,22 +146,32 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
         }
     }
 
-    private void buyBest(StockReviewAction action) {
-        StockPurchaseService.PurchaseResult result = purchaseService.buyCheapest(
+    private StockPurchaseService.PurchaseResult buyBest(StockReviewAction action) {
+        return purchaseService.buyCheapest(
                 Global.getSector(), currentMarket(Global.getSector()), action.getWeaponId(), action.getQuantity(), state.isIncludeBlackMarket());
-        reportPurchaseResult(result);
     }
 
-    private void buyFromSubmarket(StockReviewAction action) {
-        StockPurchaseService.PurchaseResult result = purchaseService.buyFromSubmarket(
+    private StockPurchaseService.PurchaseResult buyFromSubmarket(StockReviewAction action) {
+        return purchaseService.buyFromSubmarket(
                 Global.getSector(), currentMarket(Global.getSector()), action.getWeaponId(), action.getSubmarketId(), action.getQuantity(), state.isIncludeBlackMarket());
-        reportPurchaseResult(result);
     }
 
-    private void reportPurchaseResult(StockPurchaseService.PurchaseResult result) {
-        if (result == null || result.isSuccess()) {
+    private void handlePurchase(StockPurchaseService.PurchaseResult result) {
+        if (result == null) {
+            reopen();
             return;
         }
+        if (!result.isSuccess()) {
+            reportPurchaseFailure(result);
+            reopen();
+            return;
+        }
+        StockReviewHotkeyScript.requestReopen(currentMarket(Global.getSector()), state);
+        refreshVanillaCargoScreen();
+        close();
+    }
+
+    private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {
         SectorAPI sector = Global.getSector();
         if (sector != null && sector.getCampaignUI() != null) {
             sector.getCampaignUI().addMessage(result.getMessage());
@@ -210,5 +222,31 @@ public final class StockReviewPanelPlugin extends BaseCustomUIPanelPlugin {
     private void reopen() {
         StockReviewHotkeyScript.requestReopen(currentMarket(Global.getSector()), state);
         close();
+    }
+
+    private void refreshVanillaCargoScreen() {
+        SectorAPI sector = Global.getSector();
+        CampaignUIAPI ui = sector == null ? null : sector.getCampaignUI();
+        InteractionDialogAPI dialog = ui == null ? null : ui.getCurrentInteractionDialog();
+        if (dialog == null || dialog.getVisualPanel() == null) {
+            return;
+        }
+        MarketAPI market = currentMarket(sector);
+        try {
+            dialog.getVisualPanel().closeCoreUI();
+            dialog.getVisualPanel().showCore(CoreUITabId.CARGO, dialog.getInteractionTarget(),
+                    CampaignUIAPI.CoreUITradeMode.OPEN, new CoreInteractionListener() {
+                        @Override
+                        public void coreUIDismissed() {
+                        }
+                    });
+            LOG.info("WIM_STOCK_REVIEW refreshed vanilla cargo screen market=" + (market == null ? "null" : market.getId()));
+        } catch (Throwable t) {
+            LOG.warn("WIM_STOCK_REVIEW could not refresh vanilla cargo screen after purchase; closing stale core UI", t);
+            try {
+                dialog.getVisualPanel().closeCoreUI();
+            } catch (Throwable ignored) {
+            }
+        }
     }
 }

@@ -21,8 +21,8 @@ public final class StockReviewState {
     private final Set<String> expandedSellers = new HashSet<String>();
 
     public StockReviewState(StockReviewConfig config) {
-        expanded.put(StockCategory.NO_STOCK, Boolean.TRUE);
-        expanded.put(StockCategory.INSUFFICIENT, Boolean.TRUE);
+        expanded.put(StockCategory.NO_STOCK, Boolean.FALSE);
+        expanded.put(StockCategory.INSUFFICIENT, Boolean.FALSE);
         expanded.put(StockCategory.SUFFICIENT, Boolean.FALSE);
         this.displayMode = config.getDisplayMode();
         this.sortMode = config.getSortMode();

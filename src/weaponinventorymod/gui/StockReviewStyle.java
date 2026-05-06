@@ -16,7 +16,8 @@ final class StockReviewStyle {
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float CATEGORY_BUTTON_WIDTH = 820f;
     static final float CATEGORY_BUTTON_HEIGHT = 24f;
-    static final float WEAPON_ROW_WIDTH = 640f;
+    static final float CATEGORY_GAP = 12f;
+    static final float WEAPON_ROW_WIDTH = 635f;
     static final float WEAPON_ROW_HEIGHT = 22f;
     static final float SECTION_ROW_WIDTH = 700f;
     static final float SECTION_ROW_HEIGHT = 20f;
@@ -27,6 +28,7 @@ final class StockReviewStyle {
     static final Color SUFFICIENT = new Color(75, 203, 99);
     static final Color ROW_BACKGROUND = new Color(38, 38, 38);
     static final Color ROW_BACKGROUND_DARK = new Color(24, 24, 24);
+    static final Color HEADING_BACKGROUND = new Color(18, 18, 18);
     static final Color TEXT = Misc.getTextColor();
     static final Color MUTED = Misc.getGrayColor();
 

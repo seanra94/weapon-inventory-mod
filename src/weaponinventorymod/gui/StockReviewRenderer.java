@@ -70,8 +70,9 @@ final class StockReviewRenderer {
         boolean expanded = state.isExpanded(category);
         String suffix = expanded ? " (-)" : " (+)";
         String label = category.getLabel() + " [" + records.size() + "]" + suffix;
-        ButtonAPI button = tooltip.addAreaCheckbox(label, StockReviewAction.toggle(category), color, new Color(12, 12, 12), color,
-                StockReviewStyle.CATEGORY_BUTTON_WIDTH, StockReviewStyle.CATEGORY_BUTTON_HEIGHT, StockReviewStyle.PAD);
+        ButtonAPI button = tooltip.addButton(label, StockReviewAction.toggle(category), color,
+                StockReviewStyle.HEADING_BACKGROUND, Alignment.LMID, CutStyle.NONE,
+                StockReviewStyle.CATEGORY_BUTTON_WIDTH, StockReviewStyle.CATEGORY_BUTTON_HEIGHT, StockReviewStyle.CATEGORY_GAP);
         buttons.add(new StockReviewButtonBinding(button, StockReviewAction.toggle(category)));
 
         if (!expanded) {
@@ -131,9 +132,9 @@ final class StockReviewRenderer {
                                       StockReviewState state,
                                       List<StockReviewButtonBinding> buttons) {
         boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
-        ButtonAPI heading = tooltip.addAreaCheckbox("        Weapon data " + (expanded ? "(-)" : "(+)"),
+        ButtonAPI heading = tooltip.addButton("        Weapon data " + (expanded ? "(-)" : "(+)"),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA),
-                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.MUTED,
+                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, Alignment.LMID, CutStyle.NONE,
                 StockReviewStyle.SECTION_ROW_WIDTH, StockReviewStyle.SECTION_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(heading,
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA)));
@@ -154,9 +155,9 @@ final class StockReviewRenderer {
                                    StockReviewState state,
                                    List<StockReviewButtonBinding> buttons) {
         boolean expanded = state.isSellersExpanded(record.getWeaponId());
-        ButtonAPI heading = tooltip.addAreaCheckbox("        Sellers " + (expanded ? "(-)" : "(+)"),
+        ButtonAPI heading = tooltip.addButton("        Sellers " + (expanded ? "(-)" : "(+)"),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS),
-                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.MUTED,
+                StockReviewStyle.MUTED, StockReviewStyle.ROW_BACKGROUND_DARK, Alignment.LMID, CutStyle.NONE,
                 StockReviewStyle.SECTION_ROW_WIDTH, StockReviewStyle.SECTION_ROW_HEIGHT, StockReviewStyle.SMALL_PAD);
         buttons.add(new StockReviewButtonBinding(heading,
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));

@@ -23,7 +23,11 @@
   - top-level row buttons buy from cheapest eligible current-market seller stock;
   - expanded Seller rows buy from a specific submarket;
   - buys check player credits and cargo space before moving stock;
+  - after a successful buy, the popup asks the vanilla cargo core UI to close/reopen because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
+- Popup category layout:
+  - stock categories start collapsed;
+  - headings are flat full-width button rows, not nested checkboxes.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
