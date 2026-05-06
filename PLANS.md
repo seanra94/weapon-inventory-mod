@@ -7,6 +7,10 @@
   - normal mod-side paused updater for counts;
   - JVM `System` property bridge between updater and embedded helper;
   - one precomposed badge sprite per weapon or fighter LPC stack.
+- Clean frontend work has started:
+  - `F8` opens a normal read-only Weapon Stock Review popup from active market/storage interaction dialogs;
+  - popup data comes from shared stock snapshot services, not the bytecode badge path;
+  - rows show `owned / currently purchasable at this market`.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -29,11 +33,21 @@
 - Refactored updater counting to scan cargo into maps once per tick instead of repeating storage scans for every id.
 - Removed old three-square diagnostic assets/settings and the legacy no-op `CargoWeaponMarkerHook`.
 - Rewrote handover/plans docs to describe the current architecture instead of old investigation states.
+- Added first clean read-only stock review popup:
+  - shared stock snapshot builder;
+  - current-market sale counts;
+  - fleet + current-market-storage owned counts;
+  - desired-count classifier;
+  - three toggle headings.
 
 ## Active Manual Validation
 
 - Open market trade and verify:
   - no crash;
+  - `F8` opens the Weapon Stock Review popup;
+  - `Esc` and `Close` dismiss the popup;
+  - category headings expand/collapse and preserve current state across refresh;
+  - no-weapons and many-weapons markets remain responsive;
   - commodities remain vanilla;
   - weapon badges still render bottom-right;
   - fighter LPC badges still render bottom-right;

@@ -6,6 +6,7 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import org.apache.log4j.Logger;
 import weaponinventorymod.internal.WeaponInventoryCountUpdater;
+import weaponinventorymod.gui.StockReviewHotkeyScript;
 
 import java.util.List;
 
@@ -19,19 +20,24 @@ public class WeaponInventoryModPlugin extends BaseModPlugin {
             LOG.warn("WIM_COUNT_UPDATER registration skipped: sector is null");
             return;
         }
-        if (hasUpdater(sector.getTransientScripts()) || hasUpdater(sector.getScripts())) {
-            return;
+        if (!hasScript(sector.getTransientScripts(), WeaponInventoryCountUpdater.class)
+                && !hasScript(sector.getScripts(), WeaponInventoryCountUpdater.class)) {
+            sector.addTransientScript(new WeaponInventoryCountUpdater());
+            LOG.info("WIM_COUNT_UPDATER registered");
         }
-        sector.addTransientScript(new WeaponInventoryCountUpdater());
-        LOG.info("WIM_COUNT_UPDATER registered");
+        if (!hasScript(sector.getTransientScripts(), StockReviewHotkeyScript.class)
+                && !hasScript(sector.getScripts(), StockReviewHotkeyScript.class)) {
+            sector.addTransientScript(new StockReviewHotkeyScript());
+            LOG.info("WIM_STOCK_REVIEW hotkey registered");
+        }
     }
 
-    private boolean hasUpdater(List<EveryFrameScript> scripts) {
+    private boolean hasScript(List<EveryFrameScript> scripts, Class<? extends EveryFrameScript> scriptClass) {
         if (scripts == null) {
             return false;
         }
         for (EveryFrameScript script : scripts) {
-            if (script instanceof WeaponInventoryCountUpdater) {
+            if (scriptClass.isInstance(script)) {
                 return true;
             }
         }

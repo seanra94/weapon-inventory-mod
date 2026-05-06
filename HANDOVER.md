@@ -4,6 +4,8 @@
 
 - The mod renders ownership-count badges directly inside vanilla market/trade cargo cells for weapon stacks and fighter LPC stacks.
 - Exact in-cell rendering is implemented by deterministically patching `com/fs/starfarer/campaign/ui/trade/CargoStackView.renderAtCenter(FFF)V` in `starfarer_obf.jar`.
+- A clean normal-mod frontend is now being added as the primary product: `F8` opens a read-only Weapon Stock Review popup from an active market/storage interaction dialog.
+- The popup is independent of the `CargoStackView` patcher. The clean UI should keep working if the patcher is removed.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
@@ -99,6 +101,9 @@ Manual validation:
 
 - Launch/load save.
 - Open a market trade screen.
+- Press `F8` to open Weapon Stock Review.
+- Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
+- Confirm row counts are `owned / currently purchasable at this market`.
 - Confirm no crash.
 - Confirm commodities remain vanilla.
 - Confirm weapon and fighter LPC stacks show one bottom-right badge.
