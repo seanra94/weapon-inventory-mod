@@ -17,7 +17,8 @@
   - `StockReviewRenderer` builds fixed-height custom row panels from `StockReviewListModel`; `StockReviewPanelPlugin` removes/recreates one root content panel for state changes.
   - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
 - Popup button rule:
-  - Use `buttonPressed(...)` for row/section actions. Polling `ButtonAPI.isChecked()` alone was not reliable for nested weapon rows, and the old `StockReviewButtonBinding` polling path has been removed.
+  - Buttons use real Starsector button labels plus a small `StockReviewButtonBinding` registry as a polling fallback. In runtime, nested custom-panel controls did not reliably arrive through `buttonPressed(...)` alone.
+  - Keep row/button actions as explicit `StockReviewAction` ids; do not return to inferred checkbox state as the source of truth.
 - Popup default scope:
   - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
 - Popup purchase flow:
