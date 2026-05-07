@@ -49,9 +49,14 @@ final class StockReviewListRow {
     }
 
     static WimGuiListRow<StockReviewAction> labelText(String label, String value, boolean topGap) {
+        return labelText(label, value, topGap, StockReviewStyle.TEXT);
+    }
+
+    static WimGuiListRow<StockReviewAction> labelText(String label, String value, boolean topGap, Color valueColor) {
         return labelTextRow(label, value, 0f, topGap,
                 StockReviewStyle.REVIEW_LIST_WIDTH - 2f * StockReviewStyle.SMALL_PAD,
-                0f);
+                0f,
+                valueColor);
     }
 
     static WimGuiListRow<StockReviewAction> labelTextIndented(String label, String value, float indent) {
@@ -69,7 +74,7 @@ final class StockReviewListRow {
                                                               float rightReserveWidth) {
         float componentWidth = Math.max(40f,
                 StockReviewStyle.LIST_WIDTH - indent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
-        return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth);
+        return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth, StockReviewStyle.TEXT);
     }
 
     private static WimGuiListRow<StockReviewAction> labelTextRow(String label,
@@ -77,13 +82,14 @@ final class StockReviewListRow {
                                                                  float indent,
                                                                  boolean topGap,
                                                                  float componentWidth,
-                                                                 float rightReserveWidth) {
+                                                                 float rightReserveWidth,
+                                                                 Color valueColor) {
         float cellWidth = componentWidth / 2f;
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.infoWithBorder(label, cellWidth,
-                        null, StockReviewStyle.TEXT, Alignment.LMID, null),
+                        null, StockReviewStyle.TEXT, Alignment.LMID, StockReviewStyle.ROW_BORDER),
                 WimGuiRowCell.infoWithBorder(value, cellWidth,
-                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.MID, StockReviewStyle.ROW_BORDER));
+                        StockReviewStyle.CELL_BACKGROUND, valueColor, Alignment.MID, StockReviewStyle.ROW_BORDER));
         return row("", StockReviewStyle.TEXT, null,
                 null, null,
                 indent, null, Alignment.LMID, cells, topGap, 0f, rightReserveWidth);

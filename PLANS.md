@@ -10,10 +10,10 @@
 - Clean frontend work has started:
   - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
-  - weapon entries now show `Storage`, unit `Cost`, planned `Buying`/`Selling` value, and compact buy/sell/reset controls.
+  - weapon entries now show `Storage`, unit `Price`, planned `Buying`/`Selling` value, and compact buy/sell/reset controls.
   - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup rows are intentionally limited to weapons that are buyable from the active stock source or present in player inventory.
-  - popup has sort modes for need, name, and cost.
+  - popup has sort modes for need, name, and price.
   - popup row actions now support weapon expansion, nested Weapon Data/Sellers sections, cheapest-first `+1`/dynamic buy steps, and submarket-specific buys.
 - Current visual baseline:
   - bottom-right placement;
@@ -113,7 +113,7 @@
   - `tools\validate-cargo-stack-view-patch.ps1` compiles the ASM patcher and runs `Verify` mode against the active `starfarer_obf.jar`;
   - the report checks target class/method presence, WEAPONS guard, embedded helper class, exact total-helper call counts, badge sprite render count, and known stale patch patterns.
 - Implemented the Buy/Review GUI performance and layout pass:
-  - weapon-name toggle headings plus `Storage`, unit `Cost`, and planned trade cells use gray/semantic backgrounds;
+  - weapon-name toggle headings plus `Storage`, unit `Price`, and planned trade cells use gray/semantic backgrounds;
   - stock/trade/cost cells were widened, with the weapon-name area shrinking to accommodate the richer table;
   - a cached `StockReviewTradeContext` now owns pending totals, per-weapon cost, cargo-space delta, credits, and affordability checks for render and controller paths;
   - `StockReviewQuoteBook` caches sorted seller lists, line quotes, seller allocations, sell prices, and cargo-space estimates so the Buy/Review GUI does not repeatedly copy/sort market stocks or scan player cargo while rendering;
@@ -134,9 +134,9 @@
   - `F8` opens the Weapon Stock Review popup;
   - `Esc` and `Close` dismiss the popup;
   - category headings expand/collapse and preserve current state across refresh;
-  - Sort cycles through `Need`, `Name`, and `Cost`;
+  - Sort cycles through `Need`, `Name`, and `Price`;
   - Black Market toggle updates counts/categories;
-  - Mode/Sort/toggle actions no longer leave old text layered under new text;
+  - Sort/source/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
   - expanded rows show Weapon Data and Sellers sections;
   - compact buy-step controls plan buys from cheapest eligible seller stock and shrink below `+10` when fewer than ten are available;
@@ -166,11 +166,11 @@
   - [x] review page visually narrows by the width taken by buy/sell row controls, so the Review Trades layout does not inherit unnecessary trade-button width;
   - [x] review page inner panel occupies the full list body from top to bottom, not bottom-anchored to visible rows;
   - [x] fixed Buying/Selling toggle headings in Review Trades;
-  - [x] preserved the category-style gap between Selling and the Total Cost / Credits Available summary rows;
+  - [x] preserved the category-style gap between Selling and the Total Cost or Total Profit / Credits Available summary rows;
   - [x] use `Review Trades` as the review page title and `Make Trades` as the buy/sell page title;
   - [x] keep the buy/sell page inner panel static-height while scrolling instead of changing size at the bottom;
   - [x] remove the old display modes; the list now shows only active-source buyable weapons or player-inventory weapons;
-  - [x] revise sorting: default Need means lowest stored quantity first, then cheapest cost, then name; Name then uses need and cost tie-breakers; removed low-value For Sale and Owned sorts; added Cost sorting;
+  - [x] revise sorting: default Need means lowest stored quantity first, then cheapest price, then name; Name then uses need and price tie-breakers; removed low-value For Sale and Owned sorts; added Price sorting;
   - [x] remove the top-row Storage toggle because storage counts are already shown in weapon rows;
   - [x] keep `Storage` as total owned stock, including inventory, while preventing storage-only weapons from creating rows;
   - [x] keep nested `Weapon Data` and `Sellers` rows inside their parent heading width, ending before the `Storage` cell column;
@@ -180,7 +180,7 @@
   - [x] title-case toggle heading labels, including `Weapon Data`;
   - [x] fix stock-review toggle headings not opening by routing enabled WIM controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;
   - [x] add reusable labelText containers for review summary rows such as `Total Cost` and `Credits Available`;
-  - [x] rename sufficiency controls to `-S` / `+S`;
+  - [x] replace `-S` / `+S` with one `Sufficient` row button that buys deficits or sells excess to reach barely sufficient stock;
   - [x] replace buggy disabled-button hover/highlight behavior by rendering disabled action cells as inert WIM shells instead of disabled Starsector buttons;
   - [x] port the ACG-style color debug menu behind a top-row `Colors` button, with temporary and permanent RGB overrides;
   - [x] use the repo's dimmed-toggle button path for toggle headings instead of normal toggle visuals.

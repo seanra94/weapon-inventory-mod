@@ -308,7 +308,7 @@ public final class StockPurchaseService {
             if (plugin != null && plugin.isIllegalOnSubmarket(playerStack, SubmarketPlugin.TransferAction.PLAYER_SELL)) {
                 continue;
             }
-            SellTarget candidate = new SellTarget(cargo, Math.max(0, Math.round(playerStack.getBaseValuePerUnit())));
+            SellTarget candidate = new SellTarget(cargo, MarketStockService.sellUnitPrice(submarket, playerStack));
             if (best == null || candidate.unitPrice > best.unitPrice) {
                 best = candidate;
             }

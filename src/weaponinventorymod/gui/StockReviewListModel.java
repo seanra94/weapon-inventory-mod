@@ -54,21 +54,16 @@ final class StockReviewListModel {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
         String label = WimGuiToggleHeading.label(record.getDisplayName(), expanded);
         int planQuantity = tradeContext.netQuantityForWeapon(record.getWeaponId());
-        int buyRemaining = tradeContext.buyableRemaining(record);
         int sellRemaining = tradeContext.sellableRemaining(record);
-        int buyUntilQuantity = Math.min(buyRemaining, tradeContext.buyNeededForSufficiency(record));
-        buyUntilQuantity = tradeContext.affordableBuyQuantity(record, null, buyUntilQuantity);
-        int sellUntilQuantity = tradeContext.sellableUntilSufficient(record);
         int transactionCost = tradeContext.transactionCostForWeapon(record.getWeaponId());
         int buyStepQuantity = tradeContext.affordableBuyQuantity(record, null, 10);
         int sellStepQuantity = Math.min(10, sellRemaining);
+        int sufficientDelta = tradeContext.deltaToSufficient(record);
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info("Storage: " + record.getOwnedCount(),
+                WimGuiRowCell.info(storageLabel(record.getOwnedCount(), planQuantity),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
-                unitCostCell(tradeContext.unitCostForWeapon(record)),
+                unitPriceCell(tradeContext.unitPriceForWeapon(record)),
                 planCell(planQuantity, transactionCost),
-                WimGuiRowCell.standardAction("-S", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
-                        StockReviewAction.adjustPlan(record.getWeaponId(), -sellUntilQuantity), sellUntilQuantity > 0),
                 stepCell("-", sellStepQuantity, StockReviewStyle.SELL_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), -sellStepQuantity)),
                 WimGuiRowCell.standardAction("-1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
@@ -78,8 +73,8 @@ final class StockReviewListModel {
                         tradeContext.affordableBuyQuantity(record, null, 1) >= 1),
                 stepCell("+", buyStepQuantity, StockReviewStyle.BUY_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), buyStepQuantity)),
-                WimGuiRowCell.standardAction("+S", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.CONFIRM_BUTTON,
-                        StockReviewAction.adjustPlan(record.getWeaponId(), buyUntilQuantity), buyUntilQuantity > 0),
+                WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH, StockReviewStyle.CONFIRM_BUTTON,
+                        StockReviewAction.adjustToSufficient(record.getWeaponId(), sufficientDelta), sufficientDelta != 0),
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0));
         rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
@@ -98,16 +93,23 @@ final class StockReviewListModel {
                 : planQuantity < 0 ? "Selling: " + quantity + " [" + total + "]" : "Buying: 0 [0cr]";
         Color fill = planQuantity > 0
                 ? StockReviewStyle.PLAN_POSITIVE
-                : planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.PLAN_ZERO;
+                : planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.CELL_BACKGROUND;
         return WimGuiRowCell.info(label, StockReviewStyle.PLAN_CELL_WIDTH, fill, StockReviewStyle.TEXT);
     }
 
-    private static WimGuiRowCell<StockReviewAction> unitCostCell(int unitCost) {
-        if (unitCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            return WimGuiRowCell.info("Cost: ?", StockReviewStyle.COST_CELL_WIDTH, StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
+    static String storageLabel(int ownedCount, int planQuantity) {
+        if (planQuantity == 0) {
+            return "Storage: " + ownedCount;
         }
-        return WimGuiRowCell.info("Cost: " + StockReviewFormat.credits(unitCost), StockReviewStyle.COST_CELL_WIDTH,
-                StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
+        return "Storage: " + ownedCount + " [" + (planQuantity > 0 ? "+" : "") + planQuantity + "]";
+    }
+
+    private static WimGuiRowCell<StockReviewAction> unitPriceCell(int unitPrice) {
+        if (unitPrice == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
+            return WimGuiRowCell.info("Price: ?", StockReviewStyle.COST_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
+        }
+        return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(unitPrice), StockReviewStyle.COST_CELL_WIDTH,
+                StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
     }
 
     private static WimGuiRowCell<StockReviewAction> stepCell(String sign,

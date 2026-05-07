@@ -196,7 +196,7 @@ final class StockReviewQuoteBook {
         return result;
     }
 
-    private int sellUnitPrice(String weaponId) {
+    int sellUnitPrice(String weaponId) {
         if (weaponId == null) {
             return -1;
         }
@@ -205,7 +205,10 @@ final class StockReviewQuoteBook {
             return cached.intValue();
         }
         if (playerSellUnitPrices == null) {
-            playerSellUnitPrices = StockReviewPlayerCargo.sellUnitPricesByWeapon();
+            playerSellUnitPrices = StockReviewPlayerCargo.sellUnitPricesByWeapon(
+                    snapshot == null ? null : snapshot.getMarket(),
+                    snapshot != null && snapshot.isIncludeBlackMarket(),
+                    snapshot != null && snapshot.isGlobalMarketMode());
         }
         Integer price = playerSellUnitPrices.get(weaponId);
         int result = price == null ? -1 : price.intValue();

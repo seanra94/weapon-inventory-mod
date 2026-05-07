@@ -38,9 +38,9 @@
   - Global sales use `StockPurchaseService.sellVirtualGlobal(...)`, which removes weapons from player cargo and pays normal base value without adding stock to a real market. Do not apply the global buy markup to sells.
   - Optional tag/faction inference is Luna-gated by `wim_enable_global_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
 - Popup sorting:
-  - `Need`: lowest stored-outside-inventory count first, then cheapest current buy cost, then weapon name;
-  - `Name`: weapon name first, then need, then cost;
-  - `Cost`: cheapest current buy cost first, then most needed, then weapon name.
+  - `Need`: lowest stored-outside-inventory count first, then cheapest current buy price, then weapon name;
+  - `Name`: weapon name first, then need, then price;
+  - `Price`: cheapest current buy price first, then most needed, then weapon name.
 - Popup purchase flow:
   - weapon entries in the Buy GUI use a signed `Plan`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
   - top-level buy buttons queue pending buys from cheapest eligible current-market seller stock;
@@ -68,13 +68,13 @@
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` and `Sellers` use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders; nested `Weapon Data` / `Sellers` heading buttons start after the indent so the left indent remains black.
-  - Weapon entries should keep this order: weapon label, `Storage`, `Cost`, `Buying`/`Selling`, `-S`, dynamic sell step, `-1`, `+1`, dynamic buy step, `+S`, `Reset`.
-  - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory.
-  - `Cost` in the Buy GUI is the cheapest currently purchasable unit cost for that weapon, formatted with comma-grouped credits.
-  - `Buying` / `Selling` is the signed planned trade for that weapon and includes the full planned trade value in brackets, e.g. `Buying: 5 [50,000cr]`. Positive planned quantities use green, negative planned quantities use red, and zero uses pale yellow.
+  - Weapon entries should keep this order: weapon label, `Storage`, `Price`, `Buying`/`Selling`, dynamic sell step, `-1`, `+1`, dynamic buy step, `Sufficient`, `Reset`.
+  - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.
+  - `Price` in the Buy GUI is the cheapest currently purchasable unit buy price; if no buy price exists because the row is sell-only, fall back to the best legal player-cargo sell value for the active market/black-market setting. Format prices with comma-grouped credits.
+  - `Buying` / `Selling` is the signed planned trade for that weapon and includes the full planned trade value in brackets, e.g. `Buying: 5 [50,000cr]`. Positive planned quantities use green, negative planned quantities use red, and zero uses gray.
   - The dynamic sell/buy step buttons replace the old fixed `-10` / `+10` when fewer than ten additional weapons can be sold/bought. If one or fewer remain, the dynamic step stays visually as disabled `-10` / `+10` because the separate `-1` / `+1` button handles the one-item case.
-  - Cost/profit cells use the red/cancel or green/confirm backgrounds. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
-  - `-S` sells down until barely sufficient without crossing into insufficient stock. `+S` buys up until barely sufficient without exceeding desired stock.
+  - `Price` and neutral `Buying: 0` cells use the normal gray cell background. Profit cells use green/confirm. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
+  - `Sufficient` adjusts the weapon to barely sufficient status, buying if there is a deficit and selling if there is an excess.
   - Disabled controls should render as inert WIM-owned shells with gray text and disabled fill, not as disabled Starsector buttons. Starsector's disabled-button hover can darken/highlight inconsistently and should not be used for WIM action cells.
   - The `Colors` top-row button opens the in-popup Debug Colors screen. Temporary changes mutate the runtime WIM palette until restart; Permanent mode also writes the selected RGB values to Starsector common storage as `WIM_debugGuiColors.json`. Debug samples, RGB incrementors, Confirm/Apply/Restore/Cancel, and the variable selector must stay on the shared WIM row/button path.
   - The old visible `Refresh` and `Mode` buttons were removed. Sort/source changes and trade actions already rebuild the snapshot/content shell through explicit actions.
@@ -282,9 +282,9 @@ Manual validation:
 - Open a market trade screen.
 - Press `F8` to open Weapon Stock Review.
 - Confirm the popup groups weapons under No Stock, Insufficient Stock, and Sufficient Stock.
-- Confirm weapon entries show stable `Storage`, unit `Cost`, and planned `Buying`/`Selling` cells while queued changes are adjusted.
+- Confirm weapon entries show stable `Storage`, unit `Price`, and planned `Buying`/`Selling` cells while queued changes are adjusted.
 - Confirm `Source` and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
-- Confirm `Sort` cycles through `Need`, `Name`, and `Cost` without collapsing headings.
+- Confirm `Sort` cycles through `Need`, `Name`, and `Price` without collapsing headings.
 - Confirm weapon rows expand into Weapon Data and Sellers sections.
 - Confirm mouse-wheel scrolling and clickable `^     ^     ^     ^     ^` / `v     v     v     v     v` indicators preserve state and do not appear when all rows fit.
 - Confirm `+1`/dynamic buy-step works from top-level rows and specific seller rows, with credits/space failures blocked.

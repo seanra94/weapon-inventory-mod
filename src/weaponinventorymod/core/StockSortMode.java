@@ -3,7 +3,7 @@ package weaponinventorymod.core;
 public enum StockSortMode {
     NEED("Need"),
     NAME("Name"),
-    COST("Cost");
+    COST("Price");
 
     private final String label;
 

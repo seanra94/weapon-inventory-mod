@@ -10,6 +10,7 @@ final class StockReviewAction {
         TOGGLE_WEAPON_SECTION,
         ADJUST_PLAN,
         BUY_FROM_SUBMARKET,
+        ADJUST_TO_SUFFICIENT,
         RESET_PLAN,
         CYCLE_SORT_MODE,
         TOGGLE_GLOBAL_MARKET,
@@ -88,6 +89,10 @@ final class StockReviewAction {
 
     static StockReviewAction buyFromSubmarket(String weaponId, String submarketId, int quantity) {
         return new StockReviewAction(Type.BUY_FROM_SUBMARKET, null, null, null, weaponId, submarketId, quantity);
+    }
+
+    static StockReviewAction adjustToSufficient(String weaponId, int delta) {
+        return new StockReviewAction(Type.ADJUST_TO_SUFFICIENT, null, null, null, weaponId, null, delta);
     }
 
     static StockReviewAction cycleSortMode() {

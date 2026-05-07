@@ -16,14 +16,15 @@ final class StockReviewStyle {
     static final float COLOR_BUTTON_WIDTH = 82f;
     static final float BUTTON_GAP = 5f;
     static final float SELLER_BUY_BUTTON_WIDTH = 54f;
-    static final float STOCK_CELL_WIDTH = 92f;
+    static final float STOCK_CELL_WIDTH = 118f;
     static final float INVENTORY_CELL_WIDTH = 102f;
     static final float PLAN_CELL_WIDTH = 170f;
     static final float COST_CELL_WIDTH = 104f;
     static final float REVIEW_MARKET_CELL_WIDTH = 180f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
+    static final float SUFFICIENT_BUTTON_WIDTH = 82f;
     static final float RESET_BUTTON_WIDTH = 58f;
-    static final float TRADE_CONTROL_BLOCK_WIDTH = 6f * TRADE_STEP_BUTTON_WIDTH + RESET_BUTTON_WIDTH + 6f * BUTTON_GAP;
+    static final float TRADE_CONTROL_BLOCK_WIDTH = 4f * TRADE_STEP_BUTTON_WIDTH + SUFFICIENT_BUTTON_WIDTH + RESET_BUTTON_WIDTH + 5f * BUTTON_GAP;
     static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + COST_CELL_WIDTH
             + PLAN_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 9f * BUTTON_GAP;
     static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + COST_CELL_WIDTH
@@ -58,6 +59,8 @@ final class StockReviewStyle {
             SMALL_PAD);
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
+    static final float REVIEW_LIST_TOP = PAD + HEADER_HEIGHT + SMALL_PAD;
+    static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, HEIGHT - REVIEW_LIST_TOP - PAD - FOOTER_HEIGHT - PAD);
     static final float LIST_WIDTH = MODAL.contentWidth();
     static final float REVIEW_LIST_WIDTH = LIST_WIDTH - TRADE_CONTROL_BLOCK_WIDTH;
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
@@ -123,9 +126,9 @@ final class StockReviewStyle {
     static WimGuiModalListSpec REVIEW_LIST = new WimGuiModalListSpec(
             MODAL,
             PAD,
-            LIST_TOP,
+            REVIEW_LIST_TOP,
             REVIEW_LIST_WIDTH,
-            LIST_HEIGHT,
+            REVIEW_LIST_HEIGHT,
             ROW_HEIGHT,
             ACTION_BUTTON_HEIGHT,
             ROW_GAP,
@@ -201,9 +204,9 @@ final class StockReviewStyle {
         REVIEW_LIST = new WimGuiModalListSpec(
                 MODAL,
                 PAD,
-                LIST_TOP,
+                REVIEW_LIST_TOP,
                 REVIEW_LIST_WIDTH,
-                LIST_HEIGHT,
+                REVIEW_LIST_HEIGHT,
                 ROW_HEIGHT,
                 ACTION_BUTTON_HEIGHT,
                 ROW_GAP,

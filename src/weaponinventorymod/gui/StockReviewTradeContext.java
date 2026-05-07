@@ -80,12 +80,22 @@ final class StockReviewTradeContext {
         return portfolioQuote.costForLine(weaponId, submarketId);
     }
 
-    int unitCostForWeapon(WeaponStockRecord record) {
+    int unitPriceForWeapon(WeaponStockRecord record) {
         if (record == null) {
             return StockReviewQuoteBook.PRICE_UNAVAILABLE;
         }
         int unitCost = quoteBook.cheapestUnitPrice(record);
-        return unitCost == Integer.MAX_VALUE ? StockReviewQuoteBook.PRICE_UNAVAILABLE : unitCost;
+        return unitCost == Integer.MAX_VALUE ? quoteBook.sellUnitPrice(record.getWeaponId()) : unitCost;
+    }
+
+    int deltaToSufficient(WeaponStockRecord record) {
+        int buyQuantity = Math.min(buyableRemaining(record), buyNeededForSufficiency(record));
+        buyQuantity = affordableBuyQuantity(record, null, buyQuantity);
+        if (buyQuantity > 0) {
+            return buyQuantity;
+        }
+        int sellQuantity = sellableUntilSufficient(record);
+        return sellQuantity > 0 ? -sellQuantity : 0;
     }
 
     List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingPurchase purchase) {

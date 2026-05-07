@@ -23,11 +23,14 @@ final class StockReviewReviewListModel {
         addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.BUYING);
         addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.SELLING);
         int netCost = tradeContext.totalCost();
-        String netLabel = netCost < 0 ? "Net Credits Gained" : "Total Cost";
+        String netLabel = netCost < 0 ? "Total Profit" : "Total Cost";
         String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
                 ? "Price Unavailable"
                 : StockReviewFormat.credits(netCost);
-        rows.add(StockReviewListRow.labelText(netLabel, netValue, true));
+        Color netValueColor = netCost < 0
+                ? StockReviewStyle.CONFIRM_BUTTON
+                : netCost > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.TEXT;
+        rows.add(StockReviewListRow.labelText(netLabel, netValue, true, netValueColor));
         rows.add(StockReviewListRow.labelText("Credits Available", StockReviewFormat.credits(Math.round(tradeContext.credits()))));
         return rows;
     }
@@ -68,7 +71,7 @@ final class StockReviewReviewListModel {
         int quantity = Math.abs(purchase.getQuantity());
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info("Storage: " + record.getOwnedCount(),
+                WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getOwnedCount(), purchase.getQuantity()),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
                 reviewCostCell(cost, purchase.isSell()),
                 WimGuiRowCell.info((purchase.isSell() ? "Selling: " : "Buying: ") + quantity,
@@ -108,22 +111,22 @@ final class StockReviewReviewListModel {
                     StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
             rows.add(StockReviewListRow.labelTextIndented("Buying", String.valueOf(allocation.getQuantity()),
                     StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
-            rows.add(StockReviewListRow.labelTextIndented("Cost", StockReviewFormat.credits(allocation.getCost()),
+            rows.add(StockReviewListRow.labelTextIndented("Price", StockReviewFormat.credits(allocation.getCost()),
                     StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
         }
     }
 
     private static WimGuiRowCell<StockReviewAction> reviewCostCell(int cost, boolean sell) {
         if (cost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            return WimGuiRowCell.info("Cost: ?", StockReviewStyle.COST_CELL_WIDTH,
-                    StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
+            return WimGuiRowCell.info("Price: ?", StockReviewStyle.COST_CELL_WIDTH,
+                    StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
         }
         if (sell) {
             return WimGuiRowCell.info("Profit: " + StockReviewFormat.credits(cost), StockReviewStyle.COST_CELL_WIDTH,
                     StockReviewStyle.PROFIT_BUTTON, StockReviewStyle.TEXT);
         }
-        return WimGuiRowCell.info("Cost: " + StockReviewFormat.credits(cost), StockReviewStyle.COST_CELL_WIDTH,
-                StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
+        return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(cost), StockReviewStyle.COST_CELL_WIDTH,
+                StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
     }
 
     private static List<StockReviewPendingPurchase> reviewPurchasesForGroup(List<StockReviewPendingPurchase> pendingPurchases,

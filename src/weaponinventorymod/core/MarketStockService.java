@@ -98,6 +98,18 @@ public final class MarketStockService {
         return Math.max(0, Math.round(stack.getBaseValuePerUnit() * (1f + Math.max(0f, tariff))));
     }
 
+    public static int sellUnitPrice(SubmarketAPI submarket, CargoStackAPI stack) {
+        if (stack == null) {
+            return 0;
+        }
+        float tariff = 0f;
+        if (submarket != null) {
+            SubmarketPlugin plugin = submarket.getPlugin();
+            tariff = plugin == null ? submarket.getTariff() : plugin.getTariff();
+        }
+        return Math.max(0, Math.round(stack.getBaseValuePerUnit() * (1f - Math.max(0f, tariff))));
+    }
+
     public static float unitCargoSpace(CargoStackAPI stack) {
         if (stack == null) {
             return 1f;

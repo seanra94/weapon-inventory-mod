@@ -22,7 +22,9 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                             boolean colorDebugPersistent,
                             List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         renderHeader(root, snapshot, reviewMode, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
-        renderActionRow(root, snapshot, buttons);
+        if (!reviewMode) {
+            renderActionRow(root, snapshot, buttons);
+        }
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingPurchases);
         WimGuiListBounds result = colorDebugMode
                 ? renderColorDebugList(root, colorDebugTargetIndex, colorDebugDraft, colorDebugPersistent, state, buttons)
