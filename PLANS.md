@@ -10,7 +10,7 @@
 - Clean frontend work has started:
   - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
-  - rows show `owned / currently purchasable at this market`.
+  - weapon entries now show `Current`, `For Sale`, `Plan`, and `Cost`/`Profit` cells plus buy/sell controls.
   - popup has config-backed desired stock defaults, display mode, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup defaults to `All Tracked` so the review starts from all enabled weapon specs instead of only owned/currently sold weapons.
   - popup has sort modes for need, name, for-sale count, and owned count.
@@ -69,7 +69,12 @@
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;
   - purchases check credits and cargo space before mutating cargo.
-  - successful purchases close/reopen the underlying vanilla cargo core screen to avoid stale cargo-cell overlap after direct cargo mutation.
+  - successful purchases rebuild the popup snapshot in place by default; the older close/reopen fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
+- Added signed planned-trade flow:
+  - positive planned quantity means buying;
+  - negative planned quantity means selling from player inventory;
+  - `Review Purchase` opens a confirmation screen before cargo mutation;
+  - `Purchase Until Sufficient` currently queues needed buys and opens the review screen.
 
 ## Active Manual Validation
 
@@ -80,7 +85,7 @@
   - category headings expand/collapse and preserve current state across refresh;
   - Mode cycles through `Owned or For Sale`, `Currently For Sale`, `Owned Only`, and `All Tracked`;
   - Sort cycles through `Need`, `Name`, `For Sale`, and `Owned`;
-  - Market Storage and Black Market toggles update counts/categories;
+  - Storage and Black Market toggles update counts/categories;
   - Mode/Sort/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
   - expanded rows show Weapon Data and Sellers sections;
@@ -97,6 +102,46 @@
 
 ## High-Value Future Work
 
+- Rework Buy GUI weapon entries into the next stock-control row system:
+  - target collapsed weapon-entry structure:
+    - `Weapon Name` on gray background;
+    - `Storage: N` on gray background;
+    - `Inventory: N` on gray background;
+    - `Stocked: N` on gray background;
+    - `Buying: N` on green background when net planned quantity is positive;
+    - `Selling: N` on red background when net planned quantity is negative;
+    - neutral `Buying: 0` on yellow background when no trade is planned;
+    - `Cost: $N` on red background for net cost;
+    - `Profit: $N` on green background for net profit;
+    - `- N`, `- 10`, `- 1`, `+ 1`, `+ 10`, `+ N`, `Reset` as compact controls;
+    - `Buy Until Sufficient` or `+ N` should use green semantics where it represents reaching sufficiency.
+  - `Storage` means accessible storage count, separate from player fleet cargo.
+  - `Inventory` means player fleet cargo count, because only inventory weapons can be sold through this GUI.
+  - `Stocked` means current total stock before planned trades, usually storage plus inventory under the active owned-source policy.
+  - `Buying`/`Selling`, `Cost`/`Profit`, `Storage`, `Inventory`, and `Stocked` must remain snapshot/planned-trade summaries; clicking row controls should not mutate cargo until the Review GUI is confirmed.
+  - `- N` means sell down until the weapon is barely sufficient, never below sufficient stock if already sufficient.
+  - `+ N` means buy up until the weapon is barely sufficient, never beyond desired sufficient stock.
+  - `Reset` sets that weapon's planned trade quantity back to zero.
+  - `- 1` and `- 10` must be disabled with gray text and disabled-button visuals when there is not enough inventory stock available to sell that increment.
+  - `+ 1` and `+ 10` must be disabled with gray text and disabled-button visuals when the planned running total would exceed current credits or cargo capacity, or when current market stock is insufficient for that increment.
+  - Buy affordability and cargo-space checks must use the full current planned-trade total, not each weapon in isolation.
+  - Weapon-name toggle headings can be about 25% narrower than the current row-label area to make room for the richer control grid.
+  - Import/adapt the ACG text helper for button/row label fitting: shared wrapping, truncation, and `...` suffix behavior should be centralized rather than hand-coded per row.
+  - Investigate why WIM buttons still do not visually match ACG's dimmed-inner-rectangle behavior. Compare WIM `StockReviewRenderer.addButton(...)` with the relevant ACG button helper and preserve the result in WIM's shared button template.
+- Rework bottom Buy GUI bulk controls:
+  - rename `Purchase Until Sufficient` to `Purchase All Until Sufficient` if that better matches the final UX.
+  - Add `Sell All Until Sufficient`.
+  - Add `Reset All Trades`.
+  - `Purchase All Until Sufficient` should:
+    - gather all current-market weapons available for purchase;
+    - order purchase candidates from cheapest to most expensive;
+    - buy as many as possible of each cheapest candidate until money runs out, cargo space runs out, seller stock runs out, or that weapon reaches barely sufficient stock;
+    - respect any existing planned buys/sells rather than overwriting them;
+    - leave the user in the Buy GUI with updated planned quantities and cost/profit cells, not jump straight to Review GUI unless explicitly changed later.
+  - `Sell All Until Sufficient` should:
+    - plan as many inventory sells as possible without moving a weapon from sufficient to insufficient or no-stock status after planned trades;
+    - respect existing planned buys/sells rather than overwriting them.
+  - `Reset All Trades` should clear all planned buy/sell quantities back to zero.
 - Remove or reduce capped runtime diagnostic logs once the latest cleanup is manually validated.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
