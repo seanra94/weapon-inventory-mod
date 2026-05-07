@@ -37,12 +37,12 @@
   - The old display-mode button and config mode were removed. The Buy GUI should show only weapons that are buyable from the active stock source or present in player inventory and therefore sellable through the GUI.
   - Stored-only weapons should not create rows. The `Storage` cell may still show full owned stock, including accessible storage, for a weapon that appears because it is buyable or in player inventory.
   - Local stock collection, local buys, local sells, and sell-price quoting should all use `MarketStockService.isTradeSubmarket(...)` for storage/local-resource/black-market filtering. Do not copy that submarket filter into each caller.
-- Global Weapon Market:
-  - The Buy GUI now has a `Source: Local/Global` toggle. Local source behaves like the normal current-market review. Global source is a virtual seller, not a real submarket inserted into vanilla cargo.
-  - Initial global eligibility is intentionally conservative and live-scan based: `GlobalWeaponMarketService` scans all current economy markets and includes a weapon if it appears in any non-storage/non-local-resources market cargo that WIM can see. Eligible weapons appear with 999 virtual stock.
-  - Global buy prices are multiplied by the Luna setting `wim_global_market_price_multiplier`, default `4.0`. This markup applies only to the virtual global buy source.
-  - Global purchases use `StockPurchaseService.buyVirtualGlobal(...)`, which charges credits and adds weapons directly to player cargo without removing anything from real markets.
-  - Global sales use `StockPurchaseService.sellVirtualGlobal(...)`, which removes weapons from player cargo and pays normal base value without adding stock to a real market. Do not apply the global buy markup to sells.
+- Stock source modes:
+  - The Buy GUI now cycles `Source: Local`, `Source: Sector Market`, and `Source: Secret Market`.
+  - `Local` behaves like the normal current-market review and honors the Black Market toggle.
+  - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wim_sector_market_price_multiplier` (default `4.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
+  - `Secret Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_secret_market_price_multiplier` (default `6.0`) to buy prices, and does not drain real market cargo. Selling while in Secret Market mode still sells to the current local market.
+  - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
   - Optional tag/faction inference is Luna-gated by `wim_enable_global_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
 - Popup sorting:
   - `Need`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
@@ -71,7 +71,7 @@
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run;
-  - global-market buys/sells remain virtual WIM transactions and intentionally do not report to a real submarket plugin.
+  - Secret Market buys remain virtual WIM transactions and intentionally do not report to a real submarket plugin. Sector Market buys remove stock from real remote market cargo and report a best-effort transaction to the touched remote submarket. Remote-mode sells use the current local market buyer with black market disabled.
 - Popup category layout:
   - stock categories start collapsed;
   - headings are flat full-width peer rows, not nested checkboxes;
@@ -101,7 +101,8 @@
   - The old visible `Refresh` and `Mode` buttons were removed. Sort/source changes and trade actions already rebuild the snapshot/content shell through explicit actions.
   - The Make Trades and Review Trades screens intentionally omit the old title/status text box. That vertical space belongs to the main weapon list. Filter and color-debug screens still keep a title/status header because those screens need orientation text.
   - Credit labels should use the Starsector-supported cent-sign glyph (`\u00a2`, font char id 162) instead of the plain `cr` suffix. Longer campaign messages may still say `credits` when that reads better.
-  - `Warning`, `Credits Available`, and `Cargo Space Available` belong in fixed bottom summary rows above the footer buttons on trade/review screens, not inside the scrollable weapon list. The warning row starts at `None` and otherwise displays the most recently triggered trade warning.
+  - `Warning`, `Tariffs Paid`, `Credits Available`, and `Cargo Space Available` belong in fixed bottom summary rows above the footer buttons on trade/review screens, not inside the scrollable weapon list. The warning row starts at `None` and otherwise displays the most recently triggered trade warning.
+  - `Tariffs Paid` is the markup paid above the unmarked buy cost for planned buys, with an average multiplier label such as `[4.0x]`. It uses the red/cancel fill when the markup is greater than zero and gray when zero.
   - `Credits Available` and `Cargo Space Available` value cells include the current value plus a signed bracketed delta, e.g. `500,000\u00a2 [-100,000\u00a2]` when buying or `500,000\u00a2 [+100,000\u00a2]` when selling. Buying/negative-available deltas use the buy-side yellow fill, selling/positive-available deltas use the sell-side purple fill, and unchanged rows use gray.
   - Trade warnings currently include: `Not enough cargo capacity`, `Not enough credits`, `Credit balance at <5% of initial balance`, and `Cargo capacity at <5% of total capacity`. Plan-changing actions refresh the warning back to `None` when no warning condition remains.
   - Performance-sensitive trade math should go through `StockReviewTradeContext`, which caches pending buy/sell quantities, per-weapon costs, total cost, cargo-space delta, current credits, cargo space, and affordability probes for the current render/controller action.

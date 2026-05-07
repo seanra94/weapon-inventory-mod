@@ -89,7 +89,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
                 }
             }
             MarketStockService.MarketStock globalStock =
-                    new GlobalWeaponMarketService().collectGlobalWeaponStock(Global.getSector(), config.isIncludeBlackMarket());
+                    new GlobalWeaponMarketService().collectSectorWeaponStock(Global.getSector());
             for (String ignored : globalStock.weaponIds()) {
                 return true;
             }

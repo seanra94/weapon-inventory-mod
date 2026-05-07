@@ -27,14 +27,13 @@ public final class WeaponStockSnapshotBuilder {
                                      StockSortMode sortMode,
                                      boolean includeCurrentMarketStorage,
                                      boolean includeBlackMarket,
-                                     boolean globalMarketMode) {
+                                     StockSourceMode sourceMode) {
+        StockSourceMode resolvedSourceMode = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
         OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
         DesiredStockService desiredStockService = new DesiredStockService(config);
         Map<String, Integer> owned = inventoryCountService.collectOwnedWeaponCounts(sector, market, ownedSourcePolicy);
         Map<String, Integer> playerCargoCounts = InventoryCountService.collectCargoWeaponCounts(playerCargo(sector));
-        MarketStockService.MarketStock marketStock = globalMarketMode
-                ? globalWeaponMarketService.collectGlobalWeaponStock(sector, includeBlackMarket)
-                : marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
+        MarketStockService.MarketStock marketStock = marketStock(sector, market, includeBlackMarket, resolvedSourceMode);
 
         Set<String> ids = new HashSet<String>();
         addTradeableIds(ids, playerCargoCounts, marketStock);
@@ -75,7 +74,23 @@ public final class WeaponStockSnapshotBuilder {
             Collections.sort(records, comparatorFor(sortMode));
         }
 
-        return new WeaponStockSnapshot(market, ownedSourcePolicy, sortMode, includeBlackMarket, globalMarketMode, grouped);
+        return new WeaponStockSnapshot(market, ownedSourcePolicy, sortMode,
+                resolvedSourceMode.isRemote() ? false : includeBlackMarket,
+                resolvedSourceMode,
+                grouped);
+    }
+
+    private MarketStockService.MarketStock marketStock(SectorAPI sector,
+                                                       MarketAPI market,
+                                                       boolean includeBlackMarket,
+                                                       StockSourceMode sourceMode) {
+        if (StockSourceMode.SECRET.equals(sourceMode)) {
+            return globalWeaponMarketService.collectSecretWeaponStock(sector);
+        }
+        if (StockSourceMode.SECTOR.equals(sourceMode)) {
+            return globalWeaponMarketService.collectSectorWeaponStock(sector);
+        }
+        return marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
     }
 
     private static void addTradeableIds(Set<String> ids,

@@ -13,7 +13,7 @@ final class StockReviewAction {
         ADJUST_TO_SUFFICIENT,
         RESET_PLAN,
         CYCLE_SORT_MODE,
-        TOGGLE_GLOBAL_MARKET,
+        CYCLE_SOURCE_MODE,
         TOGGLE_BLACK_MARKET,
         SCROLL_LIST,
         PURCHASE_ALL_UNTIL_SUFFICIENT,
@@ -117,8 +117,8 @@ final class StockReviewAction {
         return new StockReviewAction(Type.TOGGLE_BLACK_MARKET, null, null, null, null, null, null, null, 0);
     }
 
-    static StockReviewAction toggleGlobalMarket() {
-        return new StockReviewAction(Type.TOGGLE_GLOBAL_MARKET, null, null, null, null, null, null, null, 0);
+    static StockReviewAction cycleSourceMode() {
+        return new StockReviewAction(Type.CYCLE_SOURCE_MODE, null, null, null, null, null, null, null, 0);
     }
 
     static StockReviewAction scrollList(int delta) {

@@ -85,13 +85,15 @@ final class StockReviewQuoteBook {
                                                    Map<String, Integer> remainingBySource) {
         int remaining = purchase.getQuantity();
         int totalCost = 0;
+        int totalBaseCost = 0;
+        int totalQuantity = 0;
         float totalCargo = 0f;
         List<StockReviewSellerAllocation> allocations =
                 new ArrayList<StockReviewSellerAllocation>();
         List<SubmarketWeaponStock> stocks = sortedBuyStocks(purchase.getWeaponId());
         for (int i = 0; i < stocks.size() && remaining > 0; i++) {
             SubmarketWeaponStock stock = stocks.get(i);
-            if (purchase.getSubmarketId() != null && !purchase.getSubmarketId().equals(stock.getSubmarketId())) {
+            if (purchase.getSubmarketId() != null && !matchesSource(purchase.getSubmarketId(), stock)) {
                 continue;
             }
             int available = remainingBySource == null ? stock.getCount() : remainingStock(purchase.getWeaponId(), stock, remainingBySource);
@@ -101,9 +103,11 @@ final class StockReviewQuoteBook {
             }
             int cost = quantity * stock.getUnitPrice();
             totalCost += cost;
+            totalBaseCost += quantity * stock.getBaseUnitPrice();
+            totalQuantity += quantity;
             totalCargo += quantity * stock.getUnitCargoSpace();
-            allocations.add(new StockReviewSellerAllocation(stock.getSubmarketName(),
-                    stock.getSubmarketId(), quantity, cost));
+            allocations.add(new StockReviewSellerAllocation(stock.getDisplaySourceName(),
+                    stock.getSourceId(), quantity, cost));
             remaining -= quantity;
             if (remainingBySource != null) {
                 remainingBySource.put(sourceKey(purchase.getWeaponId(), stock), Integer.valueOf(available - quantity));
@@ -112,7 +116,7 @@ final class StockReviewQuoteBook {
         if (remaining > 0) {
             return StockReviewQuote.priceUnavailable(totalCargo, allocations);
         }
-        return new StockReviewQuote(totalCost, totalCargo, allocations);
+        return new StockReviewQuote(totalCost, totalCargo, totalBaseCost, totalQuantity, allocations);
     }
 
     private int remainingStock(String weaponId, SubmarketWeaponStock stock, Map<String, Integer> remainingBySource) {
@@ -208,7 +212,7 @@ final class StockReviewQuoteBook {
             playerSellUnitPrices = StockReviewPlayerCargo.sellUnitPricesByWeapon(
                     snapshot == null ? null : snapshot.getMarket(),
                     snapshot != null && snapshot.isIncludeBlackMarket(),
-                    snapshot != null && snapshot.isGlobalMarketMode());
+                    false);
         }
         Integer price = playerSellUnitPrices.get(weaponId);
         int result = price == null ? -1 : price.intValue();
@@ -243,7 +247,14 @@ final class StockReviewQuoteBook {
 
     private static String sourceKey(String weaponId, SubmarketWeaponStock stock) {
         return (weaponId == null ? "" : weaponId)
-                + "|" + (stock == null || stock.getSubmarketId() == null ? "" : stock.getSubmarketId());
+                + "|" + (stock == null || stock.getSourceId() == null ? "" : stock.getSourceId());
+    }
+
+    private static boolean matchesSource(String requestedSourceId, SubmarketWeaponStock stock) {
+        if (stock == null || requestedSourceId == null) {
+            return false;
+        }
+        return requestedSourceId.equals(stock.getSourceId()) || requestedSourceId.equals(stock.getSubmarketId());
     }
 
 }

@@ -114,7 +114,7 @@
 - Added first transaction-side-effect hardening:
   - local-market WIM buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
   - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
-  - virtual global-market trades remain WIM-only and do not report to a real submarket.
+  - Secret Market buys remain virtual WIM-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
 - Cleaned up the `Cost` to `Price` terminology migration:
   - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
   - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
@@ -201,15 +201,14 @@
 
 ## High-Value Future Work
 
-- Global weapon market feature:
-  - [x] add a separate global stock source in the WIM popup rather than mutating real market cargo;
-  - [x] determine initial eligibility by scanning live in-sector market weapon cargo across all markets/factions/submarkets;
-  - [x] show eligible global weapons as a virtual 999-stock seller;
-  - [x] keep the feature isolated from patched cargo-cell badges and from normal local-market stock review;
-  - [x] add optional tag/faction inference behind a Luna setting, so weapons that can theoretically appear in a faction market can be included even if they are not currently stocked anywhere;
-  - [x] add a Luna setting to disable tag/faction inference if it lets secret/restricted weapons through;
-  - [x] add a Luna setting for the global market buy-price multiplier, defaulting to 4x.
-  - [x] add virtual global selling at normal base value, with no global buy markup applied.
+- Expanded stock source feature:
+  - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Secret Market` source modes;
+  - [x] keep `Local` as current-market stock review with the normal Black Market toggle;
+  - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wim_sector_market_price_multiplier` Luna setting, defaulting to 4x;
+  - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
+  - [x] add `Secret Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_secret_market_price_multiplier` Luna setting, defaulting to 6x;
+  - [x] disable and gray out the Black Market button for non-local source modes;
+  - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
 - Current requested stock-review review/buy page work queue:
   - [x] review page visually narrows by the width taken by buy/sell row controls, so the Review Trades layout does not inherit unnecessary trade-button width;
   - [x] review page inner panel occupies the full list body from top to bottom, not bottom-anchored to visible rows;

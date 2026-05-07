@@ -45,6 +45,8 @@ public final class MarketStockService {
                     byWeapon.put(weaponId, stocks);
                 }
                 stocks.add(new SubmarketWeaponStock(
+                        market.getId(),
+                        market.getName(),
                         submarket.getSpecId(),
                         submarket.getNameOneLine(),
                         count,

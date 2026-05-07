@@ -11,6 +11,7 @@ $liveJar = Join-Path $StarsectorDir "mods\Weapon Inventory Mod\jars\weapon-inven
 $requiredClasses = @(
     "weaponinventorymod/gui/StockReviewPanelPlugin.class",
     "weaponinventorymod/core/GlobalWeaponMarketService.class",
+    "weaponinventorymod/core/StockSourceMode.class",
     "weaponinventorymod/gui/WimGuiCampaignDialogHost.class",
     "weaponinventorymod/gui/WimGuiContentPanel.class",
     "weaponinventorymod/gui/WimGuiDialogDelegate.class",

@@ -141,6 +141,14 @@ final class StockReviewTradeContext {
         return totalCargoSpaceDelta;
     }
 
+    int totalMarkupPaid() {
+        return portfolioQuote.totalMarkupPaid();
+    }
+
+    float averageBuyMultiplier() {
+        return portfolioQuote.averageBuyMultiplier();
+    }
+
     float credits() {
         return credits;
     }
@@ -199,7 +207,7 @@ final class StockReviewTradeContext {
         int sourceCount = 0;
         for (int i = 0; i < record.getSubmarketStocks().size(); i++) {
             SubmarketWeaponStock stock = record.getSubmarketStocks().get(i);
-            if (submarketId.equals(stock.getSubmarketId()) && stock.isPurchasable()) {
+            if ((submarketId.equals(stock.getSourceId()) || submarketId.equals(stock.getSubmarketId())) && stock.isPurchasable()) {
                 sourceCount += stock.getCount();
             }
         }

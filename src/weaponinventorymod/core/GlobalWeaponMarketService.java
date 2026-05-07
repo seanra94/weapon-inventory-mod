@@ -17,27 +17,77 @@ import java.util.Set;
 
 public final class GlobalWeaponMarketService {
     public static final String VIRTUAL_SUBMARKET_ID = "wim_global_weapon_market";
-    public static final String VIRTUAL_SUBMARKET_NAME = "Global Weapon Market";
+    public static final String SECTOR_MARKET_NAME = "Sector Market";
+    public static final String SECRET_MARKET_NAME = "Secret Market";
     public static final int VIRTUAL_STOCK = 999;
 
     private final MarketStockService marketStockService = new MarketStockService();
     private final Map<String, MarketStockService.MarketStock> cache = new HashMap<String, MarketStockService.MarketStock>();
 
-    public MarketStockService.MarketStock collectGlobalWeaponStock(SectorAPI sector, boolean includeBlackMarket) {
-        boolean includeInferred = WeaponInventoryConfig.isGlobalMarketTagInferenceEnabled();
-        float priceMultiplier = WeaponInventoryConfig.globalMarketPriceMultiplier();
-        String key = includeBlackMarket + "|" + includeInferred + "|" + priceMultiplier;
+    public MarketStockService.MarketStock collectSectorWeaponStock(SectorAPI sector) {
+        float priceMultiplier = WeaponInventoryConfig.sectorMarketPriceMultiplier();
+        String key = "sector|" + priceMultiplier;
         MarketStockService.MarketStock cached = cache.get(key);
         if (cached != null) {
             return cached;
         }
-        MarketStockService.MarketStock result = buildGlobalWeaponStock(sector, includeBlackMarket, includeInferred, priceMultiplier);
+        MarketStockService.MarketStock result = buildSectorWeaponStock(sector, priceMultiplier);
         cache.put(key, result);
         return result;
     }
 
-    private MarketStockService.MarketStock buildGlobalWeaponStock(SectorAPI sector,
-                                                                  boolean includeBlackMarket,
+    public MarketStockService.MarketStock collectSecretWeaponStock(SectorAPI sector) {
+        boolean includeInferred = WeaponInventoryConfig.isGlobalMarketTagInferenceEnabled();
+        float priceMultiplier = WeaponInventoryConfig.secretMarketPriceMultiplier();
+        String key = "secret|" + includeInferred + "|" + priceMultiplier;
+        MarketStockService.MarketStock cached = cache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        MarketStockService.MarketStock result = buildSecretWeaponStock(sector, includeInferred, priceMultiplier);
+        cache.put(key, result);
+        return result;
+    }
+
+    /**
+     * Sector Market is deliberately built from real market cargo entries. The
+     * stock rows are marked up for WIM pricing, but keep market/submarket ids so
+     * confirmation can drain the actual remote cargo stacks.
+     */
+    private MarketStockService.MarketStock buildSectorWeaponStock(SectorAPI sector, float priceMultiplier) {
+        MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
+        EconomyAPI economy = sector == null ? null : sector.getEconomy();
+        List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
+        if (markets == null) {
+            return builder.build();
+        }
+        for (int i = 0; i < markets.size(); i++) {
+            MarketAPI market = markets.get(i);
+            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketWeaponStock(market, true);
+            for (String weaponId : stock.weaponIds()) {
+                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(weaponId);
+                for (int j = 0; j < sources.size(); j++) {
+                    SubmarketWeaponStock source = sources.get(j);
+                    if (source.getCount() <= 0) {
+                        continue;
+                    }
+                    builder.add(weaponId, new SubmarketWeaponStock(
+                            source.getMarketId(),
+                            source.getMarketName(),
+                            source.getSubmarketId(),
+                            source.getSubmarketName(),
+                            source.getCount(),
+                            markedUpPrice(source.getUnitPrice(), priceMultiplier),
+                            source.getUnitPrice(),
+                            source.getUnitCargoSpace(),
+                            source.isPurchasable()));
+                }
+            }
+        }
+        return builder.build();
+    }
+
+    private MarketStockService.MarketStock buildSecretWeaponStock(SectorAPI sector,
                                                                   boolean includeInferred,
                                                                   float priceMultiplier) {
         MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
@@ -53,7 +103,7 @@ public final class GlobalWeaponMarketService {
             if (market != null && market.getFactionId() != null && !market.getFactionId().isEmpty()) {
                 activeFactionIds.add(market.getFactionId());
             }
-            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
+            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketWeaponStock(market, true);
             for (String weaponId : stock.weaponIds()) {
                 List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(weaponId);
                 for (int j = 0; j < sources.size(); j++) {
@@ -69,15 +119,16 @@ public final class GlobalWeaponMarketService {
             }
         }
         if (includeInferred) {
-            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon, priceMultiplier);
+            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon);
         }
         for (Map.Entry<String, SubmarketWeaponStock> entry : cheapestByWeapon.entrySet()) {
             SubmarketWeaponStock source = entry.getValue();
             builder.add(entry.getKey(), new SubmarketWeaponStock(
                     VIRTUAL_SUBMARKET_ID,
-                    VIRTUAL_SUBMARKET_NAME,
+                    SECRET_MARKET_NAME,
                     VIRTUAL_STOCK,
                     markedUpPrice(source.getUnitPrice(), priceMultiplier),
+                    source.getUnitPrice(),
                     source.getUnitCargoSpace(),
                     true));
         }
@@ -86,8 +137,7 @@ public final class GlobalWeaponMarketService {
 
     private static void addInferredFactionWeapons(SectorAPI sector,
                                                   Set<String> activeFactionIds,
-                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon,
-                                                  float priceMultiplier) {
+                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon) {
         if (sector == null || activeFactionIds == null || activeFactionIds.isEmpty()) {
             return;
         }
@@ -103,9 +153,9 @@ public final class GlobalWeaponMarketService {
                 }
                 cheapestByWeapon.put(weaponId, new SubmarketWeaponStock(
                         VIRTUAL_SUBMARKET_ID,
-                        VIRTUAL_SUBMARKET_NAME,
+                        SECRET_MARKET_NAME,
                         VIRTUAL_STOCK,
-                        markedUpPrice(Math.max(0, Math.round(spec.getBaseValue())), priceMultiplier),
+                        Math.max(0, Math.round(spec.getBaseValue())),
                         1f,
                         true));
             }

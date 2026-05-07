@@ -13,7 +13,7 @@ public final class WeaponStockSnapshot {
     private final OwnedSourcePolicy ownedSourcePolicy;
     private final StockSortMode sortMode;
     private final boolean includeBlackMarket;
-    private final boolean globalMarketMode;
+    private final StockSourceMode sourceMode;
     private final Map<StockCategory, List<WeaponStockRecord>> recordsByCategory;
     private final Map<String, WeaponStockRecord> recordsByWeaponId;
     private final List<WeaponStockRecord> allRecords;
@@ -23,13 +23,13 @@ public final class WeaponStockSnapshot {
                                OwnedSourcePolicy ownedSourcePolicy,
                                StockSortMode sortMode,
                                boolean includeBlackMarket,
-                               boolean globalMarketMode,
+                               StockSourceMode sourceMode,
                                Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
         this.market = market;
         this.ownedSourcePolicy = ownedSourcePolicy;
         this.sortMode = sortMode;
         this.includeBlackMarket = includeBlackMarket;
-        this.globalMarketMode = globalMarketMode;
+        this.sourceMode = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
         this.recordsByCategory = immutableCategoryMap(recordsByCategory);
         this.recordsByWeaponId = immutableWeaponMap(this.recordsByCategory);
         this.allRecords = immutableAllRecords(this.recordsByCategory);
@@ -53,7 +53,11 @@ public final class WeaponStockSnapshot {
     }
 
     public boolean isGlobalMarketMode() {
-        return globalMarketMode;
+        return sourceMode.isRemote();
+    }
+
+    public StockSourceMode getSourceMode() {
+        return sourceMode;
     }
 
     public List<WeaponStockRecord> getRecords(StockCategory category) {
@@ -81,8 +85,11 @@ public final class WeaponStockSnapshot {
     }
 
     public String getMarketName() {
-        if (globalMarketMode) {
-            return GlobalWeaponMarketService.VIRTUAL_SUBMARKET_NAME;
+        if (StockSourceMode.SECRET.equals(sourceMode)) {
+            return GlobalWeaponMarketService.SECRET_MARKET_NAME;
+        }
+        if (StockSourceMode.SECTOR.equals(sourceMode)) {
+            return GlobalWeaponMarketService.SECTOR_MARKET_NAME;
         }
         return market == null ? "No market context" : market.getName();
     }

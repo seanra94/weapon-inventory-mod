@@ -1,6 +1,7 @@
 package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.ui.CustomPanelAPI;
+import weaponinventorymod.core.StockSourceMode;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
 import java.awt.Color;
@@ -79,10 +80,10 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 WimGuiButtonSpecs.of(
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND),
-                        buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + (snapshot.isGlobalMarketMode() ? "Global" : "Local"),
-                                StockReviewAction.toggleGlobalMarket(), StockReviewStyle.ACTION_BACKGROUND),
-                        buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
-                                StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
+                        buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + snapshot.getSourceMode().getLabel(),
+                                StockReviewAction.cycleSourceMode(), StockReviewStyle.ACTION_BACKGROUND),
+                        buttonFactory.button(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
+                                StockReviewAction.toggleBlackMarket(), !snapshot.getSourceMode().isRemote(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.FILTER_BUTTON_WIDTH, "Filters: " + state.getActiveFilterCount(),
                                 StockReviewAction.openFilters(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.COLOR_BUTTON_WIDTH, "Colors",
@@ -125,6 +126,14 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 "Warning",
                 warning,
                 "None".equals(warning) ? StockReviewStyle.CELL_BACKGROUND : StockReviewStyle.PRESET_SCOPE_BUTTON);
+        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
+        addSummaryRow(
+                root,
+                width,
+                rowY,
+                "Tariffs Paid",
+                tariffsPaidLabel(tradeContext),
+                tradeContext.totalMarkupPaid() > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND);
         rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
@@ -179,6 +188,15 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
 
     private static String cargoAvailableLabel(float cargoSpaceAvailable, float cargoDelta) {
         return formatCargo(cargoSpaceAvailable) + " [" + signedCargo(-cargoDelta) + "]";
+    }
+
+    private static String tariffsPaidLabel(StockReviewTradeContext tradeContext) {
+        int markup = tradeContext.totalMarkupPaid();
+        float multiplier = tradeContext.averageBuyMultiplier();
+        if (markup <= 0) {
+            return StockReviewFormat.credits(0) + " [1.0x]";
+        }
+        return StockReviewFormat.credits(markup) + " [" + String.format(java.util.Locale.US, "%.1fx", multiplier) + "]";
     }
 
     private static String signedCredits(int delta) {
@@ -346,9 +364,13 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         return "Market: " + snapshot.getMarketName()
                 + " | Sort: " + snapshot.getSortMode().getLabel()
                 + " | Owned source: " + ownedSourceLabel(snapshot)
-                + " | Stock source: " + (snapshot.isGlobalMarketMode() ? "global" : "local")
+                + " | Stock source: " + sourceLabel(snapshot.getSourceMode())
                 + " | Black market: " + onOff(snapshot.isIncludeBlackMarket())
                 + " | Filters: " + state.getActiveFilterCount();
+    }
+
+    private static String sourceLabel(StockSourceMode sourceMode) {
+        return sourceMode == null ? "local" : sourceMode.getLabel();
     }
 
     private static String filterStatusLine(StockReviewState state) {

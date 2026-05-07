@@ -3,6 +3,7 @@ package weaponinventorymod.gui;
 import weaponinventorymod.core.StockCategory;
 import weaponinventorymod.core.StockReviewConfig;
 import weaponinventorymod.core.StockSortMode;
+import weaponinventorymod.core.StockSourceMode;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -16,7 +17,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
     private boolean includeBlackMarket;
-    private boolean globalMarketMode;
+    private StockSourceMode sourceMode;
     private int listScrollOffset = 0;
     private final Set<String> expandedWeapons = new HashSet<String>();
     private final Set<String> expandedWeaponData = new HashSet<String>();
@@ -39,7 +40,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.sortMode = config.getSortMode();
         this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
         this.includeBlackMarket = config.isIncludeBlackMarket();
-        this.globalMarketMode = false;
+        this.sourceMode = StockSourceMode.LOCAL;
     }
 
     public StockReviewState(StockReviewState source) {
@@ -48,7 +49,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.sortMode = source.sortMode;
         this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
         this.includeBlackMarket = source.includeBlackMarket;
-        this.globalMarketMode = source.globalMarketMode;
+        this.sourceMode = source.sourceMode;
         this.listScrollOffset = source.listScrollOffset;
         this.expandedWeapons.addAll(source.expandedWeapons);
         this.expandedWeaponData.addAll(source.expandedWeaponData);
@@ -153,19 +154,30 @@ public final class StockReviewState implements WimGuiScrollableListState {
     }
 
     public boolean isIncludeBlackMarket() {
-        return includeBlackMarket;
+        return !getSourceMode().isRemote() && includeBlackMarket;
     }
 
     public void toggleBlackMarket() {
+        if (getSourceMode().isRemote()) {
+            includeBlackMarket = false;
+            return;
+        }
         includeBlackMarket = !includeBlackMarket;
     }
 
     public boolean isGlobalMarketMode() {
-        return globalMarketMode;
+        return getSourceMode().isRemote();
     }
 
-    public void toggleGlobalMarketMode() {
-        globalMarketMode = !globalMarketMode;
+    public StockSourceMode getSourceMode() {
+        return sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
+    }
+
+    public void cycleSourceMode() {
+        sourceMode = getSourceMode().next();
+        if (sourceMode.isRemote()) {
+            includeBlackMarket = false;
+        }
     }
 
     public int getListScrollOffset() {

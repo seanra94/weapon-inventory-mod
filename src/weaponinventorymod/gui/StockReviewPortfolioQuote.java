@@ -8,6 +8,9 @@ final class StockReviewPortfolioQuote {
     private final Map<String, StockReviewQuote> quotesByLine = new HashMap<String, StockReviewQuote>();
     private final Map<String, Integer> costByWeapon = new HashMap<String, Integer>();
     private int totalCost = 0;
+    private int totalBuyCost = 0;
+    private int totalBaseBuyCost = 0;
+    private int totalBuyQuantity = 0;
     private float totalCargoSpaceDelta = 0f;
     private boolean priceUnavailable = false;
 
@@ -20,6 +23,11 @@ final class StockReviewPortfolioQuote {
         } else {
             add(costByWeapon, purchase.getWeaponId(), quote.getCost());
             totalCost += quote.getCost();
+            if (purchase.isBuy()) {
+                totalBuyCost += quote.getCost();
+                totalBaseBuyCost += quote.getBaseCost();
+                totalBuyQuantity += quote.getBuyQuantity();
+            }
         }
         totalCargoSpaceDelta += quote.getCargoSpaceDelta();
     }
@@ -34,6 +42,24 @@ final class StockReviewPortfolioQuote {
 
     int costForWeapon(String weaponId) {
         return get(costByWeapon, weaponId);
+    }
+
+    int totalMarkupPaid() {
+        if (priceUnavailable) {
+            return 0;
+        }
+        return Math.max(0, totalBuyCost - totalBaseBuyCost);
+    }
+
+    float averageBuyMultiplier() {
+        if (totalBaseBuyCost <= 0) {
+            return 1f;
+        }
+        return (float) totalBuyCost / (float) totalBaseBuyCost;
+    }
+
+    int totalBuyQuantity() {
+        return totalBuyQuantity;
     }
 
     int costForLine(String weaponId, String submarketId) {
