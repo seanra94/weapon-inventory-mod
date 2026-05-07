@@ -10,6 +10,7 @@ $repoJar = Join-Path (Split-Path -Parent $PSScriptRoot) "jars\weapon-inventory-m
 $liveJar = Join-Path $StarsectorDir "mods\Weapon Inventory Mod\jars\weapon-inventory-mod.jar"
 $requiredClasses = @(
     "weaponinventorymod/gui/StockReviewPanelPlugin.class",
+    "weaponinventorymod/core/GlobalWeaponMarketService.class",
     "weaponinventorymod/gui/WimGuiCampaignDialogHost.class",
     "weaponinventorymod/gui/WimGuiContentPanel.class",
     "weaponinventorymod/gui/WimGuiDialogDelegate.class",

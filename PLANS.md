@@ -159,8 +159,8 @@
   - [x] determine initial eligibility by scanning live in-sector market weapon cargo across all markets/factions/submarkets;
   - [x] show eligible global weapons as a virtual 999-stock seller;
   - [x] keep the feature isolated from patched cargo-cell badges and from normal local-market stock review;
-  - [ ] add optional tag/faction inference later, behind a Luna setting, so weapons that can theoretically appear in a faction market can be included even if they are not currently stocked anywhere;
-  - [ ] add a Luna setting to disable tag/faction inference if it lets secret/restricted weapons through.
+  - [x] add optional tag/faction inference behind a Luna setting, so weapons that can theoretically appear in a faction market can be included even if they are not currently stocked anywhere;
+  - [x] add a Luna setting to disable tag/faction inference if it lets secret/restricted weapons through.
 - Current requested stock-review review/buy page work queue:
   - [x] review page visually narrows by the width taken by buy/sell row controls, so the Review Trades layout does not inherit unnecessary trade-button width;
   - [x] review page inner panel occupies the full list body from top to bottom, not bottom-anchored to visible rows;
