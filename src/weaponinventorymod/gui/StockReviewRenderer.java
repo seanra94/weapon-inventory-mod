@@ -63,8 +63,6 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 StockReviewStyle.ACTION_BUTTON_HEIGHT,
                 StockReviewStyle.BUTTON_GAP,
                 WimGuiButtonSpecs.of(
-                        buttonFactory.enabledButton(StockReviewStyle.MODE_BUTTON_WIDTH, "Mode: " + snapshot.getDisplayMode().getLabel(),
-                                StockReviewAction.cycleDisplayMode(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + (snapshot.isGlobalMarketMode() ? "Global" : "Local"),
@@ -199,7 +197,6 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
 
     private static String statusLine(WeaponStockSnapshot snapshot) {
         return "Market: " + snapshot.getMarketName()
-                + " | Mode: " + snapshot.getDisplayMode().getLabel()
                 + " | Sort: " + snapshot.getSortMode().getLabel()
                 + " | Owned source: " + ownedSourceLabel(snapshot)
                 + " | Stock source: " + (snapshot.isGlobalMarketMode() ? "global" : "local")

@@ -126,12 +126,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             addPendingTrade(action);
             return;
         }
-        if (StockReviewAction.Type.CYCLE_DISPLAY_MODE.equals(type)) {
-            state.cycleDisplayMode();
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
         if (StockReviewAction.Type.CYCLE_SORT_MODE.equals(type)) {
             state.cycleSortMode();
             rebuildSnapshot();
@@ -382,16 +376,10 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         SectorAPI sector = host.getSector();
         MarketAPI market = host.getCurrentMarketOr(initialMarket);
         List<StockReviewPendingPurchase> executionOrder = StockReviewTradePlanner.executionOrder(pendingTrades.asList());
+        boolean globalMarketMode = snapshot != null && snapshot.isGlobalMarketMode();
         for (int i = 0; i < executionOrder.size(); i++) {
             StockReviewPendingPurchase purchase = executionOrder.get(i);
-            StockPurchaseService.PurchaseResult result = purchase.isSell()
-                    ? purchaseService.sellToMarket(sector, market, purchase.getWeaponId(), -purchase.getQuantity(), state.isIncludeBlackMarket())
-                    : snapshot != null && snapshot.isGlobalMarketMode()
-                    ? purchaseService.buyVirtualGlobal(sector, purchase.getWeaponId(), purchase.getQuantity(),
-                            virtualUnitPrice(purchase.getWeaponId()), virtualUnitCargoSpace(purchase.getWeaponId()))
-                    : purchase.getSubmarketId() == null
-                    ? purchaseService.buyCheapest(sector, market, purchase.getWeaponId(), purchase.getQuantity(), state.isIncludeBlackMarket())
-                    : purchaseService.buyFromSubmarket(sector, market, purchase.getWeaponId(), purchase.getSubmarketId(), purchase.getQuantity(), state.isIncludeBlackMarket());
+            StockPurchaseService.PurchaseResult result = executePendingPurchase(sector, market, purchase, globalMarketMode);
             if (result == null || !result.isSuccess()) {
                 if (result != null) {
                     reportPurchaseFailure(result);
@@ -415,6 +403,27 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         rebuildContent();
     }
 
+    private StockPurchaseService.PurchaseResult executePendingPurchase(SectorAPI sector,
+                                                                       MarketAPI market,
+                                                                       StockReviewPendingPurchase purchase,
+                                                                       boolean globalMarketMode) {
+        if (purchase.isSell()) {
+            if (globalMarketMode) {
+                return purchaseService.sellVirtualGlobal(sector, purchase.getWeaponId(), -purchase.getQuantity());
+            }
+            return purchaseService.sellToMarket(sector, market, purchase.getWeaponId(), -purchase.getQuantity(), state.isIncludeBlackMarket());
+        }
+        if (globalMarketMode) {
+            return purchaseService.buyVirtualGlobal(sector, purchase.getWeaponId(), purchase.getQuantity(),
+                    virtualUnitPrice(purchase.getWeaponId()), virtualUnitCargoSpace(purchase.getWeaponId()));
+        }
+        if (purchase.getSubmarketId() == null) {
+            return purchaseService.buyCheapest(sector, market, purchase.getWeaponId(), purchase.getQuantity(), state.isIncludeBlackMarket());
+        }
+        return purchaseService.buyFromSubmarket(sector, market, purchase.getWeaponId(), purchase.getSubmarketId(),
+                purchase.getQuantity(), state.isIncludeBlackMarket());
+    }
+
     private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {
         reportMessage(result.getMessage());
         LOG.info("WIM_STOCK_REVIEW trade blocked: " + result.getMessage());
@@ -428,8 +437,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
         SectorAPI sector = host.getSector();
         MarketAPI market = host.getCurrentMarketOr(initialMarket);
-        snapshot = snapshotBuilder.build(sector, market, config, state.getDisplayMode(),
-                state.getSortMode(), state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket(),
+        snapshot = snapshotBuilder.build(sector, market, config, state.getSortMode(),
+                state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket(),
                 state.isGlobalMarketMode());
     }
 

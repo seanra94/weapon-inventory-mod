@@ -84,8 +84,8 @@ function Test-StockReviewConfig {
             throw "$Label stock review config missing '$section'"
         }
     }
-    if (-not $json.display.PSObject.Properties.Name.Contains("defaultMode")) {
-        throw "$Label stock review config missing display.defaultMode"
+    if ($json.display.PSObject.Properties.Name.Contains("defaultMode")) {
+        throw "$Label stock review config still contains removed display.defaultMode"
     }
     if (-not $json.display.PSObject.Properties.Name.Contains("defaultSort")) {
         throw "$Label stock review config missing display.defaultSort"

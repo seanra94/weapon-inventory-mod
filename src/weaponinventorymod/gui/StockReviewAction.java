@@ -11,7 +11,6 @@ final class StockReviewAction {
         ADJUST_PLAN,
         BUY_FROM_SUBMARKET,
         RESET_PLAN,
-        CYCLE_DISPLAY_MODE,
         CYCLE_SORT_MODE,
         TOGGLE_GLOBAL_MARKET,
         TOGGLE_BLACK_MARKET,
@@ -89,10 +88,6 @@ final class StockReviewAction {
 
     static StockReviewAction buyFromSubmarket(String weaponId, String submarketId, int quantity) {
         return new StockReviewAction(Type.BUY_FROM_SUBMARKET, null, null, null, weaponId, submarketId, quantity);
-    }
-
-    static StockReviewAction cycleDisplayMode() {
-        return new StockReviewAction(Type.CYCLE_DISPLAY_MODE, null, null, null, null, null, 0);
     }
 
     static StockReviewAction cycleSortMode() {

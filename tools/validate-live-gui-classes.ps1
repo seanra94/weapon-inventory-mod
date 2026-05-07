@@ -38,6 +38,7 @@ $requiredClasses = @(
     "weaponinventorymod/gui/WimGuiSemanticButtonFactory.class",
     "weaponinventorymod/gui/WimGuiColorDebug.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$Target.class",
+    "weaponinventorymod/gui/StockReviewFormat.class",
     "weaponinventorymod/gui/StockReviewColorDebugRows.class"
 )
 $forbiddenClasses = @(
@@ -51,7 +52,8 @@ $forbiddenClasses = @(
     "weaponinventorymod/gui/WimGuiModalListLayout`$ExtraGapProvider.class",
     "weaponinventorymod/gui/WimGuiModalListGapAdapter.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$ColorSetter.class",
-    "weaponinventorymod/gui/WimGuiColorDebug`$1.class"
+    "weaponinventorymod/gui/WimGuiColorDebug`$1.class",
+    "weaponinventorymod/core/StockDisplayMode.class"
 )
 
 function Test-JarClasses {

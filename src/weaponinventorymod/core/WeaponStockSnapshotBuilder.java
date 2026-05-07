@@ -24,7 +24,6 @@ public final class WeaponStockSnapshotBuilder {
     public WeaponStockSnapshot build(SectorAPI sector,
                                      MarketAPI market,
                                      StockReviewConfig config,
-                                     StockDisplayMode displayMode,
                                      StockSortMode sortMode,
                                      boolean includeCurrentMarketStorage,
                                      boolean includeBlackMarket,
@@ -38,7 +37,7 @@ public final class WeaponStockSnapshotBuilder {
                 : marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
 
         Set<String> ids = new HashSet<String>();
-        addIdsForDisplayMode(ids, sector, owned, marketStock, displayMode);
+        addTradeableIds(ids, playerCargoCounts, marketStock);
 
         Map<StockCategory, List<WeaponStockRecord>> grouped = new EnumMap<StockCategory, List<WeaponStockRecord>>(StockCategory.class);
         for (StockCategory category : StockCategory.values()) {
@@ -55,7 +54,7 @@ public final class WeaponStockSnapshotBuilder {
             }
             int ownedCount = getCount(owned, weaponId);
             int purchasableCount = marketStock.getTotal(weaponId);
-            if (!shouldInclude(displayMode, ownedCount, purchasableCount)) {
+            if (!shouldInclude(getCount(playerCargoCounts, weaponId), marketStock.getSubmarketStocks(weaponId))) {
                 continue;
             }
             int desiredCount = desiredStockService.desiredCount(weaponId, spec);
@@ -76,47 +75,35 @@ public final class WeaponStockSnapshotBuilder {
             Collections.sort(records, comparatorFor(sortMode));
         }
 
-        return new WeaponStockSnapshot(market, ownedSourcePolicy, displayMode, sortMode, includeBlackMarket, globalMarketMode, grouped);
+        return new WeaponStockSnapshot(market, ownedSourcePolicy, sortMode, includeBlackMarket, globalMarketMode, grouped);
     }
 
-    private static void addIdsForDisplayMode(Set<String> ids,
-                                             SectorAPI sector,
-                                             Map<String, Integer> owned,
-                                             MarketStockService.MarketStock marketStock,
-                                             StockDisplayMode displayMode) {
-        if (StockDisplayMode.CURRENTLY_FOR_SALE.equals(displayMode)) {
-            for (String id : marketStock.weaponIds()) {
+    private static void addTradeableIds(Set<String> ids,
+                                        Map<String, Integer> playerCargoCounts,
+                                        MarketStockService.MarketStock marketStock) {
+        ids.addAll(playerCargoCounts.keySet());
+        for (String id : marketStock.weaponIds()) {
+            if (hasPurchasableStock(marketStock.getSubmarketStocks(id))) {
                 ids.add(id);
             }
-            return;
-        }
-        if (StockDisplayMode.OWNED_ONLY.equals(displayMode)) {
-            ids.addAll(owned.keySet());
-            return;
-        }
-        if (StockDisplayMode.ALL_TRACKED.equals(displayMode)) {
-            if (sector != null && sector.getAllWeaponIds() != null) {
-                ids.addAll(sector.getAllWeaponIds());
-            }
-            return;
-        }
-        ids.addAll(owned.keySet());
-        for (String id : marketStock.weaponIds()) {
-            ids.add(id);
         }
     }
 
-    private static boolean shouldInclude(StockDisplayMode displayMode, int ownedCount, int purchasableCount) {
-        if (StockDisplayMode.CURRENTLY_FOR_SALE.equals(displayMode)) {
-            return purchasableCount > 0;
+    private static boolean shouldInclude(int playerCargoCount, List<SubmarketWeaponStock> marketStocks) {
+        return playerCargoCount > 0 || hasPurchasableStock(marketStocks);
+    }
+
+    private static boolean hasPurchasableStock(List<SubmarketWeaponStock> marketStocks) {
+        if (marketStocks == null) {
+            return false;
         }
-        if (StockDisplayMode.OWNED_ONLY.equals(displayMode)) {
-            return ownedCount > 0;
+        for (int i = 0; i < marketStocks.size(); i++) {
+            SubmarketWeaponStock stock = marketStocks.get(i);
+            if (stock != null && stock.isPurchasable() && stock.getCount() > 0) {
+                return true;
+            }
         }
-        if (StockDisplayMode.ALL_TRACKED.equals(displayMode)) {
-            return true;
-        }
-        return ownedCount > 0 || purchasableCount > 0;
+        return false;
     }
 
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {

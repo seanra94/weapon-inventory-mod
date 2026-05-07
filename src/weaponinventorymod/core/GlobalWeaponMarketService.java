@@ -25,19 +25,21 @@ public final class GlobalWeaponMarketService {
 
     public MarketStockService.MarketStock collectGlobalWeaponStock(SectorAPI sector, boolean includeBlackMarket) {
         boolean includeInferred = WeaponInventoryConfig.isGlobalMarketTagInferenceEnabled();
-        String key = includeBlackMarket + "|" + includeInferred;
+        float priceMultiplier = WeaponInventoryConfig.globalMarketPriceMultiplier();
+        String key = includeBlackMarket + "|" + includeInferred + "|" + priceMultiplier;
         MarketStockService.MarketStock cached = cache.get(key);
         if (cached != null) {
             return cached;
         }
-        MarketStockService.MarketStock result = buildGlobalWeaponStock(sector, includeBlackMarket, includeInferred);
+        MarketStockService.MarketStock result = buildGlobalWeaponStock(sector, includeBlackMarket, includeInferred, priceMultiplier);
         cache.put(key, result);
         return result;
     }
 
     private MarketStockService.MarketStock buildGlobalWeaponStock(SectorAPI sector,
                                                                   boolean includeBlackMarket,
-                                                                  boolean includeInferred) {
+                                                                  boolean includeInferred,
+                                                                  float priceMultiplier) {
         MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
         EconomyAPI economy = sector == null ? null : sector.getEconomy();
         List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
@@ -67,7 +69,7 @@ public final class GlobalWeaponMarketService {
             }
         }
         if (includeInferred) {
-            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon);
+            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon, priceMultiplier);
         }
         for (Map.Entry<String, SubmarketWeaponStock> entry : cheapestByWeapon.entrySet()) {
             SubmarketWeaponStock source = entry.getValue();
@@ -75,7 +77,7 @@ public final class GlobalWeaponMarketService {
                     VIRTUAL_SUBMARKET_ID,
                     VIRTUAL_SUBMARKET_NAME,
                     VIRTUAL_STOCK,
-                    source.getUnitPrice(),
+                    markedUpPrice(source.getUnitPrice(), priceMultiplier),
                     source.getUnitCargoSpace(),
                     true));
         }
@@ -84,7 +86,8 @@ public final class GlobalWeaponMarketService {
 
     private static void addInferredFactionWeapons(SectorAPI sector,
                                                   Set<String> activeFactionIds,
-                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon) {
+                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon,
+                                                  float priceMultiplier) {
         if (sector == null || activeFactionIds == null || activeFactionIds.isEmpty()) {
             return;
         }
@@ -102,7 +105,7 @@ public final class GlobalWeaponMarketService {
                         VIRTUAL_SUBMARKET_ID,
                         VIRTUAL_SUBMARKET_NAME,
                         VIRTUAL_STOCK,
-                        Math.max(0, Math.round(spec.getBaseValue())),
+                        markedUpPrice(Math.max(0, Math.round(spec.getBaseValue())), priceMultiplier),
                         1f,
                         true));
             }
@@ -140,6 +143,10 @@ public final class GlobalWeaponMarketService {
 
     private static boolean contains(Set<String> tags, String tag) {
         return tags != null && tag != null && tags.contains(tag);
+    }
+
+    private static int markedUpPrice(int unitPrice, float priceMultiplier) {
+        return Math.max(0, Math.round(Math.max(0, unitPrice) * Math.max(1f, priceMultiplier)));
     }
 
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {

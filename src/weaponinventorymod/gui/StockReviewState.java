@@ -1,7 +1,6 @@
 package weaponinventorymod.gui;
 
 import weaponinventorymod.core.StockCategory;
-import weaponinventorymod.core.StockDisplayMode;
 import weaponinventorymod.core.StockReviewConfig;
 import weaponinventorymod.core.StockSortMode;
 
@@ -13,7 +12,6 @@ import java.util.Set;
 public final class StockReviewState implements WimGuiScrollableListState {
     private final Map<StockCategory, Boolean> expanded = new EnumMap<StockCategory, Boolean>(StockCategory.class);
     private final Map<StockReviewTradeGroup, Boolean> expandedTradeGroups = new EnumMap<StockReviewTradeGroup, Boolean>(StockReviewTradeGroup.class);
-    private StockDisplayMode displayMode;
     private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
     private boolean includeBlackMarket;
@@ -29,7 +27,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
         expanded.put(StockCategory.SUFFICIENT, Boolean.FALSE);
         expandedTradeGroups.put(StockReviewTradeGroup.BUYING, Boolean.FALSE);
         expandedTradeGroups.put(StockReviewTradeGroup.SELLING, Boolean.FALSE);
-        this.displayMode = config.getDisplayMode();
         this.sortMode = config.getSortMode();
         this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
         this.includeBlackMarket = config.isIncludeBlackMarket();
@@ -39,7 +36,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
     public StockReviewState(StockReviewState source) {
         expanded.putAll(source.expanded);
         expandedTradeGroups.putAll(source.expandedTradeGroups);
-        this.displayMode = source.displayMode;
         this.sortMode = source.sortMode;
         this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
         this.includeBlackMarket = source.includeBlackMarket;
@@ -90,14 +86,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
         } else if (StockReviewSection.SELLERS.equals(section)) {
             toggleSet(expandedSellers, weaponId);
         }
-    }
-
-    public StockDisplayMode getDisplayMode() {
-        return displayMode;
-    }
-
-    public void cycleDisplayMode() {
-        displayMode = displayMode.next();
     }
 
     public StockSortMode getSortMode() {

@@ -22,7 +22,6 @@ public final class StockReviewConfig {
     private final int largeWeaponDesired;
     private final boolean includeCurrentMarketStorage;
     private final boolean includeBlackMarket;
-    private final StockDisplayMode displayMode;
     private final StockSortMode sortMode;
     private final Map<String, Integer> desiredOverrides;
     private final Map<String, Boolean> ignoredWeapons;
@@ -32,7 +31,6 @@ public final class StockReviewConfig {
                               int largeWeaponDesired,
                               boolean includeCurrentMarketStorage,
                               boolean includeBlackMarket,
-                              StockDisplayMode displayMode,
                               StockSortMode sortMode,
                               Map<String, Integer> desiredOverrides,
                               Map<String, Boolean> ignoredWeapons) {
@@ -41,7 +39,6 @@ public final class StockReviewConfig {
         this.largeWeaponDesired = largeWeaponDesired;
         this.includeCurrentMarketStorage = includeCurrentMarketStorage;
         this.includeBlackMarket = includeBlackMarket;
-        this.displayMode = displayMode;
         this.sortMode = sortMode;
         this.desiredOverrides = Collections.unmodifiableMap(new HashMap<String, Integer>(desiredOverrides));
         this.ignoredWeapons = Collections.unmodifiableMap(new HashMap<String, Boolean>(ignoredWeapons));
@@ -64,7 +61,6 @@ public final class StockReviewConfig {
                 DEFAULT_LARGE_WEAPON_COUNT,
                 true,
                 true,
-                StockDisplayMode.ALL_TRACKED,
                 StockSortMode.NEED,
                 Collections.<String, Integer>emptyMap(),
                 Collections.<String, Boolean>emptyMap());
@@ -81,7 +77,6 @@ public final class StockReviewConfig {
         boolean includeBlackMarket = optBoolean(sources, "includeBlackMarket", true);
 
         JSONObject display = json.optJSONObject("display");
-        StockDisplayMode displayMode = StockDisplayMode.fromConfig(optString(display, "defaultMode", "OWNED_OR_FOR_SALE"));
         StockSortMode sortMode = StockSortMode.fromConfig(optString(display, "defaultSort", "NEED"));
 
         Map<String, Integer> overrides = new HashMap<String, Integer>();
@@ -104,7 +99,7 @@ public final class StockReviewConfig {
             }
         }
 
-        return new StockReviewConfig(small, medium, large, includeStorage, includeBlackMarket, displayMode, sortMode, overrides, ignored);
+        return new StockReviewConfig(small, medium, large, includeStorage, includeBlackMarket, sortMode, overrides, ignored);
     }
 
     public int desiredCount(String weaponId, WeaponAPI.WeaponSize size) {
@@ -135,10 +130,6 @@ public final class StockReviewConfig {
 
     public boolean isIncludeBlackMarket() {
         return includeBlackMarket;
-    }
-
-    public StockDisplayMode getDisplayMode() {
-        return displayMode;
     }
 
     public StockSortMode getSortMode() {

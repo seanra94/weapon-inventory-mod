@@ -11,7 +11,6 @@ import java.util.Map;
 public final class WeaponStockSnapshot {
     private final MarketAPI market;
     private final OwnedSourcePolicy ownedSourcePolicy;
-    private final StockDisplayMode displayMode;
     private final StockSortMode sortMode;
     private final boolean includeBlackMarket;
     private final boolean globalMarketMode;
@@ -22,14 +21,12 @@ public final class WeaponStockSnapshot {
 
     public WeaponStockSnapshot(MarketAPI market,
                                OwnedSourcePolicy ownedSourcePolicy,
-                               StockDisplayMode displayMode,
                                StockSortMode sortMode,
                                boolean includeBlackMarket,
                                boolean globalMarketMode,
                                Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
         this.market = market;
         this.ownedSourcePolicy = ownedSourcePolicy;
-        this.displayMode = displayMode;
         this.sortMode = sortMode;
         this.includeBlackMarket = includeBlackMarket;
         this.globalMarketMode = globalMarketMode;
@@ -45,10 +42,6 @@ public final class WeaponStockSnapshot {
 
     public OwnedSourcePolicy getOwnedSourcePolicy() {
         return ownedSourcePolicy;
-    }
-
-    public StockDisplayMode getDisplayMode() {
-        return displayMode;
     }
 
     public StockSortMode getSortMode() {

@@ -10,13 +10,18 @@ public final class WeaponInventoryConfig {
     private static final String SETTING_UPDATE_INTERVAL = "wim_update_interval_seconds";
     private static final String SETTING_ENABLE_PATCHED_BADGES = "wim_enable_patched_badges";
     private static final String SETTING_ENABLE_GLOBAL_MARKET_TAG_INFERENCE = "wim_enable_global_market_tag_inference";
+    private static final String SETTING_GLOBAL_MARKET_PRICE_MULTIPLIER = "wim_global_market_price_multiplier";
     private static final String KEY_UPDATE_INTERVAL = "wim.config.updateIntervalSeconds";
     private static final String KEY_PATCHED_BADGES_ENABLED = "wim.config.patchedBadgesEnabled";
     private static final String KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED = "wim.config.globalMarketTagInferenceEnabled";
+    private static final String KEY_GLOBAL_MARKET_PRICE_MULTIPLIER = "wim.config.globalMarketPriceMultiplier";
 
     private static final float DEFAULT_UPDATE_INTERVAL_SEC = 0.20f;
     private static final float MIN_UPDATE_INTERVAL_SEC = 0.05f;
     private static final float MAX_UPDATE_INTERVAL_SEC = 2.00f;
+    private static final float DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER = 4.00f;
+    private static final float MIN_GLOBAL_MARKET_PRICE_MULTIPLIER = 1.00f;
+    private static final float MAX_GLOBAL_MARKET_PRICE_MULTIPLIER = 20.00f;
     private static final int MAX_CONFIG_LOGS = 10;
 
     private static int configLogs = 0;
@@ -29,6 +34,7 @@ public final class WeaponInventoryConfig {
         float effective = DEFAULT_UPDATE_INTERVAL_SEC;
         boolean badgesEnabled = true;
         boolean globalMarketTagInferenceEnabled = true;
+        float globalMarketPriceMultiplier = DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER;
         try {
             Double value = LunaSettings.getDouble(MOD_ID, SETTING_UPDATE_INTERVAL);
             if (value != null) {
@@ -42,6 +48,10 @@ public final class WeaponInventoryConfig {
             if (inferenceEnabled != null) {
                 globalMarketTagInferenceEnabled = inferenceEnabled.booleanValue();
             }
+            Double multiplier = LunaSettings.getDouble(MOD_ID, SETTING_GLOBAL_MARKET_PRICE_MULTIPLIER);
+            if (multiplier != null) {
+                globalMarketPriceMultiplier = (float) multiplier.doubleValue();
+            }
         } catch (Throwable t) {
             if (!configErrorLogged) {
                 configErrorLogged = true;
@@ -50,20 +60,34 @@ public final class WeaponInventoryConfig {
         }
 
         effective = clamp(effective, MIN_UPDATE_INTERVAL_SEC, MAX_UPDATE_INTERVAL_SEC);
+        globalMarketPriceMultiplier = clamp(globalMarketPriceMultiplier, MIN_GLOBAL_MARKET_PRICE_MULTIPLIER, MAX_GLOBAL_MARKET_PRICE_MULTIPLIER);
         System.setProperty(KEY_UPDATE_INTERVAL, Float.toString(effective));
         System.setProperty(KEY_PATCHED_BADGES_ENABLED, Boolean.toString(badgesEnabled));
         System.setProperty(KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED, Boolean.toString(globalMarketTagInferenceEnabled));
+        System.setProperty(KEY_GLOBAL_MARKET_PRICE_MULTIPLIER, Float.toString(globalMarketPriceMultiplier));
         if (configLogs < MAX_CONFIG_LOGS) {
             configLogs++;
             LOG.info("WIM_CONFIG updateIntervalSeconds=" + effective
                     + " patchedBadgesEnabled=" + badgesEnabled
-                    + " globalMarketTagInferenceEnabled=" + globalMarketTagInferenceEnabled);
+                    + " globalMarketTagInferenceEnabled=" + globalMarketTagInferenceEnabled
+                    + " globalMarketPriceMultiplier=" + globalMarketPriceMultiplier);
         }
         return effective;
     }
 
     public static boolean isGlobalMarketTagInferenceEnabled() {
         return Boolean.parseBoolean(System.getProperty(KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED, "true"));
+    }
+
+    public static float globalMarketPriceMultiplier() {
+        try {
+            return clamp(Float.parseFloat(System.getProperty(KEY_GLOBAL_MARKET_PRICE_MULTIPLIER,
+                            Float.toString(DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER))),
+                    MIN_GLOBAL_MARKET_PRICE_MULTIPLIER,
+                    MAX_GLOBAL_MARKET_PRICE_MULTIPLIER);
+        } catch (Throwable ignored) {
+            return DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER;
+        }
     }
 
     private static float clamp(float value, float min, float max) {
