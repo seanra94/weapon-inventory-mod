@@ -77,7 +77,7 @@ final class StockReviewListModel {
                 stepCell("+", buyStepQuantity, StockReviewStyle.BUY_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), buyStepQuantity)),
                 WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH,
-                        sufficientDelta < 0 ? StockReviewStyle.SELL_BUTTON : StockReviewStyle.CONFIRM_BUTTON,
+                        sufficientDelta < 0 ? StockReviewStyle.SELL_BUTTON : StockReviewStyle.BUY_BUTTON,
                         StockReviewAction.adjustToSufficient(record.getWeaponId(), sufficientDelta), sufficientDelta != 0),
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0));
@@ -112,7 +112,7 @@ final class StockReviewListModel {
         Color fill = planQuantity > 0
                 ? StockReviewStyle.PLAN_POSITIVE
                 : planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.CELL_BACKGROUND;
-        return WimGuiRowCell.info(label, StockReviewStyle.PLAN_CELL_WIDTH, fill, StockReviewStyle.TEXT);
+        return WimGuiRowCell.info(label, StockReviewStyle.PLAN_CELL_WIDTH, fill, StockReviewStyle.TEXT, Alignment.LMID);
     }
 
     static String storageLabel(int ownedCount, int planQuantity) {

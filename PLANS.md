@@ -159,6 +159,12 @@
   - `Weapon Data` uses one indent and loses one indent-width from its parent weapon heading width;
   - Weapon Data rows use two indents and lose two indent-widths from the parent weapon heading width;
   - visible `Sellers` sections were removed from trade/review rows.
+- Updated trade/filter presentation:
+  - active filters now render directly above the first filter-group heading instead of under an `Active Filters` heading;
+  - the filter list panel uses a narrow one-quarter-width list spec;
+  - `Buying`/`Selling` row cells are left-aligned with standard internal padding;
+  - `Price` cells are wider, with the extra width taken from the weapon heading area;
+  - buy-side controls use yellow, sell-side controls use purple, and general top/footer controls use the dark-gray heading color.
 
 ## Active Manual Validation
 

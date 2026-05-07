@@ -12,10 +12,6 @@ final class StockReviewFilterListModel {
         List<WimGuiListRow<StockReviewAction>> rows = new ArrayList<WimGuiListRow<StockReviewAction>>();
         Set<StockReviewFilter> active = state.getActiveFilters();
         if (!active.isEmpty()) {
-            rows.add(StockReviewListRow.filterHeading(
-                    WimGuiToggleHeading.countedLabel("Active Filters", active.size(), true),
-                    StockReviewAction.resetFilters(),
-                    false));
             for (StockReviewFilter filter : StockReviewFilter.values()) {
                 if (active.contains(filter)) {
                     rows.add(StockReviewListRow.filter(filter.getLabel(), true,
@@ -45,7 +41,10 @@ final class StockReviewFilterListModel {
                 continue;
             }
             boolean active = state.isFilterActive(filter);
-            rows.add(StockReviewListRow.filter(filter.getLabel(), active,
+            if (active) {
+                continue;
+            }
+            rows.add(StockReviewListRow.filter(filter.getLabel(), false,
                     StockReviewAction.toggleFilter(filter), false));
         }
     }

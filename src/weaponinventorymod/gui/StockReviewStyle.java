@@ -19,7 +19,7 @@ final class StockReviewStyle {
     static final float STOCK_CELL_WIDTH = 136f;
     static final float INVENTORY_CELL_WIDTH = 102f;
     static final float PLAN_CELL_WIDTH = 170f;
-    static final float PRICE_CELL_WIDTH = 104f;
+    static final float PRICE_CELL_WIDTH = 120f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
     static final float SUFFICIENT_BUTTON_WIDTH = 82f;
     static final float RESET_BUTTON_WIDTH = 58f;
@@ -64,6 +64,7 @@ final class StockReviewStyle {
     static final float TRADE_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - LIST_TOP - SMALL_PAD);
     static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - REVIEW_LIST_TOP - SMALL_PAD);
     static final float LIST_WIDTH = MODAL.contentWidth();
+    static final float FILTER_LIST_WIDTH = LIST_WIDTH / 4f;
     static final float REVIEW_LIST_WIDTH = LIST_WIDTH - TRADE_CONTROL_BLOCK_WIDTH;
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
     // equal idle colors because Starsector darkens idle buttons differently.
@@ -97,14 +98,14 @@ final class StockReviewStyle {
     static Color PANEL_BACKGROUND = WimGuiStyle.MODAL_PANEL_BACKGROUND;
     static Color PANEL_BORDER = WimGuiStyle.MODAL_PANEL_BORDER;
     static Color ROW_BORDER = WimGuiStyle.ROW_BORDER;
-    static Color ACTION_BACKGROUND = UNCOLOURED_BUTTON;
-    static Color BUY_BUTTON = CONFIRM_BUTTON;
-    static Color SELL_BUTTON = CANCEL_BUTTON;
+    static Color ACTION_BACKGROUND = HEADING_BACKGROUND;
+    static Color BUY_BUTTON = LOAD_BUTTON;
+    static Color SELL_BUTTON = SAVE_BUTTON;
     static Color BULK_BUTTON = SAVE_BUTTON;
     static Color FILTER_ACTIVE = PRESET_SCOPE_BUTTON;
-    static Color PLAN_POSITIVE = CONFIRM_BUTTON;
-    static Color PLAN_NEGATIVE = CANCEL_BUTTON;
-    static Color PLAN_ZERO = LOAD_BUTTON;
+    static Color PLAN_POSITIVE = BUY_BUTTON;
+    static Color PLAN_NEGATIVE = SELL_BUTTON;
+    static Color PLAN_ZERO = CELL_BACKGROUND;
     static Color PROFIT_BUTTON = CONFIRM_BUTTON;
     static Color SCROLL = DEFAULT_TEXT;
     static Color TEXT = WHITE_TEXT;
@@ -131,6 +132,22 @@ final class StockReviewStyle {
             LIST_TOP,
             LIST_WIDTH,
             TRADE_LIST_HEIGHT,
+            ROW_HEIGHT,
+            ACTION_BUTTON_HEIGHT,
+            ROW_GAP,
+            SMALL_PAD,
+            BUTTON_GAP,
+            TEXT_LEFT_PAD,
+            80f,
+            PANEL_BACKGROUND,
+            PANEL_BORDER,
+            ROW_BORDER);
+    static WimGuiModalListSpec FILTER_LIST = new WimGuiModalListSpec(
+            MODAL,
+            PAD,
+            LIST_TOP,
+            FILTER_LIST_WIDTH,
+            LIST_HEIGHT,
             ROW_HEIGHT,
             ACTION_BUTTON_HEIGHT,
             ROW_GAP,
@@ -191,14 +208,14 @@ final class StockReviewStyle {
         PANEL_BACKGROUND = WimGuiStyle.MODAL_PANEL_BACKGROUND;
         PANEL_BORDER = WimGuiStyle.MODAL_PANEL_BORDER;
         ROW_BORDER = WimGuiStyle.ROW_BORDER;
-        ACTION_BACKGROUND = UNCOLOURED_BUTTON;
-        BUY_BUTTON = CONFIRM_BUTTON;
-        SELL_BUTTON = CANCEL_BUTTON;
+        ACTION_BACKGROUND = HEADING_BACKGROUND;
+        BUY_BUTTON = LOAD_BUTTON;
+        SELL_BUTTON = SAVE_BUTTON;
         BULK_BUTTON = SAVE_BUTTON;
         FILTER_ACTIVE = PRESET_SCOPE_BUTTON;
-        PLAN_POSITIVE = CONFIRM_BUTTON;
-        PLAN_NEGATIVE = CANCEL_BUTTON;
-        PLAN_ZERO = LOAD_BUTTON;
+        PLAN_POSITIVE = BUY_BUTTON;
+        PLAN_NEGATIVE = SELL_BUTTON;
+        PLAN_ZERO = CELL_BACKGROUND;
         PROFIT_BUTTON = CONFIRM_BUTTON;
         SCROLL = DEFAULT_TEXT;
         TEXT = WHITE_TEXT;
@@ -225,6 +242,22 @@ final class StockReviewStyle {
                 LIST_TOP,
                 LIST_WIDTH,
                 TRADE_LIST_HEIGHT,
+                ROW_HEIGHT,
+                ACTION_BUTTON_HEIGHT,
+                ROW_GAP,
+                SMALL_PAD,
+                BUTTON_GAP,
+                TEXT_LEFT_PAD,
+                80f,
+                PANEL_BACKGROUND,
+                PANEL_BORDER,
+                ROW_BORDER);
+        FILTER_LIST = new WimGuiModalListSpec(
+                MODAL,
+                PAD,
+                LIST_TOP,
+                FILTER_LIST_WIDTH,
+                LIST_HEIGHT,
                 ROW_HEIGHT,
                 ACTION_BUTTON_HEIGHT,
                 ROW_GAP,

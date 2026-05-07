@@ -78,13 +78,13 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + (snapshot.isGlobalMarketMode() ? "Global" : "Local"),
-                                StockReviewAction.toggleGlobalMarket(), snapshot.isGlobalMarketMode() ? StockReviewStyle.SAVE_BUTTON : StockReviewStyle.ACTION_BACKGROUND),
+                                StockReviewAction.toggleGlobalMarket(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.FILTER_BUTTON_WIDTH, "Filters: " + state.getActiveFilterCount(),
-                                StockReviewAction.openFilters(), state.getActiveFilterCount() > 0 ? StockReviewStyle.FILTER_ACTIVE : StockReviewStyle.ACTION_BACKGROUND),
+                                StockReviewAction.openFilters(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.COLOR_BUTTON_WIDTH, "Colors",
-                                StockReviewAction.openColorDebug(), StockReviewStyle.SAVE_BUTTON)),
+                                StockReviewAction.openColorDebug(), StockReviewStyle.ACTION_BACKGROUND)),
                 buttons);
     }
 
@@ -157,7 +157,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                               StockReviewState state,
                                               List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         List<WimGuiListRow<StockReviewAction>> rows = StockReviewFilterListModel.build(state);
-        return renderRows(root, rows, state, StockReviewStyle.LIST, buttons);
+        return renderRows(root, rows, state, StockReviewStyle.FILTER_LIST, buttons);
     }
 
     private WimGuiListBounds renderRows(CustomPanelAPI root,
@@ -191,7 +191,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                     StockReviewStyle.BUTTON_GAP,
                     WimGuiButtonSpecs.of(
                             footerButton("Confirm", StockReviewAction.debugConfirm(), true, StockReviewStyle.CONFIRM_BUTTON),
-                            footerButton("Apply", StockReviewAction.debugApply(), true, StockReviewStyle.SAVE_BUTTON),
+                        footerButton("Apply", StockReviewAction.debugApply(), true, StockReviewStyle.SAVE_BUTTON),
                             footerButton("Restore", StockReviewAction.debugRestore(), true, StockReviewStyle.LOAD_BUTTON)),
                     footerButton("Cancel", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON),
                     buttons);
@@ -232,13 +232,13 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                         footerButton("Review Trades", StockReviewAction.reviewPurchase(),
                                 pendingPurchases != null && !pendingPurchases.isEmpty(), StockReviewStyle.CONFIRM_BUTTON),
                         bulkButton("Purchase All Until Sufficient", StockReviewAction.purchaseAllUntilSufficient(), true),
-                        bulkButton("Sell All Until Sufficient", StockReviewAction.sellAllUntilSufficient(), true),
+                        bulkButton("Sell All Until Sufficient", StockReviewAction.sellAllUntilSufficient(), true, StockReviewStyle.SELL_BUTTON),
                         buttonFactory.button(
                                 StockReviewStyle.RESET_ALL_BUTTON_WIDTH,
                                 "Reset All Trades",
                                 StockReviewAction.resetAllTrades(),
                                 pendingPurchases != null && !pendingPurchases.isEmpty(),
-                                StockReviewStyle.BULK_BUTTON)),
+                                StockReviewStyle.ACTION_BACKGROUND)),
                 footerButton("Cancel", StockReviewAction.close(), true, StockReviewStyle.CANCEL_BUTTON),
                 buttons);
     }
@@ -253,7 +253,14 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
     private WimGuiButtonSpec<StockReviewAction> bulkButton(String label,
                                                            StockReviewAction action,
                                                            boolean enabled) {
-        return buttonFactory.button(StockReviewStyle.BULK_BUTTON_WIDTH, label, action, enabled, StockReviewStyle.BULK_BUTTON);
+        return bulkButton(label, action, enabled, StockReviewStyle.BUY_BUTTON);
+    }
+
+    private WimGuiButtonSpec<StockReviewAction> bulkButton(String label,
+                                                           StockReviewAction action,
+                                                           boolean enabled,
+                                                           Color fill) {
+        return buttonFactory.button(StockReviewStyle.BULK_BUTTON_WIDTH, label, action, enabled, fill);
     }
 
     @Override

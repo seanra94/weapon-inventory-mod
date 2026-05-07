@@ -68,7 +68,8 @@ final class StockReviewReviewListModel {
                 WimGuiRowCell.info((purchase.isSell() ? "Selling: " : "Buying: ") + quantity,
                         StockReviewStyle.PLAN_CELL_WIDTH,
                         purchase.isSell() ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.PLAN_POSITIVE,
-                        StockReviewStyle.TEXT));
+                        StockReviewStyle.TEXT,
+                        Alignment.LMID));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
                 cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
         if (!expanded) {
