@@ -18,6 +18,7 @@ final class WimGuiListRow<A> {
     private final Alignment mainAlignment;
     private final List<WimGuiRowCell<A>> cells;
     private final boolean topGap;
+    private final Float cellGapOverride;
 
     WimGuiListRow(String label,
                   Color textColor,
@@ -28,7 +29,8 @@ final class WimGuiListRow<A> {
                   A mainAction,
                   Alignment mainAlignment,
                   List<WimGuiRowCell<A>> cells,
-                  boolean topGap) {
+                  boolean topGap,
+                  Float cellGapOverride) {
         this.label = label;
         this.textColor = textColor;
         this.fillColor = fillColor;
@@ -41,6 +43,7 @@ final class WimGuiListRow<A> {
                 ? Collections.<WimGuiRowCell<A>>emptyList()
                 : Collections.unmodifiableList(new ArrayList<WimGuiRowCell<A>>(cells));
         this.topGap = topGap;
+        this.cellGapOverride = cellGapOverride;
     }
 
     String getLabel() {
@@ -81,5 +84,9 @@ final class WimGuiListRow<A> {
 
     boolean hasTopGap() {
         return topGap;
+    }
+
+    float cellGap(float defaultGap) {
+        return cellGapOverride == null ? defaultGap : cellGapOverride;
     }
 }

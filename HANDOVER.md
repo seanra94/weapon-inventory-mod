@@ -9,7 +9,7 @@
 - Terminology:
   - `Buy GUI` means the main `F8` stock-review screen.
   - `Review GUI` means the planned-trade review screen opened from the Buy GUI.
-  - `main headings` / `top level headings` means `No stock`, `Insufficient stock`, and `Sufficient stock`.
+  - `main headings` / `top level headings` means `No Stock`, `Insufficient Stock`, and `Sufficient Stock`.
   - `weapon entries` means rows under those main headings, such as `Light Needler (-)` plus stock, plan, cost/profit, and buy/sell controls.
 - Popup configuration lives in `data/config/weapon_inventory_stock.json`:
   - default display mode;
@@ -42,9 +42,9 @@
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
-  - expanded review weapon rows show stock cells, trade quantity, cost/profit, `Weapon data`, and seller allocations for buys;
+  - expanded review weapon rows show stock cells, trade quantity, cost/profit, `Weapon Data`, and seller allocations for buys;
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
-  - this avoids the awkward immediate recategorization where buying one `No stock` weapon moves it out of that category before the user finishes shopping;
+  - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
 - Popup category layout:
@@ -52,18 +52,20 @@
   - headings are flat full-width peer rows, not nested checkboxes;
   - weapon rows, nested section rows, seller rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
 - Popup visual rules:
-  - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No stock and sell/decrement controls, yellow/load for Insufficient rows, green/confirm for Sufficient and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
+  - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No Stock and sell/decrement controls, yellow/load for Insufficient Stock rows, green/confirm for Sufficient Stock and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
   - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
-  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon data` and `Sellers` use the ACG dark-gray collapsible heading fill.
+  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` and `Sellers` use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
-  - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Nested `Weapon data` / `Sellers` heading buttons start after the indent so the left indent remains black.
-  - Weapon entries should keep this order: weapon label, `Storage`, `Inventory`, `Stocked`, `Buying`/`Selling`, `Cost`/`Profit`, `-N`, `-10`, `-1`, `+1`, `+10`, `+N`, `Reset`.
+  - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders; nested `Weapon Data` / `Sellers` heading buttons start after the indent so the left indent remains black.
+  - Weapon entries should keep this order: weapon label, `Storage`, `Inventory`, `Stocked`, `Buying`/`Selling`, `Cost`/`Profit`, `-S`, `-10`, `-1`, `+1`, `+10`, `+S`, `Reset`.
   - `Storage` is the portion of the snapshot owned count outside player fleet cargo under the active owned-source policy.
   - `Inventory` is the player fleet cargo count, because only inventory weapons can be sold through this GUI.
   - `Stocked` is the snapshot stock count across the enabled owned source, normally fleet plus all accessible storage. It should not change while the user clicks buy/sell buttons in the Buy GUI.
   - `Buying` / `Selling` is the signed planned trade for that weapon. Positive planned quantities use green, negative planned quantities use red, and zero uses pale yellow.
   - `Cost` uses the red/cancel background; net-profit rows become `Profit` with the green/confirm background. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
-  - `-N` sells down until barely sufficient without crossing into insufficient stock. `+N` buys up until barely sufficient without exceeding desired stock.
+  - `-S` sells down until barely sufficient without crossing into insufficient stock. `+S` buys up until barely sufficient without exceeding desired stock.
+  - Disabled controls should render as inert WIM-owned shells with gray text and disabled fill, not as disabled Starsector buttons. Starsector's disabled-button hover can darken/highlight inconsistently and should not be used for WIM action cells.
+  - The `Colors` top-row button opens the in-popup Debug Colors screen. Temporary changes mutate the runtime WIM palette until restart; Permanent mode also writes the selected RGB values to Starsector common storage as `WIM_debugGuiColors.json`. Debug samples, RGB incrementors, Confirm/Apply/Restore/Cancel, and the variable selector must stay on the shared WIM row/button path.
   - The old visible `Refresh` button was removed. Mode/sort/source changes and trade actions already rebuild the snapshot/content shell through explicit actions.
   - Performance-sensitive trade math should go through `StockReviewTradeContext`, which caches pending buy/sell quantities, per-weapon costs, total cost, cargo-space delta, current credits, cargo space, and affordability probes for the current render/controller action.
   - Market quote/pricing work should go through `StockReviewQuoteBook`. It caches sorted buyable seller lists, line quotes, seller allocations, sell prices, and fallback cargo-space values so render/controller paths do not repeatedly copy/sort submarkets or scan player cargo.
@@ -149,7 +151,7 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
 - Starsector dims idle button interiors heavily. Raw RGB values can look much darker in game, while hover/glow is closer to raw RGB. For WIM, keep hover/glow equal to the idle/base color unless a runtime-tested exception is deliberately accepted.
 - Avoid bare `addAreaCheckbox(...)` visuals for action rows. If WIM uses area checkboxes for a future row type, give the row an owned background/fill so idle colors do not degrade into only a border or ring.
 - Use the imported ACG palette consistently:
-  - No stock category rows: cancel red;
+  - No Stock category rows: cancel red;
   - Insufficient rows: load yellow;
   - Buy/increment buttons: confirm green;
   - Sell/decrement buttons: cancel red;
@@ -268,7 +270,7 @@ Manual validation:
 - Launch/load save.
 - Open a market trade screen.
 - Press `F8` to open Weapon Stock Review.
-- Confirm the popup groups weapons under No stock, Insufficient stock, and Sufficient stock.
+- Confirm the popup groups weapons under No Stock, Insufficient Stock, and Sufficient Stock.
 - Confirm weapon entries show stable `Storage`, `Inventory`, `Stocked`, `Buying`/`Selling`, and `Cost`/`Profit` cells while queued changes are adjusted.
 - Confirm `Mode`, `Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
 - Confirm `Sort` cycles ordering without collapsing headings.

@@ -36,6 +36,24 @@ final class StockReviewListRow {
                 StockReviewStyle.DETAIL_INDENT, null, Alignment.LMID, null, false);
     }
 
+    static WimGuiListRow<StockReviewAction> labelText(String label, String value) {
+        List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
+                WimGuiRowCell.info(label, StockReviewStyle.LABEL_TEXT_CELL_WIDTH,
+                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
+                WimGuiRowCell.info(value, StockReviewStyle.LABEL_TEXT_CELL_WIDTH,
+                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.MID));
+        return row("", StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
+                StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
+                0f, null, Alignment.LMID, cells, false, 0f);
+    }
+
+    static WimGuiListRow<StockReviewAction> form(String label,
+                                                 List<WimGuiRowCell<StockReviewAction>> cells) {
+        return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
+                StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
+                0f, null, Alignment.LMID, cells, false);
+    }
+
     static WimGuiListRow<StockReviewAction> seller(String label,
                                                    boolean buyOneEnabled,
                                                    boolean buyTenEnabled,
@@ -100,6 +118,32 @@ final class StockReviewListRow {
                 action,
                 alignment,
                 cells,
-                topGap);
+                topGap,
+                null);
+    }
+
+    private static WimGuiListRow<StockReviewAction> row(String label,
+                                                        Color textColor,
+                                                        Color fillColor,
+                                                        Color buttonFillColor,
+                                                        Color borderColor,
+                                                        float indent,
+                                                        StockReviewAction action,
+                                                        Alignment alignment,
+                                                        List<WimGuiRowCell<StockReviewAction>> cells,
+                                                        boolean topGap,
+                                                        Float cellGapOverride) {
+        return new WimGuiListRow<StockReviewAction>(
+                label,
+                textColor,
+                fillColor,
+                buttonFillColor,
+                borderColor,
+                indent,
+                action,
+                alignment,
+                cells,
+                topGap,
+                cellGapOverride);
     }
 }

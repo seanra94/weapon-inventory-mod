@@ -17,24 +17,36 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                             StockReviewState state,
                             List<StockReviewPendingPurchase> pendingPurchases,
                             boolean reviewMode,
+                            boolean colorDebugMode,
+                            int colorDebugTargetIndex,
+                            Color colorDebugDraft,
+                            boolean colorDebugPersistent,
                             List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        renderHeader(root, snapshot);
+        renderHeader(root, snapshot, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
         renderActionRow(root, snapshot, buttons);
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingPurchases);
-        WimGuiListBounds result = reviewMode
+        WimGuiListBounds result = colorDebugMode
+                ? renderColorDebugList(root, colorDebugTargetIndex, colorDebugDraft, colorDebugPersistent, state, buttons)
+                : reviewMode
                 ? renderReviewList(root, snapshot, pendingPurchases, state, tradeContext, buttons)
                 : renderStockList(root, snapshot, state, tradeContext, buttons);
-        renderFooter(root, tradeContext, pendingPurchases, reviewMode, buttons);
+        renderFooter(root, tradeContext, pendingPurchases, reviewMode, colorDebugMode, colorDebugPersistent, buttons);
         return result;
     }
 
-    private void renderHeader(CustomPanelAPI root, WeaponStockSnapshot snapshot) {
+    private void renderHeader(CustomPanelAPI root,
+                              WeaponStockSnapshot snapshot,
+                              boolean colorDebugMode,
+                              int colorDebugTargetIndex,
+                              Color colorDebugDraft) {
+        String title = colorDebugMode ? "Debug Colors" : "Weapon Stock Review";
+        String status = colorDebugMode ? colorStatusLine(colorDebugTargetIndex, colorDebugDraft) : statusLine(snapshot);
         WimGuiModalHeader.addTitleStatusHeader(
                 root,
                 StockReviewStyle.MODAL,
                 StockReviewStyle.HEADER_HEIGHT,
-                "Weapon Stock Review",
-                statusLine(snapshot),
+                title,
+                status,
                 StockReviewStyle.PANEL_BACKGROUND,
                 StockReviewStyle.PANEL_BORDER,
                 StockReviewStyle.TEXT);
@@ -59,6 +71,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                 StockReviewAction.toggleCurrentMarketStorage(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
+                        buttonFactory.enabledButton(StockReviewStyle.CLOSE_BUTTON_WIDTH, "Colors",
+                                StockReviewAction.openColorDebug(), StockReviewStyle.SAVE_BUTTON),
                         buttonFactory.enabledButton(StockReviewStyle.CLOSE_BUTTON_WIDTH, "Close",
                                 StockReviewAction.close(), StockReviewStyle.ACTION_BACKGROUND)),
                 buttons);
@@ -83,6 +97,16 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         return renderRows(root, rows, state, buttons);
     }
 
+    private WimGuiListBounds renderColorDebugList(CustomPanelAPI root,
+                                                  int targetIndex,
+                                                  Color draft,
+                                                  boolean persistent,
+                                                  StockReviewState state,
+                                                  List<WimGuiButtonBinding<StockReviewAction>> buttons) {
+        List<WimGuiListRow<StockReviewAction>> rows = StockReviewColorDebugRows.build(targetIndex, draft, persistent);
+        return renderRows(root, rows, state, buttons);
+    }
+
     private WimGuiListBounds renderRows(CustomPanelAPI root,
                                         List<WimGuiListRow<StockReviewAction>> rows,
                                         StockReviewState state,
@@ -101,7 +125,23 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                               StockReviewTradeContext tradeContext,
                               List<StockReviewPendingPurchase> pendingPurchases,
                               boolean reviewMode,
+                              boolean colorDebugMode,
+                              boolean colorDebugPersistent,
                               List<WimGuiButtonBinding<StockReviewAction>> buttons) {
+        if (colorDebugMode) {
+            WimGuiModalFooter.addLeftRowAndRightButton(
+                    root,
+                    StockReviewStyle.MODAL,
+                    StockReviewStyle.ACTION_BUTTON_HEIGHT,
+                    StockReviewStyle.BUTTON_GAP,
+                    WimGuiButtonSpecs.of(
+                            footerButton("Confirm", StockReviewAction.debugConfirm(), true, StockReviewStyle.CONFIRM_BUTTON),
+                            footerButton("Apply", StockReviewAction.debugApply(), true, StockReviewStyle.SAVE_BUTTON),
+                            footerButton("Restore", StockReviewAction.debugRestore(), true, StockReviewStyle.LOAD_BUTTON)),
+                    footerButton("Cancel", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON),
+                    buttons);
+            return;
+        }
         if (reviewMode) {
             WimGuiModalFooter.addLeftRowAndRightButton(
                     root,
@@ -164,6 +204,15 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 + " | Sort: " + snapshot.getSortMode().getLabel()
                 + " | Owned source: " + ownedSourceLabel(snapshot)
                 + " | Black market: " + onOff(snapshot.isIncludeBlackMarket());
+    }
+
+    private static String colorStatusLine(int targetIndex, Color draft) {
+        WimGuiColorDebug.Target target = WimGuiColorDebug.targetAt(targetIndex);
+        Color color = draft == null ? WimGuiColorDebug.currentColor(target) : draft;
+        return target.getLabel() + " | RGB("
+                + color.getRed() + ", "
+                + color.getGreen() + ", "
+                + color.getBlue() + ")";
     }
 
     private static String ownedSourceLabel(WeaponStockSnapshot snapshot) {

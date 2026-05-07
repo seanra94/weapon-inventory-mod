@@ -10,6 +10,7 @@ import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 import weaponinventorymod.core.WeaponStockSnapshotBuilder;
 
+import java.awt.Color;
 import java.util.List;
 
 public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction> {
@@ -25,6 +26,10 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     private WeaponStockSnapshot snapshot;
     private boolean reviewMode = false;
+    private boolean colorDebugMode = false;
+    private boolean colorDebugPersistent = false;
+    private int colorDebugTargetIndex = 0;
+    private Color colorDebugDraft = null;
 
     public StockReviewPanelPlugin(MarketAPI initialMarket, StockReviewState initialState) {
         super(
@@ -55,7 +60,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     @Override
     protected WimGuiListBounds renderContent(CustomPanelAPI content,
                                              List<WimGuiButtonBinding<StockReviewAction>> buttonBindings) {
-        return renderer.render(content, snapshot, state, pendingTrades.asList(), reviewMode, buttonBindings);
+        return renderer.render(content, snapshot, state, pendingTrades.asList(), reviewMode,
+                colorDebugMode, colorDebugTargetIndex, currentColorDebugDraft(), colorDebugPersistent, buttonBindings);
     }
 
     @Override
@@ -143,6 +149,61 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.OPEN_COLOR_DEBUG.equals(type)) {
+            colorDebugMode = true;
+            reviewMode = false;
+            state.setListScrollOffset(0);
+            ensureColorDebugDraft();
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_CYCLE_TARGET.equals(type)) {
+            cycleColorDebugTarget(action.getQuantity());
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_TOGGLE_PERSISTENCE.equals(type)) {
+            colorDebugPersistent = !colorDebugPersistent;
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_ADJUST_RED.equals(type)) {
+            colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), action.getQuantity(), 0, 0);
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_ADJUST_GREEN.equals(type)) {
+            colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), 0, action.getQuantity(), 0);
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_ADJUST_BLUE.equals(type)) {
+            colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), 0, 0, action.getQuantity());
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_APPLY.equals(type)) {
+            applyColorDebugDraft();
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_CONFIRM.equals(type)) {
+            applyColorDebugDraft();
+            colorDebugMode = false;
+            state.setListScrollOffset(0);
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_RESTORE.equals(type)) {
+            WimGuiColorDebug.Target target = WimGuiColorDebug.targetAt(colorDebugTargetIndex);
+            colorDebugDraft = target == null ? null : target.getDefaultColor();
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.DEBUG_NOOP.equals(type)) {
+            rebuildContent();
+            return;
+        }
         if (StockReviewAction.Type.REVIEW_PURCHASE.equals(type)) {
             if (!pendingTrades.isEmpty()) {
                 reviewMode = true;
@@ -152,6 +213,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.GO_BACK.equals(type)) {
+            if (colorDebugMode) {
+                colorDebugMode = false;
+                state.setListScrollOffset(0);
+                rebuildContent();
+                return;
+            }
             reviewMode = false;
             state.setListScrollOffset(0);
             rebuildContent();
@@ -326,6 +393,41 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         MarketAPI market = host.getCurrentMarketOr(initialMarket);
         snapshot = snapshotBuilder.build(sector, market, config, state.getDisplayMode(),
                 state.getSortMode(), state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket());
+    }
+
+    private void cycleColorDebugTarget(int delta) {
+        List<WimGuiColorDebug.Target> targets = WimGuiColorDebug.targets();
+        if (targets.isEmpty()) {
+            colorDebugTargetIndex = 0;
+            colorDebugDraft = null;
+            return;
+        }
+        int size = targets.size();
+        colorDebugTargetIndex = ((colorDebugTargetIndex + delta) % size + size) % size;
+        colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex));
+    }
+
+    private Color currentColorDebugDraft() {
+        ensureColorDebugDraft();
+        return colorDebugDraft;
+    }
+
+    private void ensureColorDebugDraft() {
+        if (colorDebugDraft != null) {
+            return;
+        }
+        colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex));
+    }
+
+    private void applyColorDebugDraft() {
+        WimGuiColorDebug.Target target = WimGuiColorDebug.targetAt(colorDebugTargetIndex);
+        if (target == null) {
+            return;
+        }
+        target.apply(currentColorDebugDraft());
+        if (colorDebugPersistent) {
+            WimGuiColorDebug.save(target, currentColorDebugDraft());
+        }
     }
 
     private void refreshVanillaCargoScreen() {

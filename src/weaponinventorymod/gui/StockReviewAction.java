@@ -19,6 +19,16 @@ final class StockReviewAction {
         PURCHASE_ALL_UNTIL_SUFFICIENT,
         SELL_ALL_UNTIL_SUFFICIENT,
         RESET_ALL_TRADES,
+        OPEN_COLOR_DEBUG,
+        DEBUG_CYCLE_TARGET,
+        DEBUG_TOGGLE_PERSISTENCE,
+        DEBUG_ADJUST_RED,
+        DEBUG_ADJUST_GREEN,
+        DEBUG_ADJUST_BLUE,
+        DEBUG_APPLY,
+        DEBUG_CONFIRM,
+        DEBUG_RESTORE,
+        DEBUG_NOOP,
         REVIEW_PURCHASE,
         CONFIRM_PURCHASE,
         GO_BACK,
@@ -115,6 +125,46 @@ final class StockReviewAction {
 
     static StockReviewAction resetAllTrades() {
         return new StockReviewAction(Type.RESET_ALL_TRADES, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction openColorDebug() {
+        return new StockReviewAction(Type.OPEN_COLOR_DEBUG, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction debugCycleTarget(int delta) {
+        return new StockReviewAction(Type.DEBUG_CYCLE_TARGET, null, null, null, null, null, delta);
+    }
+
+    static StockReviewAction debugTogglePersistence() {
+        return new StockReviewAction(Type.DEBUG_TOGGLE_PERSISTENCE, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction debugAdjustRed(int delta) {
+        return new StockReviewAction(Type.DEBUG_ADJUST_RED, null, null, null, null, null, delta);
+    }
+
+    static StockReviewAction debugAdjustGreen(int delta) {
+        return new StockReviewAction(Type.DEBUG_ADJUST_GREEN, null, null, null, null, null, delta);
+    }
+
+    static StockReviewAction debugAdjustBlue(int delta) {
+        return new StockReviewAction(Type.DEBUG_ADJUST_BLUE, null, null, null, null, null, delta);
+    }
+
+    static StockReviewAction debugApply() {
+        return new StockReviewAction(Type.DEBUG_APPLY, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction debugConfirm() {
+        return new StockReviewAction(Type.DEBUG_CONFIRM, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction debugRestore() {
+        return new StockReviewAction(Type.DEBUG_RESTORE, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction debugNoop() {
+        return new StockReviewAction(Type.DEBUG_NOOP, null, null, null, null, null, 0);
     }
 
     static StockReviewAction confirmPurchase() {

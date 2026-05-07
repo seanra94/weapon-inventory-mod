@@ -23,6 +23,9 @@ final class StockReviewStyle {
     static final float REVIEW_MARKET_CELL_WIDTH = 180f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
     static final float RESET_BUTTON_WIDTH = 58f;
+    static final float DEBUG_VALUE_WIDTH = 430f;
+    static final float DEBUG_SAMPLE_WIDTH = 130f;
+    static final float DEBUG_DELTA_BUTTON_WIDTH = 48f;
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float ROW_HEIGHT = 22f;
     static final float ROW_GAP = 3f;
@@ -52,51 +55,52 @@ final class StockReviewStyle {
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
     static final float LIST_WIDTH = MODAL.contentWidth();
+    static final float LABEL_TEXT_CELL_WIDTH = (LIST_WIDTH - 2f * SMALL_PAD) / 2f;
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
     // equal idle colors because Starsector darkens idle buttons differently.
-    static final Color DEFAULT_TEXT = WimGuiStyle.DEFAULT_TEXT;
-    static final Color WHITE_TEXT = WimGuiStyle.WHITE_TEXT;
-    static final Color ALERT_RED = WimGuiStyle.ALERT_RED;
-    static final Color DISABLED_BACKGROUND = WimGuiStyle.DISABLED_BACKGROUND;
-    static final Color DISABLED_DARK = WimGuiStyle.DISABLED_DARK;
-    static final Color DISABLED_TEXT = WimGuiStyle.DISABLED_TEXT;
-    static final Color DISABLED_BORDER = WimGuiStyle.DISABLED_BORDER;
-    static final Color SAVE_BUTTON = WimGuiStyle.SAVE_PURPLE;
-    static final Color LOAD_BUTTON = WimGuiStyle.LOAD_YELLOW;
-    static final Color CONFIRM_BUTTON = WimGuiStyle.CONFIRM_GREEN;
-    static final Color CANCEL_BUTTON = WimGuiStyle.CANCEL_RED;
-    static final Color UNCOLOURED_BUTTON = WimGuiStyle.UNCOLOURED_BUTTON;
-    static final Color PRESET_SCOPE_BUTTON = WimGuiStyle.PRESET_SCOPE_ORANGE;
-    static final Color SELECTED_WEAPON_SHIP = WimGuiStyle.SELECTED_BLUE;
-    static final Color PANEL_HEADING = WimGuiStyle.PANEL_HEADING;
-    static final Color STALE_HEADING = WimGuiStyle.STALE_HEADING;
-    static final Color COLLAPSIBLE_HEADING = WimGuiStyle.COLLAPSIBLE_HEADING;
-    static final Color UNSAVED_HEADING = WimGuiStyle.UNSAVED_HEADING;
-    static final Color TAG_CATEGORY_HEADING = WimGuiStyle.TAG_CATEGORY_HEADING;
+    static Color DEFAULT_TEXT = WimGuiStyle.DEFAULT_TEXT;
+    static Color WHITE_TEXT = WimGuiStyle.WHITE_TEXT;
+    static Color ALERT_RED = WimGuiStyle.ALERT_RED;
+    static Color DISABLED_BACKGROUND = WimGuiStyle.DISABLED_BACKGROUND;
+    static Color DISABLED_DARK = WimGuiStyle.DISABLED_DARK;
+    static Color DISABLED_TEXT = WimGuiStyle.DISABLED_TEXT;
+    static Color DISABLED_BORDER = WimGuiStyle.DISABLED_BORDER;
+    static Color SAVE_BUTTON = WimGuiStyle.SAVE_PURPLE;
+    static Color LOAD_BUTTON = WimGuiStyle.LOAD_YELLOW;
+    static Color CONFIRM_BUTTON = WimGuiStyle.CONFIRM_GREEN;
+    static Color CANCEL_BUTTON = WimGuiStyle.CANCEL_RED;
+    static Color UNCOLOURED_BUTTON = WimGuiStyle.UNCOLOURED_BUTTON;
+    static Color PRESET_SCOPE_BUTTON = WimGuiStyle.PRESET_SCOPE_ORANGE;
+    static Color SELECTED_WEAPON_SHIP = WimGuiStyle.SELECTED_BLUE;
+    static Color PANEL_HEADING = WimGuiStyle.PANEL_HEADING;
+    static Color STALE_HEADING = WimGuiStyle.STALE_HEADING;
+    static Color COLLAPSIBLE_HEADING = WimGuiStyle.COLLAPSIBLE_HEADING;
+    static Color UNSAVED_HEADING = WimGuiStyle.UNSAVED_HEADING;
+    static Color TAG_CATEGORY_HEADING = WimGuiStyle.TAG_CATEGORY_HEADING;
 
-    static final Color NO_STOCK = CANCEL_BUTTON;
-    static final Color INSUFFICIENT = LOAD_BUTTON;
-    static final Color SUFFICIENT = CONFIRM_BUTTON;
-    static final Color ROW_BACKGROUND = UNCOLOURED_BUTTON;
-    static final Color ROW_BACKGROUND_DARK = DISABLED_DARK;
-    static final Color HEADING_BACKGROUND = COLLAPSIBLE_HEADING;
-    static final Color CELL_BACKGROUND = COLLAPSIBLE_HEADING;
-    static final Color PANEL_BACKGROUND = WimGuiStyle.MODAL_PANEL_BACKGROUND;
-    static final Color PANEL_BORDER = WimGuiStyle.MODAL_PANEL_BORDER;
-    static final Color ROW_BORDER = WimGuiStyle.ROW_BORDER;
-    static final Color ACTION_BACKGROUND = UNCOLOURED_BUTTON;
-    static final Color BUY_BUTTON = CONFIRM_BUTTON;
-    static final Color SELL_BUTTON = CANCEL_BUTTON;
-    static final Color BULK_BUTTON = SAVE_BUTTON;
-    static final Color PLAN_POSITIVE = CONFIRM_BUTTON;
-    static final Color PLAN_NEGATIVE = CANCEL_BUTTON;
-    static final Color PLAN_ZERO = LOAD_BUTTON;
-    static final Color COST_BUTTON = CANCEL_BUTTON;
-    static final Color PROFIT_BUTTON = CONFIRM_BUTTON;
-    static final Color SCROLL = DEFAULT_TEXT;
-    static final Color TEXT = WHITE_TEXT;
-    static final Color MUTED = WHITE_TEXT;
-    static final WimGuiModalListSpec LIST = new WimGuiModalListSpec(
+    static Color NO_STOCK = CANCEL_BUTTON;
+    static Color INSUFFICIENT = LOAD_BUTTON;
+    static Color SUFFICIENT = CONFIRM_BUTTON;
+    static Color ROW_BACKGROUND = UNCOLOURED_BUTTON;
+    static Color ROW_BACKGROUND_DARK = DISABLED_DARK;
+    static Color HEADING_BACKGROUND = COLLAPSIBLE_HEADING;
+    static Color CELL_BACKGROUND = COLLAPSIBLE_HEADING;
+    static Color PANEL_BACKGROUND = WimGuiStyle.MODAL_PANEL_BACKGROUND;
+    static Color PANEL_BORDER = WimGuiStyle.MODAL_PANEL_BORDER;
+    static Color ROW_BORDER = WimGuiStyle.ROW_BORDER;
+    static Color ACTION_BACKGROUND = UNCOLOURED_BUTTON;
+    static Color BUY_BUTTON = CONFIRM_BUTTON;
+    static Color SELL_BUTTON = CANCEL_BUTTON;
+    static Color BULK_BUTTON = SAVE_BUTTON;
+    static Color PLAN_POSITIVE = CONFIRM_BUTTON;
+    static Color PLAN_NEGATIVE = CANCEL_BUTTON;
+    static Color PLAN_ZERO = LOAD_BUTTON;
+    static Color COST_BUTTON = CANCEL_BUTTON;
+    static Color PROFIT_BUTTON = CONFIRM_BUTTON;
+    static Color SCROLL = DEFAULT_TEXT;
+    static Color TEXT = WHITE_TEXT;
+    static Color MUTED = WHITE_TEXT;
+    static WimGuiModalListSpec LIST = new WimGuiModalListSpec(
             MODAL,
             PAD,
             LIST_TOP,
@@ -114,6 +118,66 @@ final class StockReviewStyle {
             ROW_BORDER);
 
     private StockReviewStyle() {
+    }
+
+    static void refreshColors() {
+        DEFAULT_TEXT = WimGuiStyle.DEFAULT_TEXT;
+        WHITE_TEXT = WimGuiStyle.WHITE_TEXT;
+        ALERT_RED = WimGuiStyle.ALERT_RED;
+        DISABLED_BACKGROUND = WimGuiStyle.DISABLED_BACKGROUND;
+        DISABLED_DARK = WimGuiStyle.DISABLED_DARK;
+        DISABLED_TEXT = WimGuiStyle.DISABLED_TEXT;
+        DISABLED_BORDER = WimGuiStyle.DISABLED_BORDER;
+        SAVE_BUTTON = WimGuiStyle.SAVE_PURPLE;
+        LOAD_BUTTON = WimGuiStyle.LOAD_YELLOW;
+        CONFIRM_BUTTON = WimGuiStyle.CONFIRM_GREEN;
+        CANCEL_BUTTON = WimGuiStyle.CANCEL_RED;
+        UNCOLOURED_BUTTON = WimGuiStyle.UNCOLOURED_BUTTON;
+        PRESET_SCOPE_BUTTON = WimGuiStyle.PRESET_SCOPE_ORANGE;
+        SELECTED_WEAPON_SHIP = WimGuiStyle.SELECTED_BLUE;
+        PANEL_HEADING = WimGuiStyle.PANEL_HEADING;
+        STALE_HEADING = WimGuiStyle.STALE_HEADING;
+        COLLAPSIBLE_HEADING = WimGuiStyle.COLLAPSIBLE_HEADING;
+        UNSAVED_HEADING = WimGuiStyle.UNSAVED_HEADING;
+        TAG_CATEGORY_HEADING = WimGuiStyle.TAG_CATEGORY_HEADING;
+        NO_STOCK = CANCEL_BUTTON;
+        INSUFFICIENT = LOAD_BUTTON;
+        SUFFICIENT = CONFIRM_BUTTON;
+        ROW_BACKGROUND = UNCOLOURED_BUTTON;
+        ROW_BACKGROUND_DARK = DISABLED_DARK;
+        HEADING_BACKGROUND = COLLAPSIBLE_HEADING;
+        CELL_BACKGROUND = COLLAPSIBLE_HEADING;
+        PANEL_BACKGROUND = WimGuiStyle.MODAL_PANEL_BACKGROUND;
+        PANEL_BORDER = WimGuiStyle.MODAL_PANEL_BORDER;
+        ROW_BORDER = WimGuiStyle.ROW_BORDER;
+        ACTION_BACKGROUND = UNCOLOURED_BUTTON;
+        BUY_BUTTON = CONFIRM_BUTTON;
+        SELL_BUTTON = CANCEL_BUTTON;
+        BULK_BUTTON = SAVE_BUTTON;
+        PLAN_POSITIVE = CONFIRM_BUTTON;
+        PLAN_NEGATIVE = CANCEL_BUTTON;
+        PLAN_ZERO = LOAD_BUTTON;
+        COST_BUTTON = CANCEL_BUTTON;
+        PROFIT_BUTTON = CONFIRM_BUTTON;
+        SCROLL = DEFAULT_TEXT;
+        TEXT = WHITE_TEXT;
+        MUTED = WHITE_TEXT;
+        LIST = new WimGuiModalListSpec(
+                MODAL,
+                PAD,
+                LIST_TOP,
+                LIST_WIDTH,
+                LIST_HEIGHT,
+                ROW_HEIGHT,
+                ACTION_BUTTON_HEIGHT,
+                ROW_GAP,
+                SMALL_PAD,
+                BUTTON_GAP,
+                TEXT_LEFT_PAD,
+                80f,
+                PANEL_BACKGROUND,
+                PANEL_BORDER,
+                ROW_BORDER);
     }
 
     static WimGuiListBounds initialListBounds() {

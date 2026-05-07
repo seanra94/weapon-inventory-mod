@@ -36,7 +36,10 @@ $requiredClasses = @(
     "weaponinventorymod/gui/WimGuiNoopCoreInteractionListener.class",
     "weaponinventorymod/gui/WimGuiPendingDialog.class",
     "weaponinventorymod/gui/WimGuiScrollableListState.class",
-    "weaponinventorymod/gui/WimGuiSemanticButtonFactory.class"
+    "weaponinventorymod/gui/WimGuiSemanticButtonFactory.class",
+    "weaponinventorymod/gui/WimGuiColorDebug.class",
+    "weaponinventorymod/gui/WimGuiColorDebug`$Target.class",
+    "weaponinventorymod/gui/StockReviewColorDebugRows.class"
 )
 $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewButtonBinding.class",
@@ -45,7 +48,9 @@ $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewPurchasePreview.class",
     "weaponinventorymod/gui/StockReviewRowCells.class",
     "weaponinventorymod/gui/StockReviewRowRenderer.class",
-    "weaponinventorymod/gui/StockReviewText.class"
+    "weaponinventorymod/gui/StockReviewText.class",
+    "weaponinventorymod/gui/WimGuiColorDebug`$ColorSetter.class",
+    "weaponinventorymod/gui/WimGuiColorDebug`$1.class"
 )
 
 function Test-JarClasses {

@@ -13,6 +13,9 @@ final class WimGuiButtonPoller<A> {
     private final List<WimGuiButtonBinding<A>> bindings = new ArrayList<WimGuiButtonBinding<A>>();
     private final int framesAfterMouseEvent;
     private int framesRemaining = 0;
+    private boolean hasPendingMouseUp = false;
+    private float pendingMouseUpX = 0f;
+    private float pendingMouseUpY = 0f;
 
     WimGuiButtonPoller(int framesAfterMouseEvent) {
         this.framesAfterMouseEvent = Math.max(1, framesAfterMouseEvent);
@@ -25,6 +28,7 @@ final class WimGuiButtonPoller<A> {
     void clearBindings() {
         bindings.clear();
         framesRemaining = 0;
+        clearPendingMouseUp();
     }
 
     void requestPollFromInput(List<InputEventAPI> events) {
@@ -33,7 +37,17 @@ final class WimGuiButtonPoller<A> {
         }
         for (int i = 0; i < events.size(); i++) {
             InputEventAPI event = events.get(i);
-            if (event != null && !event.isConsumed() && (event.isMouseUpEvent() || event.isMouseDownEvent())) {
+            if (event == null) {
+                continue;
+            }
+            if (event.isMouseUpEvent()) {
+                hasPendingMouseUp = true;
+                pendingMouseUpX = event.getX();
+                pendingMouseUpY = event.getY();
+                framesRemaining = framesAfterMouseEvent;
+                return;
+            }
+            if (event.isMouseDownEvent()) {
                 framesRemaining = framesAfterMouseEvent;
                 return;
             }
@@ -45,6 +59,19 @@ final class WimGuiButtonPoller<A> {
             return false;
         }
         framesRemaining--;
+        if (hasPendingMouseUp) {
+            float x = pendingMouseUpX;
+            float y = pendingMouseUpY;
+            clearPendingMouseUp();
+            for (int i = 0; i < bindings.size(); i++) {
+                WimGuiButtonBinding<A> binding = bindings.get(i);
+                if (!binding.consumeIfClicked(x, y)) {
+                    continue;
+                }
+                handler.handle(binding.getAction());
+                return true;
+            }
+        }
         for (int i = 0; i < bindings.size(); i++) {
             WimGuiButtonBinding<A> binding = bindings.get(i);
             if (!binding.consumeIfPressed()) {
@@ -61,5 +88,12 @@ final class WimGuiButtonPoller<A> {
             bindings.get(i).clear();
         }
         framesRemaining = 0;
+        clearPendingMouseUp();
+    }
+
+    private void clearPendingMouseUp() {
+        hasPendingMouseUp = false;
+        pendingMouseUpX = 0f;
+        pendingMouseUpY = 0f;
     }
 }

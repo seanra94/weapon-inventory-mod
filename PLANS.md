@@ -50,7 +50,7 @@
 - Earlier popup redraw layering was mitigated by dismissing/reopening the tooltip dialog; the current cleaner foundation supersedes that with in-place custom-panel content replacement.
 - Fixed row action routing around explicit `StockReviewAction` button ids; current custom-panel buttons use a narrow polling fallback because `buttonPressed(...)` alone was not reliable for nested row controls.
 - Optimized that polling fallback so it only scans buttons for a few frames after mouse events instead of every frame.
-- Changed stock categories to start collapsed and render as flat full-width heading rows, so `No stock`, `Insufficient stock`, and `Sufficient stock` are visually peer sections.
+- Changed stock categories to start collapsed and render as flat full-width heading rows, so `No Stock`, `Insufficient Stock`, and `Sufficient Stock` are visually peer sections.
 - Replaced the tooltip-row popup renderer with an explicit custom-panel/list foundation:
   - `StockReviewListModel` builds render-ready row descriptors from the snapshot and state;
   - `StockReviewReviewListModel` builds Review GUI row descriptors so the renderer does not own review-table business logic;
@@ -154,6 +154,15 @@
 
 ## High-Value Future Work
 
+- Current requested stock-review polish/work queue:
+  - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
+  - [x] title-case toggle heading labels, including `Weapon Data`;
+  - [x] fix stock-review toggle headings not opening by routing enabled WIM controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;
+  - [x] add reusable labelText containers for review summary rows such as `Total Cost` and `Credits Available`;
+  - [x] rename sufficiency controls to `-S` / `+S`;
+  - [x] replace buggy disabled-button hover/highlight behavior by rendering disabled action cells as inert WIM shells instead of disabled Starsector buttons;
+  - [x] port the ACG-style color debug menu behind a top-row `Colors` button, with temporary and permanent RGB overrides;
+  - [x] use the repo's dimmed-toggle button path for toggle headings instead of normal toggle visuals.
 - ACG GUI migration is now largely in drawdown:
   - modal composition, modal list panels, scroll math, button semantics, toggle-heading labels, text helpers, host adapters, and live-jar helper validation have reusable `WimGui*` ownership;
   - future WIM screens should start from those helpers rather than copying stock-review renderer code;

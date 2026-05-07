@@ -3,6 +3,7 @@ package weaponinventorymod.gui;
 import com.fs.starfarer.api.ui.Alignment;
 import com.fs.starfarer.api.ui.CustomPanelAPI;
 
+import java.awt.Color;
 import java.util.List;
 
 final class WimGuiListRowRenderer {
@@ -21,13 +22,15 @@ final class WimGuiListRowRenderer {
                               java.awt.Color defaultBorder,
                               List<WimGuiButtonBinding<A>> buttons) {
         float width = parent.getPosition().getWidth() - 2f * horizontalPad;
+        Color rowBorder = row.getIndent() > 0f ? null : row.getBorderColor();
         CustomPanelAPI rowPanel = parent.createCustomPanel(
                 width,
                 rowHeight,
-                new WimGuiPanelPlugin(row.getFillColor(), row.getBorderColor()));
+                new WimGuiPanelPlugin(row.getFillColor(), rowBorder));
         parent.addComponent(rowPanel).inTL(horizontalPad, y);
 
-        float cellBlockWidth = WimGuiRowCell.totalWidth(row.getCells(), buttonGap);
+        float cellGap = row.cellGap(buttonGap);
+        float cellBlockWidth = WimGuiRowCell.totalWidth(row.getCells(), cellGap);
         float labelLeft = row.getIndent();
         float labelWidth = Math.max(minLabelWidth, width - labelLeft - cellBlockWidth - textLeftPad);
         if (row.getMainAction() != null) {
@@ -41,7 +44,7 @@ final class WimGuiListRowRenderer {
             for (int i = 0; i < row.getCells().size(); i++) {
                 WimGuiRowCell<A> cell = row.getCells().get(i);
                 WimGuiControls.addRowCell(rowPanel, x, 0f, actionHeight, cell, buttons, defaultBorder);
-                x += cell.getWidth() + buttonGap;
+                x += cell.getWidth() + cellGap;
             }
         }
     }

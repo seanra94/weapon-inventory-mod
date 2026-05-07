@@ -1,5 +1,7 @@
 package weaponinventorymod.gui;
 
+import com.fs.starfarer.api.ui.Alignment;
+
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,23 +13,30 @@ final class WimGuiRowCell<A> {
     private final Color textColor;
     private final A action;
     private final boolean enabled;
+    private final Alignment alignment;
 
     private WimGuiRowCell(String label,
                           float width,
                           Color fillColor,
                           Color textColor,
                           A action,
-                          boolean enabled) {
+                          boolean enabled,
+                          Alignment alignment) {
         this.label = label;
         this.width = width;
         this.fillColor = fillColor;
         this.textColor = textColor;
         this.action = action;
         this.enabled = enabled;
+        this.alignment = alignment == null ? Alignment.MID : alignment;
     }
 
     static <A> WimGuiRowCell<A> info(String label, float width, Color fillColor, Color textColor) {
-        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true);
+        return info(label, width, fillColor, textColor, Alignment.MID);
+    }
+
+    static <A> WimGuiRowCell<A> info(String label, float width, Color fillColor, Color textColor, Alignment alignment) {
+        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment);
     }
 
     static <A> WimGuiRowCell<A> action(String label,
@@ -37,7 +46,7 @@ final class WimGuiRowCell<A> {
                                        Color disabledTextColor,
                                        A action,
                                        boolean enabled) {
-        return new WimGuiRowCell<A>(label, width, fillColor, enabled ? enabledTextColor : disabledTextColor, action, enabled);
+        return new WimGuiRowCell<A>(label, width, fillColor, enabled ? enabledTextColor : disabledTextColor, action, enabled, Alignment.MID);
     }
 
     static <A> WimGuiRowCell<A> standardAction(String label,
@@ -95,6 +104,10 @@ final class WimGuiRowCell<A> {
 
     boolean isAction() {
         return action != null;
+    }
+
+    Alignment getAlignment() {
+        return alignment;
     }
 
     static float totalWidth(List<? extends WimGuiRowCell<?>> cells, float gap) {

@@ -1,9 +1,9 @@
 package weaponinventorymod.core;
 
 public enum StockCategory {
-    NO_STOCK("No stock"),
-    INSUFFICIENT("Insufficient stock"),
-    SUFFICIENT("Sufficient stock");
+    NO_STOCK("No Stock"),
+    INSUFFICIENT("Insufficient Stock"),
+    SUFFICIENT("Sufficient Stock");
 
     private final String label;
 

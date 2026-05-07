@@ -23,11 +23,12 @@ final class StockReviewReviewListModel {
         addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.BUYING);
         addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.SELLING);
         int netCost = tradeContext.totalCost();
-        String netText = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
-                ? "Total cost: price unavailable"
-                : (netCost < 0 ? "Net credits gained: " + (-netCost) + "cr" : "Total cost: " + netCost + "cr");
-        rows.add(StockReviewListRow.detail(netText));
-        rows.add(StockReviewListRow.detail("Credits available: " + Math.round(tradeContext.credits()) + "cr"));
+        String netLabel = netCost < 0 ? "Net Credits Gained" : "Total Cost";
+        String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
+                ? "Price Unavailable"
+                : (netCost < 0 ? (-netCost) + "cr" : netCost + "cr");
+        rows.add(StockReviewListRow.labelText(netLabel, netValue));
+        rows.add(StockReviewListRow.labelText("Credits Available", Math.round(tradeContext.credits()) + "cr"));
         return rows;
     }
 

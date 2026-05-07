@@ -69,7 +69,7 @@ final class StockReviewListModel {
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
                 planCell(planQuantity),
                 costCell(transactionCost),
-                WimGuiRowCell.standardAction("-N", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
+                WimGuiRowCell.standardAction("-S", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), -sellUntilQuantity), sellUntilQuantity > 0),
                 WimGuiRowCell.standardAction("-10", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), -10), sellRemaining >= 10),
@@ -81,7 +81,7 @@ final class StockReviewListModel {
                 WimGuiRowCell.standardAction("+10", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), 10),
                         tradeContext.affordableBuyQuantity(record, null, 10) >= 10),
-                WimGuiRowCell.standardAction("+N", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.CONFIRM_BUTTON,
+                WimGuiRowCell.standardAction("+S", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.CONFIRM_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), buyUntilQuantity), buyUntilQuantity > 0),
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0));
@@ -118,7 +118,7 @@ final class StockReviewListModel {
     static void addWeaponData(List<WimGuiListRow<StockReviewAction>> rows, WeaponStockRecord record, StockReviewState state) {
         boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
         rows.add(StockReviewListRow.section(
-                WimGuiToggleHeading.label("Weapon data", expanded),
+                WimGuiToggleHeading.label("Weapon Data", expanded),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA)));
         if (!expanded) {
             return;

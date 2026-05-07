@@ -37,6 +37,10 @@ final class WimGuiControls {
                 height,
                 new WimGuiPanelPlugin(shellFill, borderColor));
         parent.addComponent(shell).inTL(x, y);
+        if (!enabled) {
+            addLabel(shell, label, resolvedText, 0f, 0f, width, height, alignment);
+            return new WimGuiButtonShell(shell, null);
+        }
 
         TooltipMakerAPI element = shell.createUIElement(width, height, false);
         element.setButtonFontDefault();
@@ -52,12 +56,6 @@ final class WimGuiControls {
                 0f);
         button.setEnabled(enabled);
         button.setQuickMode(true);
-        if (!enabled) {
-            button.setShowTooltipWhileInactive(false);
-            button.setMouseOverSound(null);
-            button.setButtonPressedSound(null);
-            button.setButtonDisabledPressedSound(null);
-        }
         shell.addUIElement(element).inTL(0f, 0f);
         addLabel(shell, label, resolvedText, 0f, 0f, width, height, alignment);
         return new WimGuiButtonShell(shell, button);
@@ -83,7 +81,7 @@ final class WimGuiControls {
                 spec.colors,
                 spec.borderColor);
         if (spec.enabled && bindings != null) {
-            bindings.add(new WimGuiButtonBinding<A>(shell.button, spec.action));
+            bindings.add(new WimGuiButtonBinding<A>(shell.panel, shell.button, spec.action));
         }
         return shell;
     }
@@ -116,10 +114,23 @@ final class WimGuiControls {
                             Color background,
                             Color textColor,
                             Color borderColor) {
+        addInfoCell(parent, x, y, width, height, label, background, textColor, borderColor, Alignment.MID);
+    }
+
+    static void addInfoCell(CustomPanelAPI parent,
+                            float x,
+                            float y,
+                            float width,
+                            float height,
+                            String label,
+                            Color background,
+                            Color textColor,
+                            Color borderColor,
+                            Alignment alignment) {
         CustomPanelAPI cell = parent.createCustomPanel(width, height,
                 new WimGuiPanelPlugin(background, borderColor));
         parent.addComponent(cell).inTL(x, y);
-        addLabel(cell, label, textColor, 0f, 0f, width, height, Alignment.MID);
+        addLabel(cell, label, textColor, 0f, 0f, width, height, alignment);
     }
 
     static <A> void addRowCell(CustomPanelAPI parent,
@@ -151,7 +162,7 @@ final class WimGuiControls {
                     bindings);
             return;
         }
-        addInfoCell(parent, x, y, cell.getWidth(), height, cell.getLabel(), cell.getFillColor(), cell.getTextColor(), borderColor);
+        addInfoCell(parent, x, y, cell.getWidth(), height, cell.getLabel(), cell.getFillColor(), cell.getTextColor(), borderColor, cell.getAlignment());
     }
 
     static void addLabel(CustomPanelAPI parent,
