@@ -159,8 +159,9 @@
   - expanded the fixed bottom summary to five rows: `Warning`, `Total Cost` / `Total Profit`, `Credits Available`, `Total Purchase Volume`, and `Cargo Space Available`;
   - later condensed the summary to three rows: `Warning`, `Credits Available`, and `Cargo Space Available`, with the credit/cargo changes shown as signed bracketed deltas inside the two value cells;
   - added orange near-limit summary fills for positive total cost at 95%-100% of available credits and purchase volume at 95%-100% of available cargo space, then replaced those with buy-side yellow / sell-side purple delta fills after the summary was condensed.
-  - switched compact GUI credit labels from `cr` to Starsector's cent-sign glyph (`¢`, bundled font char id 162);
+  - switched compact GUI credit labels from `cr` to Starsector's cent-sign glyph (`\u00a2`, bundled font char id 162);
   - added a fixed bottom `Warning` row above the credit/cargo summary rows, with persistent most-recent trade warnings for insufficient cargo capacity, insufficient credits, low post-trade credit balance, and low post-trade cargo capacity.
+  - extracted trade-warning policy to `StockReviewTradeWarnings`, keeping warning text, initial credit/cargo baselines, low-balance thresholds, and purchase-all partial-fill warning detection out of `StockReviewPanelPlugin`.
 - Corrected nested weapon-row sizing:
   - `Weapon Data` uses one indent and loses one indent-width from its parent weapon heading width;
   - Weapon Data rows use two indents and lose two indent-widths from the parent weapon heading width;

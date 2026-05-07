@@ -189,10 +189,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.tradeWarning = tradeWarning == null || tradeWarning.isEmpty() ? "None" : tradeWarning;
     }
 
-    public void clearTradeWarning() {
-        tradeWarning = "None";
-    }
-
     public float getInitialCredits() {
         return initialCredits;
     }

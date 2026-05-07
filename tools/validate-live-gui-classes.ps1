@@ -46,6 +46,7 @@ $requiredClasses = @(
     "weaponinventorymod/gui/StockReviewFilters.class",
     "weaponinventorymod/gui/StockReviewReviewListModel.class",
     "weaponinventorymod/gui/StockReviewTradeGroup.class",
+    "weaponinventorymod/gui/StockReviewTradeWarnings.class",
     "weaponinventorymod/core/WeaponStockSnapshotBuilder`$CostComparator.class",
     "weaponinventorymod/core/StockPurchaseService`$PurchaseSourcePriceComparator.class"
 )
