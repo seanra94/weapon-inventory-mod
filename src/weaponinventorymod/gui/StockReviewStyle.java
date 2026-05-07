@@ -60,7 +60,6 @@ final class StockReviewStyle {
     static final float LIST_HEIGHT = MODAL.bodyHeight();
     static final float LIST_WIDTH = MODAL.contentWidth();
     static final float REVIEW_LIST_WIDTH = LIST_WIDTH - TRADE_CONTROL_BLOCK_WIDTH;
-    static final float LABEL_TEXT_CELL_WIDTH = (REVIEW_LIST_WIDTH - 2f * SMALL_PAD) / 2f;
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
     // equal idle colors because Starsector darkens idle buttons differently.
     static Color DEFAULT_TEXT = WimGuiStyle.DEFAULT_TEXT;

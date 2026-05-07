@@ -109,10 +109,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
         return includeCurrentMarketStorage;
     }
 
-    public void toggleCurrentMarketStorage() {
-        includeCurrentMarketStorage = !includeCurrentMarketStorage;
-    }
-
     public boolean isIncludeBlackMarket() {
         return includeBlackMarket;
     }

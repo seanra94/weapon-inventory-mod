@@ -120,12 +120,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
-        if (StockReviewAction.Type.TOGGLE_CURRENT_MARKET_STORAGE.equals(type)) {
-            state.toggleCurrentMarketStorage();
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
         if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
             state.toggleBlackMarket();
             rebuildSnapshot();

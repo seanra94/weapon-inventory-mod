@@ -25,8 +25,6 @@ $requiredClasses = @(
     "weaponinventorymod/gui/WimGuiListRowRenderer.class",
     "weaponinventorymod/gui/WimGuiModalActionRow.class",
     "weaponinventorymod/gui/WimGuiModalInput.class",
-    "weaponinventorymod/gui/WimGuiModalListLayout`$ExtraGapProvider.class",
-    "weaponinventorymod/gui/WimGuiModalListGapAdapter.class",
     "weaponinventorymod/gui/WimGuiModalListRenderer.class",
     "weaponinventorymod/gui/WimGuiModalListRenderer`$ExtraGapProvider.class",
     "weaponinventorymod/gui/WimGuiModalListRenderer`$ScrollRowFactory.class",
@@ -49,6 +47,8 @@ $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewRowCells.class",
     "weaponinventorymod/gui/StockReviewRowRenderer.class",
     "weaponinventorymod/gui/StockReviewText.class",
+    "weaponinventorymod/gui/WimGuiModalListLayout`$ExtraGapProvider.class",
+    "weaponinventorymod/gui/WimGuiModalListGapAdapter.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$ColorSetter.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$1.class"
 )

@@ -3,10 +3,6 @@ package weaponinventorymod.gui;
 import java.util.List;
 
 final class WimGuiModalListLayout<T> {
-    interface ExtraGapProvider<T> {
-        float extraGapBefore(T item);
-    }
-
     final WimGuiScrollSlice<T> scrollSlice;
     final float panelTop;
     final float panelHeight;
@@ -34,8 +30,7 @@ final class WimGuiModalListLayout<T> {
                                                 float bodyTop,
                                                 float bodyHeight,
                                                 float panelWidth,
-                                                WimGuiModalLayout modal,
-                                                ExtraGapProvider<T> extraGapProvider) {
+                                                WimGuiModalLayout modal) {
         float availablePanelHeight = Math.max(modal.rowHeight, bodyHeight);
         float availableInnerHeight = Math.max(modal.rowHeight, availablePanelHeight - 2f * modal.listInset);
         WimGuiScrollSlice<T> slice = WimGuiScroll.verticalSlice(
@@ -48,16 +43,5 @@ final class WimGuiModalListLayout<T> {
         float panelTop = bodyTop;
         float innerWidth = Math.max(1f, panelWidth - 2f * modal.listInset);
         return new WimGuiModalListLayout<T>(slice, panelTop, renderedPanelHeight, innerWidth, slice.maxOffset);
-    }
-
-    private static <T> float visibleExtraGapHeight(List<T> visibleRows, ExtraGapProvider<T> extraGapProvider) {
-        if (visibleRows == null || extraGapProvider == null) {
-            return 0f;
-        }
-        float result = 0f;
-        for (int i = 0; i < visibleRows.size(); i++) {
-            result += Math.max(0f, extraGapProvider.extraGapBefore(visibleRows.get(i)));
-        }
-        return result;
     }
 }

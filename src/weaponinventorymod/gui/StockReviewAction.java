@@ -13,7 +13,6 @@ final class StockReviewAction {
         RESET_PLAN,
         CYCLE_DISPLAY_MODE,
         CYCLE_SORT_MODE,
-        TOGGLE_CURRENT_MARKET_STORAGE,
         TOGGLE_BLACK_MARKET,
         SCROLL_LIST,
         PURCHASE_ALL_UNTIL_SUFFICIENT,
@@ -97,10 +96,6 @@ final class StockReviewAction {
 
     static StockReviewAction cycleSortMode() {
         return new StockReviewAction(Type.CYCLE_SORT_MODE, null, null, null, null, null, 0);
-    }
-
-    static StockReviewAction toggleCurrentMarketStorage() {
-        return new StockReviewAction(Type.TOGGLE_CURRENT_MARKET_STORAGE, null, null, null, null, null, 0);
     }
 
     static StockReviewAction toggleBlackMarket() {

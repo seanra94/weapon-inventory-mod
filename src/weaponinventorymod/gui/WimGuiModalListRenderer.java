@@ -29,8 +29,7 @@ final class WimGuiModalListRenderer {
                 spec.panelTop,
                 spec.panelHeight,
                 spec.panelWidth,
-                spec.modal,
-                new WimGuiModalListGapAdapter<A>(extraGapProvider));
+                spec.modal);
         WimGuiScrollSlice<WimGuiListRow<A>> slice = layout.scrollSlice;
         CustomPanelAPI listPanel = root.createCustomPanel(
                 spec.panelWidth,
