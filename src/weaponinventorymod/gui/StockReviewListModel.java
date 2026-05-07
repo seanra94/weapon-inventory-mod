@@ -106,9 +106,9 @@ final class StockReviewListModel {
 
     private static WimGuiRowCell<StockReviewAction> unitPriceCell(int unitPrice) {
         if (unitPrice == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            return WimGuiRowCell.info("Price: ?", StockReviewStyle.COST_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
+            return WimGuiRowCell.info("Price: ?", StockReviewStyle.PRICE_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
         }
-        return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(unitPrice), StockReviewStyle.COST_CELL_WIDTH,
+        return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(unitPrice), StockReviewStyle.PRICE_CELL_WIDTH,
                 StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
     }
 

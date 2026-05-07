@@ -365,7 +365,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         float credits = tradeContext.credits();
         if (estimatedCost > 0 && credits + 0.01f < estimatedCost) {
-            reportMessage("Need " + estimatedCost + " credits for these trades.");
+            reportMessage("Need " + StockReviewFormat.credits(estimatedCost) + " for these trades.");
             rebuildContent();
             return;
         }

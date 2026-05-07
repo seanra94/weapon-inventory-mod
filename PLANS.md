@@ -113,12 +113,15 @@
   - local-market WIM buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
   - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
   - virtual global-market trades remain WIM-only and do not report to a real submarket.
+- Cleaned up the `Cost` to `Price` terminology migration:
+  - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
+  - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
 - Added explicit patch verification:
   - `tools\validate-cargo-stack-view-patch.ps1` compiles the ASM patcher and runs `Verify` mode against the active `starfarer_obf.jar`;
   - the report checks target class/method presence, WEAPONS guard, embedded helper class, exact total-helper call counts, badge sprite render count, and known stale patch patterns.
 - Implemented the Buy/Review GUI performance and layout pass:
   - weapon-name toggle headings plus `Storage`, unit `Price`, and planned trade cells use gray/semantic backgrounds;
-  - stock/trade/cost cells were widened, with the weapon-name area shrinking to accommodate the richer table;
+  - stock/trade/price cells were widened, with the weapon-name area shrinking to accommodate the richer table;
   - a cached `StockReviewTradeContext` now owns pending totals, per-weapon cost, cargo-space delta, credits, and affordability checks for render and controller paths;
   - `StockReviewQuoteBook` caches sorted seller lists, line quotes, seller allocations, sell prices, and cargo-space estimates so the Buy/Review GUI does not repeatedly copy/sort market stocks or scan player cargo while rendering;
   - seller-row `+1` / dynamic buy-step enabled states now share the same affordability logic as top-level weapon-row buttons;

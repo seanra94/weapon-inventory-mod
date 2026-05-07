@@ -128,8 +128,8 @@ public final class WeaponStockSnapshotBuilder {
         if (StockSortMode.NAME.equals(sortMode)) {
             return NameComparator.INSTANCE;
         }
-        if (StockSortMode.COST.equals(sortMode)) {
-            return CostComparator.INSTANCE;
+        if (StockSortMode.PRICE.equals(sortMode)) {
+            return PriceComparator.INSTANCE;
         }
         return NeedComparator.INSTANCE;
     }
@@ -139,7 +139,7 @@ public final class WeaponStockSnapshotBuilder {
 
         @Override
         public int compare(WeaponStockRecord left, WeaponStockRecord right) {
-            return compareByNeedCostName(left, right);
+            return compareByNeedPriceName(left, right);
         }
     }
 
@@ -156,16 +156,16 @@ public final class WeaponStockSnapshotBuilder {
             if (result != 0) {
                 return result;
             }
-            return compareByCost(left, right);
+            return compareByPrice(left, right);
         }
     }
 
-    private static final class CostComparator implements Comparator<WeaponStockRecord> {
-        static final CostComparator INSTANCE = new CostComparator();
+    private static final class PriceComparator implements Comparator<WeaponStockRecord> {
+        static final PriceComparator INSTANCE = new PriceComparator();
 
         @Override
         public int compare(WeaponStockRecord left, WeaponStockRecord right) {
-            int result = compareByCost(left, right);
+            int result = compareByPrice(left, right);
             if (result != 0) {
                 return result;
             }
@@ -177,12 +177,12 @@ public final class WeaponStockSnapshotBuilder {
         }
     }
 
-    private static int compareByNeedCostName(WeaponStockRecord left, WeaponStockRecord right) {
+    private static int compareByNeedPriceName(WeaponStockRecord left, WeaponStockRecord right) {
         int result = compareByNeed(left, right);
         if (result != 0) {
             return result;
         }
-        result = compareByCost(left, right);
+        result = compareByPrice(left, right);
         if (result != 0) {
             return result;
         }
@@ -193,7 +193,7 @@ public final class WeaponStockSnapshotBuilder {
         return Integer.compare(left.getStoredOutsideInventoryCount(), right.getStoredOutsideInventoryCount());
     }
 
-    private static int compareByCost(WeaponStockRecord left, WeaponStockRecord right) {
+    private static int compareByPrice(WeaponStockRecord left, WeaponStockRecord right) {
         return Integer.compare(left.getCheapestPurchasableUnitPrice(), right.getCheapestPurchasableUnitPrice());
     }
 }

@@ -3,7 +3,7 @@ package weaponinventorymod.core;
 public enum StockSortMode {
     NEED("Need"),
     NAME("Name"),
-    COST("Price");
+    PRICE("Price");
 
     private final String label;
 
@@ -28,6 +28,9 @@ public enum StockSortMode {
         String normalized = value.trim().toUpperCase().replace('-', '_').replace(' ', '_');
         if ("PURCHASABLE".equals(normalized) || "FOR_SALE".equals(normalized) || "OWNED".equals(normalized)) {
             return NEED;
+        }
+        if ("COST".equals(normalized)) {
+            return PRICE;
         }
         for (StockSortMode mode : values()) {
             if (mode.name().equals(normalized)) {

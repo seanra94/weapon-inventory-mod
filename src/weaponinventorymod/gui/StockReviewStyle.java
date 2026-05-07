@@ -19,15 +19,15 @@ final class StockReviewStyle {
     static final float STOCK_CELL_WIDTH = 118f;
     static final float INVENTORY_CELL_WIDTH = 102f;
     static final float PLAN_CELL_WIDTH = 170f;
-    static final float COST_CELL_WIDTH = 104f;
+    static final float PRICE_CELL_WIDTH = 104f;
     static final float REVIEW_MARKET_CELL_WIDTH = 180f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
     static final float SUFFICIENT_BUTTON_WIDTH = 82f;
     static final float RESET_BUTTON_WIDTH = 58f;
     static final float TRADE_CONTROL_BLOCK_WIDTH = 4f * TRADE_STEP_BUTTON_WIDTH + SUFFICIENT_BUTTON_WIDTH + RESET_BUTTON_WIDTH + 5f * BUTTON_GAP;
-    static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + COST_CELL_WIDTH
+    static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + PRICE_CELL_WIDTH
             + PLAN_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 9f * BUTTON_GAP;
-    static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + COST_CELL_WIDTH
+    static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + PRICE_CELL_WIDTH
             + PLAN_CELL_WIDTH + 2f * BUTTON_GAP;
     static final float DEBUG_VALUE_WIDTH = 430f;
     static final float DEBUG_SAMPLE_WIDTH = 130f;
@@ -102,7 +102,6 @@ final class StockReviewStyle {
     static Color PLAN_POSITIVE = CONFIRM_BUTTON;
     static Color PLAN_NEGATIVE = CANCEL_BUTTON;
     static Color PLAN_ZERO = LOAD_BUTTON;
-    static Color COST_BUTTON = CANCEL_BUTTON;
     static Color PROFIT_BUTTON = CONFIRM_BUTTON;
     static Color SCROLL = DEFAULT_TEXT;
     static Color TEXT = WHITE_TEXT;
@@ -180,7 +179,6 @@ final class StockReviewStyle {
         PLAN_POSITIVE = CONFIRM_BUTTON;
         PLAN_NEGATIVE = CANCEL_BUTTON;
         PLAN_ZERO = LOAD_BUTTON;
-        COST_BUTTON = CANCEL_BUTTON;
         PROFIT_BUTTON = CONFIRM_BUTTON;
         SCROLL = DEFAULT_TEXT;
         TEXT = WHITE_TEXT;

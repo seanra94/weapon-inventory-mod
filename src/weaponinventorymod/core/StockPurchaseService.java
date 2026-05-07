@@ -83,7 +83,7 @@ public final class StockPurchaseService {
         target.cargo.updateSpaceUsed();
         reportWeaponTransaction(market, target.submarket, weaponId, quantity, target.unitPrice, false);
 
-        String message = "Sold " + quantity + " " + weaponDisplayName(weaponId) + " for " + credits(credits) + ".";
+        String message = "Sold " + quantity + " " + weaponDisplayName(weaponId) + " for " + CreditFormat.creditsLong(credits) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -123,7 +123,7 @@ public final class StockPurchaseService {
         playerCargo.updateSpaceUsed();
 
         String message = "Sold " + quantity + " " + weaponDisplayName(weaponId)
-                + " to the global weapon market for " + credits(credits) + ".";
+                + " to the global weapon market for " + CreditFormat.creditsLong(credits) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -156,7 +156,7 @@ public final class StockPurchaseService {
         int totalCost = unitPrice * requestedQuantity;
         float totalSpace = Math.max(1f, unitCargoSpace) * requestedQuantity;
         if (playerCargo.getCredits().get() + 0.01f < totalCost) {
-            return PurchaseResult.failure("Need " + credits(totalCost) + " for this order.");
+            return PurchaseResult.failure("Need " + CreditFormat.creditsLong(totalCost) + " for this order.");
         }
         if (playerCargo.getSpaceLeft() + 0.01f < totalSpace) {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
@@ -169,7 +169,7 @@ public final class StockPurchaseService {
         playerCargo.updateSpaceUsed();
 
         String message = "Bought " + requestedQuantity + " " + weaponDisplayName(weaponId)
-                + " from the global weapon market for " + credits(totalCost) + ".";
+                + " from the global weapon market for " + CreditFormat.creditsLong(totalCost) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -228,7 +228,7 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("No purchasable stock is available.");
         }
         if (playerCargo.getCredits().get() + 0.01f < totalCost) {
-            return PurchaseResult.failure("Need " + credits(totalCost) + " for this order.");
+            return PurchaseResult.failure("Need " + CreditFormat.creditsLong(totalCost) + " for this order.");
         }
         if (playerCargo.getSpaceLeft() + 0.01f < totalSpace) {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
@@ -247,7 +247,7 @@ public final class StockPurchaseService {
         playerCargo.sort();
         playerCargo.updateSpaceUsed();
 
-        String message = "Bought " + totalQuantity + " " + weaponDisplayName(weaponId) + " for " + credits(totalCost) + ".";
+        String message = "Bought " + totalQuantity + " " + weaponDisplayName(weaponId) + " for " + CreditFormat.creditsLong(totalCost) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -413,20 +413,6 @@ public final class StockPurchaseService {
         return Global.getSector() == null || Global.getSector().getClock() == null
                 ? 0L
                 : Global.getSector().getClock().getTimestamp();
-    }
-
-    private static String credits(int credits) {
-        String digits = String.valueOf(Math.abs(credits));
-        StringBuilder result = new StringBuilder();
-        int firstGroup = digits.length() % 3;
-        if (firstGroup == 0) {
-            firstGroup = 3;
-        }
-        result.append(digits.substring(0, firstGroup));
-        for (int i = firstGroup; i < digits.length(); i += 3) {
-            result.append(',').append(digits.substring(i, i + 3));
-        }
-        return (credits < 0 ? "-" : "") + result.toString() + " credits";
     }
 
     private static final class PurchaseSource {
