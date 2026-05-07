@@ -90,6 +90,7 @@
 - Added `tools\validate-live-gui-classes.ps1` after a runtime `NoClassDefFoundError` exposed stale live-jar/classloader risk. It verifies required extracted GUI helper classes exist in both repo and live jars and that repo/live SHA-256 hashes match.
 - Expanded `tools\validate-live-gui-classes.ps1` to reject stale removed GUI helper classes as well as missing required helpers, so future migrations catch old adapter classes reappearing in jars.
 - Added explicit live-jar checks for reusable nested helper interfaces such as `WimGuiButtonPoller.ActionHandler` and `WimGuiModalListLayout.ExtraGapProvider`, keeping intentional nested classes covered without allowing anonymous GUI companion drift.
+- Restored `WeaponStockSnapshotBuilder$CostComparator` as a compatibility shim delegating to the newer `PriceComparator`, after runtime sorting on the global market showed Starsector could keep stale outer-class references across hot-copied jars.
 - Ported the accepted ACG GUI palette into `StockReviewStyle` and applied it to the stock review popup:
   - top stock category headings use red/yellow/green fills with white text;
   - nested toggle headings use the dark-gray collapsible heading color;

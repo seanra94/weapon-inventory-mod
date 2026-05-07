@@ -177,6 +177,20 @@ public final class WeaponStockSnapshotBuilder {
         }
     }
 
+    /**
+     * Compatibility shim for games that hot-loaded an older outer class while a
+     * newer jar was copied underneath it. Remove only after this class has been
+     * in public builds long enough that stale runtime references are unlikely.
+     */
+    private static final class CostComparator implements Comparator<WeaponStockRecord> {
+        static final CostComparator INSTANCE = new CostComparator();
+
+        @Override
+        public int compare(WeaponStockRecord left, WeaponStockRecord right) {
+            return PriceComparator.INSTANCE.compare(left, right);
+        }
+    }
+
     private static int compareByNeedPriceName(WeaponStockRecord left, WeaponStockRecord right) {
         int result = compareByNeed(left, right);
         if (result != 0) {

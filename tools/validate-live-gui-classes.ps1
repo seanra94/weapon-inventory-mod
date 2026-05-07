@@ -43,7 +43,8 @@ $requiredClasses = @(
     "weaponinventorymod/gui/StockReviewFilter.class",
     "weaponinventorymod/gui/StockReviewFilterGroup.class",
     "weaponinventorymod/gui/StockReviewFilterListModel.class",
-    "weaponinventorymod/gui/StockReviewFilters.class"
+    "weaponinventorymod/gui/StockReviewFilters.class",
+    "weaponinventorymod/core/WeaponStockSnapshotBuilder`$CostComparator.class"
 )
 $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewButtonBinding.class",
