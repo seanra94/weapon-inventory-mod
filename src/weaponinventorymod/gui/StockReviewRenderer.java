@@ -22,7 +22,9 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                             Color colorDebugDraft,
                             boolean colorDebugPersistent,
                             List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        renderHeader(root, snapshot, state, reviewMode, filterMode, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
+        if (filterMode || colorDebugMode) {
+            renderHeader(root, snapshot, state, reviewMode, filterMode, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
+        }
         if (!reviewMode && !filterMode && !colorDebugMode) {
             renderActionRow(root, snapshot, state, buttons);
         }
@@ -70,8 +72,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         WimGuiModalActionRow.add(
                 root,
                 StockReviewStyle.MODAL,
-                StockReviewStyle.HEADER_HEIGHT,
-                StockReviewStyle.SMALL_PAD,
+                0f,
+                0f,
                 StockReviewStyle.ACTION_BUTTON_HEIGHT,
                 StockReviewStyle.BUTTON_GAP,
                 WimGuiButtonSpecs.of(
@@ -115,32 +117,98 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
                 ? "Price Unavailable"
                 : StockReviewFormat.credits(netCost);
-        Color netFill = netCost < 0
-                ? StockReviewStyle.CONFIRM_BUTTON
-                : netCost > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND;
+        Color netFill = costValueFill(netCost, tradeContext.credits());
+        float purchaseVolume = Math.max(0f, tradeContext.totalCargoSpaceDelta());
         float width = reviewMode ? StockReviewStyle.REVIEW_LIST_WIDTH : StockReviewStyle.LIST_WIDTH;
-        WimGuiControls.addLabelTextRow(
+        float rowY = StockReviewStyle.SUMMARY_TOP;
+        addSummaryRow(
                 root,
-                StockReviewStyle.PAD,
-                StockReviewStyle.SUMMARY_TOP,
                 width,
-                StockReviewStyle.ROW_HEIGHT,
+                rowY,
                 netLabel,
                 netValue,
-                netFill,
-                StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.TEXT);
+                netFill);
+        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
+        addSummaryRow(
+                root,
+                width,
+                rowY,
+                "Credits Available",
+                StockReviewFormat.credits(Math.round(tradeContext.credits())),
+                StockReviewStyle.CELL_BACKGROUND);
+        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
+        addSummaryRow(
+                root,
+                width,
+                rowY,
+                "Total Purchase Volume",
+                formatCargo(purchaseVolume),
+                StockReviewStyle.CELL_BACKGROUND);
+        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
+        addSummaryRow(
+                root,
+                width,
+                rowY,
+                "Cargo Space Available",
+                formatCargo(tradeContext.cargoSpaceLeft()),
+                cargoValueFill(purchaseVolume, tradeContext.cargoSpaceLeft()));
+    }
+
+    private void addSummaryRow(CustomPanelAPI root,
+                               float width,
+                               float y,
+                               String label,
+                               String value,
+                               Color valueFill) {
         WimGuiControls.addLabelTextRow(
                 root,
                 StockReviewStyle.PAD,
-                StockReviewStyle.SUMMARY_TOP + StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP,
+                y,
                 width,
                 StockReviewStyle.ROW_HEIGHT,
-                "Credits Available",
-                StockReviewFormat.credits(Math.round(tradeContext.credits())),
-                StockReviewStyle.CELL_BACKGROUND,
+                label,
+                value,
+                valueFill,
                 StockReviewStyle.ROW_BORDER,
                 StockReviewStyle.TEXT);
+    }
+
+    private static Color costValueFill(int netCost, float creditsAvailable) {
+        if (netCost < 0) {
+            return StockReviewStyle.CONFIRM_BUTTON;
+        }
+        if (netCost <= 0) {
+            return StockReviewStyle.CELL_BACKGROUND;
+        }
+        if (isNearLimit(netCost, creditsAvailable)) {
+            return StockReviewStyle.PRESET_SCOPE_BUTTON;
+        }
+        return StockReviewStyle.CANCEL_BUTTON;
+    }
+
+    private static Color cargoValueFill(float purchaseVolume, float cargoSpaceAvailable) {
+        if (purchaseVolume <= 0f) {
+            return StockReviewStyle.CELL_BACKGROUND;
+        }
+        if (purchaseVolume > cargoSpaceAvailable) {
+            return StockReviewStyle.CANCEL_BUTTON;
+        }
+        if (isNearLimit(purchaseVolume, cargoSpaceAvailable)) {
+            return StockReviewStyle.PRESET_SCOPE_BUTTON;
+        }
+        return StockReviewStyle.CELL_BACKGROUND;
+    }
+
+    private static boolean isNearLimit(float value, float limit) {
+        return limit > 0f && value >= limit * 0.95f && value <= limit;
+    }
+
+    private static String formatCargo(float value) {
+        float rounded = Math.round(value);
+        if (Math.abs(value - rounded) < 0.05f) {
+            return Integer.toString(Math.round(rounded));
+        }
+        return String.format(java.util.Locale.US, "%.1f", value);
     }
 
     private WimGuiListBounds renderColorDebugList(CustomPanelAPI root,

@@ -36,7 +36,9 @@ final class StockReviewStyle {
     static final float ROW_GAP = 3f;
     static final float CATEGORY_TOP_GAP = ROW_GAP;
     static final float SUMMARY_ROW_GAP = 4f;
-    static final float SUMMARY_HEIGHT = 2f * ROW_HEIGHT + SUMMARY_ROW_GAP;
+    static final int SUMMARY_ROW_COUNT = 4;
+    static final float SUMMARY_HEIGHT = SUMMARY_ROW_COUNT * ROW_HEIGHT
+            + (SUMMARY_ROW_COUNT - 1) * SUMMARY_ROW_GAP;
     static final float SUMMARY_TOP = HEIGHT - PAD - ACTION_BUTTON_HEIGHT - SMALL_PAD - SUMMARY_HEIGHT;
     static final float TEXT_TOP_PAD = WimGuiStyle.TEXT_TOP_PAD;
     static final float TEXT_LEFT_PAD = WimGuiStyle.TEXT_LEFT_PAD;
@@ -60,8 +62,10 @@ final class StockReviewStyle {
             SMALL_PAD);
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
-    static final float REVIEW_LIST_TOP = PAD + HEADER_HEIGHT + SMALL_PAD;
-    static final float TRADE_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - LIST_TOP - SMALL_PAD);
+    static final float TRADE_ACTION_ROW_TOP = PAD;
+    static final float TRADE_LIST_TOP = TRADE_ACTION_ROW_TOP + ACTION_ROW_HEIGHT + SMALL_PAD;
+    static final float REVIEW_LIST_TOP = PAD;
+    static final float TRADE_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - TRADE_LIST_TOP - SMALL_PAD);
     static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - REVIEW_LIST_TOP - SMALL_PAD);
     static final float LIST_WIDTH = MODAL.contentWidth();
     static final float FILTER_LIST_WIDTH = LIST_WIDTH / 4f;
@@ -129,7 +133,7 @@ final class StockReviewStyle {
     static WimGuiModalListSpec TRADE_LIST = new WimGuiModalListSpec(
             MODAL,
             PAD,
-            LIST_TOP,
+            TRADE_LIST_TOP,
             LIST_WIDTH,
             TRADE_LIST_HEIGHT,
             ROW_HEIGHT,
@@ -239,7 +243,7 @@ final class StockReviewStyle {
         TRADE_LIST = new WimGuiModalListSpec(
                 MODAL,
                 PAD,
-                LIST_TOP,
+                TRADE_LIST_TOP,
                 LIST_WIDTH,
                 TRADE_LIST_HEIGHT,
                 ROW_HEIGHT,
@@ -287,6 +291,6 @@ final class StockReviewStyle {
     }
 
     static WimGuiListBounds initialListBounds() {
-        return new WimGuiListBounds(0, PAD, LIST_TOP, LIST_WIDTH, TRADE_LIST_HEIGHT);
+        return new WimGuiListBounds(0, PAD, TRADE_LIST_TOP, LIST_WIDTH, TRADE_LIST_HEIGHT);
     }
 }

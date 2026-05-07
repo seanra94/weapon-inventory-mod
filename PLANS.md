@@ -155,6 +155,9 @@
   - widened the `Storage` cell and left-aligned its text with standard internal padding;
   - moved `Total Cost` / `Total Profit` and `Credits Available` out of the scrollable list into fixed bottom summary rows above the footer buttons;
   - summary value cells now use red/green backgrounds for net cost/profit instead of colored text.
+  - removed the Make Trades / Review Trades title-status header boxes to give the main trade panels more weapon-row space;
+  - expanded the fixed bottom summary to four rows: `Total Cost` / `Total Profit`, `Credits Available`, `Total Purchase Volume`, and `Cargo Space Available`;
+  - added orange near-limit summary fills for positive total cost at 95%-100% of available credits and purchase volume at 95%-100% of available cargo space.
 - Corrected nested weapon-row sizing:
   - `Weapon Data` uses one indent and loses one indent-width from its parent weapon heading width;
   - Weapon Data rows use two indents and lose two indent-widths from the parent weapon heading width;
