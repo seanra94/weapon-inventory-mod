@@ -34,6 +34,9 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 : reviewMode
                 ? renderReviewList(root, snapshot, pendingPurchases, state, tradeContext, buttons)
                 : renderStockList(root, snapshot, state, tradeContext, buttons);
+        if (!filterMode && !colorDebugMode) {
+            renderTradeSummary(root, tradeContext, reviewMode);
+        }
         renderFooter(root, tradeContext, pendingPurchases, reviewMode, filterMode, colorDebugMode, colorDebugPersistent, buttons);
         return result;
     }
@@ -91,7 +94,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                              StockReviewTradeContext tradeContext,
                                              List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         List<WimGuiListRow<StockReviewAction>> rows = StockReviewListModel.build(snapshot, state, tradeContext);
-        return renderRows(root, rows, state, StockReviewStyle.LIST, buttons);
+        return renderRows(root, rows, state, StockReviewStyle.TRADE_LIST, buttons);
     }
 
     private WimGuiListBounds renderReviewList(CustomPanelAPI root,
@@ -102,6 +105,42 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                               List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         List<WimGuiListRow<StockReviewAction>> rows = StockReviewReviewListModel.build(snapshot, pendingPurchases, state, tradeContext);
         return renderRows(root, rows, state, StockReviewStyle.REVIEW_LIST, buttons);
+    }
+
+    private void renderTradeSummary(CustomPanelAPI root,
+                                    StockReviewTradeContext tradeContext,
+                                    boolean reviewMode) {
+        int netCost = tradeContext.totalCost();
+        String netLabel = netCost < 0 ? "Total Profit" : "Total Cost";
+        String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
+                ? "Price Unavailable"
+                : StockReviewFormat.credits(netCost);
+        Color netFill = netCost < 0
+                ? StockReviewStyle.CONFIRM_BUTTON
+                : netCost > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND;
+        float width = reviewMode ? StockReviewStyle.REVIEW_LIST_WIDTH : StockReviewStyle.LIST_WIDTH;
+        WimGuiControls.addLabelTextRow(
+                root,
+                StockReviewStyle.PAD,
+                StockReviewStyle.SUMMARY_TOP,
+                width,
+                StockReviewStyle.ROW_HEIGHT,
+                netLabel,
+                netValue,
+                netFill,
+                StockReviewStyle.ROW_BORDER,
+                StockReviewStyle.TEXT);
+        WimGuiControls.addLabelTextRow(
+                root,
+                StockReviewStyle.PAD,
+                StockReviewStyle.SUMMARY_TOP + StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP,
+                width,
+                StockReviewStyle.ROW_HEIGHT,
+                "Credits Available",
+                StockReviewFormat.credits(Math.round(tradeContext.credits())),
+                StockReviewStyle.CELL_BACKGROUND,
+                StockReviewStyle.ROW_BORDER,
+                StockReviewStyle.TEXT);
     }
 
     private WimGuiListBounds renderColorDebugList(CustomPanelAPI root,

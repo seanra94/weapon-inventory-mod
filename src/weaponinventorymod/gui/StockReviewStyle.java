@@ -17,7 +17,7 @@ final class StockReviewStyle {
     static final float COLOR_BUTTON_WIDTH = 82f;
     static final float BUTTON_GAP = 5f;
     static final float SELLER_BUY_BUTTON_WIDTH = 54f;
-    static final float STOCK_CELL_WIDTH = 118f;
+    static final float STOCK_CELL_WIDTH = 136f;
     static final float INVENTORY_CELL_WIDTH = 102f;
     static final float PLAN_CELL_WIDTH = 170f;
     static final float PRICE_CELL_WIDTH = 104f;
@@ -37,6 +37,9 @@ final class StockReviewStyle {
     static final float ROW_HEIGHT = 22f;
     static final float ROW_GAP = 3f;
     static final float CATEGORY_TOP_GAP = ROW_GAP;
+    static final float SUMMARY_ROW_GAP = 4f;
+    static final float SUMMARY_HEIGHT = 2f * ROW_HEIGHT + SUMMARY_ROW_GAP;
+    static final float SUMMARY_TOP = HEIGHT - PAD - ACTION_BUTTON_HEIGHT - SMALL_PAD - SUMMARY_HEIGHT;
     static final float TEXT_TOP_PAD = WimGuiStyle.TEXT_TOP_PAD;
     static final float TEXT_LEFT_PAD = WimGuiStyle.TEXT_LEFT_PAD;
     static final float WEAPON_INDENT = 18f;
@@ -61,7 +64,8 @@ final class StockReviewStyle {
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
     static final float REVIEW_LIST_TOP = PAD + HEADER_HEIGHT + SMALL_PAD;
-    static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, HEIGHT - REVIEW_LIST_TOP - PAD - FOOTER_HEIGHT - PAD);
+    static final float TRADE_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - LIST_TOP - SMALL_PAD);
+    static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - REVIEW_LIST_TOP - SMALL_PAD);
     static final float LIST_WIDTH = MODAL.contentWidth();
     static final float REVIEW_LIST_WIDTH = LIST_WIDTH - TRADE_CONTROL_BLOCK_WIDTH;
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
@@ -114,6 +118,22 @@ final class StockReviewStyle {
             LIST_TOP,
             LIST_WIDTH,
             LIST_HEIGHT,
+            ROW_HEIGHT,
+            ACTION_BUTTON_HEIGHT,
+            ROW_GAP,
+            SMALL_PAD,
+            BUTTON_GAP,
+            TEXT_LEFT_PAD,
+            80f,
+            PANEL_BACKGROUND,
+            PANEL_BORDER,
+            ROW_BORDER);
+    static WimGuiModalListSpec TRADE_LIST = new WimGuiModalListSpec(
+            MODAL,
+            PAD,
+            LIST_TOP,
+            LIST_WIDTH,
+            TRADE_LIST_HEIGHT,
             ROW_HEIGHT,
             ACTION_BUTTON_HEIGHT,
             ROW_GAP,
@@ -202,6 +222,22 @@ final class StockReviewStyle {
                 PANEL_BACKGROUND,
                 PANEL_BORDER,
                 ROW_BORDER);
+        TRADE_LIST = new WimGuiModalListSpec(
+                MODAL,
+                PAD,
+                LIST_TOP,
+                LIST_WIDTH,
+                TRADE_LIST_HEIGHT,
+                ROW_HEIGHT,
+                ACTION_BUTTON_HEIGHT,
+                ROW_GAP,
+                SMALL_PAD,
+                BUTTON_GAP,
+                TEXT_LEFT_PAD,
+                80f,
+                PANEL_BACKGROUND,
+                PANEL_BORDER,
+                ROW_BORDER);
         REVIEW_LIST = new WimGuiModalListSpec(
                 MODAL,
                 PAD,
@@ -221,6 +257,6 @@ final class StockReviewStyle {
     }
 
     static WimGuiListBounds initialListBounds() {
-        return new WimGuiListBounds(0, PAD, LIST_TOP, LIST_WIDTH, LIST_HEIGHT);
+        return new WimGuiListBounds(0, PAD, LIST_TOP, LIST_WIDTH, TRADE_LIST_HEIGHT);
     }
 }

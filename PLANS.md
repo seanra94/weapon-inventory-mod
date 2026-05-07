@@ -151,6 +151,10 @@
   - small weapons default to 16;
   - medium weapons default to 8;
   - large weapons default to 4.
+- Adjusted stock-review layout:
+  - widened the `Storage` cell and left-aligned its text with standard internal padding;
+  - moved `Total Cost` / `Total Profit` and `Credits Available` out of the scrollable list into fixed bottom summary rows above the footer buttons;
+  - summary value cells now use red/green backgrounds for net cost/profit instead of colored text.
 
 ## Active Manual Validation
 

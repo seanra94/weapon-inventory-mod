@@ -1,5 +1,6 @@
 package weaponinventorymod.gui;
 
+import com.fs.starfarer.api.ui.Alignment;
 import weaponinventorymod.core.StockCategory;
 import weaponinventorymod.core.SubmarketWeaponStock;
 import weaponinventorymod.core.WeaponStockRecord;
@@ -64,7 +65,7 @@ final class StockReviewListModel {
         int sufficientDelta = tradeContext.deltaToSufficient(record);
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info(storageLabel(record.getStorageCount(), planQuantity),
-                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
+                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
                 unitPriceCell(tradeContext.unitPriceForWeapon(record)),
                 planCell(planQuantity, transactionCost),
                 stepCell("-", sellStepQuantity, StockReviewStyle.SELL_BUTTON,

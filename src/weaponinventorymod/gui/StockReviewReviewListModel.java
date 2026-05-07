@@ -1,5 +1,6 @@
 package weaponinventorymod.gui;
 
+import com.fs.starfarer.api.ui.Alignment;
 import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
@@ -22,16 +23,6 @@ final class StockReviewReviewListModel {
         }
         addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.BUYING);
         addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.SELLING);
-        int netCost = tradeContext.totalCost();
-        String netLabel = netCost < 0 ? "Total Profit" : "Total Cost";
-        String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
-                ? "Price Unavailable"
-                : StockReviewFormat.credits(netCost);
-        Color netValueColor = netCost < 0
-                ? StockReviewStyle.CONFIRM_BUTTON
-                : netCost > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.TEXT;
-        rows.add(StockReviewListRow.labelText(netLabel, netValue, true, netValueColor));
-        rows.add(StockReviewListRow.labelText("Credits Available", StockReviewFormat.credits(Math.round(tradeContext.credits()))));
         return rows;
     }
 
@@ -72,7 +63,7 @@ final class StockReviewReviewListModel {
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getStorageCount(), purchase.getQuantity()),
-                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
+                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
                 reviewCostCell(cost, purchase.isSell()),
                 WimGuiRowCell.info((purchase.isSell() ? "Selling: " : "Buying: ") + quantity,
                         StockReviewStyle.PLAN_CELL_WIDTH,

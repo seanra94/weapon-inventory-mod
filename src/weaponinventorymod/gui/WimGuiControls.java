@@ -133,6 +133,22 @@ final class WimGuiControls {
         addLabel(cell, label, textColor, 0f, 0f, width, height, alignment);
     }
 
+    static void addLabelTextRow(CustomPanelAPI parent,
+                                float x,
+                                float y,
+                                float width,
+                                float height,
+                                String label,
+                                String value,
+                                Color valueFillColor,
+                                Color borderColor,
+                                Color textColor) {
+        float labelWidth = width / 2f;
+        float valueWidth = width - labelWidth;
+        addInfoCell(parent, x, y, labelWidth, height, label, null, textColor, borderColor, Alignment.LMID);
+        addInfoCell(parent, x + labelWidth, y, valueWidth, height, value, valueFillColor, textColor, borderColor, Alignment.MID);
+    }
+
     static <A> void addRowCell(CustomPanelAPI parent,
                                float x,
                                float y,
