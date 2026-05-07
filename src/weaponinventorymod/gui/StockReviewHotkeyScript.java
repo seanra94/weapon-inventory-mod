@@ -1,10 +1,6 @@
 package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.EveryFrameScript;
-import com.fs.starfarer.api.Global;
-import com.fs.starfarer.api.campaign.CampaignUIAPI;
-import com.fs.starfarer.api.campaign.InteractionDialogAPI;
-import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
@@ -15,11 +11,10 @@ import weaponinventorymod.core.SubmarketWeaponStock;
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
     private static final int HOTKEY = Keyboard.KEY_F8;
-    private static boolean dialogOpen = false;
-    private static MarketAPI pendingMarket;
-    private static StockReviewState pendingState;
+    private static final WimGuiDialogTracker<MarketAPI, StockReviewState> DIALOG_TRACKER =
+            new WimGuiDialogTracker<MarketAPI, StockReviewState>();
 
-    private boolean wasDown = false;
+    private final WimGuiHotkeyLatch hotkey = new WimGuiHotkeyLatch(HOTKEY);
 
     @Override
     public boolean isDone() {
@@ -33,61 +28,45 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
 
     @Override
     public void advance(float amount) {
-        if (!dialogOpen && pendingState != null) {
-            StockReviewState state = pendingState;
-            MarketAPI market = pendingMarket;
-            pendingState = null;
-            pendingMarket = null;
-            openDialog(market, state);
+        if (DIALOG_TRACKER.hasPending()) {
+            WimGuiPendingDialog<MarketAPI, StockReviewState> pending = DIALOG_TRACKER.consumePending();
+            openDialog(pending.getContext(), pending.getState());
             return;
         }
-        boolean down = Keyboard.isKeyDown(HOTKEY);
-        if (!down) {
-            wasDown = false;
-            return;
+        if (hotkey.consumePress()) {
+            openDialog();
         }
-        if (wasDown) {
-            return;
-        }
-        wasDown = true;
-        openDialog();
     }
 
     static void markDialogClosed() {
-        dialogOpen = false;
+        DIALOG_TRACKER.markClosed();
     }
 
     static void requestReopen(MarketAPI market, StockReviewState state) {
-        pendingMarket = market;
-        pendingState = new StockReviewState(state);
-        dialogOpen = false;
+        DIALOG_TRACKER.requestReopen(market, new StockReviewState(state));
     }
 
     private void openDialog() {
-        if (dialogOpen) {
+        if (DIALOG_TRACKER.isOpen()) {
             return;
         }
-        SectorAPI sector = Global.getSector();
-        CampaignUIAPI ui = sector == null ? null : sector.getCampaignUI();
-        InteractionDialogAPI dialog = ui == null ? null : ui.getCurrentInteractionDialog();
-        if (dialog == null) {
-            if (ui != null) {
-                ui.addMessage("Weapon Stock Review requires an active market/storage dialog.");
-            }
+        WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
+        if (!host.hasDialog()) {
+            host.addMessage("Weapon Stock Review requires an active market/storage dialog.");
             return;
         }
 
-        MarketAPI market = sector.getCurrentlyOpenMarket();
+        MarketAPI market = host.getCurrentMarket();
         if (!canOpenAtCurrentMarket(market)) {
-            ui.addMessage("Weapon Stock Review is only available while shopping at a market with weapons for sale.");
+            host.addMessage("Weapon Stock Review is only available while shopping at a market with weapons for sale.");
             return;
         }
         try {
             openDialog(market, null);
         } catch (Throwable t) {
-            dialogOpen = false;
+            DIALOG_TRACKER.markClosed();
             LOG.error("WIM_STOCK_REVIEW open failed", t);
-            ui.addMessage("Weapon Stock Review failed to open. Check starsector.log.");
+            host.addMessage("Weapon Stock Review failed to open. Check starsector.log.");
         }
     }
 
@@ -112,22 +91,20 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
     }
 
     private void openDialog(MarketAPI market, StockReviewState initialState) {
-        SectorAPI sector = Global.getSector();
-        CampaignUIAPI ui = sector == null ? null : sector.getCampaignUI();
-        InteractionDialogAPI dialog = ui == null ? null : ui.getCurrentInteractionDialog();
-        if (dialog == null) {
-            dialogOpen = false;
+        WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
+        if (!host.hasDialog()) {
+            DIALOG_TRACKER.markClosed();
             return;
         }
         try {
             StockReviewPanelPlugin panelPlugin = new StockReviewPanelPlugin(market, initialState);
-            dialog.showCustomVisualDialog(StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, new StockReviewDialogDelegate(panelPlugin));
-            dialogOpen = true;
+            WimGuiDialogOpener.show(host.getDialog(), StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, panelPlugin);
+            DIALOG_TRACKER.markOpen();
             LOG.info("WIM_STOCK_REVIEW opened hotkey=F8 market=" + (market == null ? "null" : market.getId()));
         } catch (Throwable t) {
-            dialogOpen = false;
+            DIALOG_TRACKER.markClosed();
             LOG.error("WIM_STOCK_REVIEW open failed", t);
-            ui.addMessage("Weapon Stock Review failed to open. Check starsector.log.");
+            host.addMessage("Weapon Stock Review failed to open. Check starsector.log.");
         }
     }
 }

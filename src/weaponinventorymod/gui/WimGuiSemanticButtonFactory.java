@@ -1,0 +1,26 @@
+package weaponinventorymod.gui;
+
+import java.awt.Color;
+
+final class WimGuiSemanticButtonFactory<A> {
+    private final Color borderColor;
+
+    WimGuiSemanticButtonFactory(Color borderColor) {
+        this.borderColor = borderColor;
+    }
+
+    WimGuiButtonSpec<A> button(float width,
+                               String label,
+                               A action,
+                               boolean enabled,
+                               Color fillColor) {
+        return WimGuiButtonSpec.semantic(width, label, action, enabled, fillColor, borderColor);
+    }
+
+    WimGuiButtonSpec<A> enabledButton(float width,
+                                      String label,
+                                      A action,
+                                      Color fillColor) {
+        return button(width, label, action, true, fillColor);
+    }
+}

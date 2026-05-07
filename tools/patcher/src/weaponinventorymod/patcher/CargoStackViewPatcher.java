@@ -136,9 +136,55 @@ public class CargoStackViewPatcher {
         }
     }
 
+    private static final class PatchReport {
+        boolean targetClassFound;
+        boolean targetMethodFound;
+        boolean weaponsGuardFound;
+        boolean helperEmbedded;
+        boolean legacyHookCall;
+        boolean diagnosticDuplicateDraw;
+        boolean markerDraw;
+        boolean markerOutsideWeapons;
+        boolean postProbeOffset;
+        boolean countCallsInWeapons;
+        boolean splitBadgeHelperCalls;
+        boolean helperCallInWeapons;
+        boolean helperCallOutsideWeapons;
+        int totalHelperCallsInWeapons;
+        int totalHelperCallsOutsideWeapons;
+        int spriteRenderCallsInWeapons;
+
+        void print(Path jarPath) {
+            System.out.println("CargoStackView patch verification report");
+            System.out.println("Jar: " + jarPath);
+            System.out.println("Target class: " + ok(targetClassFound));
+            System.out.println("Target method renderAtCenter(FFF)V: " + ok(targetMethodFound));
+            System.out.println("WEAPONS branch guard: " + ok(weaponsGuardFound));
+            System.out.println("Embedded helper class: " + ok(helperEmbedded));
+            System.out.println("WEAPONS total helper calls: " + totalHelperCallsInWeapons);
+            System.out.println("Non-WEAPONS total helper calls: " + totalHelperCallsOutsideWeapons);
+            System.out.println("WEAPONS badge sprite render calls: " + spriteRenderCallsInWeapons);
+            System.out.println("Legacy hook call present: " + yesNo(legacyHookCall));
+            System.out.println("Duplicate diagnostic draw present: " + yesNo(diagnosticDuplicateDraw));
+            System.out.println("Marker draw present: " + yesNo(markerDraw));
+            System.out.println("Marker draw outside WEAPONS present: " + yesNo(markerOutsideWeapons));
+            System.out.println("Post-draw probe offset present: " + yesNo(postProbeOffset));
+            System.out.println("Count path calls in WEAPONS present: " + yesNo(countCallsInWeapons));
+            System.out.println("Old split-badge helper calls present: " + yesNo(splitBadgeHelperCalls));
+        }
+
+        private static String ok(boolean value) {
+            return value ? "OK" : "MISSING";
+        }
+
+        private static String yesNo(boolean value) {
+            return value ? "YES" : "no";
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 3 || args.length > 4) {
-            throw new IllegalArgumentException("Usage: CargoStackViewPatcher <patch|restore> <obfJarPath> <backupJarPath> [modJarPath]");
+            throw new IllegalArgumentException("Usage: CargoStackViewPatcher <patch|restore|verify> <obfJarPath> <backupJarPath> [modJarPath]");
         }
 
         String mode = args[0].toLowerCase();
@@ -157,8 +203,19 @@ public class CargoStackViewPatcher {
             restore(jarPath, backupPath);
             return;
         }
+        if ("verify".equals(mode)) {
+            verify(jarPath);
+            return;
+        }
 
         throw new IllegalArgumentException("Unknown mode: " + args[0]);
+    }
+
+    private static void verify(Path jarPath) throws Exception {
+        PatchReport report = analyzePatchedState(jarPath);
+        report.print(jarPath);
+        requireValidPatchReport(report);
+        System.out.println("CargoStackView patch verification passed.");
     }
 
     private static void patch(Path jarPath, Path backupPath, Path modJarPath) throws Exception {
@@ -682,6 +739,40 @@ public class CargoStackViewPatcher {
         return false;
     }
 
+    private static int countSpecificHelperCallsInWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel, String methodName, String methodDesc) {
+        int count = 0;
+        for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (methodInsn.getOpcode() == Opcodes.INVOKESTATIC
+                    && HELPER_CLASS.equals(methodInsn.owner)
+                    && methodName.equals(methodInsn.name)
+                    && methodDesc.equals(methodInsn.desc)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int countSpecificHelperCallsOutsideWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel, String methodName, String methodDesc) {
+        int count = 0;
+        for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode) || isInWeaponsBranch(insn, guard, nonWeaponLabel)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (methodInsn.getOpcode() == Opcodes.INVOKESTATIC
+                    && HELPER_CLASS.equals(methodInsn.owner)
+                    && methodName.equals(methodInsn.name)
+                    && methodDesc.equals(methodInsn.desc)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private static boolean hasPostProbeOffsetInWeaponsBranch(MethodNode method, JumpInsnNode guard, LabelNode nonWeaponLabel) {
         for (AbstractInsnNode insn = guard.getNext(); insn != null && insn != nonWeaponLabel; insn = insn.getNext()) {
             if (!(insn instanceof LdcInsnNode)) {
@@ -863,6 +954,89 @@ public class CargoStackViewPatcher {
         }
     }
 
+    private static PatchReport analyzePatchedState(Path jarPath) throws IOException {
+        PatchReport report = new PatchReport();
+        byte[] classBytes = readClassBytes(jarPath, TARGET_CLASS_ENTRY);
+        report.targetClassFound = classBytes != null;
+        report.helperEmbedded = findEntry(jarPath, HELPER_CLASS_ENTRY);
+        if (classBytes == null) {
+            return report;
+        }
+
+        ClassNode classNode = readClassNode(classBytes);
+        MethodNode method = findTargetMethod(classNode);
+        report.targetMethodFound = method != null;
+        if (method == null) {
+            return report;
+        }
+
+        JumpInsnNode weaponTypeGuard = findWeaponTypeGuard(method);
+        report.weaponsGuardFound = weaponTypeGuard != null;
+        if (weaponTypeGuard == null) {
+            return report;
+        }
+        LabelNode nonWeaponLabel = weaponTypeGuard.label;
+        WeaponRenderInfo info = findWeaponRenderInfo(classNode, method, weaponTypeGuard, nonWeaponLabel);
+
+        report.legacyHookCall = hasLegacyHookCall(method);
+        report.diagnosticDuplicateDraw = hasDiagnosticDuplicateDraw(method, classNode.name, info);
+        report.markerDraw = hasMarkerDraw(method, weaponTypeGuard, nonWeaponLabel);
+        report.markerOutsideWeapons = hasMarkerDrawOutsideWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
+        report.postProbeOffset = hasPostProbeOffsetInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
+        report.countCallsInWeapons = hasCountCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
+        report.splitBadgeHelperCalls = hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_ANCHOR_METHOD, HELPER_ANCHOR_DESC)
+                || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_PLAYER_METHOD, HELPER_PLAYER_DESC)
+                || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_STORAGE_METHOD, HELPER_STORAGE_DESC);
+        report.helperCallInWeapons = hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC);
+        report.helperCallOutsideWeapons = hasSpecificHelperCallOutsideWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC);
+        report.totalHelperCallsInWeapons = countSpecificHelperCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC);
+        report.totalHelperCallsOutsideWeapons = countSpecificHelperCallsOutsideWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_TOTAL_METHOD, HELPER_TOTAL_KIND_DESC);
+        report.spriteRenderCallsInWeapons = countSpriteRenderCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
+        return report;
+    }
+
+    private static void requireValidPatchReport(PatchReport report) {
+        if (!report.targetClassFound) {
+            throw new IllegalStateException("Patch verification failed: target class missing.");
+        }
+        if (!report.targetMethodFound) {
+            throw new IllegalStateException("Patch verification failed: target method missing.");
+        }
+        if (!report.weaponsGuardFound) {
+            throw new IllegalStateException("Patch verification failed: WEAPONS branch guard missing.");
+        }
+        if (!report.helperEmbedded) {
+            throw new IllegalStateException("Patch verification failed: embedded helper class missing.");
+        }
+        if (!report.helperCallInWeapons || report.totalHelperCallsInWeapons != 1) {
+            throw new IllegalStateException("Patch verification failed: expected exactly one WEAPONS total helper(kind,id) call.");
+        }
+        if (!report.helperCallOutsideWeapons || report.totalHelperCallsOutsideWeapons != 1) {
+            throw new IllegalStateException("Patch verification failed: expected exactly one non-WEAPONS total helper(kind,id) call.");
+        }
+        if (report.spriteRenderCallsInWeapons != 1) {
+            throw new IllegalStateException("Patch verification failed: expected exactly one WEAPONS badge sprite render call.");
+        }
+        if (report.legacyHookCall) {
+            throw new IllegalStateException("Patch verification failed: legacy hook call still present.");
+        }
+        if (report.diagnosticDuplicateDraw) {
+            throw new IllegalStateException("Patch verification failed: duplicate diagnostic weapon draw still present.");
+        }
+        if (report.markerDraw || report.markerOutsideWeapons) {
+            throw new IllegalStateException("Patch verification failed: stale marker draw still present.");
+        }
+        if (report.postProbeOffset) {
+            throw new IllegalStateException("Patch verification failed: post-draw probe offset pattern still present.");
+        }
+        if (report.countCallsInWeapons) {
+            throw new IllegalStateException("Patch verification failed: count path calls still present in WEAPONS branch.");
+        }
+        if (report.splitBadgeHelperCalls) {
+            throw new IllegalStateException("Patch verification failed: old split-badge helper calls still present.");
+        }
+    }
+
     private static ClassNode readClassNode(byte[] classBytes) {
         ClassNode classNode = new ClassNode();
         ClassReader reader = new ClassReader(classBytes);
@@ -928,6 +1102,12 @@ public class CargoStackViewPatcher {
             }
         }
         return missing;
+    }
+
+    private static boolean findEntry(Path jarPath, String entryName) throws IOException {
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+            return jarFile.getJarEntry(entryName) != null;
+        }
     }
 
     private static void writePatchedJar(Path jarPath, String entryName, byte[] replacementBytes, Map<String, byte[]> helperEntries) throws IOException {

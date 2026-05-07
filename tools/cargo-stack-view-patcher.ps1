@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Patch", "Restore")]
+    [ValidateSet("Patch", "Restore", "Verify")]
     [string]$Mode = "Patch",
     [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY
 )
@@ -61,6 +61,8 @@ if ($modeArg -eq "patch") {
         }
     }
     & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar $modJarPath
+} elseif ($modeArg -eq "restore") {
+    & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
 } else {
     & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
 }

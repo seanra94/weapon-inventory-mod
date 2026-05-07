@@ -2,11 +2,11 @@ package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.ui.ButtonAPI;
 
-final class StockReviewButtonBinding {
+final class WimGuiButtonBinding<A> {
     private final ButtonAPI button;
-    private final StockReviewAction action;
+    private final A action;
 
-    StockReviewButtonBinding(ButtonAPI button, StockReviewAction action) {
+    WimGuiButtonBinding(ButtonAPI button, A action) {
         this.button = button;
         this.action = action;
     }
@@ -15,11 +15,17 @@ final class StockReviewButtonBinding {
         if (button == null || !button.isChecked()) {
             return false;
         }
-        button.setChecked(false);
+        clear();
         return true;
     }
 
-    StockReviewAction getAction() {
+    void clear() {
+        if (button != null) {
+            button.setChecked(false);
+        }
+    }
+
+    A getAction() {
         return action;
     }
 }

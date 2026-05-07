@@ -13,131 +13,112 @@ final class StockReviewListModel {
     private StockReviewListModel() {
     }
 
-    static List<StockReviewListRow> build(WeaponStockSnapshot snapshot, StockReviewState state, List<StockReviewPendingPurchase> pendingPurchases) {
-        List<StockReviewListRow> rows = new ArrayList<StockReviewListRow>();
+    static List<WimGuiListRow<StockReviewAction>> build(WeaponStockSnapshot snapshot,
+                                          StockReviewState state,
+                                          StockReviewTradeContext tradeContext) {
+        List<WimGuiListRow<StockReviewAction>> rows = new ArrayList<WimGuiListRow<StockReviewAction>>();
         int displayed = 0;
-        displayed += addCategory(rows, snapshot, state, pendingPurchases, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
-        displayed += addCategory(rows, snapshot, state, pendingPurchases, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
-        displayed += addCategory(rows, snapshot, state, pendingPurchases, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
+        displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
+        displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
+        displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
         if (displayed == 0) {
             rows.add(StockReviewListRow.empty("No currently buyable weapons were found at this market."));
         }
         return rows;
     }
 
-    private static int addCategory(List<StockReviewListRow> rows,
+    private static int addCategory(List<WimGuiListRow<StockReviewAction>> rows,
                                    WeaponStockSnapshot snapshot,
                                    StockReviewState state,
-                                   List<StockReviewPendingPurchase> pendingPurchases,
+                                   StockReviewTradeContext tradeContext,
                                    StockCategory category,
                                    Color color,
                                    boolean topGap) {
-        List<WeaponStockRecord> records = buyableRecords(snapshot.getRecords(category));
+        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleBuyableRecords(snapshot, category);
         boolean expanded = state.isExpanded(category);
-        String label = category.getLabel() + " [" + records.size() + "] " + (expanded ? "(-)" : "(+)");
+        String label = WimGuiToggleHeading.countedLabel(category.getLabel(), records.size(), expanded);
         rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap));
         if (!expanded) {
             return records.size();
         }
         for (int i = 0; i < records.size(); i++) {
-            addWeapon(rows, snapshot, records.get(i), color, state, pendingPurchases);
+            addWeapon(rows, records.get(i), state, tradeContext);
         }
         return records.size();
     }
 
-    private static List<WeaponStockRecord> buyableRecords(List<WeaponStockRecord> records) {
-        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
-        for (int i = 0; i < records.size(); i++) {
-            WeaponStockRecord record = records.get(i);
-            if (record.getBuyableCount() > 0) {
-                result.add(record);
-            }
-        }
-        return result;
-    }
-
-    private static void addWeapon(List<StockReviewListRow> rows,
-                                  WeaponStockSnapshot snapshot,
+    private static void addWeapon(List<WimGuiListRow<StockReviewAction>> rows,
                                   WeaponStockRecord record,
-                                  Color color,
                                   StockReviewState state,
-                                  List<StockReviewPendingPurchase> pendingPurchases) {
+                                  StockReviewTradeContext tradeContext) {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
-        String label = record.getDisplayName() + " " + (expanded ? "(-)" : "(+)");
-        int planQuantity = pendingPlanQuantity(record.getWeaponId(), pendingPurchases);
-        int buyRemaining = Math.max(0, record.getBuyableCount() - pendingBuyQuantity(record.getWeaponId(), pendingPurchases));
-        int sellRemaining = Math.max(0, record.getPlayerCargoCount() - pendingSellQuantity(record.getWeaponId(), pendingPurchases));
-        int buyUntilQuantity = Math.min(buyRemaining, Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + planQuantity)));
-        int transactionCost = StockReviewPurchasePreview.totalCostForWeapon(snapshot, pendingPurchases, record.getWeaponId());
-        rows.add(StockReviewListRow.weapon(
-                label,
-                StockReviewStyle.TEXT,
-                StockReviewAction.toggleWeapon(record.getWeaponId()),
-                StockReviewAction.adjustPlan(record.getWeaponId(), -10),
-                StockReviewAction.adjustPlan(record.getWeaponId(), -1),
-                StockReviewAction.adjustPlan(record.getWeaponId(), 1),
-                StockReviewAction.adjustPlan(record.getWeaponId(), 10),
-                StockReviewAction.adjustPlan(record.getWeaponId(), buyUntilQuantity),
-                record.getOwnedCount(),
-                record.getBuyableCount(),
-                planQuantity,
-                transactionCost,
-                sellRemaining > 0,
-                buyRemaining > 0,
-                buyUntilQuantity > 0));
+        String label = WimGuiToggleHeading.label(record.getDisplayName(), expanded);
+        int planQuantity = tradeContext.netQuantityForWeapon(record.getWeaponId());
+        int buyRemaining = tradeContext.buyableRemaining(record);
+        int sellRemaining = tradeContext.sellableRemaining(record);
+        int buyUntilQuantity = Math.min(buyRemaining, tradeContext.buyNeededForSufficiency(record));
+        buyUntilQuantity = tradeContext.affordableBuyQuantity(record, null, buyUntilQuantity);
+        int sellUntilQuantity = tradeContext.sellableUntilSufficient(record);
+        int transactionCost = tradeContext.transactionCostForWeapon(record.getWeaponId());
+        List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
+                WimGuiRowCell.info("Storage: " + Math.max(0, record.getOwnedCount() - record.getPlayerCargoCount()),
+                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
+                WimGuiRowCell.info("Inventory: " + record.getPlayerCargoCount(),
+                        StockReviewStyle.INVENTORY_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
+                WimGuiRowCell.info("Stocked: " + record.getOwnedCount(),
+                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
+                planCell(planQuantity),
+                costCell(transactionCost),
+                WimGuiRowCell.standardAction("-N", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
+                        StockReviewAction.adjustPlan(record.getWeaponId(), -sellUntilQuantity), sellUntilQuantity > 0),
+                WimGuiRowCell.standardAction("-10", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
+                        StockReviewAction.adjustPlan(record.getWeaponId(), -10), sellRemaining >= 10),
+                WimGuiRowCell.standardAction("-1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
+                        StockReviewAction.adjustPlan(record.getWeaponId(), -1), sellRemaining >= 1),
+                WimGuiRowCell.standardAction("+1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
+                        StockReviewAction.adjustPlan(record.getWeaponId(), 1),
+                        tradeContext.affordableBuyQuantity(record, null, 1) >= 1),
+                WimGuiRowCell.standardAction("+10", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
+                        StockReviewAction.adjustPlan(record.getWeaponId(), 10),
+                        tradeContext.affordableBuyQuantity(record, null, 10) >= 10),
+                WimGuiRowCell.standardAction("+N", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.CONFIRM_BUTTON,
+                        StockReviewAction.adjustPlan(record.getWeaponId(), buyUntilQuantity), buyUntilQuantity > 0),
+                WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
+                        StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0));
+        rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
         if (!expanded) {
             return;
         }
         addWeaponData(rows, record, state);
-        addSellers(rows, record, state);
+        addSellers(rows, record, state, tradeContext);
     }
 
-    private static int pendingPlanQuantity(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
-        int total = 0;
-        if (pendingPurchases == null) {
-            return total;
-        }
-        for (int i = 0; i < pendingPurchases.size(); i++) {
-            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-            if (weaponId.equals(purchase.getWeaponId())) {
-                total += purchase.getQuantity();
-            }
-        }
-        return total;
+    private static WimGuiRowCell<StockReviewAction> planCell(int planQuantity) {
+        String label = planQuantity > 0
+                ? "Buying: " + planQuantity
+                : planQuantity < 0 ? "Selling: " + (-planQuantity) : "Buying: 0";
+        Color fill = planQuantity > 0
+                ? StockReviewStyle.PLAN_POSITIVE
+                : planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.PLAN_ZERO;
+        return WimGuiRowCell.info(label, StockReviewStyle.PLAN_CELL_WIDTH, fill, StockReviewStyle.TEXT);
     }
 
-    private static int pendingBuyQuantity(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
-        int total = 0;
-        if (pendingPurchases == null) {
-            return total;
+    private static WimGuiRowCell<StockReviewAction> costCell(int transactionCost) {
+        if (transactionCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
+            return WimGuiRowCell.info("Cost: ?", StockReviewStyle.COST_CELL_WIDTH, StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
         }
-        for (int i = 0; i < pendingPurchases.size(); i++) {
-            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-            if (weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() > 0) {
-                total += purchase.getQuantity();
-            }
+        if (transactionCost < 0) {
+            return WimGuiRowCell.info("Profit: $" + (-transactionCost), StockReviewStyle.COST_CELL_WIDTH,
+                    StockReviewStyle.PROFIT_BUTTON, StockReviewStyle.TEXT);
         }
-        return total;
+        return WimGuiRowCell.info("Cost: $" + transactionCost, StockReviewStyle.COST_CELL_WIDTH,
+                transactionCost == 0 ? StockReviewStyle.PLAN_ZERO : StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
     }
 
-    private static int pendingSellQuantity(String weaponId, List<StockReviewPendingPurchase> pendingPurchases) {
-        int total = 0;
-        if (pendingPurchases == null) {
-            return total;
-        }
-        for (int i = 0; i < pendingPurchases.size(); i++) {
-            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-            if (weaponId.equals(purchase.getWeaponId()) && purchase.getQuantity() < 0) {
-                total += -purchase.getQuantity();
-            }
-        }
-        return total;
-    }
-
-    private static void addWeaponData(List<StockReviewListRow> rows, WeaponStockRecord record, StockReviewState state) {
+    static void addWeaponData(List<WimGuiListRow<StockReviewAction>> rows, WeaponStockRecord record, StockReviewState state) {
         boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
         rows.add(StockReviewListRow.section(
-                "Weapon data " + (expanded ? "(-)" : "(+)"),
+                WimGuiToggleHeading.label("Weapon data", expanded),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA)));
         if (!expanded) {
             return;
@@ -152,10 +133,13 @@ final class StockReviewListModel {
         rows.add(StockReviewListRow.detail("Flux/Damage: " + record.getFluxPerDamageLabel()));
     }
 
-    private static void addSellers(List<StockReviewListRow> rows, WeaponStockRecord record, StockReviewState state) {
+    private static void addSellers(List<WimGuiListRow<StockReviewAction>> rows,
+                                   WeaponStockRecord record,
+                                   StockReviewState state,
+                                   StockReviewTradeContext tradeContext) {
         boolean expanded = state.isSellersExpanded(record.getWeaponId());
         rows.add(StockReviewListRow.section(
-                "Sellers " + (expanded ? "(-)" : "(+)"),
+                WimGuiToggleHeading.label("Sellers", expanded),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));
         if (!expanded) {
             return;
@@ -167,7 +151,8 @@ final class StockReviewListModel {
         }
         for (int i = 0; i < stocks.size(); i++) {
             SubmarketWeaponStock stock = stocks.get(i);
-            boolean buyable = stock.isPurchasable() && stock.getCount() > 0;
+            int buyableOne = tradeContext.affordableBuyQuantity(record, stock.getSubmarketId(), 1);
+            int buyableTen = tradeContext.affordableBuyQuantity(record, stock.getSubmarketId(), 10);
             String label = stock.getSubmarketName() + ": " + stock.getCount();
             if (stock.getCount() > 0) {
                 label += " @ " + stock.getUnitPrice() + "cr";
@@ -177,7 +162,8 @@ final class StockReviewListModel {
             }
             rows.add(StockReviewListRow.seller(
                     label,
-                    buyable,
+                    buyableOne >= 1,
+                    buyableTen >= 10,
                     StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 1),
                     StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 10)));
         }

@@ -10,8 +10,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public final class StockReviewState {
+public final class StockReviewState implements WimGuiScrollableListState {
     private final Map<StockCategory, Boolean> expanded = new EnumMap<StockCategory, Boolean>(StockCategory.class);
+    private final Map<StockReviewTradeGroup, Boolean> expandedTradeGroups = new EnumMap<StockReviewTradeGroup, Boolean>(StockReviewTradeGroup.class);
     private StockDisplayMode displayMode;
     private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
@@ -25,6 +26,8 @@ public final class StockReviewState {
         expanded.put(StockCategory.NO_STOCK, Boolean.FALSE);
         expanded.put(StockCategory.INSUFFICIENT, Boolean.FALSE);
         expanded.put(StockCategory.SUFFICIENT, Boolean.FALSE);
+        expandedTradeGroups.put(StockReviewTradeGroup.BUYING, Boolean.FALSE);
+        expandedTradeGroups.put(StockReviewTradeGroup.SELLING, Boolean.FALSE);
         this.displayMode = config.getDisplayMode();
         this.sortMode = config.getSortMode();
         this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
@@ -33,6 +36,7 @@ public final class StockReviewState {
 
     public StockReviewState(StockReviewState source) {
         expanded.putAll(source.expanded);
+        expandedTradeGroups.putAll(source.expandedTradeGroups);
         this.displayMode = source.displayMode;
         this.sortMode = source.sortMode;
         this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
@@ -50,6 +54,15 @@ public final class StockReviewState {
 
     public void toggle(StockCategory category) {
         expanded.put(category, Boolean.valueOf(!isExpanded(category)));
+    }
+
+    public boolean isExpanded(StockReviewTradeGroup tradeGroup) {
+        Boolean value = expandedTradeGroups.get(tradeGroup);
+        return value != null && value.booleanValue();
+    }
+
+    public void toggle(StockReviewTradeGroup tradeGroup) {
+        expandedTradeGroups.put(tradeGroup, Boolean.valueOf(!isExpanded(tradeGroup)));
     }
 
     public boolean isWeaponExpanded(String weaponId) {
@@ -112,13 +125,13 @@ public final class StockReviewState {
         return listScrollOffset;
     }
 
+    @Override
     public void setListScrollOffset(int listScrollOffset) {
         this.listScrollOffset = Math.max(0, listScrollOffset);
     }
 
     public void adjustListScrollOffset(int delta, int maxOffset) {
-        int max = Math.max(0, maxOffset);
-        listScrollOffset = Math.max(0, Math.min(max, listScrollOffset + delta));
+        listScrollOffset = WimGuiScroll.usefulOffsetByDelta(listScrollOffset, delta, Math.max(0, maxOffset));
     }
 
     private static void toggleSet(Set<String> set, String key) {

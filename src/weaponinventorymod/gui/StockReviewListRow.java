@@ -1,224 +1,105 @@
 package weaponinventorymod.gui;
 
+import com.fs.starfarer.api.ui.Alignment;
+
 import java.awt.Color;
+import java.util.List;
 
 final class StockReviewListRow {
-    enum Kind {
-        CATEGORY,
-        WEAPON,
-        SECTION,
-        DETAIL,
-        SELLER,
-        EMPTY,
-        SCROLL
+    private StockReviewListRow() {
     }
 
-    private final Kind kind;
-    private final String label;
-    private final Color textColor;
-    private final Color fillColor;
-    private final Color buttonFillColor;
-    private final Color borderColor;
-    private final float indent;
-    private final StockReviewAction mainAction;
-    private final StockReviewAction sellTenAction;
-    private final StockReviewAction sellOneAction;
-    private final StockReviewAction buyOneAction;
-    private final StockReviewAction buyTenAction;
-    private final StockReviewAction buyUntilAction;
-    private final int currentCount;
-    private final int forSaleCount;
-    private final int planQuantity;
-    private final int transactionCost;
-    private final boolean sellEnabled;
-    private final boolean buyEnabled;
-    private final boolean buyUntilEnabled;
-    private final boolean topGap;
-
-    private StockReviewListRow(Kind kind,
-                               String label,
-                               Color textColor,
-                               Color fillColor,
-                               Color buttonFillColor,
-                               Color borderColor,
-                               float indent,
-                               StockReviewAction mainAction,
-                               StockReviewAction sellTenAction,
-                               StockReviewAction sellOneAction,
-                               StockReviewAction buyOneAction,
-                               StockReviewAction buyTenAction,
-                               StockReviewAction buyUntilAction,
-                               int currentCount,
-                               int forSaleCount,
-                               int planQuantity,
-                               int transactionCost,
-                               boolean sellEnabled,
-                               boolean buyEnabled,
-                               boolean buyUntilEnabled,
-                               boolean topGap) {
-        this.kind = kind;
-        this.label = label;
-        this.textColor = textColor;
-        this.fillColor = fillColor;
-        this.buttonFillColor = buttonFillColor;
-        this.borderColor = borderColor;
-        this.indent = indent;
-        this.mainAction = mainAction;
-        this.sellTenAction = sellTenAction;
-        this.sellOneAction = sellOneAction;
-        this.buyOneAction = buyOneAction;
-        this.buyTenAction = buyTenAction;
-        this.buyUntilAction = buyUntilAction;
-        this.currentCount = currentCount;
-        this.forSaleCount = forSaleCount;
-        this.planQuantity = planQuantity;
-        this.transactionCost = transactionCost;
-        this.sellEnabled = sellEnabled;
-        this.buyEnabled = buyEnabled;
-        this.buyUntilEnabled = buyUntilEnabled;
-        this.topGap = topGap;
+    static WimGuiListRow<StockReviewAction> category(String label,
+                                                     Color textColor,
+                                                     StockReviewAction action,
+                                                     boolean topGap) {
+        return row(label, StockReviewStyle.TEXT, textColor, textColor, null,
+                0f, action, Alignment.LMID, null, topGap);
     }
 
-    static StockReviewListRow category(String label, Color textColor, StockReviewAction action, boolean topGap) {
-        return new StockReviewListRow(Kind.CATEGORY, label, StockReviewStyle.TEXT, textColor, textColor, null,
-                0f, action, null, null, null, null, null, 0, 0, 0, 0, false, false, false, topGap);
+    static WimGuiListRow<StockReviewAction> weapon(String label,
+                                                   List<WimGuiRowCell<StockReviewAction>> cells,
+                                                   StockReviewAction action) {
+        return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
+                StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.ROW_BORDER,
+                StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, cells, false);
     }
 
-    static StockReviewListRow weapon(String label,
-                                     Color textColor,
-                                     StockReviewAction action,
-                                     StockReviewAction sellTenAction,
-                                     StockReviewAction sellOneAction,
-                                     StockReviewAction buyOneAction,
-                                     StockReviewAction buyTenAction,
-                                     StockReviewAction buyUntilAction,
-                                     int currentCount,
-                                     int forSaleCount,
-                                     int planQuantity,
-                                     int transactionCost,
-                                     boolean sellEnabled,
-                                     boolean buyEnabled,
-                                     boolean buyUntilEnabled) {
-        return new StockReviewListRow(Kind.WEAPON, label, textColor, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.WEAPON_INDENT, action, sellTenAction, sellOneAction, buyOneAction, buyTenAction, buyUntilAction,
-                currentCount, forSaleCount, planQuantity, transactionCost, sellEnabled, buyEnabled, buyUntilEnabled, false);
+    static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action) {
+        return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
+                StockReviewStyle.HEADING_BACKGROUND, null, StockReviewStyle.SECTION_INDENT,
+                action, Alignment.LMID, null, false);
     }
 
-    static StockReviewListRow section(String label, StockReviewAction action) {
-        return new StockReviewListRow(Kind.SECTION, label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.HEADING_BACKGROUND, null,
-                StockReviewStyle.SECTION_INDENT, action, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
+    static WimGuiListRow<StockReviewAction> detail(String label) {
+        return row(label, StockReviewStyle.MUTED, null, null, null,
+                StockReviewStyle.DETAIL_INDENT, null, Alignment.LMID, null, false);
     }
 
-    static StockReviewListRow detail(String label) {
-        return new StockReviewListRow(Kind.DETAIL, label, StockReviewStyle.MUTED, null, null, null,
-                StockReviewStyle.DETAIL_INDENT, null, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
+    static WimGuiListRow<StockReviewAction> seller(String label,
+                                                   boolean buyOneEnabled,
+                                                   boolean buyTenEnabled,
+                                                   StockReviewAction buyOneAction,
+                                                   StockReviewAction buyTenAction) {
+        List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
+                WimGuiRowCell.standardAction("+1", StockReviewStyle.SELLER_BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
+                        buyOneAction, buyOneEnabled),
+                WimGuiRowCell.standardAction("+10", StockReviewStyle.SELLER_BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
+                        buyTenAction, buyTenEnabled));
+        Color textColor = buyOneEnabled || buyTenEnabled ? StockReviewStyle.MUTED : StockReviewStyle.DISABLED_TEXT;
+        return row(label, textColor, StockReviewStyle.ROW_BACKGROUND_DARK,
+                StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BORDER,
+                StockReviewStyle.SELLER_INDENT, null, Alignment.LMID, cells, false);
     }
 
-    static StockReviewListRow seller(String label,
-                                     boolean buyEnabled,
-                                     StockReviewAction buyOneAction,
-                                     StockReviewAction buyTenAction) {
-        Color textColor = buyEnabled ? StockReviewStyle.MUTED : StockReviewStyle.DISABLED_TEXT;
-        return new StockReviewListRow(Kind.SELLER, label, textColor, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.SELLER_INDENT, null, null, null, buyOneAction, buyTenAction, null, 0, 0, 0, 0, false, buyEnabled, false, false);
+    static WimGuiListRow<StockReviewAction> empty(String label) {
+        return row(label, StockReviewStyle.MUTED, null, null, null,
+                0f, null, Alignment.LMID, null, false);
     }
 
-    static StockReviewListRow empty(String label) {
-        return new StockReviewListRow(Kind.EMPTY, label, StockReviewStyle.MUTED, null, null, null,
-                0f, null, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
+    static WimGuiListRow<StockReviewAction> scroll(String label, StockReviewAction action) {
+        return row(label, StockReviewStyle.SCROLL, StockReviewStyle.HEADING_BACKGROUND,
+                StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.MID, null, false);
     }
 
-    static StockReviewListRow scroll(String label, StockReviewAction action) {
-        return new StockReviewListRow(Kind.SCROLL, label, StockReviewStyle.SCROLL, StockReviewStyle.HEADING_BACKGROUND, StockReviewStyle.HEADING_BACKGROUND, null,
-                0f, action, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
+    static WimGuiListRow<StockReviewAction> review(String label, Color fillColor) {
+        return row(label, StockReviewStyle.TEXT, fillColor, fillColor,
+                StockReviewStyle.ROW_BORDER, StockReviewStyle.WEAPON_INDENT,
+                null, Alignment.LMID, null, false);
     }
 
-    static StockReviewListRow review(String label) {
-        return new StockReviewListRow(Kind.WEAPON, label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.WEAPON_INDENT, null, null, null, null, null, null, 0, 0, 0, 0, false, false, false, false);
+    static WimGuiListRow<StockReviewAction> reviewTable(String label,
+                                                        List<WimGuiRowCell<StockReviewAction>> cells,
+                                                        float indent) {
+        return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
+                StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
+                indent, null, Alignment.LMID, cells, false);
     }
 
-    Kind getKind() {
-        return kind;
+    static WimGuiListRow<StockReviewAction> review(String label) {
+        return review(label, StockReviewStyle.ROW_BACKGROUND);
     }
 
-    String getLabel() {
-        return label;
-    }
-
-    Color getTextColor() {
-        return textColor;
-    }
-
-    Color getFillColor() {
-        return fillColor;
-    }
-
-    Color getButtonFillColor() {
-        return buttonFillColor == null ? fillColor : buttonFillColor;
-    }
-
-    Color getBorderColor() {
-        return borderColor;
-    }
-
-    float getIndent() {
-        return indent;
-    }
-
-    StockReviewAction getMainAction() {
-        return mainAction;
-    }
-
-    StockReviewAction getSellTenAction() {
-        return sellTenAction;
-    }
-
-    StockReviewAction getSellOneAction() {
-        return sellOneAction;
-    }
-
-    StockReviewAction getBuyOneAction() {
-        return buyOneAction;
-    }
-
-    StockReviewAction getBuyTenAction() {
-        return buyTenAction;
-    }
-
-    StockReviewAction getBuyUntilAction() {
-        return buyUntilAction;
-    }
-
-    int getPlanQuantity() {
-        return planQuantity;
-    }
-
-    int getCurrentCount() {
-        return currentCount;
-    }
-
-    int getForSaleCount() {
-        return forSaleCount;
-    }
-
-    int getTransactionCost() {
-        return transactionCost;
-    }
-
-    boolean isSellEnabled() {
-        return sellEnabled;
-    }
-
-    boolean isBuyEnabled() {
-        return buyEnabled;
-    }
-
-    boolean isBuyUntilEnabled() {
-        return buyUntilEnabled;
-    }
-
-    boolean hasTopGap() {
-        return topGap;
+    private static WimGuiListRow<StockReviewAction> row(String label,
+                                                        Color textColor,
+                                                        Color fillColor,
+                                                        Color buttonFillColor,
+                                                        Color borderColor,
+                                                        float indent,
+                                                        StockReviewAction action,
+                                                        Alignment alignment,
+                                                        List<WimGuiRowCell<StockReviewAction>> cells,
+                                                        boolean topGap) {
+        return new WimGuiListRow<StockReviewAction>(
+                label,
+                textColor,
+                fillColor,
+                buttonFillColor,
+                borderColor,
+                indent,
+                action,
+                alignment,
+                cells,
+                topGap);
     }
 }

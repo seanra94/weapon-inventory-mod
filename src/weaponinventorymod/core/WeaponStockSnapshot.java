@@ -15,6 +15,8 @@ public final class WeaponStockSnapshot {
     private final StockSortMode sortMode;
     private final boolean includeBlackMarket;
     private final Map<StockCategory, List<WeaponStockRecord>> recordsByCategory;
+    private final Map<String, WeaponStockRecord> recordsByWeaponId;
+    private final List<WeaponStockRecord> allRecords;
     private final int totalRecords;
 
     public WeaponStockSnapshot(MarketAPI market,
@@ -29,11 +31,9 @@ public final class WeaponStockSnapshot {
         this.sortMode = sortMode;
         this.includeBlackMarket = includeBlackMarket;
         this.recordsByCategory = immutableCategoryMap(recordsByCategory);
-        int total = 0;
-        for (List<WeaponStockRecord> records : this.recordsByCategory.values()) {
-            total += records.size();
-        }
-        this.totalRecords = total;
+        this.recordsByWeaponId = immutableWeaponMap(this.recordsByCategory);
+        this.allRecords = immutableAllRecords(this.recordsByCategory);
+        this.totalRecords = allRecords.size();
     }
 
     public MarketAPI getMarket() {
@@ -69,12 +69,15 @@ public final class WeaponStockSnapshot {
         return totalRecords;
     }
 
-    public List<WeaponStockRecord> getAllRecords() {
-        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
-        for (StockCategory category : StockCategory.values()) {
-            result.addAll(getRecords(category));
+    public WeaponStockRecord getRecord(String weaponId) {
+        if (weaponId == null) {
+            return null;
         }
-        return Collections.unmodifiableList(result);
+        return recordsByWeaponId.get(weaponId);
+    }
+
+    public List<WeaponStockRecord> getAllRecords() {
+        return allRecords;
     }
 
     public String getMarketName() {
@@ -93,5 +96,31 @@ public final class WeaponStockSnapshot {
             result.put(category, records);
         }
         return Collections.unmodifiableMap(result);
+    }
+
+    private static Map<String, WeaponStockRecord> immutableWeaponMap(Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
+        Map<String, WeaponStockRecord> result = new java.util.HashMap<String, WeaponStockRecord>();
+        for (StockCategory category : StockCategory.values()) {
+            List<WeaponStockRecord> records = recordsByCategory.get(category);
+            if (records == null) {
+                continue;
+            }
+            for (int i = 0; i < records.size(); i++) {
+                WeaponStockRecord record = records.get(i);
+                result.put(record.getWeaponId(), record);
+            }
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    private static List<WeaponStockRecord> immutableAllRecords(Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        for (StockCategory category : StockCategory.values()) {
+            List<WeaponStockRecord> records = recordsByCategory.get(category);
+            if (records != null) {
+                result.addAll(records);
+            }
+        }
+        return Collections.unmodifiableList(result);
     }
 }

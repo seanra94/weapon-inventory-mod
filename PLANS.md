@@ -10,11 +10,11 @@
 - Clean frontend work has started:
   - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
-  - weapon entries now show `Current`, `For Sale`, `Plan`, and `Cost`/`Profit` cells plus buy/sell controls.
+  - weapon entries now show `Storage`, `Inventory`, `Stocked`, `Buying`/`Selling`, and `Cost`/`Profit` cells plus compact buy/sell/reset controls.
   - popup has config-backed desired stock defaults, display mode, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup defaults to `All Tracked` so the review starts from all enabled weapon specs instead of only owned/currently sold weapons.
   - popup has sort modes for need, name, for-sale count, and owned count.
-  - popup row actions now support weapon expansion, nested Weapon Data/Sellers sections, cheapest-first `Buy 1`/`Buy 10`, and submarket-specific buys.
+  - popup row actions now support weapon expansion, nested Weapon Data/Sellers sections, cheapest-first `+1`/`+10`, and submarket-specific buys.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -49,32 +49,83 @@
   - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
 - Earlier popup redraw layering was mitigated by dismissing/reopening the tooltip dialog; the current cleaner foundation supersedes that with in-place custom-panel content replacement.
 - Fixed row action routing around explicit `StockReviewAction` button ids; current custom-panel buttons use a narrow polling fallback because `buttonPressed(...)` alone was not reliable for nested row controls.
+- Optimized that polling fallback so it only scans buttons for a few frames after mouse events instead of every frame.
 - Changed stock categories to start collapsed and render as flat full-width heading rows, so `No stock`, `Insufficient stock`, and `Sufficient stock` are visually peer sections.
 - Replaced the tooltip-row popup renderer with an explicit custom-panel/list foundation:
   - `StockReviewListModel` builds render-ready row descriptors from the snapshot and state;
-  - `StockReviewRenderer` renders fixed-height custom row panels for category headings, weapon rows, nested sections, sellers, and scroll indicators;
-  - `StockReviewPanelBoxPlugin` owns reusable row/container fill and border drawing;
+  - `StockReviewReviewListModel` builds Review GUI row descriptors so the renderer does not own review-table business logic;
+  - `StockReviewRenderer` owns shell/header/footer composition and stock-specific scroll row/top-gap rules while shared list helpers render fixed-height custom row panels for category headings, weapon rows, nested sections, sellers, buttons, and scroll indicators;
+  - `WimGuiScroll` and `WimGuiModalListLayout` own shared visible-row/window math for scrollable modal lists;
+  - `WimGuiPanelPlugin` owns reusable row/container fill and border drawing;
   - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
-- Restored `StockReviewButtonBinding` as a narrow fallback registry after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
+- Migrated nested-button fallback polling to reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
+- Migrated popup action/footer button placement to reusable `WimGuiButtonSpec` plus `WimGuiControls.addButtonRow(...)`, removing hand-written x-position chains from `StockReviewRenderer`.
+- Migrated modal footer placement to `WimGuiModalFooter`, so stock review's `Confirm/Review` left buttons and `Go Back/Cancel` right buttons use the same bottom-button helper future WIM modals should use.
+- Ported the ACG-style wrapped text layout helper into `WimGuiTextLayout` / `WimGuiText.fitLayout(...)`, so future WIM rows and popups can share line-count and growable-height calculations instead of inventing local text math.
+- Started the ACG modal-template migration with `WimGuiModalLayout`; the stock-review list body now uses shared heading/body/footer spacing and tight black-panel height math, and the renderer reports the actual list hitbox for mouse-wheel routing.
+- Migrated stock review title/status header rendering and header/action-row spacing to `WimGuiModalHeader` / `WimGuiModalLayout`, reducing local modal positioning in `StockReviewRenderer`.
+- Migrated stock review heading labels and scroll indicator labels to `WimGuiToggleHeading` / `WimGuiScrollIndicator`, so `(+)/(-)`, counted headings, and ASCII scroll rows no longer live as local string fragments in stock-review models/renderers.
+- Removed the stale stock-review text wrapper and moved wheel-scroll step ownership to `WimGuiScroll.DEFAULT_WHEEL_STEP`.
+- Migrated row cells to `WimGuiRowCell` plus `WimGuiControls.addRowCell(...)`; stock review now supplies stock-specific row-cell content while shared helpers own fixed-width cell data, disabled text behavior, cell-block width calculation, and info/action cell rendering.
+- Migrated list rows to `WimGuiListRow` plus `WimGuiListRowRenderer`; stock review now keeps stock-specific row factories in `StockReviewListRow` while shared helpers own generic row descriptors, row-panel creation, main-action button rendering, labels, right-side cells, and alignment.
+- Moved ACG-derived semantic palette ownership into `WimGuiStyle`; `StockReviewStyle` now aliases shared confirm/cancel/load/save colors, modal panel colors, heading colors, disabled colors, and row borders instead of owning them locally.
+- Migrated popup rebuild and scroll-hitbox helpers to `WimGuiContentPanel` and `WimGuiListBounds`; stock review no longer owns the remove/create/attach content-panel lifecycle or manual Starsector list-coordinate checks.
+- Migrated modal input and visual-dialog delegate wiring to `WimGuiModalInput`, `WimGuiInputResult`, `WimGuiDialogPanel`, and `WimGuiDialogDelegate`; stock review now provides stock actions/lifecycle hooks while shared helpers own Escape handling, list wheel scrolling, gated button polling, and `CustomVisualDialogDelegate` boilerplate.
+- Migrated stock review onto `WimGuiModalPanelPlugin`, a reusable modal panel base that owns init, close callbacks, content rebuilds, input routing, button dispatch, scroll-bound state, and render-failure close behavior.
+- Migrated host/opening boilerplate to `WimGuiHotkeyLatch`, `WimGuiDialogOpener`, `WimGuiDialogTracker`, and `WimGuiPendingDialog`; stock review now keeps market availability rules locally while shared helpers own hotkey latching, visual-dialog opening, open-state tracking, and pending reopen payloads.
+- Added `WimGuiCampaignDialogHost`, so future WIM campaign dialogs can reuse current sector/UI/dialog/market lookup and message reporting instead of copying the stock-review hotkey script plumbing.
+- Routed stock-review campaign messages, snapshot rebuilds, confirmation market lookup, and vanilla-core refresh dialog lookup through `WimGuiCampaignDialogHost`, and cached sector/current-market once per confirmation execution path.
+- Moved the forced vanilla cargo-core refresh fallback into `WimGuiCampaignDialogHost.refreshCargoCore(...)`, so future WIM campaign modals can reuse the same guarded close/reopen behavior.
+- Added shared player-cargo lookup to `WimGuiCampaignDialogHost` and routed stock-review credit/cargo/sell-price probes through it, leaving direct campaign access centralized.
+- Migrated central modal-list rendering to `WimGuiModalListSpec`, `WimGuiModalListRenderer`, and `WimGuiModalListRenderResult`; stock review now supplies only its scroll-row action factory and category top-gap rule while shared helpers own black-panel creation, scroll rows, row rendering, useful offsets, and returned list bounds.
+- Added `WimGuiScrollableListState` and `WimGuiModalListRenderer.renderAndStoreOffset(...)`, removing the stock-review-only row-renderer adapter and putting list-offset preservation in the shared modal-list path.
+- Migrated top modal action-row placement to `WimGuiModalActionRow` and added `WimGuiButtonSpec.semantic(...)` for the common enabled/disabled text and fill pattern.
+- Added `WimGuiButtonSpecs` and `WimGuiModalFooter.addLeftRowAndRightButton(...)` so renderers can compose button rows declaratively instead of hand-rolling mutable button-list and paired footer placement boilerplate.
+- Removed the stock-review-only row-cell adapter; `WimGuiRowCell` now directly owns standard action-cell disabled text behavior and row-cell list construction for future WIM screens.
+- Added `WimGuiSemanticButtonFactory`, giving future WIM modals one reusable way to create enabled/disabled semantic button specs with a shared border instead of local `actionButton`/`footerButton` wrapper methods.
+- Converted the main stock and review row-cell blocks to `WimGuiRowCell.of(...)`, making the intended shared row-cell composition pattern visible in current WIM screens instead of leaving manual mutable cell setup as the example.
+- Replaced remaining anonymous GUI-side callback helpers with explicit classes such as `WimGuiModalListGapAdapter` and `WimGuiNoopCoreInteractionListener`, reducing Starsector classloader risk from generated companion classes.
+- Added `tools\validate-live-gui-classes.ps1` after a runtime `NoClassDefFoundError` exposed stale live-jar/classloader risk. It verifies required extracted GUI helper classes exist in both repo and live jars and that repo/live SHA-256 hashes match.
+- Expanded `tools\validate-live-gui-classes.ps1` to reject stale removed GUI helper classes as well as missing required helpers, so future migrations catch old adapter classes reappearing in jars.
+- Added explicit live-jar checks for reusable nested helper interfaces such as `WimGuiButtonPoller.ActionHandler` and `WimGuiModalListLayout.ExtraGapProvider`, keeping intentional nested classes covered without allowing anonymous GUI companion drift.
 - Ported the accepted ACG GUI palette into `StockReviewStyle` and applied it to the stock review popup:
   - top stock category headings use red/yellow/green fills with white text;
   - nested toggle headings use the dark-gray collapsible heading color;
-  - Buy buttons use the ACG load/yellow fill with white text;
+  - Buy/increment buttons use green/confirm styling with white text;
   - ordinary popup text uses white/default font, with gray reserved for disabled/locked controls.
 - Filtered stock review category counts and weapon rows to currently buyable market weapons only.
 - Gated `F8` popup opening to an active current market with weapon stock for sale, avoiding looting and non-trade planet contexts.
 - Changed successful popup purchases to rebuild the popup snapshot in place by default instead of force-refreshing the vanilla cargo core UI. The forced refresh fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
-- Added first purchase flow:
+- Added first planned-trade flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
   - seller rows can buy from a specific submarket;
-  - purchases check credits and cargo space before mutating cargo.
-  - successful purchases rebuild the popup snapshot in place by default; the older close/reopen fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
+  - planned trades check credits and cargo space before mutating cargo.
+  - successful trades rebuild the popup snapshot in place by default; the older close/reopen fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
 - Added signed planned-trade flow:
   - positive planned quantity means buying;
   - negative planned quantity means selling from player inventory;
-  - `Review Purchase` opens a confirmation screen before cargo mutation;
-  - `Purchase Until Sufficient` currently queues needed buys and opens the review screen.
+  - `Review Trades` opens a confirmation screen before cargo mutation;
+  - `Purchase All Until Sufficient` queues cheapest-first buys needed to reach barely sufficient stock while staying in the Buy GUI.
+  - `Sell All Until Sufficient` queues inventory sales that keep post-trade stock sufficient.
+  - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo.
+- Added explicit patch verification:
+  - `tools\validate-cargo-stack-view-patch.ps1` compiles the ASM patcher and runs `Verify` mode against the active `starfarer_obf.jar`;
+  - the report checks target class/method presence, WEAPONS guard, embedded helper class, exact total-helper call counts, badge sprite render count, and known stale patch patterns.
+- Implemented the Buy/Review GUI performance and layout pass:
+  - weapon-name toggle headings, `Storage`, `Inventory`, and `Stocked` cells use gray backgrounds;
+  - stock/trade/cost cells were widened, with the weapon-name area shrinking to accommodate the richer table;
+  - a cached `StockReviewTradeContext` now owns pending totals, per-weapon cost, cargo-space delta, credits, and affordability checks for render and controller paths;
+  - `StockReviewQuoteBook` caches sorted seller lists, line quotes, seller allocations, sell prices, and cargo-space estimates so the Buy/Review GUI does not repeatedly copy/sort market stocks or scan player cargo while rendering;
+  - seller-row `+1` / `+10` enabled states now share the same affordability logic as top-level weapon-row buttons;
+  - planned trades now quote and confirm through one execution order: sells first, explicit seller-specific buys second, generic cheapest buys last;
+  - whole-plan quote calculations now consume seller stock once across the full portfolio, avoiding independent line quotes that could overcommit the same cheapest seller stock;
+  - the stale purchase-preview helper was removed in favor of explicit quote/allocation classes;
+  - pending trade mutation now lives in `StockReviewPendingTrades`, keeping merge/reset/clear/executed-removal behavior out of `StockReviewPanelPlugin`;
+  - `WeaponStockSnapshot` now caches all-record and weapon-id indexes so pricing/review paths avoid repeated list allocation and linear scans;
+  - the visible `Refresh` button was removed because all meaningful state changes already refresh through explicit actions;
+  - buy/increment controls use green, sell/decrement controls use red, and bulk trade controls use purple;
+  - the Review GUI is now an expandable table grouped by `Buying` and `Selling`, with expandable weapon rows, weapon data, and seller allocation rows for buys.
 
 ## Active Manual Validation
 
@@ -89,8 +140,9 @@
   - Mode/Sort/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
   - expanded rows show Weapon Data and Sellers sections;
-  - top-level `Buy 1`/`Buy 10` buys from cheapest eligible seller stock;
-  - seller-specific `Buy 1`/`Buy 10` only buys from that submarket;
+  - compact `+1`/`+10` controls plan buys from cheapest eligible seller stock;
+  - compact `-1`/`-10` controls plan sells from player inventory stock;
+  - seller-specific `+1`/`+10` only buys from that submarket;
   - failed buys show a message instead of mutating cargo;
   - no-weapons and many-weapons markets remain responsive;
   - commodities remain vanilla;
@@ -102,53 +154,26 @@
 
 ## High-Value Future Work
 
-- Rework Buy GUI weapon entries into the next stock-control row system:
-  - target collapsed weapon-entry structure:
-    - `Weapon Name` on gray background;
-    - `Storage: N` on gray background;
-    - `Inventory: N` on gray background;
-    - `Stocked: N` on gray background;
-    - `Buying: N` on green background when net planned quantity is positive;
-    - `Selling: N` on red background when net planned quantity is negative;
-    - neutral `Buying: 0` on yellow background when no trade is planned;
-    - `Cost: $N` on red background for net cost;
-    - `Profit: $N` on green background for net profit;
-    - `- N`, `- 10`, `- 1`, `+ 1`, `+ 10`, `+ N`, `Reset` as compact controls;
-    - `Buy Until Sufficient` or `+ N` should use green semantics where it represents reaching sufficiency.
-  - `Storage` means accessible storage count, separate from player fleet cargo.
-  - `Inventory` means player fleet cargo count, because only inventory weapons can be sold through this GUI.
-  - `Stocked` means current total stock before planned trades, usually storage plus inventory under the active owned-source policy.
-  - `Buying`/`Selling`, `Cost`/`Profit`, `Storage`, `Inventory`, and `Stocked` must remain snapshot/planned-trade summaries; clicking row controls should not mutate cargo until the Review GUI is confirmed.
-  - `- N` means sell down until the weapon is barely sufficient, never below sufficient stock if already sufficient.
-  - `+ N` means buy up until the weapon is barely sufficient, never beyond desired sufficient stock.
-  - `Reset` sets that weapon's planned trade quantity back to zero.
-  - `- 1` and `- 10` must be disabled with gray text and disabled-button visuals when there is not enough inventory stock available to sell that increment.
-  - `+ 1` and `+ 10` must be disabled with gray text and disabled-button visuals when the planned running total would exceed current credits or cargo capacity, or when current market stock is insufficient for that increment.
-  - Buy affordability and cargo-space checks must use the full current planned-trade total, not each weapon in isolation.
-  - Weapon-name toggle headings can be about 25% narrower than the current row-label area to make room for the richer control grid.
-  - Import/adapt the ACG text helper for button/row label fitting: shared wrapping, truncation, and `...` suffix behavior should be centralized rather than hand-coded per row.
-  - Investigate why WIM buttons still do not visually match ACG's dimmed-inner-rectangle behavior. Compare WIM `StockReviewRenderer.addButton(...)` with the relevant ACG button helper and preserve the result in WIM's shared button template.
-- Rework bottom Buy GUI bulk controls:
-  - rename `Purchase Until Sufficient` to `Purchase All Until Sufficient` if that better matches the final UX.
-  - Add `Sell All Until Sufficient`.
-  - Add `Reset All Trades`.
-  - `Purchase All Until Sufficient` should:
-    - gather all current-market weapons available for purchase;
-    - order purchase candidates from cheapest to most expensive;
-    - buy as many as possible of each cheapest candidate until money runs out, cargo space runs out, seller stock runs out, or that weapon reaches barely sufficient stock;
-    - respect any existing planned buys/sells rather than overwriting them;
-    - leave the user in the Buy GUI with updated planned quantities and cost/profit cells, not jump straight to Review GUI unless explicitly changed later.
-  - `Sell All Until Sufficient` should:
-    - plan as many inventory sells as possible without moving a weapon from sufficient to insufficient or no-stock status after planned trades;
-    - respect existing planned buys/sells rather than overwriting them.
-  - `Reset All Trades` should clear all planned buy/sell quantities back to zero.
+- ACG GUI migration is now largely in drawdown:
+  - modal composition, modal list panels, scroll math, button semantics, toggle-heading labels, text helpers, host adapters, and live-jar helper validation have reusable `WimGui*` ownership;
+  - future WIM screens should start from those helpers rather than copying stock-review renderer code;
+  - only continue extracting GUI helpers when a second screen needs the same behavior or when runtime testing exposes a concrete inconsistency.
+- Keep this validation loop for future migration slices:
+  - run `build.ps1`;
+  - run `git diff --check`;
+  - deploy the jar to the live Starsector mod folder;
+  - run `tools\validate-live-gui-classes.ps1`;
+  - restart Starsector before testing when new helper classes were introduced.
+- Continue polishing the new stock-control row system after runtime testing:
+  - verify the richer row still fits long modded weapon names at common UI scales;
+  - tune cell widths if labels such as `Inventory`, `Buying`, or `Profit` clip in game;
+  - adjust seller-row cell widths if compact `+1` / `+10` labels look cramped in game.
 - Remove or reduce capped runtime diagnostic logs once the latest cleanup is manually validated.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
   - transaction reporting/suspicion behavior;
   - tariff parity with vanilla;
   - clearer failure text for commission/illegal-market cases.
-- Add a small validation command that checks patched `CargoStackView` helper-call counts and renders a concise report, instead of relying on ad hoc `javap` inspection.
 - Consider publishing packaging notes for forum users that clearly explain the core-jar patch/restore requirement.
 
 ## Avoid Unless Reopened Deliberately

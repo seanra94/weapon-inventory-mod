@@ -6,12 +6,12 @@ import org.lwjgl.opengl.GL11;
 
 import java.awt.Color;
 
-final class StockReviewPanelBoxPlugin extends BaseCustomUIPanelPlugin {
+final class WimGuiPanelPlugin extends BaseCustomUIPanelPlugin {
     private final Color fillColor;
     private final Color borderColor;
     private PositionAPI position;
 
-    StockReviewPanelBoxPlugin(Color fillColor, Color borderColor) {
+    WimGuiPanelPlugin(Color fillColor, Color borderColor) {
         this.fillColor = fillColor;
         this.borderColor = borderColor;
     }
