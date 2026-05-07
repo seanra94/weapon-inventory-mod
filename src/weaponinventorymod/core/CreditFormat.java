@@ -1,11 +1,13 @@
 package weaponinventorymod.core;
 
 public final class CreditFormat {
+    private static final String CREDIT_SYMBOL = "\u00a2";
+
     private CreditFormat() {
     }
 
     public static String credits(int credits) {
-        return grouped(credits) + "cr";
+        return grouped(credits) + CREDIT_SYMBOL;
     }
 
     public static String creditsLong(int credits) {

@@ -108,7 +108,7 @@ final class StockReviewListModel {
         String total = StockReviewFormat.credits(transactionCost);
         String label = planQuantity > 0
                 ? "Buying: " + quantity + " [" + total + "]"
-                : planQuantity < 0 ? "Selling: " + quantity + " [" + total + "]" : "Buying: 0 [0cr]";
+                : planQuantity < 0 ? "Selling: " + quantity + " [" + total + "]" : "Buying: 0 [" + StockReviewFormat.credits(0) + "]";
         Color fill = planQuantity > 0
                 ? StockReviewStyle.PLAN_POSITIVE
                 : planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.CELL_BACKGROUND;

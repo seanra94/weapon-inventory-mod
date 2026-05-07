@@ -23,6 +23,9 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private final Set<String> expandedSellers = new HashSet<String>();
     private final Set<StockReviewFilter> activeFilters = EnumSet.noneOf(StockReviewFilter.class);
     private final Map<StockReviewFilterGroup, Boolean> expandedFilterGroups = new EnumMap<StockReviewFilterGroup, Boolean>(StockReviewFilterGroup.class);
+    private String tradeWarning = "None";
+    private float initialCredits = -1f;
+    private float initialCargoCapacity = -1f;
 
     public StockReviewState(StockReviewConfig config) {
         expanded.put(StockCategory.NO_STOCK, Boolean.FALSE);
@@ -52,6 +55,9 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.expandedSellers.addAll(source.expandedSellers);
         this.activeFilters.addAll(source.activeFilters);
         this.expandedFilterGroups.putAll(source.expandedFilterGroups);
+        this.tradeWarning = source.tradeWarning;
+        this.initialCredits = source.initialCredits;
+        this.initialCargoCapacity = source.initialCargoCapacity;
     }
 
     public boolean isExpanded(StockCategory category) {
@@ -173,6 +179,38 @@ public final class StockReviewState implements WimGuiScrollableListState {
 
     public void adjustListScrollOffset(int delta, int maxOffset) {
         listScrollOffset = WimGuiScroll.usefulOffsetByDelta(listScrollOffset, delta, Math.max(0, maxOffset));
+    }
+
+    public String getTradeWarning() {
+        return tradeWarning;
+    }
+
+    public void setTradeWarning(String tradeWarning) {
+        this.tradeWarning = tradeWarning == null || tradeWarning.isEmpty() ? "None" : tradeWarning;
+    }
+
+    public void clearTradeWarning() {
+        tradeWarning = "None";
+    }
+
+    public float getInitialCredits() {
+        return initialCredits;
+    }
+
+    public void setInitialCreditsIfUnset(float initialCredits) {
+        if (this.initialCredits < 0f) {
+            this.initialCredits = Math.max(0f, initialCredits);
+        }
+    }
+
+    public float getInitialCargoCapacity() {
+        return initialCargoCapacity;
+    }
+
+    public void setInitialCargoCapacityIfUnset(float initialCargoCapacity) {
+        if (this.initialCargoCapacity < 0f) {
+            this.initialCargoCapacity = Math.max(0f, initialCargoCapacity);
+        }
     }
 
     private static void toggleSet(Set<String> set, String key) {

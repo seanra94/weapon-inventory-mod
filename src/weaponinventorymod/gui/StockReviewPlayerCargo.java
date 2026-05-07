@@ -24,6 +24,11 @@ final class StockReviewPlayerCargo {
         return cargo == null ? 0f : cargo.getSpaceLeft();
     }
 
+    static float currentCargoCapacity() {
+        CargoAPI cargo = WimGuiCampaignDialogHost.current().getPlayerCargo();
+        return cargo == null ? 0f : cargo.getMaxCapacity();
+    }
+
     static Map<String, Integer> sellUnitPricesByWeapon(MarketAPI market,
                                                        boolean includeBlackMarket,
                                                        boolean globalMarketMode) {

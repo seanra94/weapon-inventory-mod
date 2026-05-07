@@ -156,8 +156,10 @@
   - moved `Total Cost` / `Total Profit` and `Credits Available` out of the scrollable list into fixed bottom summary rows above the footer buttons;
   - summary value cells now use red/green backgrounds for net cost/profit instead of colored text.
   - removed the Make Trades / Review Trades title-status header boxes to give the main trade panels more weapon-row space;
-  - expanded the fixed bottom summary to four rows: `Total Cost` / `Total Profit`, `Credits Available`, `Total Purchase Volume`, and `Cargo Space Available`;
+  - expanded the fixed bottom summary to five rows: `Warning`, `Total Cost` / `Total Profit`, `Credits Available`, `Total Purchase Volume`, and `Cargo Space Available`;
   - added orange near-limit summary fills for positive total cost at 95%-100% of available credits and purchase volume at 95%-100% of available cargo space.
+  - switched compact GUI credit labels from `cr` to Starsector's cent-sign glyph (`¢`, bundled font char id 162);
+  - added a fixed bottom `Warning` row above `Total Cost` / `Total Profit`, with persistent most-recent trade warnings for insufficient cargo capacity, insufficient credits, low post-trade credit balance, and low post-trade cargo capacity.
 - Corrected nested weapon-row sizing:
   - `Weapon Data` uses one indent and loses one indent-width from its parent weapon heading width;
   - Weapon Data rows use two indents and lose two indent-widths from the parent weapon heading width;

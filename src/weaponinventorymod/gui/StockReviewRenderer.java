@@ -37,7 +37,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 ? renderReviewList(root, snapshot, pendingPurchases, state, tradeContext, buttons)
                 : renderStockList(root, snapshot, state, tradeContext, buttons);
         if (!filterMode && !colorDebugMode) {
-            renderTradeSummary(root, tradeContext, reviewMode);
+            renderTradeSummary(root, tradeContext, state, reviewMode);
         }
         renderFooter(root, tradeContext, pendingPurchases, reviewMode, filterMode, colorDebugMode, colorDebugPersistent, buttons);
         return result;
@@ -111,6 +111,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
 
     private void renderTradeSummary(CustomPanelAPI root,
                                     StockReviewTradeContext tradeContext,
+                                    StockReviewState state,
                                     boolean reviewMode) {
         int netCost = tradeContext.totalCost();
         String netLabel = netCost < 0 ? "Total Profit" : "Total Cost";
@@ -121,6 +122,15 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         float purchaseVolume = Math.max(0f, tradeContext.totalCargoSpaceDelta());
         float width = reviewMode ? StockReviewStyle.REVIEW_LIST_WIDTH : StockReviewStyle.LIST_WIDTH;
         float rowY = StockReviewStyle.SUMMARY_TOP;
+        String warning = state == null ? "None" : state.getTradeWarning();
+        addSummaryRow(
+                root,
+                width,
+                rowY,
+                "Warning",
+                warning,
+                "None".equals(warning) ? StockReviewStyle.CELL_BACKGROUND : StockReviewStyle.PRESET_SCOPE_BUTTON);
+        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
                 width,

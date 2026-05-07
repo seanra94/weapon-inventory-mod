@@ -15,6 +15,11 @@ import java.util.List;
 
 public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction> {
     private static final Logger LOG = Logger.getLogger(StockReviewPanelPlugin.class);
+    private static final String WARNING_NONE = "None";
+    private static final String WARNING_NO_CARGO_CAPACITY = "Not enough cargo capacity";
+    private static final String WARNING_NOT_ENOUGH_CREDITS = "Not enough credits";
+    private static final String WARNING_LOW_CREDIT_BALANCE = "Credit balance at <5% of initial balance";
+    private static final String WARNING_LOW_CARGO_CAPACITY = "Cargo capacity at <5% of total capacity";
 
     private final StockReviewConfig config = StockReviewConfig.load();
     private final StockReviewState state;
@@ -47,7 +52,10 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     @Override
     protected void onInit() {
+        state.setInitialCreditsIfUnset(StockReviewPlayerCargo.currentCredits());
+        state.setInitialCargoCapacityIfUnset(StockReviewPlayerCargo.currentCargoCapacity());
         rebuildSnapshot();
+        updateTradeWarning(null);
     }
 
     @Override
@@ -146,6 +154,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (StockReviewAction.Type.TOGGLE_GLOBAL_MARKET.equals(type)) {
             state.toggleGlobalMarketMode();
             pendingTrades.clear();
+            state.clearTradeWarning();
             reviewMode = false;
             state.setListScrollOffset(0);
             rebuildSnapshot();
@@ -155,6 +164,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
             state.toggleBlackMarket();
             pendingTrades.clear();
+            state.clearTradeWarning();
             reviewMode = false;
             rebuildSnapshot();
             rebuildContent();
@@ -179,6 +189,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockReviewAction.Type.RESET_ALL_TRADES.equals(type)) {
             pendingTrades.clear();
+            updateTradeWarning(null);
             rebuildContent();
             return;
         }
@@ -306,6 +317,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         int available = availableFor(action);
         if (available <= 0) {
             reportMessage(action.getQuantity() < 0 ? "No more player-cargo stock is available to sell." : "No more buyable stock is available for that plan.");
+            updateTradeWarning(null);
             rebuildContent();
             return;
         }
@@ -315,6 +327,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (Math.abs(quantity) < Math.abs(requested)) {
             reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
         }
+        updateTradeWarning(null);
         rebuildContent();
     }
 
@@ -322,6 +335,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         int available = availableFor(action);
         if (available <= 0) {
             reportMessage(action.getQuantity() < 0 ? "No more queued or player-cargo stock is available to remove from the plan." : "No more queued sales or buyable stock is available for that plan.");
+            updateTradeWarning(null);
             rebuildContent();
             return;
         }
@@ -331,11 +345,13 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (Math.abs(quantity) < Math.abs(requested)) {
             reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
         }
+        updateTradeWarning(null);
         rebuildContent();
     }
 
     private void resetPlan(String weaponId) {
         pendingTrades.resetWeapon(weaponId);
+        updateTradeWarning(null);
         rebuildContent();
     }
 
@@ -344,12 +360,14 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         int added = 0;
+        String explicitWarning = null;
         List<WeaponStockRecord> records = StockReviewTradePlanner.cheapestFirstVisibleBuyableRecords(snapshot);
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
         for (int i = 0; i < records.size(); i++) {
             WeaponStockRecord record = records.get(i);
             int needed = tradeContext.buyNeededForSufficiency(record);
             int quantity = tradeContext.affordableBuyQuantity(record, null, needed);
+            explicitWarning = purchaseAllLimitWarning(record, tradeContext, needed, quantity, explicitWarning);
             if (quantity <= 0) {
                 continue;
             }
@@ -359,9 +377,11 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (added <= 0) {
             reportMessage("No additional sufficient-stock purchases are available.");
+            updateTradeWarning(explicitWarning);
             rebuildContent();
             return;
         }
+        updateTradeWarning(explicitWarning);
         rebuildContent();
     }
 
@@ -384,10 +404,73 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (removed <= 0) {
             reportMessage("No sufficient-stock sales are available.");
+            updateTradeWarning(null);
             rebuildContent();
             return;
         }
+        updateTradeWarning(null);
         rebuildContent();
+    }
+
+    private String purchaseAllLimitWarning(WeaponStockRecord record,
+                                           StockReviewTradeContext tradeContext,
+                                           int needed,
+                                           int quantity,
+                                           String currentWarning) {
+        int target = Math.min(Math.max(0, needed), tradeContext.buyableRemaining(record));
+        if (target <= 0 || quantity >= target) {
+            return currentWarning;
+        }
+        StockReviewQuoteBook quoteBook = new StockReviewQuoteBook(snapshot);
+        StockReviewPortfolioQuote fullQuote = quoteBook.quotePortfolio(StockReviewTradePlanner.withAdjustment(
+                pendingTrades.asList(),
+                record.getWeaponId(),
+                null,
+                target));
+        int fullCost = fullQuote.totalCost();
+        if (fullCost != StockReviewQuoteBook.PRICE_UNAVAILABLE && fullCost > tradeContext.credits()) {
+            return WARNING_NOT_ENOUGH_CREDITS;
+        }
+        if (fullQuote.totalCargoSpaceDelta() > tradeContext.cargoSpaceLeft() + 0.01f) {
+            return WARNING_NO_CARGO_CAPACITY;
+        }
+        return currentWarning;
+    }
+
+    private void updateTradeWarning(String explicitWarning) {
+        if (explicitWarning != null && !explicitWarning.isEmpty()) {
+            state.setTradeWarning(explicitWarning);
+            return;
+        }
+        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
+        if (tradeContext.cargoSpaceLeft() <= 0.01f
+                || tradeContext.totalCargoSpaceDelta() > tradeContext.cargoSpaceLeft() + 0.01f) {
+            state.setTradeWarning(WARNING_NO_CARGO_CAPACITY);
+            return;
+        }
+        int netCost = tradeContext.totalCost();
+        if (netCost != StockReviewQuoteBook.PRICE_UNAVAILABLE
+                && netCost > 0
+                && remainingCreditsAfterTrade(tradeContext) < state.getInitialCredits() * 0.05f) {
+            state.setTradeWarning(WARNING_LOW_CREDIT_BALANCE);
+            return;
+        }
+        float purchaseVolume = Math.max(0f, tradeContext.totalCargoSpaceDelta());
+        if (purchaseVolume > 0f
+                && remainingCargoAfterTrade(tradeContext) < state.getInitialCargoCapacity() * 0.05f) {
+            state.setTradeWarning(WARNING_LOW_CARGO_CAPACITY);
+            return;
+        }
+        state.setTradeWarning(WARNING_NONE);
+    }
+
+    private static float remainingCreditsAfterTrade(StockReviewTradeContext tradeContext) {
+        int netCost = tradeContext.totalCost();
+        return tradeContext.credits() - Math.max(0, netCost);
+    }
+
+    private static float remainingCargoAfterTrade(StockReviewTradeContext tradeContext) {
+        return tradeContext.cargoSpaceLeft() - Math.max(0f, tradeContext.totalCargoSpaceDelta());
     }
 
     private int availableFor(StockReviewAction action) {
@@ -421,12 +504,14 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         float credits = tradeContext.credits();
         if (estimatedCost > 0 && credits + 0.01f < estimatedCost) {
             reportMessage("Need " + StockReviewFormat.credits(estimatedCost) + " for these trades.");
+            updateTradeWarning(WARNING_NOT_ENOUGH_CREDITS);
             rebuildContent();
             return;
         }
         float cargoDelta = tradeContext.totalCargoSpaceDelta();
         if (cargoDelta > tradeContext.cargoSpaceLeft() + 0.01f) {
             reportMessage("Need " + Math.round(cargoDelta) + " cargo space for these trades.");
+            updateTradeWarning(WARNING_NO_CARGO_CAPACITY);
             rebuildContent();
             return;
         }
@@ -450,6 +535,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             }
         }
         pendingTrades.clear();
+        updateTradeWarning(null);
         reviewMode = false;
         state.setListScrollOffset(0);
         rebuildSnapshot();
