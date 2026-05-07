@@ -57,7 +57,8 @@
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
-  - this is intentionally isolated in `StockPurchaseService` for future transaction-side-effect hardening.
+  - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run;
+  - global-market buys/sells remain virtual WIM transactions and intentionally do not report to a real submarket plugin.
 - Popup category layout:
   - stock categories start collapsed;
   - headings are flat full-width peer rows, not nested checkboxes;
@@ -91,6 +92,7 @@
   - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently buyable under the current black-market setting. It should not open from looting, non-trade planet contexts, or markets with only locked/unbuyable weapon stock.
 - Purchase refresh:
   - The current preferred buy path does not force-close/reopen the vanilla cargo core after purchase; it mutates cargo, then rebuilds the popup snapshot in place. The old forced core refresh remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE` in case vanilla trade-grid stale-slot corruption still reproduces.
+  - Local-market transactions are still not guaranteed to be perfectly vanilla-identical. WIM now reports `PlayerMarketTransaction` to the touched submarket plugin, but runtime testing should still confirm tariff, suspicion, reputation, economy-impact, and modded-listener behavior.
 - Normal mod-side code owns all campaign state:
   - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
   - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.

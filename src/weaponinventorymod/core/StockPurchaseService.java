@@ -1,14 +1,19 @@
 package weaponinventorymod.core;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.campaign.CampaignUIAPI;
 import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.CargoStackAPI;
+import com.fs.starfarer.api.campaign.PlayerMarketTransaction;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.SubmarketPlugin;
+import com.fs.starfarer.api.campaign.CargoAPI.CargoItemType;
+import com.fs.starfarer.api.campaign.PlayerMarketTransaction.LineItemType;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets;
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +21,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public final class StockPurchaseService {
+    private static final Logger LOG = Logger.getLogger(StockPurchaseService.class);
+
     public PurchaseResult buyCheapest(SectorAPI sector,
                                       MarketAPI market,
                                       String weaponId,
@@ -74,8 +81,9 @@ public final class StockPurchaseService {
         target.cargo.removeEmptyStacks();
         target.cargo.sort();
         target.cargo.updateSpaceUsed();
+        reportWeaponTransaction(market, target.submarket, weaponId, quantity, target.unitPrice, false);
 
-        String message = "Sold " + quantity + " " + weaponDisplayName(weaponId) + " for " + credits + " credits.";
+        String message = "Sold " + quantity + " " + weaponDisplayName(weaponId) + " for " + credits(credits) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -115,7 +123,7 @@ public final class StockPurchaseService {
         playerCargo.updateSpaceUsed();
 
         String message = "Sold " + quantity + " " + weaponDisplayName(weaponId)
-                + " to the global weapon market for " + credits + " credits.";
+                + " to the global weapon market for " + credits(credits) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -148,7 +156,7 @@ public final class StockPurchaseService {
         int totalCost = unitPrice * requestedQuantity;
         float totalSpace = Math.max(1f, unitCargoSpace) * requestedQuantity;
         if (playerCargo.getCredits().get() + 0.01f < totalCost) {
-            return PurchaseResult.failure("Need " + totalCost + " credits for this order.");
+            return PurchaseResult.failure("Need " + credits(totalCost) + " for this order.");
         }
         if (playerCargo.getSpaceLeft() + 0.01f < totalSpace) {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
@@ -161,7 +169,7 @@ public final class StockPurchaseService {
         playerCargo.updateSpaceUsed();
 
         String message = "Bought " + requestedQuantity + " " + weaponDisplayName(weaponId)
-                + " from the global weapon market for " + totalCost + " credits.";
+                + " from the global weapon market for " + credits(totalCost) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -220,7 +228,7 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("No purchasable stock is available.");
         }
         if (playerCargo.getCredits().get() + 0.01f < totalCost) {
-            return PurchaseResult.failure("Need " + totalCost + " credits for this order.");
+            return PurchaseResult.failure("Need " + credits(totalCost) + " for this order.");
         }
         if (playerCargo.getSpaceLeft() + 0.01f < totalSpace) {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
@@ -231,6 +239,7 @@ public final class StockPurchaseService {
             line.source.cargo.removeEmptyStacks();
             line.source.cargo.sort();
             line.source.cargo.updateSpaceUsed();
+            reportWeaponTransaction(market, line.source.submarket, weaponId, line.quantity, line.source.unitPrice, true);
         }
         playerCargo.addWeapons(weaponId, totalQuantity);
         playerCargo.getCredits().subtract(totalCost);
@@ -238,7 +247,7 @@ public final class StockPurchaseService {
         playerCargo.sort();
         playerCargo.updateSpaceUsed();
 
-        String message = "Bought " + totalQuantity + " " + weaponDisplayName(weaponId) + " for " + totalCost + " credits.";
+        String message = "Bought " + totalQuantity + " " + weaponDisplayName(weaponId) + " for " + credits(totalCost) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
@@ -308,7 +317,7 @@ public final class StockPurchaseService {
             if (plugin != null && plugin.isIllegalOnSubmarket(playerStack, SubmarketPlugin.TransferAction.PLAYER_SELL)) {
                 continue;
             }
-            SellTarget candidate = new SellTarget(cargo, MarketStockService.sellUnitPrice(submarket, playerStack));
+            SellTarget candidate = new SellTarget(submarket, cargo, MarketStockService.sellUnitPrice(submarket, playerStack));
             if (best == null || candidate.unitPrice > best.unitPrice) {
                 best = candidate;
             }
@@ -349,6 +358,77 @@ public final class StockPurchaseService {
         }
     }
 
+    private static void reportWeaponTransaction(MarketAPI market,
+                                                SubmarketAPI submarket,
+                                                String weaponId,
+                                                int quantity,
+                                                int unitPrice,
+                                                boolean bought) {
+        if (market == null || submarket == null || weaponId == null || weaponId.isEmpty() || quantity <= 0) {
+            return;
+        }
+        SubmarketPlugin plugin = submarket.getPlugin();
+        if (plugin == null) {
+            return;
+        }
+        try {
+            PlayerMarketTransaction transaction = new PlayerMarketTransaction(market, submarket, tradeMode(submarket));
+            CargoAPI cargo = Global.getFactory() == null ? null : Global.getFactory().createCargo(false);
+            if (cargo != null) {
+                cargo.addWeapons(weaponId, quantity);
+                cargo.sort();
+                if (bought) {
+                    transaction.setBought(cargo);
+                } else {
+                    transaction.setSold(cargo);
+                }
+            }
+            LineItemType lineType = bought ? LineItemType.BOUGHT : LineItemType.SOLD;
+            transaction.getLineItems().add(new PlayerMarketTransaction.TransactionLineItem(
+                    weaponId,
+                    lineType,
+                    CargoItemType.WEAPONS,
+                    submarket,
+                    quantity,
+                    unitPrice,
+                    unitPrice,
+                    timestamp()));
+            transaction.setCreditValue(bought ? unitPrice * quantity : -unitPrice * quantity);
+            plugin.reportPlayerMarketTransaction(transaction);
+        } catch (Throwable t) {
+            // Transaction callbacks are best-effort; cargo mutation has already succeeded.
+            LOG.warn("WIM_STOCK_REVIEW transaction report failed for " + weaponId
+                    + " at " + submarket.getSpecId(), t);
+        }
+    }
+
+    private static CampaignUIAPI.CoreUITradeMode tradeMode(SubmarketAPI submarket) {
+        SubmarketPlugin plugin = submarket == null ? null : submarket.getPlugin();
+        return plugin != null && plugin.isBlackMarket()
+                ? CampaignUIAPI.CoreUITradeMode.SNEAK
+                : CampaignUIAPI.CoreUITradeMode.OPEN;
+    }
+
+    private static long timestamp() {
+        return Global.getSector() == null || Global.getSector().getClock() == null
+                ? 0L
+                : Global.getSector().getClock().getTimestamp();
+    }
+
+    private static String credits(int credits) {
+        String digits = String.valueOf(Math.abs(credits));
+        StringBuilder result = new StringBuilder();
+        int firstGroup = digits.length() % 3;
+        if (firstGroup == 0) {
+            firstGroup = 3;
+        }
+        result.append(digits.substring(0, firstGroup));
+        for (int i = firstGroup; i < digits.length(); i += 3) {
+            result.append(',').append(digits.substring(i, i + 3));
+        }
+        return (credits < 0 ? "-" : "") + result.toString() + " credits";
+    }
+
     private static final class PurchaseSource {
         static final Comparator<PurchaseSource> PRICE_ORDER = new Comparator<PurchaseSource>() {
             @Override
@@ -387,10 +467,12 @@ public final class StockPurchaseService {
     }
 
     private static final class SellTarget {
+        final SubmarketAPI submarket;
         final CargoAPI cargo;
         final int unitPrice;
 
-        SellTarget(CargoAPI cargo, int unitPrice) {
+        SellTarget(SubmarketAPI submarket, CargoAPI cargo, int unitPrice) {
+            this.submarket = submarket;
             this.cargo = cargo;
             this.unitPrice = unitPrice;
         }

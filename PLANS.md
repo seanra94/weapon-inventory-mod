@@ -109,6 +109,10 @@
   - `Purchase All Until Sufficient` queues cheapest-first buys needed to reach barely sufficient stock while staying in the Buy GUI.
   - `Sell All Until Sufficient` queues inventory sales that keep post-trade stock sufficient.
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo.
+- Added first transaction-side-effect hardening:
+  - local-market WIM buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
+  - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
+  - virtual global-market trades remain WIM-only and do not report to a real submarket.
 - Added explicit patch verification:
   - `tools\validate-cargo-stack-view-patch.ps1` compiles the ASM patcher and runs `Verify` mode against the active `starfarer_obf.jar`;
   - the report checks target class/method presence, WEAPONS guard, embedded helper class, exact total-helper call counts, badge sprite render count, and known stale patch patterns.
@@ -201,9 +205,9 @@
 - Remove or reduce capped runtime diagnostic logs once the latest cleanup is manually validated.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
-  - transaction reporting/suspicion behavior;
+  - verify the new transaction reporting actually triggers vanilla/modded suspicion/economy listeners as expected;
   - tariff parity with vanilla;
-  - black-market sale side effects, if WIM ever adds a true black-market sell route instead of simple base-value cargo mutation;
+  - black-market sale side effects beyond the current best-effort `SNEAK` transaction callback;
   - clearer failure text for commission/illegal-market cases.
 - Consider publishing packaging notes for forum users that clearly explain the core-jar patch/restore requirement.
 
