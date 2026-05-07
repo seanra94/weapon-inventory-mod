@@ -16,6 +16,11 @@
   - include/exclude black market stock;
   - desired stock defaults by weapon size;
   - per-weapon desired/ignored overrides.
+- LunaLib now owns the user-facing default sufficient-stock thresholds by weapon mount size:
+  - `wim_desired_small_weapon_count`, default 16;
+  - `wim_desired_medium_weapon_count`, default 8;
+  - `wim_desired_large_weapon_count`, default 4.
+  These override the JSON defaults, while per-weapon JSON `desired` overrides still take precedence for specific weapons.
 - Popup redraw rule:
   - The clean popup now renders through an explicit custom-panel shell, not one long tooltip row pile.
   - `StockReviewListModel` builds Buy GUI rows and `StockReviewReviewListModel` builds Review GUI rows.

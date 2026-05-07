@@ -4,6 +4,7 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.combat.WeaponAPI;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import weaponinventorymod.internal.WeaponInventoryConfig;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,9 +14,9 @@ public final class StockReviewConfig {
     private static final Logger LOG = Logger.getLogger(StockReviewConfig.class);
     private static final String CONFIG_PATH = "data/config/weapon_inventory_stock.json";
 
-    private static final int DEFAULT_SMALL_WEAPON_COUNT = 8;
-    private static final int DEFAULT_MEDIUM_WEAPON_COUNT = 4;
-    private static final int DEFAULT_LARGE_WEAPON_COUNT = 2;
+    private static final int DEFAULT_SMALL_WEAPON_COUNT = 16;
+    private static final int DEFAULT_MEDIUM_WEAPON_COUNT = 8;
+    private static final int DEFAULT_LARGE_WEAPON_COUNT = 4;
 
     private final int smallWeaponDesired;
     private final int mediumWeaponDesired;
@@ -46,6 +47,7 @@ public final class StockReviewConfig {
 
     public static StockReviewConfig load() {
         try {
+            WeaponInventoryConfig.refreshAndPublishSettings();
             JSONObject json = Global.getSettings().loadJSON(CONFIG_PATH);
             return fromJson(json);
         } catch (Throwable t) {
@@ -56,9 +58,9 @@ public final class StockReviewConfig {
 
     public static StockReviewConfig defaults() {
         return new StockReviewConfig(
-                DEFAULT_SMALL_WEAPON_COUNT,
-                DEFAULT_MEDIUM_WEAPON_COUNT,
-                DEFAULT_LARGE_WEAPON_COUNT,
+                WeaponInventoryConfig.desiredSmallWeaponCount(DEFAULT_SMALL_WEAPON_COUNT),
+                WeaponInventoryConfig.desiredMediumWeaponCount(DEFAULT_MEDIUM_WEAPON_COUNT),
+                WeaponInventoryConfig.desiredLargeWeaponCount(DEFAULT_LARGE_WEAPON_COUNT),
                 true,
                 true,
                 StockSortMode.NEED,
@@ -68,9 +70,12 @@ public final class StockReviewConfig {
 
     private static StockReviewConfig fromJson(JSONObject json) {
         JSONObject desiredDefaults = json.optJSONObject("desiredDefaults");
-        int small = clampDesired(optInt(desiredDefaults, "smallWeapon", DEFAULT_SMALL_WEAPON_COUNT));
-        int medium = clampDesired(optInt(desiredDefaults, "mediumWeapon", DEFAULT_MEDIUM_WEAPON_COUNT));
-        int large = clampDesired(optInt(desiredDefaults, "largeWeapon", DEFAULT_LARGE_WEAPON_COUNT));
+        int small = WeaponInventoryConfig.desiredSmallWeaponCount(
+                clampDesired(optInt(desiredDefaults, "smallWeapon", DEFAULT_SMALL_WEAPON_COUNT)));
+        int medium = WeaponInventoryConfig.desiredMediumWeaponCount(
+                clampDesired(optInt(desiredDefaults, "mediumWeapon", DEFAULT_MEDIUM_WEAPON_COUNT)));
+        int large = WeaponInventoryConfig.desiredLargeWeaponCount(
+                clampDesired(optInt(desiredDefaults, "largeWeapon", DEFAULT_LARGE_WEAPON_COUNT)));
 
         JSONObject sources = json.optJSONObject("sources");
         boolean includeStorage = optBoolean(sources, "includeCurrentMarketStorage", true);

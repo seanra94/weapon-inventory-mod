@@ -7,9 +7,9 @@
     "includeBlackMarket": true
   },
   "desiredDefaults": {
-    "smallWeapon": 8,
-    "mediumWeapon": 4,
-    "largeWeapon": 2
+    "smallWeapon": 16,
+    "mediumWeapon": 8,
+    "largeWeapon": 4
   },
   "perWeapon": {
   }

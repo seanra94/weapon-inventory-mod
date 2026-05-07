@@ -147,6 +147,10 @@
 - Aligned `Sort: Need` with the current visible `Storage` semantics. It now sorts by total owned stock, including player inventory, rather than the old outside-inventory-only count.
 - Centralized local trade submarket eligibility in `MarketStockService.isTradeSubmarket(...)`, so stock collection, buying, selling, and sell-price quoting share the same storage/local-resource/black-market filtering.
 - Replaced the remaining runtime-side anonymous purchase-source comparator with an explicit nested comparator and added live-jar validation to reject the stale generated `$PurchaseSource$1` class.
+- Added LunaLib settings for sufficient-stock thresholds by weapon mount size:
+  - small weapons default to 16;
+  - medium weapons default to 8;
+  - large weapons default to 4.
 
 ## Active Manual Validation
 

@@ -55,7 +55,7 @@ public class WeaponInventoryCountUpdater implements EveryFrameScript {
 
     @Override
     public void advance(float amount) {
-        updateIntervalSec = WeaponInventoryConfig.refreshAndPublishUpdateIntervalSeconds();
+        updateIntervalSec = WeaponInventoryConfig.refreshAndPublishSettings();
         elapsedSinceUpdate += amount;
         if (elapsedSinceUpdate < updateIntervalSec) {
             return;
