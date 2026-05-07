@@ -69,10 +69,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
-                        buttonFactory.enabledButton(StockReviewStyle.CLOSE_BUTTON_WIDTH, "Colors",
-                                StockReviewAction.openColorDebug(), StockReviewStyle.SAVE_BUTTON),
-                        buttonFactory.enabledButton(StockReviewStyle.CLOSE_BUTTON_WIDTH, "Close",
-                                StockReviewAction.close(), StockReviewStyle.ACTION_BACKGROUND)),
+                        buttonFactory.enabledButton(StockReviewStyle.COLOR_BUTTON_WIDTH, "Colors",
+                                StockReviewAction.openColorDebug(), StockReviewStyle.SAVE_BUTTON)),
                 buttons);
     }
 

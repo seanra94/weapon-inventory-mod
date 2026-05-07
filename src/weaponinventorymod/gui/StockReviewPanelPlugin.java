@@ -27,6 +27,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private WeaponStockSnapshot snapshot;
     private boolean reviewMode = false;
     private boolean colorDebugMode = false;
+    private boolean colorDebugReturnToReview = false;
+    private int colorDebugReturnScrollOffset = 0;
     private boolean colorDebugPersistent = false;
     private int colorDebugTargetIndex = 0;
     private Color colorDebugDraft = null;
@@ -45,6 +47,22 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     @Override
     protected void onInit() {
         rebuildSnapshot();
+    }
+
+    @Override
+    protected void onCloseRequested() {
+        if (colorDebugMode) {
+            leaveColorDebug();
+            rebuildContent();
+            return;
+        }
+        if (reviewMode) {
+            reviewMode = false;
+            state.setListScrollOffset(0);
+            rebuildContent();
+            return;
+        }
+        close();
     }
 
     @Override
@@ -149,6 +167,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.OPEN_COLOR_DEBUG.equals(type)) {
+            colorDebugReturnToReview = reviewMode;
+            colorDebugReturnScrollOffset = state.getListScrollOffset();
             colorDebugMode = true;
             reviewMode = false;
             state.setListScrollOffset(0);
@@ -188,8 +208,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockReviewAction.Type.DEBUG_CONFIRM.equals(type)) {
             applyColorDebugDraft();
-            colorDebugMode = false;
-            state.setListScrollOffset(0);
+            leaveColorDebug();
             rebuildContent();
             return;
         }
@@ -213,8 +232,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockReviewAction.Type.GO_BACK.equals(type)) {
             if (colorDebugMode) {
-                colorDebugMode = false;
-                state.setListScrollOffset(0);
+                leaveColorDebug();
                 rebuildContent();
                 return;
             }
@@ -230,6 +248,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (StockReviewAction.Type.CLOSE.equals(type)) {
             close();
         }
+    }
+
+    private void leaveColorDebug() {
+        colorDebugMode = false;
+        reviewMode = colorDebugReturnToReview;
+        state.setListScrollOffset(colorDebugReturnScrollOffset);
     }
 
     private void addPendingTrade(StockReviewAction action) {

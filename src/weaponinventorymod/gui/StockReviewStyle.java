@@ -13,7 +13,7 @@ final class StockReviewStyle {
     static final float MODE_BUTTON_WIDTH = 168f;
     static final float SORT_BUTTON_WIDTH = 140f;
     static final float BLACK_MARKET_BUTTON_WIDTH = 160f;
-    static final float CLOSE_BUTTON_WIDTH = 82f;
+    static final float COLOR_BUTTON_WIDTH = 82f;
     static final float BUTTON_GAP = 5f;
     static final float SELLER_BUY_BUTTON_WIDTH = 54f;
     static final float STOCK_CELL_WIDTH = 92f;
@@ -34,7 +34,7 @@ final class StockReviewStyle {
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float ROW_HEIGHT = 22f;
     static final float ROW_GAP = 3f;
-    static final float CATEGORY_TOP_GAP = 8f;
+    static final float CATEGORY_TOP_GAP = ROW_GAP;
     static final float TEXT_TOP_PAD = WimGuiStyle.TEXT_TOP_PAD;
     static final float TEXT_LEFT_PAD = WimGuiStyle.TEXT_LEFT_PAD;
     static final float WEAPON_INDENT = 18f;

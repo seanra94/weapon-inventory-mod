@@ -45,7 +45,7 @@ abstract class WimGuiModalPanelPlugin<A> extends BaseCustomUIPanelPlugin impleme
     public final void processInput(List<InputEventAPI> events) {
         WimGuiInputResult result = modalInput.processInput(events);
         if (result.isCloseRequested()) {
-            close();
+            onCloseRequested();
             return;
         }
         if (result.hasScrollDelta()) {
@@ -94,6 +94,10 @@ abstract class WimGuiModalPanelPlugin<A> extends BaseCustomUIPanelPlugin impleme
             callbacks = null;
             currentCallbacks.dismissDialog();
         }
+    }
+
+    protected void onCloseRequested() {
+        close();
     }
 
     protected final int maxScrollOffset() {

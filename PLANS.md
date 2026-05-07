@@ -136,7 +136,7 @@
   - category headings expand/collapse and preserve current state across refresh;
   - Mode cycles through `Owned or For Sale`, `Currently For Sale`, `Owned Only`, and `All Tracked`;
   - Sort cycles through `Need`, `Name`, and `Cost`;
-  - Storage and Black Market toggles update counts/categories;
+  - Black Market toggle updates counts/categories;
   - Mode/Sort/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
   - expanded rows show Weapon Data and Sellers sections;

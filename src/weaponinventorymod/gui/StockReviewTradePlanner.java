@@ -24,6 +24,15 @@ final class StockReviewTradePlanner {
         return result;
     }
 
+    static List<WeaponStockRecord> visibleTradeableRecords(WeaponStockSnapshot snapshot, StockCategory category) {
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        if (snapshot == null || category == null) {
+            return result;
+        }
+        addVisibleTradeableRecords(result, snapshot.getRecords(category));
+        return result;
+    }
+
     static List<WeaponStockRecord> visibleBuyableRecords(WeaponStockSnapshot snapshot) {
         List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
         if (snapshot == null) {
@@ -117,6 +126,18 @@ final class StockReviewTradePlanner {
         for (int i = 0; i < records.size(); i++) {
             WeaponStockRecord record = records.get(i);
             if (record.getBuyableCount() > 0) {
+                result.add(record);
+            }
+        }
+    }
+
+    private static void addVisibleTradeableRecords(List<WeaponStockRecord> result, List<WeaponStockRecord> records) {
+        if (records == null) {
+            return;
+        }
+        for (int i = 0; i < records.size(); i++) {
+            WeaponStockRecord record = records.get(i);
+            if (record.getBuyableCount() > 0 || record.getPlayerCargoCount() > 0) {
                 result.add(record);
             }
         }

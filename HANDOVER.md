@@ -35,6 +35,7 @@
   - `Owned or For Sale`: weapons the player already owns or that the current market sells;
   - `Currently For Sale`: weapons currently sold by the open market/submarkets;
   - `Owned Only`: weapons already owned under the active owned-source policy.
+- Buy GUI row visibility is tradeability-based: render rows with buyable current-market stock or player-inventory stock that can be sold. Do not filter the main list to buyable-only rows, because that hides sellable inventory when Black Market is off or a market has no legal weapon stock.
 - Popup sorting:
   - `Need`: lowest stored-outside-inventory count first, then cheapest current buy cost, then weapon name;
   - `Name`: weapon name first, then need, then cost;

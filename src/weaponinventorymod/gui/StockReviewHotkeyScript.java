@@ -1,6 +1,9 @@
 package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.EveryFrameScript;
+import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.campaign.CargoAPI;
+import com.fs.starfarer.api.campaign.CargoStackAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
@@ -58,7 +61,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
 
         MarketAPI market = host.getCurrentMarket();
         if (!canOpenAtCurrentMarket(market)) {
-            host.addMessage("Weapon Stock Review is only available while shopping at a market with weapons for sale.");
+            host.addMessage("Weapon Stock Review is only available while shopping at a market or carrying weapons to sell.");
             return;
         }
         try {
@@ -84,10 +87,26 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
                     }
                 }
             }
-            return false;
+            return playerHasWeaponCargo();
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    private static boolean playerHasWeaponCargo() {
+        if (Global.getSector() == null || Global.getSector().getPlayerFleet() == null) {
+            return false;
+        }
+        CargoAPI cargo = Global.getSector().getPlayerFleet().getCargo();
+        if (cargo == null || cargo.getStacksCopy() == null) {
+            return false;
+        }
+        for (CargoStackAPI stack : cargo.getStacksCopy()) {
+            if (MarketStockService.isVisibleWeaponStack(stack)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void openDialog(MarketAPI market, StockReviewState initialState) {

@@ -22,7 +22,7 @@ final class StockReviewListModel {
         displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
         displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
         if (displayed == 0) {
-            rows.add(StockReviewListRow.empty("No currently buyable weapons were found at this market."));
+            rows.add(StockReviewListRow.empty("No tradeable weapons were found at this market."));
         }
         return rows;
     }
@@ -34,7 +34,7 @@ final class StockReviewListModel {
                                    StockCategory category,
                                    Color color,
                                    boolean topGap) {
-        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleBuyableRecords(snapshot, category);
+        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleTradeableRecords(snapshot, category);
         boolean expanded = state.isExpanded(category);
         String label = WimGuiToggleHeading.countedLabel(category.getLabel(), records.size(), expanded);
         rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap));
