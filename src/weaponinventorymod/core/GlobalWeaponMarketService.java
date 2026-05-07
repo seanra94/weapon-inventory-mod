@@ -8,6 +8,7 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import weaponinventorymod.internal.WeaponInventoryConfig;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
@@ -89,10 +90,7 @@ public final class GlobalWeaponMarketService {
         }
         for (String factionId : activeFactionIds) {
             FactionAPI faction = sector.getFaction(factionId);
-            if (faction == null || faction.getKnownWeapons() == null) {
-                continue;
-            }
-            for (String weaponId : faction.getKnownWeapons()) {
+            for (String weaponId : inferredWeaponIds(faction)) {
                 if (cheapestByWeapon.containsKey(weaponId) || !isSafeInferredWeapon(weaponId)) {
                     continue;
                 }
@@ -109,6 +107,18 @@ public final class GlobalWeaponMarketService {
                         true));
             }
         }
+    }
+
+    private static Set<String> inferredWeaponIds(FactionAPI faction) {
+        if (faction == null) {
+            return Collections.emptySet();
+        }
+        Map<String, Float> sellFrequency = faction.getWeaponSellFrequency();
+        if (sellFrequency != null && !sellFrequency.isEmpty()) {
+            return sellFrequency.keySet();
+        }
+        Set<String> knownWeapons = faction.getKnownWeapons();
+        return knownWeapons == null ? Collections.<String>emptySet() : knownWeapons;
     }
 
     private static boolean isSafeInferredWeapon(String weaponId) {
