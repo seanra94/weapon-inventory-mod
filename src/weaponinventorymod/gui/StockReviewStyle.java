@@ -36,7 +36,7 @@ final class StockReviewStyle {
     static final float ROW_GAP = 3f;
     static final float CATEGORY_TOP_GAP = ROW_GAP;
     static final float SUMMARY_ROW_GAP = 4f;
-    static final int SUMMARY_ROW_COUNT = 5;
+    static final int SUMMARY_ROW_COUNT = 3;
     static final float SUMMARY_HEIGHT = SUMMARY_ROW_COUNT * ROW_HEIGHT
             + (SUMMARY_ROW_COUNT - 1) * SUMMARY_ROW_GAP;
     static final float SUMMARY_TOP = HEIGHT - PAD - ACTION_BUTTON_HEIGHT - SMALL_PAD - SUMMARY_HEIGHT;

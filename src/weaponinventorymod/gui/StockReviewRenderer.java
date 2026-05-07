@@ -114,12 +114,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                     StockReviewState state,
                                     boolean reviewMode) {
         int netCost = tradeContext.totalCost();
-        String netLabel = netCost < 0 ? "Total Profit" : "Total Cost";
-        String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
-                ? "Price Unavailable"
-                : StockReviewFormat.credits(netCost);
-        Color netFill = costValueFill(netCost, tradeContext.credits());
-        float purchaseVolume = Math.max(0f, tradeContext.totalCargoSpaceDelta());
+        float cargoDelta = tradeContext.totalCargoSpaceDelta();
         float width = reviewMode ? StockReviewStyle.REVIEW_LIST_WIDTH : StockReviewStyle.LIST_WIDTH;
         float rowY = StockReviewStyle.SUMMARY_TOP;
         String warning = state == null ? "None" : state.getTradeWarning();
@@ -135,33 +130,17 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 root,
                 width,
                 rowY,
-                netLabel,
-                netValue,
-                netFill);
-        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
-        addSummaryRow(
-                root,
-                width,
-                rowY,
                 "Credits Available",
-                StockReviewFormat.credits(Math.round(tradeContext.credits())),
-                StockReviewStyle.CELL_BACKGROUND);
-        rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
-        addSummaryRow(
-                root,
-                width,
-                rowY,
-                "Total Purchase Volume",
-                formatCargo(purchaseVolume),
-                StockReviewStyle.CELL_BACKGROUND);
+                creditsAvailableLabel(tradeContext.credits(), netCost),
+                creditDeltaFill(netCost));
         rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
                 width,
                 rowY,
                 "Cargo Space Available",
-                formatCargo(tradeContext.cargoSpaceLeft()),
-                cargoValueFill(purchaseVolume, tradeContext.cargoSpaceLeft()));
+                cargoAvailableLabel(tradeContext.cargoSpaceLeft(), cargoDelta),
+                cargoDeltaFill(cargoDelta));
     }
 
     private void addSummaryRow(CustomPanelAPI root,
@@ -183,42 +162,54 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 StockReviewStyle.TEXT);
     }
 
-    private static Color costValueFill(int netCost, float creditsAvailable) {
-        if (netCost < 0) {
-            return StockReviewStyle.CONFIRM_BUTTON;
-        }
-        if (netCost <= 0) {
-            return StockReviewStyle.CELL_BACKGROUND;
-        }
-        if (isNearLimit(netCost, creditsAvailable)) {
-            return StockReviewStyle.PRESET_SCOPE_BUTTON;
-        }
-        return StockReviewStyle.CANCEL_BUTTON;
-    }
-
-    private static Color cargoValueFill(float purchaseVolume, float cargoSpaceAvailable) {
-        if (purchaseVolume <= 0f) {
-            return StockReviewStyle.CELL_BACKGROUND;
-        }
-        if (purchaseVolume > cargoSpaceAvailable) {
-            return StockReviewStyle.CANCEL_BUTTON;
-        }
-        if (isNearLimit(purchaseVolume, cargoSpaceAvailable)) {
-            return StockReviewStyle.PRESET_SCOPE_BUTTON;
-        }
-        return StockReviewStyle.CELL_BACKGROUND;
-    }
-
-    private static boolean isNearLimit(float value, float limit) {
-        return limit > 0f && value >= limit * 0.95f && value <= limit;
-    }
-
     private static String formatCargo(float value) {
         float rounded = Math.round(value);
         if (Math.abs(value - rounded) < 0.05f) {
             return Integer.toString(Math.round(rounded));
         }
         return String.format(java.util.Locale.US, "%.1f", value);
+    }
+
+    private static String creditsAvailableLabel(float creditsAvailable, int netCost) {
+        if (netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
+            return StockReviewFormat.credits(Math.round(creditsAvailable)) + " [?]";
+        }
+        return StockReviewFormat.credits(Math.round(creditsAvailable)) + " [" + signedCredits(-netCost) + "]";
+    }
+
+    private static String cargoAvailableLabel(float cargoSpaceAvailable, float cargoDelta) {
+        return formatCargo(cargoSpaceAvailable) + " [" + signedCargo(-cargoDelta) + "]";
+    }
+
+    private static String signedCredits(int delta) {
+        return (delta >= 0 ? "+" : "-") + StockReviewFormat.credits(delta);
+    }
+
+    private static String signedCargo(float delta) {
+        return (delta >= 0f ? "+" : "-") + formatCargo(Math.abs(delta));
+    }
+
+    private static Color creditDeltaFill(int netCost) {
+        if (netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
+            return StockReviewStyle.CANCEL_BUTTON;
+        }
+        if (netCost > 0) {
+            return StockReviewStyle.BUY_BUTTON;
+        }
+        if (netCost < 0) {
+            return StockReviewStyle.SELL_BUTTON;
+        }
+        return StockReviewStyle.CELL_BACKGROUND;
+    }
+
+    private static Color cargoDeltaFill(float cargoDelta) {
+        if (cargoDelta > 0.01f) {
+            return StockReviewStyle.BUY_BUTTON;
+        }
+        if (cargoDelta < -0.01f) {
+            return StockReviewStyle.SELL_BUTTON;
+        }
+        return StockReviewStyle.CELL_BACKGROUND;
     }
 
     private WimGuiListBounds renderColorDebugList(CustomPanelAPI root,
