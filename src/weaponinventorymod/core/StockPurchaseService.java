@@ -409,16 +409,7 @@ public final class StockPurchaseService {
     }
 
     private static final class PurchaseSource {
-        static final Comparator<PurchaseSource> PRICE_ORDER = new Comparator<PurchaseSource>() {
-            @Override
-            public int compare(PurchaseSource left, PurchaseSource right) {
-                int result = Integer.compare(left.unitPrice, right.unitPrice);
-                if (result != 0) {
-                    return result;
-                }
-                return left.submarket.getNameOneLine().compareToIgnoreCase(right.submarket.getNameOneLine());
-            }
-        };
+        static final Comparator<PurchaseSource> PRICE_ORDER = PurchaseSourcePriceComparator.INSTANCE;
 
         final SubmarketAPI submarket;
         final CargoAPI cargo;
@@ -432,6 +423,19 @@ public final class StockPurchaseService {
             this.available = available;
             this.unitPrice = unitPrice;
             this.unitCargoSpace = unitCargoSpace;
+        }
+    }
+
+    private static final class PurchaseSourcePriceComparator implements Comparator<PurchaseSource> {
+        static final PurchaseSourcePriceComparator INSTANCE = new PurchaseSourcePriceComparator();
+
+        @Override
+        public int compare(PurchaseSource left, PurchaseSource right) {
+            int result = Integer.compare(left.unitPrice, right.unitPrice);
+            if (result != 0) {
+                return result;
+            }
+            return left.submarket.getNameOneLine().compareToIgnoreCase(right.submarket.getNameOneLine());
         }
     }
 

@@ -44,7 +44,8 @@ $requiredClasses = @(
     "weaponinventorymod/gui/StockReviewFilterGroup.class",
     "weaponinventorymod/gui/StockReviewFilterListModel.class",
     "weaponinventorymod/gui/StockReviewFilters.class",
-    "weaponinventorymod/core/WeaponStockSnapshotBuilder`$CostComparator.class"
+    "weaponinventorymod/core/WeaponStockSnapshotBuilder`$CostComparator.class",
+    "weaponinventorymod/core/StockPurchaseService`$PurchaseSourcePriceComparator.class"
 )
 $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewButtonBinding.class",
@@ -58,7 +59,8 @@ $forbiddenClasses = @(
     "weaponinventorymod/gui/WimGuiModalListGapAdapter.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$ColorSetter.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$1.class",
-    "weaponinventorymod/core/StockDisplayMode.class"
+    "weaponinventorymod/core/StockDisplayMode.class",
+    "weaponinventorymod/core/StockPurchaseService`$PurchaseSource`$1.class"
 )
 
 function Test-JarClasses {
