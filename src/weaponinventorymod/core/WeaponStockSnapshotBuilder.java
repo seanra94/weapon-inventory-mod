@@ -204,7 +204,7 @@ public final class WeaponStockSnapshotBuilder {
     }
 
     private static int compareByNeed(WeaponStockRecord left, WeaponStockRecord right) {
-        return Integer.compare(left.getStoredOutsideInventoryCount(), right.getStoredOutsideInventoryCount());
+        return Integer.compare(left.getStorageCount(), right.getStorageCount());
     }
 
     private static int compareByPrice(WeaponStockRecord left, WeaponStockRecord right) {

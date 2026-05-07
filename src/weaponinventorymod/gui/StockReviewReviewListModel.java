@@ -71,7 +71,7 @@ final class StockReviewReviewListModel {
         int quantity = Math.abs(purchase.getQuantity());
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getOwnedCount(), purchase.getQuantity()),
+                WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getStorageCount(), purchase.getQuantity()),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
                 reviewCostCell(cost, purchase.isSell()),
                 WimGuiRowCell.info((purchase.isSell() ? "Selling: " : "Buying: ") + quantity,

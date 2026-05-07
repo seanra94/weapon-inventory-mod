@@ -22,7 +22,7 @@ public final class MarketStockService {
         }
 
         for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
-            if (!isPurchasableSubmarket(submarket, includeBlackMarket)) {
+            if (!isTradeSubmarket(submarket, includeBlackMarket)) {
                 continue;
             }
             CargoAPI cargo = submarket.getCargoNullOk();
@@ -57,18 +57,22 @@ public final class MarketStockService {
         return new MarketStock(totals, byWeapon);
     }
 
-    private static boolean isPurchasableSubmarket(SubmarketAPI submarket, boolean includeBlackMarket) {
+    public static boolean isTradeSubmarket(SubmarketAPI submarket, boolean includeBlackMarket) {
         if (submarket == null) {
             return false;
         }
         String id = submarket.getSpecId();
-        if (Submarkets.SUBMARKET_STORAGE.equals(id) || Submarkets.LOCAL_RESOURCES.equals(id)) {
+        if (isNonTradeSubmarket(id)) {
             return false;
         }
         if (!includeBlackMarket && Submarkets.SUBMARKET_BLACK.equals(id)) {
             return false;
         }
         return submarket.getCargoNullOk() != null;
+    }
+
+    public static boolean isNonTradeSubmarket(String submarketId) {
+        return Submarkets.SUBMARKET_STORAGE.equals(submarketId) || Submarkets.LOCAL_RESOURCES.equals(submarketId);
     }
 
     public static boolean isVisibleWeaponStack(CargoStackAPI stack) {

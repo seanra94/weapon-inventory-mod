@@ -63,7 +63,7 @@ final class StockReviewListModel {
         int sellStepQuantity = Math.min(10, sellRemaining);
         int sufficientDelta = tradeContext.deltaToSufficient(record);
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info(storageLabel(record.getOwnedCount(), planQuantity),
+                WimGuiRowCell.info(storageLabel(record.getStorageCount(), planQuantity),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
                 unitPriceCell(tradeContext.unitPriceForWeapon(record)),
                 planCell(planQuantity, transactionCost),

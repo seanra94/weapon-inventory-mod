@@ -144,6 +144,8 @@
   - negative row adjustments first remove queued buys for that weapon before creating real sell plans;
   - positive row adjustments first remove queued sells before creating real buy plans;
   - `Sufficient` now compares the desired target against current queued plan state and uses red styling when it will reduce the plan or sell excess.
+- Aligned `Sort: Need` with the current visible `Storage` semantics. It now sorts by total owned stock, including player inventory, rather than the old outside-inventory-only count.
+- Centralized local trade submarket eligibility in `MarketStockService.isTradeSubmarket(...)`, so stock collection, buying, selling, and sell-price quoting share the same storage/local-resource/black-market filtering.
 
 ## Active Manual Validation
 

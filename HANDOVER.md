@@ -30,6 +30,7 @@
 - Popup scope:
   - The old display-mode button and config mode were removed. The Buy GUI should show only weapons that are buyable from the active stock source or present in player inventory and therefore sellable through the GUI.
   - Stored-only weapons should not create rows. The `Storage` cell may still show full owned stock, including accessible storage, for a weapon that appears because it is buyable or in player inventory.
+  - Local stock collection, local buys, local sells, and sell-price quoting should all use `MarketStockService.isTradeSubmarket(...)` for storage/local-resource/black-market filtering. Do not copy that submarket filter into each caller.
 - Global Weapon Market:
   - The Buy GUI now has a `Source: Local/Global` toggle. Local source behaves like the normal current-market review. Global source is a virtual seller, not a real submarket inserted into vanilla cargo.
   - Initial global eligibility is intentionally conservative and live-scan based: `GlobalWeaponMarketService` scans all current economy markets and includes a weapon if it appears in any non-storage/non-local-resources market cargo that WIM can see. Eligible weapons appear with 999 virtual stock.
@@ -38,7 +39,7 @@
   - Global sales use `StockPurchaseService.sellVirtualGlobal(...)`, which removes weapons from player cargo and pays normal base value without adding stock to a real market. Do not apply the global buy markup to sells.
   - Optional tag/faction inference is Luna-gated by `wim_enable_global_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
 - Popup sorting:
-  - `Need`: lowest stored-outside-inventory count first, then cheapest current buy price, then weapon name;
+  - `Need`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
   - `Name`: weapon name first, then need, then price;
   - `Price`: cheapest current buy price first, then most needed, then weapon name.
 - Popup filters:

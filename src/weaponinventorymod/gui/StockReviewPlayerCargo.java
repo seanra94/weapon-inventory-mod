@@ -5,7 +5,6 @@ import com.fs.starfarer.api.campaign.CargoStackAPI;
 import com.fs.starfarer.api.campaign.SubmarketPlugin;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
-import com.fs.starfarer.api.impl.campaign.ids.Submarkets;
 import weaponinventorymod.core.MarketStockService;
 
 import java.util.HashMap;
@@ -63,14 +62,7 @@ final class StockReviewPlayerCargo {
             if (submarket == null) {
                 continue;
             }
-            String id = submarket.getSpecId();
-            if (Submarkets.SUBMARKET_STORAGE.equals(id) || Submarkets.LOCAL_RESOURCES.equals(id)) {
-                continue;
-            }
-            if (!includeBlackMarket && Submarkets.SUBMARKET_BLACK.equals(id)) {
-                continue;
-            }
-            if (submarket.getCargoNullOk() == null) {
+            if (!MarketStockService.isTradeSubmarket(submarket, includeBlackMarket)) {
                 continue;
             }
             SubmarketPlugin plugin = submarket.getPlugin();

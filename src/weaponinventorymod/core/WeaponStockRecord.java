@@ -54,6 +54,10 @@ public final class WeaponStockRecord {
         return ownedCount;
     }
 
+    public int getStorageCount() {
+        return ownedCount;
+    }
+
     public int getPlayerCargoCount() {
         return playerCargoCount;
     }

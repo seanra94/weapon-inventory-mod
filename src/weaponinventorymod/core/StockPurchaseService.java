@@ -12,7 +12,6 @@ import com.fs.starfarer.api.campaign.CargoAPI.CargoItemType;
 import com.fs.starfarer.api.campaign.PlayerMarketTransaction.LineItemType;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
-import com.fs.starfarer.api.impl.campaign.ids.Submarkets;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -266,10 +265,7 @@ public final class StockPurchaseService {
             if (onlySubmarketId != null && !onlySubmarketId.equals(submarket.getSpecId())) {
                 continue;
             }
-            if (Submarkets.SUBMARKET_STORAGE.equals(submarket.getSpecId()) || Submarkets.LOCAL_RESOURCES.equals(submarket.getSpecId())) {
-                continue;
-            }
-            if (!includeBlackMarket && Submarkets.SUBMARKET_BLACK.equals(submarket.getSpecId())) {
+            if (!MarketStockService.isTradeSubmarket(submarket, includeBlackMarket)) {
                 continue;
             }
             CargoAPI cargo = submarket.getCargoNullOk();
@@ -303,10 +299,7 @@ public final class StockPurchaseService {
             if (submarket == null) {
                 continue;
             }
-            if (Submarkets.SUBMARKET_STORAGE.equals(submarket.getSpecId()) || Submarkets.LOCAL_RESOURCES.equals(submarket.getSpecId())) {
-                continue;
-            }
-            if (!includeBlackMarket && Submarkets.SUBMARKET_BLACK.equals(submarket.getSpecId())) {
+            if (!MarketStockService.isTradeSubmarket(submarket, includeBlackMarket)) {
                 continue;
             }
             CargoAPI cargo = submarket.getCargoNullOk();
