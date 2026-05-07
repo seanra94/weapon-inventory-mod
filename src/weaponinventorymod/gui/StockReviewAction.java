@@ -13,6 +13,7 @@ final class StockReviewAction {
         RESET_PLAN,
         CYCLE_DISPLAY_MODE,
         CYCLE_SORT_MODE,
+        TOGGLE_GLOBAL_MARKET,
         TOGGLE_BLACK_MARKET,
         SCROLL_LIST,
         PURCHASE_ALL_UNTIL_SUFFICIENT,
@@ -100,6 +101,10 @@ final class StockReviewAction {
 
     static StockReviewAction toggleBlackMarket() {
         return new StockReviewAction(Type.TOGGLE_BLACK_MARKET, null, null, null, null, null, 0);
+    }
+
+    static StockReviewAction toggleGlobalMarket() {
+        return new StockReviewAction(Type.TOGGLE_GLOBAL_MARKET, null, null, null, null, null, 0);
     }
 
     static StockReviewAction scrollList(int delta) {

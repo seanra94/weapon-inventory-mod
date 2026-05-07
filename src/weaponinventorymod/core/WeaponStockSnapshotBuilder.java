@@ -18,6 +18,7 @@ import java.util.Set;
 public final class WeaponStockSnapshotBuilder {
     private final InventoryCountService inventoryCountService = new InventoryCountService();
     private final MarketStockService marketStockService = new MarketStockService();
+    private final GlobalWeaponMarketService globalWeaponMarketService = new GlobalWeaponMarketService();
     private final StockStatusClassifier classifier = new StockStatusClassifier();
 
     public WeaponStockSnapshot build(SectorAPI sector,
@@ -26,12 +27,15 @@ public final class WeaponStockSnapshotBuilder {
                                      StockDisplayMode displayMode,
                                      StockSortMode sortMode,
                                      boolean includeCurrentMarketStorage,
-                                     boolean includeBlackMarket) {
+                                     boolean includeBlackMarket,
+                                     boolean globalMarketMode) {
         OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
         DesiredStockService desiredStockService = new DesiredStockService(config);
         Map<String, Integer> owned = inventoryCountService.collectOwnedWeaponCounts(sector, market, ownedSourcePolicy);
         Map<String, Integer> playerCargoCounts = InventoryCountService.collectCargoWeaponCounts(playerCargo(sector));
-        MarketStockService.MarketStock marketStock = marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
+        MarketStockService.MarketStock marketStock = globalMarketMode
+                ? globalWeaponMarketService.collectGlobalWeaponStock(sector, includeBlackMarket)
+                : marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
 
         Set<String> ids = new HashSet<String>();
         addIdsForDisplayMode(ids, sector, owned, marketStock, displayMode);
@@ -72,7 +76,7 @@ public final class WeaponStockSnapshotBuilder {
             Collections.sort(records, comparatorFor(sortMode));
         }
 
-        return new WeaponStockSnapshot(market, ownedSourcePolicy, displayMode, sortMode, includeBlackMarket, grouped);
+        return new WeaponStockSnapshot(market, ownedSourcePolicy, displayMode, sortMode, includeBlackMarket, globalMarketMode, grouped);
     }
 
     private static void addIdsForDisplayMode(Set<String> ids,

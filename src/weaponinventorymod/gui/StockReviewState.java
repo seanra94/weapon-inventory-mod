@@ -17,6 +17,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
     private boolean includeBlackMarket;
+    private boolean globalMarketMode;
     private int listScrollOffset = 0;
     private final Set<String> expandedWeapons = new HashSet<String>();
     private final Set<String> expandedWeaponData = new HashSet<String>();
@@ -32,6 +33,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.sortMode = config.getSortMode();
         this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
         this.includeBlackMarket = config.isIncludeBlackMarket();
+        this.globalMarketMode = false;
     }
 
     public StockReviewState(StockReviewState source) {
@@ -41,6 +43,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.sortMode = source.sortMode;
         this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
         this.includeBlackMarket = source.includeBlackMarket;
+        this.globalMarketMode = source.globalMarketMode;
         this.listScrollOffset = source.listScrollOffset;
         this.expandedWeapons.addAll(source.expandedWeapons);
         this.expandedWeaponData.addAll(source.expandedWeaponData);
@@ -115,6 +118,14 @@ public final class StockReviewState implements WimGuiScrollableListState {
 
     public void toggleBlackMarket() {
         includeBlackMarket = !includeBlackMarket;
+    }
+
+    public boolean isGlobalMarketMode() {
+        return globalMarketMode;
+    }
+
+    public void toggleGlobalMarketMode() {
+        globalMarketMode = !globalMarketMode;
     }
 
     public int getListScrollOffset() {

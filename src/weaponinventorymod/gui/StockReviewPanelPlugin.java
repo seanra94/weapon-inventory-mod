@@ -138,8 +138,19 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.TOGGLE_GLOBAL_MARKET.equals(type)) {
+            state.toggleGlobalMarketMode();
+            pendingTrades.clear();
+            reviewMode = false;
+            state.setListScrollOffset(0);
+            rebuildSnapshot();
+            rebuildContent();
+            return;
+        }
         if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
             state.toggleBlackMarket();
+            pendingTrades.clear();
+            reviewMode = false;
             rebuildSnapshot();
             rebuildContent();
             return;
@@ -308,7 +319,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         int removed = 0;
-        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleBuyableRecords(snapshot);
+        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleTradeableRecords(snapshot);
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
         for (int i = 0; i < records.size(); i++) {
             WeaponStockRecord record = records.get(i);
@@ -375,6 +386,9 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             StockReviewPendingPurchase purchase = executionOrder.get(i);
             StockPurchaseService.PurchaseResult result = purchase.isSell()
                     ? purchaseService.sellToMarket(sector, market, purchase.getWeaponId(), -purchase.getQuantity(), state.isIncludeBlackMarket())
+                    : snapshot != null && snapshot.isGlobalMarketMode()
+                    ? purchaseService.buyVirtualGlobal(sector, purchase.getWeaponId(), purchase.getQuantity(),
+                            virtualUnitPrice(purchase.getWeaponId()), virtualUnitCargoSpace(purchase.getWeaponId()))
                     : purchase.getSubmarketId() == null
                     ? purchaseService.buyCheapest(sector, market, purchase.getWeaponId(), purchase.getQuantity(), state.isIncludeBlackMarket())
                     : purchaseService.buyFromSubmarket(sector, market, purchase.getWeaponId(), purchase.getSubmarketId(), purchase.getQuantity(), state.isIncludeBlackMarket());
@@ -415,7 +429,21 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         SectorAPI sector = host.getSector();
         MarketAPI market = host.getCurrentMarketOr(initialMarket);
         snapshot = snapshotBuilder.build(sector, market, config, state.getDisplayMode(),
-                state.getSortMode(), state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket());
+                state.getSortMode(), state.isIncludeCurrentMarketStorage(), state.isIncludeBlackMarket(),
+                state.isGlobalMarketMode());
+    }
+
+    private int virtualUnitPrice(String weaponId) {
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(weaponId);
+        return record == null ? 0 : record.getCheapestPurchasableUnitPrice();
+    }
+
+    private float virtualUnitCargoSpace(String weaponId) {
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(weaponId);
+        if (record == null || record.getSubmarketStocks().isEmpty()) {
+            return 1f;
+        }
+        return Math.max(1f, record.getSubmarketStocks().get(0).getUnitCargoSpace());
     }
 
     private void cycleColorDebugTarget(int delta) {

@@ -67,6 +67,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                 StockReviewAction.cycleDisplayMode(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND),
+                        buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + (snapshot.isGlobalMarketMode() ? "Global" : "Local"),
+                                StockReviewAction.toggleGlobalMarket(), snapshot.isGlobalMarketMode() ? StockReviewStyle.SAVE_BUTTON : StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.COLOR_BUTTON_WIDTH, "Colors",
@@ -200,6 +202,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 + " | Mode: " + snapshot.getDisplayMode().getLabel()
                 + " | Sort: " + snapshot.getSortMode().getLabel()
                 + " | Owned source: " + ownedSourceLabel(snapshot)
+                + " | Stock source: " + (snapshot.isGlobalMarketMode() ? "global" : "local")
                 + " | Black market: " + onOff(snapshot.isIncludeBlackMarket());
     }
 

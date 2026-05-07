@@ -10,6 +10,7 @@ import org.lwjgl.input.Keyboard;
 import weaponinventorymod.core.MarketStockService;
 import weaponinventorymod.core.StockReviewConfig;
 import weaponinventorymod.core.SubmarketWeaponStock;
+import weaponinventorymod.core.GlobalWeaponMarketService;
 
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
@@ -86,6 +87,11 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
                         return true;
                     }
                 }
+            }
+            MarketStockService.MarketStock globalStock =
+                    new GlobalWeaponMarketService().collectGlobalWeaponStock(Global.getSector(), config.isIncludeBlackMarket());
+            for (String ignored : globalStock.weaponIds()) {
+                return true;
             }
             return playerHasWeaponCargo();
         } catch (Throwable ignored) {

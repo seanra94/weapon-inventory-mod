@@ -15,21 +15,23 @@ final class StockReviewTradePlanner {
     private StockReviewTradePlanner() {
     }
 
-    static List<WeaponStockRecord> visibleBuyableRecords(WeaponStockSnapshot snapshot, StockCategory category) {
-        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
-        if (snapshot == null || category == null) {
-            return result;
-        }
-        addVisibleBuyableRecords(result, snapshot.getRecords(category));
-        return result;
-    }
-
     static List<WeaponStockRecord> visibleTradeableRecords(WeaponStockSnapshot snapshot, StockCategory category) {
         List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
         if (snapshot == null || category == null) {
             return result;
         }
         addVisibleTradeableRecords(result, snapshot.getRecords(category));
+        return result;
+    }
+
+    static List<WeaponStockRecord> visibleTradeableRecords(WeaponStockSnapshot snapshot) {
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        if (snapshot == null) {
+            return result;
+        }
+        for (StockCategory category : StockCategory.values()) {
+            addVisibleTradeableRecords(result, snapshot.getRecords(category));
+        }
         return result;
     }
 

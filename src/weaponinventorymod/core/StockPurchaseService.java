@@ -82,6 +82,52 @@ public final class StockPurchaseService {
         return PurchaseResult.success(message, quantity, -credits);
     }
 
+    public PurchaseResult buyVirtualGlobal(SectorAPI sector,
+                                           String weaponId,
+                                           int requestedQuantity,
+                                           int unitPrice,
+                                           float unitCargoSpace) {
+        if (sector == null) {
+            return PurchaseResult.failure("No active sector context.");
+        }
+        if (weaponId == null || weaponId.isEmpty()) {
+            return PurchaseResult.failure("No weapon selected.");
+        }
+        if (requestedQuantity <= 0) {
+            return PurchaseResult.failure("Nothing to buy.");
+        }
+        if (unitPrice < 0) {
+            return PurchaseResult.failure("No global-market price is available.");
+        }
+
+        CampaignFleetAPI fleet = sector.getPlayerFleet();
+        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
+        if (playerCargo == null) {
+            return PurchaseResult.failure("Player cargo is unavailable.");
+        }
+        int totalCost = unitPrice * requestedQuantity;
+        float totalSpace = Math.max(1f, unitCargoSpace) * requestedQuantity;
+        if (playerCargo.getCredits().get() + 0.01f < totalCost) {
+            return PurchaseResult.failure("Need " + totalCost + " credits for this order.");
+        }
+        if (playerCargo.getSpaceLeft() + 0.01f < totalSpace) {
+            return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
+        }
+
+        playerCargo.addWeapons(weaponId, requestedQuantity);
+        playerCargo.getCredits().subtract(totalCost);
+        playerCargo.removeEmptyStacks();
+        playerCargo.sort();
+        playerCargo.updateSpaceUsed();
+
+        String message = "Bought " + requestedQuantity + " " + weaponDisplayName(weaponId)
+                + " from the global weapon market for " + totalCost + " credits.";
+        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
+            Global.getSector().getCampaignUI().addMessage(message);
+        }
+        return PurchaseResult.success(message, requestedQuantity, totalCost);
+    }
+
     private PurchaseResult buy(SectorAPI sector,
                                MarketAPI market,
                                String weaponId,

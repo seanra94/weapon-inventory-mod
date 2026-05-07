@@ -14,6 +14,7 @@ public final class WeaponStockSnapshot {
     private final StockDisplayMode displayMode;
     private final StockSortMode sortMode;
     private final boolean includeBlackMarket;
+    private final boolean globalMarketMode;
     private final Map<StockCategory, List<WeaponStockRecord>> recordsByCategory;
     private final Map<String, WeaponStockRecord> recordsByWeaponId;
     private final List<WeaponStockRecord> allRecords;
@@ -24,12 +25,14 @@ public final class WeaponStockSnapshot {
                                StockDisplayMode displayMode,
                                StockSortMode sortMode,
                                boolean includeBlackMarket,
+                               boolean globalMarketMode,
                                Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
         this.market = market;
         this.ownedSourcePolicy = ownedSourcePolicy;
         this.displayMode = displayMode;
         this.sortMode = sortMode;
         this.includeBlackMarket = includeBlackMarket;
+        this.globalMarketMode = globalMarketMode;
         this.recordsByCategory = immutableCategoryMap(recordsByCategory);
         this.recordsByWeaponId = immutableWeaponMap(this.recordsByCategory);
         this.allRecords = immutableAllRecords(this.recordsByCategory);
@@ -54,6 +57,10 @@ public final class WeaponStockSnapshot {
 
     public boolean isIncludeBlackMarket() {
         return includeBlackMarket;
+    }
+
+    public boolean isGlobalMarketMode() {
+        return globalMarketMode;
     }
 
     public List<WeaponStockRecord> getRecords(StockCategory category) {
@@ -81,6 +88,9 @@ public final class WeaponStockSnapshot {
     }
 
     public String getMarketName() {
+        if (globalMarketMode) {
+            return GlobalWeaponMarketService.VIRTUAL_SUBMARKET_NAME;
+        }
         return market == null ? "No market context" : market.getName();
     }
 

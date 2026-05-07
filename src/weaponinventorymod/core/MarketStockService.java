@@ -132,4 +132,26 @@ public final class MarketStockService {
             return totals.keySet();
         }
     }
+
+    public static final class MarketStockBuilder {
+        private final Map<String, Integer> totals = new HashMap<String, Integer>();
+        private final Map<String, List<SubmarketWeaponStock>> byWeapon = new HashMap<String, List<SubmarketWeaponStock>>();
+
+        public void add(String weaponId, SubmarketWeaponStock stock) {
+            if (weaponId == null || weaponId.isEmpty() || stock == null || stock.getCount() <= 0) {
+                return;
+            }
+            InventoryCountService.add(totals, weaponId, stock.getCount());
+            List<SubmarketWeaponStock> stocks = byWeapon.get(weaponId);
+            if (stocks == null) {
+                stocks = new ArrayList<SubmarketWeaponStock>();
+                byWeapon.put(weaponId, stocks);
+            }
+            stocks.add(stock);
+        }
+
+        public MarketStock build() {
+            return new MarketStock(totals, byWeapon);
+        }
+    }
 }

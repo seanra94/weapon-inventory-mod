@@ -36,6 +36,11 @@
   - `Currently For Sale`: weapons currently sold by the open market/submarkets;
   - `Owned Only`: weapons already owned under the active owned-source policy.
 - Buy GUI row visibility is tradeability-based: render rows with buyable current-market stock or player-inventory stock that can be sold. Do not filter the main list to buyable-only rows, because that hides sellable inventory when Black Market is off or a market has no legal weapon stock.
+- Global Weapon Market:
+  - The Buy GUI now has a `Source: Local/Global` toggle. Local source behaves like the normal current-market review. Global source is a virtual seller, not a real submarket inserted into vanilla cargo.
+  - Initial global eligibility is intentionally conservative and live-scan based: `GlobalWeaponMarketService` scans all current economy markets and includes a weapon if it appears in any non-storage/non-local-resources market cargo that WIM can see. Eligible weapons appear with 999 virtual stock.
+  - Global purchases use `StockPurchaseService.buyVirtualGlobal(...)`, which charges credits and adds weapons directly to player cargo without removing anything from real markets.
+  - Future tag/faction inference should be optional and Luna-gated. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons.
 - Popup sorting:
   - `Need`: lowest stored-outside-inventory count first, then cheapest current buy cost, then weapon name;
   - `Name`: weapon name first, then need, then cost;
