@@ -72,6 +72,26 @@ public final class WeaponStockRecord {
         return count;
     }
 
+    public int getStoredOutsideInventoryCount() {
+        return Math.max(0, ownedCount - playerCargoCount);
+    }
+
+    public int getNeededCount() {
+        return Math.max(0, desiredCount - ownedCount);
+    }
+
+    public int getCheapestPurchasableUnitPrice() {
+        int cheapest = Integer.MAX_VALUE;
+        for (int i = 0; i < submarketStocks.size(); i++) {
+            SubmarketWeaponStock stock = submarketStocks.get(i);
+            if (!stock.isPurchasable() || stock.getCount() <= 0) {
+                continue;
+            }
+            cheapest = Math.min(cheapest, stock.getUnitPrice());
+        }
+        return cheapest == Integer.MAX_VALUE ? Integer.MAX_VALUE : cheapest;
+    }
+
     public int getDesiredCount() {
         return desiredCount;
     }

@@ -31,8 +31,9 @@ final class WimGuiListRowRenderer {
 
         float cellGap = row.cellGap(buttonGap);
         float cellBlockWidth = WimGuiRowCell.totalWidth(row.getCells(), cellGap);
+        float reservedBlockWidth = Math.max(cellBlockWidth, row.rightReserveWidth());
         float labelLeft = row.getIndent();
-        float labelWidth = Math.max(minLabelWidth, width - labelLeft - cellBlockWidth - textLeftPad);
+        float labelWidth = Math.max(minLabelWidth, width - labelLeft - reservedBlockWidth - textLeftPad);
         if (row.getMainAction() != null) {
             addMainAction(rowPanel, row, labelLeft, labelWidth, actionHeight, defaultBorder, buttons);
         } else {
@@ -40,7 +41,7 @@ final class WimGuiListRowRenderer {
         }
 
         if (!row.getCells().isEmpty()) {
-            float x = width - cellBlockWidth;
+            float x = width - row.rightReserveWidth() - cellBlockWidth;
             for (int i = 0; i < row.getCells().size(); i++) {
                 WimGuiRowCell<A> cell = row.getCells().get(i);
                 WimGuiControls.addRowCell(rowPanel, x, 0f, actionHeight, cell, buttons, defaultBorder);

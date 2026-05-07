@@ -26,9 +26,17 @@ final class StockReviewListRow {
     }
 
     static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action) {
+        return section(label, action, StockReviewStyle.TRADE_ROW_RIGHT_BLOCK_WIDTH);
+    }
+
+    static WimGuiListRow<StockReviewAction> reviewSection(String label, StockReviewAction action) {
+        return section(label, action, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH);
+    }
+
+    private static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action, float rightReserveWidth) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.HEADING_BACKGROUND, null, StockReviewStyle.SECTION_INDENT,
-                action, Alignment.LMID, null, false);
+                action, Alignment.LMID, null, false, null, rightReserveWidth);
     }
 
     static WimGuiListRow<StockReviewAction> detail(String label) {
@@ -37,14 +45,48 @@ final class StockReviewListRow {
     }
 
     static WimGuiListRow<StockReviewAction> labelText(String label, String value) {
+        return labelText(label, value, false);
+    }
+
+    static WimGuiListRow<StockReviewAction> labelText(String label, String value, boolean topGap) {
+        return labelTextRow(label, value, 0f, topGap,
+                StockReviewStyle.REVIEW_LIST_WIDTH - 2f * StockReviewStyle.SMALL_PAD,
+                0f);
+    }
+
+    static WimGuiListRow<StockReviewAction> labelTextIndented(String label, String value, float indent) {
+        return labelTextIndented(label, value, indent, false);
+    }
+
+    static WimGuiListRow<StockReviewAction> labelTextIndented(String label, String value, float indent, boolean topGap) {
+        return labelTextIndented(label, value, indent, topGap, StockReviewStyle.TRADE_ROW_RIGHT_BLOCK_WIDTH);
+    }
+
+    static WimGuiListRow<StockReviewAction> labelTextIndented(String label,
+                                                              String value,
+                                                              float indent,
+                                                              boolean topGap,
+                                                              float rightReserveWidth) {
+        float componentWidth = Math.max(40f,
+                StockReviewStyle.LIST_WIDTH - indent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
+        return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth);
+    }
+
+    private static WimGuiListRow<StockReviewAction> labelTextRow(String label,
+                                                                 String value,
+                                                                 float indent,
+                                                                 boolean topGap,
+                                                                 float componentWidth,
+                                                                 float rightReserveWidth) {
+        float cellWidth = componentWidth / 2f;
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info(label, StockReviewStyle.LABEL_TEXT_CELL_WIDTH,
-                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
-                WimGuiRowCell.info(value, StockReviewStyle.LABEL_TEXT_CELL_WIDTH,
-                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.MID));
-        return row("", StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
-                StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                0f, null, Alignment.LMID, cells, false, 0f);
+                WimGuiRowCell.infoWithBorder(label, cellWidth,
+                        null, StockReviewStyle.TEXT, Alignment.LMID, null),
+                WimGuiRowCell.infoWithBorder(value, cellWidth,
+                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.MID, StockReviewStyle.ROW_BORDER));
+        return row("", StockReviewStyle.TEXT, null,
+                null, null,
+                indent, null, Alignment.LMID, cells, topGap, 0f, rightReserveWidth);
     }
 
     static WimGuiListRow<StockReviewAction> form(String label,
@@ -55,17 +97,20 @@ final class StockReviewListRow {
     }
 
     static WimGuiListRow<StockReviewAction> seller(String label,
+                                                   String value,
                                                    boolean buyOneEnabled,
                                                    boolean buyTenEnabled,
                                                    StockReviewAction buyOneAction,
                                                    StockReviewAction buyTenAction) {
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
+                WimGuiRowCell.infoWithBorder(value, StockReviewStyle.REVIEW_MARKET_CELL_WIDTH,
+                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.MID, StockReviewStyle.ROW_BORDER),
                 WimGuiRowCell.standardAction("+1", StockReviewStyle.SELLER_BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
                         buyOneAction, buyOneEnabled),
                 WimGuiRowCell.standardAction("+10", StockReviewStyle.SELLER_BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
                         buyTenAction, buyTenEnabled));
         Color textColor = buyOneEnabled || buyTenEnabled ? StockReviewStyle.MUTED : StockReviewStyle.DISABLED_TEXT;
-        return row(label, textColor, StockReviewStyle.ROW_BACKGROUND_DARK,
+        return row(label, textColor, null,
                 StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BORDER,
                 StockReviewStyle.SELLER_INDENT, null, Alignment.LMID, cells, false);
     }
@@ -84,14 +129,6 @@ final class StockReviewListRow {
         return row(label, StockReviewStyle.TEXT, fillColor, fillColor,
                 StockReviewStyle.ROW_BORDER, StockReviewStyle.WEAPON_INDENT,
                 null, Alignment.LMID, null, false);
-    }
-
-    static WimGuiListRow<StockReviewAction> reviewTable(String label,
-                                                        List<WimGuiRowCell<StockReviewAction>> cells,
-                                                        float indent) {
-        return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
-                StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                indent, null, Alignment.LMID, cells, false);
     }
 
     static WimGuiListRow<StockReviewAction> review(String label) {
@@ -119,7 +156,8 @@ final class StockReviewListRow {
                 alignment,
                 cells,
                 topGap,
-                null);
+                null,
+                0f);
     }
 
     private static WimGuiListRow<StockReviewAction> row(String label,
@@ -132,7 +170,8 @@ final class StockReviewListRow {
                                                         Alignment alignment,
                                                         List<WimGuiRowCell<StockReviewAction>> cells,
                                                         boolean topGap,
-                                                        Float cellGapOverride) {
+                                                        Float cellGapOverride,
+                                                        float rightReserveWidth) {
         return new WimGuiListRow<StockReviewAction>(
                 label,
                 textColor,
@@ -144,6 +183,7 @@ final class StockReviewListRow {
                 alignment,
                 cells,
                 topGap,
-                cellGapOverride);
+                cellGapOverride,
+                rightReserveWidth);
     }
 }

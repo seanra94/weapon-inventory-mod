@@ -12,9 +12,9 @@ final class StockReviewStyle {
     static final float FOOTER_HEIGHT = 34f;
     static final float MODE_BUTTON_WIDTH = 168f;
     static final float SORT_BUTTON_WIDTH = 140f;
-    static final float STORAGE_BUTTON_WIDTH = 178f;
     static final float BLACK_MARKET_BUTTON_WIDTH = 160f;
     static final float CLOSE_BUTTON_WIDTH = 82f;
+    static final float BUTTON_GAP = 5f;
     static final float SELLER_BUY_BUTTON_WIDTH = 54f;
     static final float STOCK_CELL_WIDTH = 92f;
     static final float INVENTORY_CELL_WIDTH = 102f;
@@ -23,6 +23,11 @@ final class StockReviewStyle {
     static final float REVIEW_MARKET_CELL_WIDTH = 180f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
     static final float RESET_BUTTON_WIDTH = 58f;
+    static final float TRADE_CONTROL_BLOCK_WIDTH = 6f * TRADE_STEP_BUTTON_WIDTH + RESET_BUTTON_WIDTH + 6f * BUTTON_GAP;
+    static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + INVENTORY_CELL_WIDTH + STOCK_CELL_WIDTH
+            + PLAN_CELL_WIDTH + COST_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 11f * BUTTON_GAP;
+    static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + INVENTORY_CELL_WIDTH
+            + PLAN_CELL_WIDTH + COST_CELL_WIDTH + 3f * BUTTON_GAP;
     static final float DEBUG_VALUE_WIDTH = 430f;
     static final float DEBUG_SAMPLE_WIDTH = 130f;
     static final float DEBUG_DELTA_BUTTON_WIDTH = 48f;
@@ -36,7 +41,6 @@ final class StockReviewStyle {
     static final float SECTION_INDENT = 34f;
     static final float DETAIL_INDENT = 52f;
     static final float SELLER_INDENT = 52f;
-    static final float BUTTON_GAP = 5f;
     static final float FOOTER_BUTTON_WIDTH = 180f;
     static final float BULK_BUTTON_WIDTH = 210f;
     static final float RESET_ALL_BUTTON_WIDTH = 150f;
@@ -55,7 +59,8 @@ final class StockReviewStyle {
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
     static final float LIST_WIDTH = MODAL.contentWidth();
-    static final float LABEL_TEXT_CELL_WIDTH = (LIST_WIDTH - 2f * SMALL_PAD) / 2f;
+    static final float REVIEW_LIST_WIDTH = LIST_WIDTH - TRADE_CONTROL_BLOCK_WIDTH;
+    static final float LABEL_TEXT_CELL_WIDTH = (REVIEW_LIST_WIDTH - 2f * SMALL_PAD) / 2f;
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
     // equal idle colors because Starsector darkens idle buttons differently.
     static Color DEFAULT_TEXT = WimGuiStyle.DEFAULT_TEXT;
@@ -105,6 +110,22 @@ final class StockReviewStyle {
             PAD,
             LIST_TOP,
             LIST_WIDTH,
+            LIST_HEIGHT,
+            ROW_HEIGHT,
+            ACTION_BUTTON_HEIGHT,
+            ROW_GAP,
+            SMALL_PAD,
+            BUTTON_GAP,
+            TEXT_LEFT_PAD,
+            80f,
+            PANEL_BACKGROUND,
+            PANEL_BORDER,
+            ROW_BORDER);
+    static WimGuiModalListSpec REVIEW_LIST = new WimGuiModalListSpec(
+            MODAL,
+            PAD,
+            LIST_TOP,
+            REVIEW_LIST_WIDTH,
             LIST_HEIGHT,
             ROW_HEIGHT,
             ACTION_BUTTON_HEIGHT,
@@ -167,6 +188,22 @@ final class StockReviewStyle {
                 PAD,
                 LIST_TOP,
                 LIST_WIDTH,
+                LIST_HEIGHT,
+                ROW_HEIGHT,
+                ACTION_BUTTON_HEIGHT,
+                ROW_GAP,
+                SMALL_PAD,
+                BUTTON_GAP,
+                TEXT_LEFT_PAD,
+                80f,
+                PANEL_BACKGROUND,
+                PANEL_BORDER,
+                ROW_BORDER);
+        REVIEW_LIST = new WimGuiModalListSpec(
+                MODAL,
+                PAD,
+                LIST_TOP,
+                REVIEW_LIST_WIDTH,
                 LIST_HEIGHT,
                 ROW_HEIGHT,
                 ACTION_BUTTON_HEIGHT,

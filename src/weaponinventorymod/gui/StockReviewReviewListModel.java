@@ -27,7 +27,7 @@ final class StockReviewReviewListModel {
         String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
                 ? "Price Unavailable"
                 : (netCost < 0 ? (-netCost) + "cr" : netCost + "cr");
-        rows.add(StockReviewListRow.labelText(netLabel, netValue));
+        rows.add(StockReviewListRow.labelText(netLabel, netValue, true));
         rows.add(StockReviewListRow.labelText("Credits Available", Math.round(tradeContext.credits()) + "cr"));
         return rows;
     }
@@ -82,7 +82,7 @@ final class StockReviewReviewListModel {
         if (!expanded) {
             return;
         }
-        StockReviewListModel.addWeaponData(rows, record, state);
+        StockReviewListModel.addWeaponData(rows, record, state, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH);
         if (purchase.isBuy()) {
             addReviewSellers(rows, purchase, record, state, tradeContext);
         }
@@ -94,7 +94,7 @@ final class StockReviewReviewListModel {
                                          StockReviewState state,
                                          StockReviewTradeContext tradeContext) {
         boolean expanded = state.isSellersExpanded(record.getWeaponId());
-        rows.add(StockReviewListRow.section(WimGuiToggleHeading.label("Sellers", expanded),
+        rows.add(StockReviewListRow.reviewSection(WimGuiToggleHeading.label("Sellers", expanded),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));
         if (!expanded) {
             return;
@@ -106,15 +106,12 @@ final class StockReviewReviewListModel {
         }
         for (int i = 0; i < allocations.size(); i++) {
             StockReviewSellerAllocation allocation = allocations.get(i);
-            Color marketColor = allocation.isBlackMarket() ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND;
-            List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                    WimGuiRowCell.info("Market: " + allocation.getSubmarketName(),
-                            StockReviewStyle.REVIEW_MARKET_CELL_WIDTH, marketColor, StockReviewStyle.TEXT),
-                    WimGuiRowCell.info("Buying: " + allocation.getQuantity(),
-                            StockReviewStyle.PLAN_CELL_WIDTH, StockReviewStyle.PLAN_POSITIVE, StockReviewStyle.TEXT),
-                    WimGuiRowCell.info("Cost: " + allocation.getCost() + "cr",
-                            StockReviewStyle.COST_CELL_WIDTH, StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT));
-            rows.add(StockReviewListRow.reviewTable("", cells, StockReviewStyle.SELLER_INDENT));
+            rows.add(StockReviewListRow.labelTextIndented("Market", allocation.getSubmarketName(),
+                    StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
+            rows.add(StockReviewListRow.labelTextIndented("Buying", String.valueOf(allocation.getQuantity()),
+                    StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
+            rows.add(StockReviewListRow.labelTextIndented("Cost", allocation.getCost() + "cr",
+                    StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
         }
     }
 

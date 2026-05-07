@@ -1,7 +1,6 @@
 package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.ui.CustomPanelAPI;
-import weaponinventorymod.core.OwnedSourcePolicy;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
 import java.awt.Color;
@@ -22,7 +21,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                             Color colorDebugDraft,
                             boolean colorDebugPersistent,
                             List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        renderHeader(root, snapshot, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
+        renderHeader(root, snapshot, reviewMode, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
         renderActionRow(root, snapshot, buttons);
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingPurchases);
         WimGuiListBounds result = colorDebugMode
@@ -36,10 +35,11 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
 
     private void renderHeader(CustomPanelAPI root,
                               WeaponStockSnapshot snapshot,
+                              boolean reviewMode,
                               boolean colorDebugMode,
                               int colorDebugTargetIndex,
                               Color colorDebugDraft) {
-        String title = colorDebugMode ? "Debug Colors" : "Weapon Stock Review";
+        String title = colorDebugMode ? "Debug Colors" : reviewMode ? "Review Trades" : "Make Trades";
         String status = colorDebugMode ? colorStatusLine(colorDebugTargetIndex, colorDebugDraft) : statusLine(snapshot);
         WimGuiModalHeader.addTitleStatusHeader(
                 root,
@@ -67,8 +67,6 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                 StockReviewAction.cycleDisplayMode(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND),
-                        buttonFactory.enabledButton(StockReviewStyle.STORAGE_BUTTON_WIDTH, "Storage: " + onOff(!OwnedSourcePolicy.FLEET_ONLY.equals(snapshot.getOwnedSourcePolicy())),
-                                StockReviewAction.toggleCurrentMarketStorage(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.CLOSE_BUTTON_WIDTH, "Colors",
@@ -84,7 +82,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                              StockReviewTradeContext tradeContext,
                                              List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         List<WimGuiListRow<StockReviewAction>> rows = StockReviewListModel.build(snapshot, state, tradeContext);
-        return renderRows(root, rows, state, buttons);
+        return renderRows(root, rows, state, StockReviewStyle.LIST, buttons);
     }
 
     private WimGuiListBounds renderReviewList(CustomPanelAPI root,
@@ -94,7 +92,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                               StockReviewTradeContext tradeContext,
                                               List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         List<WimGuiListRow<StockReviewAction>> rows = StockReviewReviewListModel.build(snapshot, pendingPurchases, state, tradeContext);
-        return renderRows(root, rows, state, buttons);
+        return renderRows(root, rows, state, StockReviewStyle.REVIEW_LIST, buttons);
     }
 
     private WimGuiListBounds renderColorDebugList(CustomPanelAPI root,
@@ -104,18 +102,19 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                                   StockReviewState state,
                                                   List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         List<WimGuiListRow<StockReviewAction>> rows = StockReviewColorDebugRows.build(targetIndex, draft, persistent);
-        return renderRows(root, rows, state, buttons);
+        return renderRows(root, rows, state, StockReviewStyle.LIST, buttons);
     }
 
     private WimGuiListBounds renderRows(CustomPanelAPI root,
                                         List<WimGuiListRow<StockReviewAction>> rows,
                                         StockReviewState state,
+                                        WimGuiModalListSpec spec,
                                         List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         return WimGuiModalListRenderer.renderAndStoreOffset(
                 root,
                 rows,
                 state,
-                StockReviewStyle.LIST,
+                spec,
                 this,
                 this,
                 buttons);

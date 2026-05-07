@@ -162,7 +162,7 @@ final class WimGuiControls {
                     bindings);
             return;
         }
-        addInfoCell(parent, x, y, cell.getWidth(), height, cell.getLabel(), cell.getFillColor(), cell.getTextColor(), borderColor, cell.getAlignment());
+        addInfoCell(parent, x, y, cell.getWidth(), height, cell.getLabel(), cell.getFillColor(), cell.getTextColor(), cell.borderColor(borderColor), cell.getAlignment());
     }
 
     static void addLabel(CustomPanelAPI parent,

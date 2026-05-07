@@ -30,6 +30,15 @@
   - Clickable rows/buttons now use blank Starsector button text with WIM-rendered labels layered separately, so hover/base colors stay ACG-like while visible text remains white/gray under WIM control.
 - Popup default scope:
   - `data/config/weapon_inventory_stock.json` now defaults to `ALL_TRACKED`, so the popup starts from all enabled weapon specs. `Owned Or For Sale` remains available as a narrower mode.
+- Popup display modes:
+  - `All Tracked`: every non-ignored weapon known to the sector, even if none are owned or currently sold;
+  - `Owned or For Sale`: weapons the player already owns or that the current market sells;
+  - `Currently For Sale`: weapons currently sold by the open market/submarkets;
+  - `Owned Only`: weapons already owned under the active owned-source policy.
+- Popup sorting:
+  - `Need`: lowest stored-outside-inventory count first, then cheapest current buy cost, then weapon name;
+  - `Name`: weapon name first, then need, then cost;
+  - `Cost`: cheapest current buy cost first, then most needed, then weapon name.
 - Popup purchase flow:
   - weapon entries in the Buy GUI use a signed `Plan`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
   - top-level buy buttons queue pending buys from cheapest eligible current-market seller stock;
@@ -75,7 +84,7 @@
   - `WeaponStockSnapshot` keeps cached all-record and weapon-id maps. Do not reintroduce repeated `getAllRecords()` reconstruction or linear id scans in render loops.
 - Popup list filtering:
   - Category counts and weapon rows are filtered to records with at least one currently buyable unit at the open market. The popup is for shopping, not for showing unavailable desired weapons.
-  - Weapon stock summary text is split into explicit `Storage`, `Inventory`, and `Stocked` cells, not an overloaded `owned / buyable here` label. Locked seller rows may still appear inside the expanded Sellers section for context.
+  - Weapon stock summary text is split into explicit `Storage`, `Inventory`, and `Stocked` cells, not an overloaded `owned / buyable here` label. Starsector APIs often expose combined cargo/storage counts, but WIM intentionally splits `Storage` as `owned - inventory` and `Inventory` as player fleet cargo. Locked seller rows may still appear inside the expanded Sellers section for context.
 - Popup availability:
   - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently buyable under the current black-market setting. It should not open from looting, non-trade planet contexts, or markets with only locked/unbuyable weapon stock.
 - Purchase refresh:
@@ -272,8 +281,8 @@ Manual validation:
 - Press `F8` to open Weapon Stock Review.
 - Confirm the popup groups weapons under No Stock, Insufficient Stock, and Sufficient Stock.
 - Confirm weapon entries show stable `Storage`, `Inventory`, `Stocked`, `Buying`/`Selling`, and `Cost`/`Profit` cells while queued changes are adjusted.
-- Confirm `Mode`, `Storage`, and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
-- Confirm `Sort` cycles ordering without collapsing headings.
+- Confirm `Mode` and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
+- Confirm `Sort` cycles through `Need`, `Name`, and `Cost` without collapsing headings.
 - Confirm weapon rows expand into Weapon Data and Sellers sections.
 - Confirm mouse-wheel scrolling and clickable `^     ^     ^     ^     ^` / `v     v     v     v     v` indicators preserve state and do not appear when all rows fit.
 - Confirm `+1`/`+10` works from top-level rows and specific seller rows, with credits/space failures blocked.

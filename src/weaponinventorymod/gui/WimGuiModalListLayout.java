@@ -44,11 +44,8 @@ final class WimGuiModalListLayout<T> {
                 availableInnerHeight,
                 modal.rowHeight,
                 modal.rowGap);
-        float extraGapHeight = visibleExtraGapHeight(slice.items, extraGapProvider);
-        float renderedPanelHeight = Math.min(
-                availablePanelHeight,
-                modal.listPanelHeight(slice.items.size(), slice.hasAbove, slice.hasBelow, extraGapHeight));
-        float panelTop = bodyTop + Math.max(0f, availablePanelHeight - renderedPanelHeight);
+        float renderedPanelHeight = availablePanelHeight;
+        float panelTop = bodyTop;
         float innerWidth = Math.max(1f, panelWidth - 2f * modal.listInset);
         return new WimGuiModalListLayout<T>(slice, panelTop, renderedPanelHeight, innerWidth, slice.maxOffset);
     }

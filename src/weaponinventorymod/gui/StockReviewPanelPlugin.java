@@ -85,6 +85,11 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.TOGGLE_TRADE_GROUP.equals(type)) {
+            state.toggle(action.getTradeGroup());
+            rebuildContent();
+            return;
+        }
         if (StockReviewAction.Type.TOGGLE_WEAPON.equals(type)) {
             state.toggleWeapon(action.getWeaponId());
             rebuildContent();

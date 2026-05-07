@@ -135,7 +135,7 @@
   - `Esc` and `Close` dismiss the popup;
   - category headings expand/collapse and preserve current state across refresh;
   - Mode cycles through `Owned or For Sale`, `Currently For Sale`, `Owned Only`, and `All Tracked`;
-  - Sort cycles through `Need`, `Name`, `For Sale`, and `Owned`;
+  - Sort cycles through `Need`, `Name`, and `Cost`;
   - Storage and Black Market toggles update counts/categories;
   - Mode/Sort/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
@@ -154,6 +154,19 @@
 
 ## High-Value Future Work
 
+- Current requested stock-review review/buy page work queue:
+  - [x] review page visually narrows by the width taken by buy/sell row controls, so the Review Trades layout does not inherit unnecessary trade-button width;
+  - [x] review page inner panel occupies the full list body from top to bottom, not bottom-anchored to visible rows;
+  - [x] fixed Buying/Selling toggle headings in Review Trades;
+  - [x] preserved the category-style gap between Selling and the Total Cost / Credits Available summary rows;
+  - [x] use `Review Trades` as the review page title and `Make Trades` as the buy/sell page title;
+  - [x] keep the buy/sell page inner panel static-height while scrolling instead of changing size at the bottom;
+  - [x] review display modes and make their meaning clearer in docs/final notes;
+  - [x] revise sorting: default Need means lowest stored quantity first, then cheapest cost, then name; Name then uses need and cost tie-breakers; removed low-value For Sale and Owned sorts; added Cost sorting;
+  - [x] remove the top-row Storage toggle because storage counts are already shown in weapon rows;
+  - [x] keep `Storage` as owned stock outside inventory and `Inventory` as player fleet cargo only;
+  - [x] keep nested `Weapon Data` and `Sellers` rows inside their parent heading width, ending before the `Storage` cell column;
+  - [x] render Weapon Data and seller detail fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
 - Current requested stock-review polish/work queue:
   - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
   - [x] title-case toggle heading labels, including `Weapon Data`;
