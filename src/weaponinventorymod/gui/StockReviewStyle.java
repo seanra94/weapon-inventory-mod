@@ -13,6 +13,7 @@ final class StockReviewStyle {
     static final float SORT_BUTTON_WIDTH = 140f;
     static final float GLOBAL_MARKET_BUTTON_WIDTH = 170f;
     static final float BLACK_MARKET_BUTTON_WIDTH = 160f;
+    static final float FILTER_BUTTON_WIDTH = 108f;
     static final float COLOR_BUTTON_WIDTH = 82f;
     static final float BUTTON_GAP = 5f;
     static final float SELLER_BUY_BUTTON_WIDTH = 54f;
@@ -99,6 +100,7 @@ final class StockReviewStyle {
     static Color BUY_BUTTON = CONFIRM_BUTTON;
     static Color SELL_BUTTON = CANCEL_BUTTON;
     static Color BULK_BUTTON = SAVE_BUTTON;
+    static Color FILTER_ACTIVE = PRESET_SCOPE_BUTTON;
     static Color PLAN_POSITIVE = CONFIRM_BUTTON;
     static Color PLAN_NEGATIVE = CANCEL_BUTTON;
     static Color PLAN_ZERO = LOAD_BUTTON;
@@ -176,6 +178,7 @@ final class StockReviewStyle {
         BUY_BUTTON = CONFIRM_BUTTON;
         SELL_BUTTON = CANCEL_BUTTON;
         BULK_BUTTON = SAVE_BUTTON;
+        FILTER_ACTIVE = PRESET_SCOPE_BUTTON;
         PLAN_POSITIVE = CONFIRM_BUTTON;
         PLAN_NEGATIVE = CANCEL_BUTTON;
         PLAN_ZERO = LOAD_BUTTON;

@@ -31,6 +31,24 @@ final class StockReviewPendingTrades {
         }
     }
 
+    void adjustWeaponNet(String weaponId, int delta) {
+        if (weaponId == null || weaponId.isEmpty() || delta == 0) {
+            return;
+        }
+        int remaining = delta;
+        if (delta < 0) {
+            remaining = reduceExistingBuys(weaponId, -delta);
+            if (remaining > 0) {
+                add(weaponId, null, -remaining);
+            }
+            return;
+        }
+        remaining = reduceExistingSells(weaponId, delta);
+        if (remaining > 0) {
+            add(weaponId, null, remaining);
+        }
+    }
+
     void resetWeapon(String weaponId) {
         for (int i = trades.size() - 1; i >= 0; i--) {
             if (weaponId != null && weaponId.equals(trades.get(i).getWeaponId())) {
@@ -56,5 +74,39 @@ final class StockReviewPendingTrades {
             }
         }
         return null;
+    }
+
+    private int reduceExistingBuys(String weaponId, int quantity) {
+        int remaining = quantity;
+        for (int i = trades.size() - 1; i >= 0 && remaining > 0; i--) {
+            StockReviewPendingPurchase trade = trades.get(i);
+            if (!weaponId.equals(trade.getWeaponId()) || !trade.isBuy()) {
+                continue;
+            }
+            int reduced = Math.min(remaining, trade.getQuantity());
+            trade.addQuantity(-reduced);
+            remaining -= reduced;
+            if (trade.isZero()) {
+                trades.remove(i);
+            }
+        }
+        return remaining;
+    }
+
+    private int reduceExistingSells(String weaponId, int quantity) {
+        int remaining = quantity;
+        for (int i = trades.size() - 1; i >= 0 && remaining > 0; i--) {
+            StockReviewPendingPurchase trade = trades.get(i);
+            if (!weaponId.equals(trade.getWeaponId()) || !trade.isSell()) {
+                continue;
+            }
+            int reduced = Math.min(remaining, -trade.getQuantity());
+            trade.addQuantity(reduced);
+            remaining -= reduced;
+            if (trade.isZero()) {
+                trades.remove(i);
+            }
+        }
+        return remaining;
     }
 }

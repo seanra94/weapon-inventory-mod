@@ -5,6 +5,7 @@ import weaponinventorymod.core.StockReviewConfig;
 import weaponinventorymod.core.StockSortMode;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,8 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private final Set<String> expandedWeapons = new HashSet<String>();
     private final Set<String> expandedWeaponData = new HashSet<String>();
     private final Set<String> expandedSellers = new HashSet<String>();
+    private final Set<StockReviewFilter> activeFilters = EnumSet.noneOf(StockReviewFilter.class);
+    private final Map<StockReviewFilterGroup, Boolean> expandedFilterGroups = new EnumMap<StockReviewFilterGroup, Boolean>(StockReviewFilterGroup.class);
 
     public StockReviewState(StockReviewConfig config) {
         expanded.put(StockCategory.NO_STOCK, Boolean.FALSE);
@@ -27,6 +30,9 @@ public final class StockReviewState implements WimGuiScrollableListState {
         expanded.put(StockCategory.SUFFICIENT, Boolean.FALSE);
         expandedTradeGroups.put(StockReviewTradeGroup.BUYING, Boolean.FALSE);
         expandedTradeGroups.put(StockReviewTradeGroup.SELLING, Boolean.FALSE);
+        for (StockReviewFilterGroup group : StockReviewFilterGroup.values()) {
+            expandedFilterGroups.put(group, Boolean.FALSE);
+        }
         this.sortMode = config.getSortMode();
         this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
         this.includeBlackMarket = config.isIncludeBlackMarket();
@@ -44,6 +50,8 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.expandedWeapons.addAll(source.expandedWeapons);
         this.expandedWeaponData.addAll(source.expandedWeaponData);
         this.expandedSellers.addAll(source.expandedSellers);
+        this.activeFilters.addAll(source.activeFilters);
+        this.expandedFilterGroups.putAll(source.expandedFilterGroups);
     }
 
     public boolean isExpanded(StockCategory category) {
@@ -86,6 +94,44 @@ public final class StockReviewState implements WimGuiScrollableListState {
         } else if (StockReviewSection.SELLERS.equals(section)) {
             toggleSet(expandedSellers, weaponId);
         }
+    }
+
+    public boolean isFilterActive(StockReviewFilter filter) {
+        return activeFilters.contains(filter);
+    }
+
+    public void toggleFilter(StockReviewFilter filter) {
+        if (filter == null) {
+            return;
+        }
+        if (activeFilters.contains(filter)) {
+            activeFilters.remove(filter);
+        } else {
+            activeFilters.add(filter);
+        }
+        listScrollOffset = 0;
+    }
+
+    public Set<StockReviewFilter> getActiveFilters() {
+        return EnumSet.copyOf(activeFilters);
+    }
+
+    public int getActiveFilterCount() {
+        return activeFilters.size();
+    }
+
+    public void clearFilters() {
+        activeFilters.clear();
+        listScrollOffset = 0;
+    }
+
+    public boolean isExpanded(StockReviewFilterGroup group) {
+        Boolean value = expandedFilterGroups.get(group);
+        return value != null && value.booleanValue();
+    }
+
+    public void toggle(StockReviewFilterGroup group) {
+        expandedFilterGroups.put(group, Boolean.valueOf(!isExpanded(group)));
     }
 
     public StockSortMode getSortMode() {

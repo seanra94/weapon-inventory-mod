@@ -26,6 +26,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     private WeaponStockSnapshot snapshot;
     private boolean reviewMode = false;
+    private boolean filterMode = false;
     private boolean colorDebugMode = false;
     private boolean colorDebugReturnToReview = false;
     private int colorDebugReturnScrollOffset = 0;
@@ -56,6 +57,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
+        if (filterMode) {
+            filterMode = false;
+            state.setListScrollOffset(0);
+            rebuildContent();
+            return;
+        }
         if (reviewMode) {
             reviewMode = false;
             state.setListScrollOffset(0);
@@ -79,7 +86,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     protected WimGuiListBounds renderContent(CustomPanelAPI content,
                                              List<WimGuiButtonBinding<StockReviewAction>> buttonBindings) {
         return renderer.render(content, snapshot, state, pendingTrades.asList(), reviewMode,
-                colorDebugMode, colorDebugTargetIndex, currentColorDebugDraft(), colorDebugPersistent, buttonBindings);
+                filterMode, colorDebugMode, colorDebugTargetIndex, currentColorDebugDraft(), colorDebugPersistent, buttonBindings);
     }
 
     @Override
@@ -119,11 +126,11 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.ADJUST_PLAN.equals(type)) {
-            addPendingTrade(action);
+            adjustPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.ADJUST_TO_SUFFICIENT.equals(type)) {
-            addPendingTrade(action);
+            adjustPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
@@ -175,11 +182,35 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
+        if (StockReviewAction.Type.OPEN_FILTERS.equals(type)) {
+            filterMode = true;
+            reviewMode = false;
+            colorDebugMode = false;
+            state.setListScrollOffset(0);
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.TOGGLE_FILTER_GROUP.equals(type)) {
+            state.toggle(action.getFilterGroup());
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.TOGGLE_FILTER.equals(type)) {
+            state.toggleFilter(action.getFilter());
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.RESET_FILTERS.equals(type)) {
+            state.clearFilters();
+            rebuildContent();
+            return;
+        }
         if (StockReviewAction.Type.OPEN_COLOR_DEBUG.equals(type)) {
             colorDebugReturnToReview = reviewMode;
             colorDebugReturnScrollOffset = state.getListScrollOffset();
             colorDebugMode = true;
             reviewMode = false;
+            filterMode = false;
             state.setListScrollOffset(0);
             ensureColorDebugDraft();
             rebuildContent();
@@ -245,6 +276,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                 rebuildContent();
                 return;
             }
+            if (filterMode) {
+                filterMode = false;
+                state.setListScrollOffset(0);
+                rebuildContent();
+                return;
+            }
             reviewMode = false;
             state.setListScrollOffset(0);
             rebuildContent();
@@ -275,6 +312,22 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         int requested = action.getQuantity();
         int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
         pendingTrades.add(action.getWeaponId(), action.getSubmarketId(), quantity);
+        if (Math.abs(quantity) < Math.abs(requested)) {
+            reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
+        }
+        rebuildContent();
+    }
+
+    private void adjustPendingTrade(StockReviewAction action) {
+        int available = availableFor(action);
+        if (available <= 0) {
+            reportMessage(action.getQuantity() < 0 ? "No more queued or player-cargo stock is available to remove from the plan." : "No more queued sales or buyable stock is available for that plan.");
+            rebuildContent();
+            return;
+        }
+        int requested = action.getQuantity();
+        int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
+        pendingTrades.adjustWeaponNet(action.getWeaponId(), quantity);
         if (Math.abs(quantity) < Math.abs(requested)) {
             reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
         }
@@ -344,8 +397,10 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
         if (action.getQuantity() < 0) {
-            return Math.max(0, record.getPlayerCargoCount()
-                    - tradeContext.pendingSellQuantityForWeapon(action.getWeaponId()));
+            return tradeContext.negativeAdjustmentRemaining(record, -action.getQuantity());
+        }
+        if (action.getSubmarketId() == null) {
+            return tradeContext.positiveAdjustmentRemaining(record, action.getQuantity());
         }
         return tradeContext.affordableBuyQuantity(record, action.getSubmarketId(), action.getQuantity());
     }

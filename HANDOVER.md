@@ -41,11 +41,17 @@
   - `Need`: lowest stored-outside-inventory count first, then cheapest current buy price, then weapon name;
   - `Name`: weapon name first, then need, then price;
   - `Price`: cheapest current buy price first, then most needed, then weapon name.
+- Popup filters:
+  - the top-row `Filters: N` button opens a scrollable filter screen built from the same modal-list row components as the stock/review/debug screens;
+  - active filters are shown at the top and can be toggled off there;
+  - `Size`, `Type`, and `Damage` are expandable filter headings;
+  - filters apply immediately to stock category counts and weapon rows, with OR logic inside a filter group and AND logic across active groups.
 - Popup purchase flow:
   - weapon entries in the Buy GUI use a signed `Plan`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
   - top-level buy buttons queue pending buys from cheapest eligible current-market seller stock;
   - expanded Seller rows may still queue a pending buy from that specific submarket;
   - sell buttons queue pending sells from player cargo only, not broader owned stock that may include market storage;
+  - row-level buy/sell adjustment buttons first unwind the opposite queued plan before adding a real buy/sell. Example: if 5 weapons are queued to buy, row `-1` / dynamic `-5` remove those queued buys rather than requiring existing player cargo.
   - queued buys/sells are held in the popup until the user opens `Review Trades`;
   - planned trades are quoted and confirmed in one shared execution order: sells first, explicit seller-specific buys second, generic cheapest buys last. This lets planned sales fund planned buys and prevents generic buy plans from silently consuming stock reserved for explicit seller choices.
   - `Purchase All Until Sufficient` queues cheapest-first current-market buys needed to bring each listed weapon up to desired stock, without buying beyond desired stock, while respecting existing planned trades, current credits, cargo space, and seller stock;
@@ -77,6 +83,7 @@
   - The dynamic sell/buy step buttons replace the old fixed `-10` / `+10` when fewer than ten additional weapons can be sold/bought. If one or fewer remain, the dynamic step stays visually as disabled `-10` / `+10` because the separate `-1` / `+1` button handles the one-item case.
   - `Price` and neutral `Buying: 0` cells use the normal gray cell background. Profit cells use green/confirm. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
   - `Sufficient` adjusts the weapon to barely sufficient status, buying if there is a deficit and selling if there is an excess.
+  - `Sufficient` uses the current queued plan as part of its calculation and uses sell/red styling when the sufficient adjustment would reduce the plan or sell excess.
   - Disabled controls should render as inert WIM-owned shells with gray text and disabled fill, not as disabled Starsector buttons. Starsector's disabled-button hover can darken/highlight inconsistently and should not be used for WIM action cells.
   - The `Colors` top-row button opens the in-popup Debug Colors screen. Temporary changes mutate the runtime WIM palette until restart; Permanent mode also writes the selected RGB values to Starsector common storage as `WIM_debugGuiColors.json`. Debug samples, RGB incrementors, Confirm/Apply/Restore/Cancel, and the variable selector must stay on the shared WIM row/button path.
   - The old visible `Refresh` and `Mode` buttons were removed. Sort/source changes and trade actions already rebuild the snapshot/content shell through explicit actions.

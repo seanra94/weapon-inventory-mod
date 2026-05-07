@@ -17,6 +17,22 @@ final class StockReviewListRow {
                 0f, action, Alignment.LMID, null, topGap);
     }
 
+    static WimGuiListRow<StockReviewAction> filterHeading(String label,
+                                                          StockReviewAction action,
+                                                          boolean topGap) {
+        return row(label, StockReviewStyle.TEXT, StockReviewStyle.HEADING_BACKGROUND,
+                StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.LMID, null, topGap);
+    }
+
+    static WimGuiListRow<StockReviewAction> filter(String label,
+                                                   boolean active,
+                                                   StockReviewAction action,
+                                                   boolean topGap) {
+        Color fill = active ? StockReviewStyle.FILTER_ACTIVE : StockReviewStyle.ROW_BACKGROUND;
+        return row(label, StockReviewStyle.TEXT, fill, fill, StockReviewStyle.ROW_BORDER,
+                active ? 0f : StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, null, topGap);
+    }
+
     static WimGuiListRow<StockReviewAction> weapon(String label,
                                                    List<WimGuiRowCell<StockReviewAction>> cells,
                                                    StockReviewAction action) {

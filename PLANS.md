@@ -11,6 +11,7 @@
   - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
   - weapon entries now show `Storage`, unit `Price`, planned `Buying`/`Selling` value, and compact buy/sell/reset controls.
+  - popup has a scrollable `Filters` screen with active filters, expandable filter groups, and immediate row/category filtering.
   - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup rows are intentionally limited to weapons that are buyable from the active stock source or present in player inventory.
   - popup has sort modes for need, name, and price.
@@ -133,6 +134,15 @@
   - the visible `Refresh` button was removed because all meaningful state changes already refresh through explicit actions;
   - buy/increment controls use green, sell/decrement controls use red, and bulk trade controls use purple;
   - the Review GUI is now an expandable table grouped by `Buying` and `Selling`, with expandable weapon rows, weapon data, and seller allocation rows for buys.
+- Implemented the first filter screen:
+  - top-row `Filters: N` opens a scrollable filter list;
+  - active filters are moved to the top of the list;
+  - `Size`, `Type`, and `Damage` headings expand into filter rows;
+  - active filters use OR within a group and AND across groups.
+- Fixed row-level planned-trade reversibility:
+  - negative row adjustments first remove queued buys for that weapon before creating real sell plans;
+  - positive row adjustments first remove queued sells before creating real buy plans;
+  - `Sufficient` now compares the desired target against current queued plan state and uses red styling when it will reduce the plan or sell excess.
 
 ## Active Manual Validation
 
@@ -148,6 +158,9 @@
   - expanded rows show Weapon Data and Sellers sections;
   - compact buy-step controls plan buys from cheapest eligible seller stock and shrink below `+10` when fewer than ten are available;
   - compact sell-step controls plan sells from player inventory stock and shrink below `-10` when fewer than ten are available;
+  - compact sell-step controls also shrink to queued buy quantity when they are only reversing the shopping cart, e.g. `-5` after queuing 5 buys from zero inventory;
+  - `Sufficient` buys enough to reach the desired count from the current queued state and turns red when it will reduce the queued plan or sell excess;
+  - `Filters: N` opens/closes cleanly, filters rows immediately, and preserves the normal stock/review/color-debug flows;
   - seller-specific `+1`/dynamic buy-step only buys from that submarket;
   - failed buys show a message instead of mutating cargo;
   - no-weapons and many-weapons markets remain responsive;

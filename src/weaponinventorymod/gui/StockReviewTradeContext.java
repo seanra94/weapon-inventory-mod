@@ -62,6 +62,32 @@ final class StockReviewTradeContext {
         return Math.max(0, record.getPlayerCargoCount() - pendingSellQuantityForWeapon(record.getWeaponId()));
     }
 
+    int positiveAdjustmentRemaining(WeaponStockRecord record, int requestedQuantity) {
+        int requested = Math.max(0, requestedQuantity);
+        if (requested <= 0) {
+            return 0;
+        }
+        int sellCancellation = Math.min(requested, pendingSellQuantityForWeapon(record.getWeaponId()));
+        int remainingRequest = requested - sellCancellation;
+        if (remainingRequest <= 0) {
+            return sellCancellation;
+        }
+        return sellCancellation + affordableBuyQuantity(record, null, remainingRequest);
+    }
+
+    int negativeAdjustmentRemaining(WeaponStockRecord record, int requestedQuantity) {
+        int requested = Math.max(0, requestedQuantity);
+        if (requested <= 0) {
+            return 0;
+        }
+        int buyCancellation = Math.min(requested, pendingBuyQuantityForWeapon(record.getWeaponId()));
+        int remainingRequest = requested - buyCancellation;
+        if (remainingRequest <= 0) {
+            return buyCancellation;
+        }
+        return buyCancellation + Math.min(remainingRequest, sellableRemaining(record));
+    }
+
     int buyNeededForSufficiency(WeaponStockRecord record) {
         return Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + netQuantityForWeapon(record.getWeaponId())));
     }
@@ -89,13 +115,15 @@ final class StockReviewTradeContext {
     }
 
     int deltaToSufficient(WeaponStockRecord record) {
-        int buyQuantity = Math.min(buyableRemaining(record), buyNeededForSufficiency(record));
-        buyQuantity = affordableBuyQuantity(record, null, buyQuantity);
-        if (buyQuantity > 0) {
-            return buyQuantity;
+        int targetNet = record.getDesiredCount() - record.getOwnedCount();
+        int delta = targetNet - netQuantityForWeapon(record.getWeaponId());
+        if (delta > 0) {
+            return positiveAdjustmentRemaining(record, delta);
         }
-        int sellQuantity = sellableUntilSufficient(record);
-        return sellQuantity > 0 ? -sellQuantity : 0;
+        if (delta < 0) {
+            return -negativeAdjustmentRemaining(record, -delta);
+        }
+        return 0;
     }
 
     List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingPurchase purchase) {

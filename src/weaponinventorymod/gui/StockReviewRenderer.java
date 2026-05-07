@@ -16,33 +16,39 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                             StockReviewState state,
                             List<StockReviewPendingPurchase> pendingPurchases,
                             boolean reviewMode,
+                            boolean filterMode,
                             boolean colorDebugMode,
                             int colorDebugTargetIndex,
                             Color colorDebugDraft,
                             boolean colorDebugPersistent,
                             List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        renderHeader(root, snapshot, reviewMode, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
-        if (!reviewMode) {
-            renderActionRow(root, snapshot, buttons);
+        renderHeader(root, snapshot, state, reviewMode, filterMode, colorDebugMode, colorDebugTargetIndex, colorDebugDraft);
+        if (!reviewMode && !filterMode && !colorDebugMode) {
+            renderActionRow(root, snapshot, state, buttons);
         }
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingPurchases);
         WimGuiListBounds result = colorDebugMode
                 ? renderColorDebugList(root, colorDebugTargetIndex, colorDebugDraft, colorDebugPersistent, state, buttons)
+                : filterMode
+                ? renderFilterList(root, state, buttons)
                 : reviewMode
                 ? renderReviewList(root, snapshot, pendingPurchases, state, tradeContext, buttons)
                 : renderStockList(root, snapshot, state, tradeContext, buttons);
-        renderFooter(root, tradeContext, pendingPurchases, reviewMode, colorDebugMode, colorDebugPersistent, buttons);
+        renderFooter(root, tradeContext, pendingPurchases, reviewMode, filterMode, colorDebugMode, colorDebugPersistent, buttons);
         return result;
     }
 
     private void renderHeader(CustomPanelAPI root,
                               WeaponStockSnapshot snapshot,
+                              StockReviewState state,
                               boolean reviewMode,
+                              boolean filterMode,
                               boolean colorDebugMode,
                               int colorDebugTargetIndex,
                               Color colorDebugDraft) {
-        String title = colorDebugMode ? "Debug Colors" : reviewMode ? "Review Trades" : "Make Trades";
-        String status = colorDebugMode ? colorStatusLine(colorDebugTargetIndex, colorDebugDraft) : statusLine(snapshot);
+        String title = colorDebugMode ? "Debug Colors" : filterMode ? "Filters" : reviewMode ? "Review Trades" : "Make Trades";
+        String status = colorDebugMode ? colorStatusLine(colorDebugTargetIndex, colorDebugDraft)
+                : filterMode ? filterStatusLine(state) : statusLine(snapshot, state);
         WimGuiModalHeader.addTitleStatusHeader(
                 root,
                 StockReviewStyle.MODAL,
@@ -56,6 +62,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
 
     private void renderActionRow(CustomPanelAPI root,
                                  WeaponStockSnapshot snapshot,
+                                 StockReviewState state,
                                  List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         WimGuiModalActionRow.add(
                 root,
@@ -71,6 +78,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                 StockReviewAction.toggleGlobalMarket(), snapshot.isGlobalMarketMode() ? StockReviewStyle.SAVE_BUTTON : StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), StockReviewStyle.ACTION_BACKGROUND),
+                        buttonFactory.enabledButton(StockReviewStyle.FILTER_BUTTON_WIDTH, "Filters: " + state.getActiveFilterCount(),
+                                StockReviewAction.openFilters(), state.getActiveFilterCount() > 0 ? StockReviewStyle.FILTER_ACTIVE : StockReviewStyle.ACTION_BACKGROUND),
                         buttonFactory.enabledButton(StockReviewStyle.COLOR_BUTTON_WIDTH, "Colors",
                                 StockReviewAction.openColorDebug(), StockReviewStyle.SAVE_BUTTON)),
                 buttons);
@@ -105,6 +114,13 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         return renderRows(root, rows, state, StockReviewStyle.LIST, buttons);
     }
 
+    private WimGuiListBounds renderFilterList(CustomPanelAPI root,
+                                              StockReviewState state,
+                                              List<WimGuiButtonBinding<StockReviewAction>> buttons) {
+        List<WimGuiListRow<StockReviewAction>> rows = StockReviewFilterListModel.build(state);
+        return renderRows(root, rows, state, StockReviewStyle.LIST, buttons);
+    }
+
     private WimGuiListBounds renderRows(CustomPanelAPI root,
                                         List<WimGuiListRow<StockReviewAction>> rows,
                                         StockReviewState state,
@@ -124,6 +140,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                               StockReviewTradeContext tradeContext,
                               List<StockReviewPendingPurchase> pendingPurchases,
                               boolean reviewMode,
+                              boolean filterMode,
                               boolean colorDebugMode,
                               boolean colorDebugPersistent,
                               List<WimGuiButtonBinding<StockReviewAction>> buttons) {
@@ -137,6 +154,19 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                             footerButton("Confirm", StockReviewAction.debugConfirm(), true, StockReviewStyle.CONFIRM_BUTTON),
                             footerButton("Apply", StockReviewAction.debugApply(), true, StockReviewStyle.SAVE_BUTTON),
                             footerButton("Restore", StockReviewAction.debugRestore(), true, StockReviewStyle.LOAD_BUTTON)),
+                    footerButton("Cancel", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON),
+                    buttons);
+            return;
+        }
+        if (filterMode) {
+            WimGuiModalFooter.addLeftRowAndRightButton(
+                    root,
+                    StockReviewStyle.MODAL,
+                    StockReviewStyle.ACTION_BUTTON_HEIGHT,
+                    StockReviewStyle.BUTTON_GAP,
+                    WimGuiButtonSpecs.of(footerButton("Confirm", StockReviewAction.goBack(), true, StockReviewStyle.CONFIRM_BUTTON),
+                            footerButton("Reset Filters", StockReviewAction.resetFilters(),
+                                    true, StockReviewStyle.LOAD_BUTTON)),
                     footerButton("Cancel", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON),
                     buttons);
             return;
@@ -197,12 +227,18 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         return row != null && row.hasTopGap() ? StockReviewStyle.CATEGORY_TOP_GAP : 0f;
     }
 
-    private static String statusLine(WeaponStockSnapshot snapshot) {
+    private static String statusLine(WeaponStockSnapshot snapshot, StockReviewState state) {
         return "Market: " + snapshot.getMarketName()
                 + " | Sort: " + snapshot.getSortMode().getLabel()
                 + " | Owned source: " + ownedSourceLabel(snapshot)
                 + " | Stock source: " + (snapshot.isGlobalMarketMode() ? "global" : "local")
-                + " | Black market: " + onOff(snapshot.isIncludeBlackMarket());
+                + " | Black market: " + onOff(snapshot.isIncludeBlackMarket())
+                + " | Filters: " + state.getActiveFilterCount();
+    }
+
+    private static String filterStatusLine(StockReviewState state) {
+        return "Active filters: " + state.getActiveFilterCount()
+                + " | Active filter rows are shown first";
     }
 
     private static String colorStatusLine(int targetIndex, Color draft) {

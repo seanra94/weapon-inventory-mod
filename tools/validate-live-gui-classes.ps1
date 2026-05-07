@@ -39,7 +39,11 @@ $requiredClasses = @(
     "weaponinventorymod/gui/WimGuiColorDebug.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$Target.class",
     "weaponinventorymod/gui/StockReviewFormat.class",
-    "weaponinventorymod/gui/StockReviewColorDebugRows.class"
+    "weaponinventorymod/gui/StockReviewColorDebugRows.class",
+    "weaponinventorymod/gui/StockReviewFilter.class",
+    "weaponinventorymod/gui/StockReviewFilterGroup.class",
+    "weaponinventorymod/gui/StockReviewFilterListModel.class",
+    "weaponinventorymod/gui/StockReviewFilters.class"
 )
 $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewButtonBinding.class",

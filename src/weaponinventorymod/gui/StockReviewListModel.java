@@ -8,6 +8,7 @@ import weaponinventorymod.core.WeaponStockSnapshot;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 final class StockReviewListModel {
     private StockReviewListModel() {
@@ -34,7 +35,9 @@ final class StockReviewListModel {
                                    StockCategory category,
                                    Color color,
                                    boolean topGap) {
-        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleTradeableRecords(snapshot, category);
+        List<WeaponStockRecord> records = filteredRecords(
+                StockReviewTradePlanner.visibleTradeableRecords(snapshot, category),
+                state.getActiveFilters());
         boolean expanded = state.isExpanded(category);
         String label = WimGuiToggleHeading.countedLabel(category.getLabel(), records.size(), expanded);
         rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap));
@@ -54,9 +57,9 @@ final class StockReviewListModel {
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
         String label = WimGuiToggleHeading.label(record.getDisplayName(), expanded);
         int planQuantity = tradeContext.netQuantityForWeapon(record.getWeaponId());
-        int sellRemaining = tradeContext.sellableRemaining(record);
+        int sellRemaining = tradeContext.negativeAdjustmentRemaining(record, Integer.MAX_VALUE);
         int transactionCost = tradeContext.transactionCostForWeapon(record.getWeaponId());
-        int buyStepQuantity = tradeContext.affordableBuyQuantity(record, null, 10);
+        int buyStepQuantity = tradeContext.positiveAdjustmentRemaining(record, 10);
         int sellStepQuantity = Math.min(10, sellRemaining);
         int sufficientDelta = tradeContext.deltaToSufficient(record);
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
@@ -70,10 +73,11 @@ final class StockReviewListModel {
                         StockReviewAction.adjustPlan(record.getWeaponId(), -1), sellRemaining >= 1),
                 WimGuiRowCell.standardAction("+1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), 1),
-                        tradeContext.affordableBuyQuantity(record, null, 1) >= 1),
+                        tradeContext.positiveAdjustmentRemaining(record, 1) >= 1),
                 stepCell("+", buyStepQuantity, StockReviewStyle.BUY_BUTTON,
                         StockReviewAction.adjustPlan(record.getWeaponId(), buyStepQuantity)),
-                WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH, StockReviewStyle.CONFIRM_BUTTON,
+                WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH,
+                        sufficientDelta < 0 ? StockReviewStyle.SELL_BUTTON : StockReviewStyle.CONFIRM_BUTTON,
                         StockReviewAction.adjustToSufficient(record.getWeaponId(), sufficientDelta), sufficientDelta != 0),
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0));
@@ -83,6 +87,21 @@ final class StockReviewListModel {
         }
         addWeaponData(rows, record, state);
         addSellers(rows, record, state, tradeContext);
+    }
+
+    private static List<WeaponStockRecord> filteredRecords(List<WeaponStockRecord> records,
+                                                           Set<StockReviewFilter> activeFilters) {
+        if (records == null || records.isEmpty() || StockReviewFilters.count(activeFilters) <= 0) {
+            return records;
+        }
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        for (int i = 0; i < records.size(); i++) {
+            WeaponStockRecord record = records.get(i);
+            if (StockReviewFilters.matches(record, activeFilters)) {
+                result.add(record);
+            }
+        }
+        return result;
     }
 
     private static WimGuiRowCell<StockReviewAction> planCell(int planQuantity, int transactionCost) {
