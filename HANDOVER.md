@@ -6,6 +6,7 @@
 - Exact in-cell rendering is implemented by deterministically patching `com/fs/starfarer/campaign/ui/trade/CargoStackView.renderAtCenter(FFF)V` in `starfarer_obf.jar`.
 - A clean normal-mod frontend is now being added as the primary product: `F8` opens a Weapon Stock Review popup from an active market/storage interaction dialog.
 - The popup is independent of the `CargoStackView` patcher. The clean UI should keep working if the patcher is removed.
+- `PACKAGING.md` separates the forum-safe clean popup package from the optional patched badge package. Do not ship a prepatched `starfarer_obf.jar`; the patcher should operate on the user's installed game copy.
 - Terminology:
   - `Buy GUI` means the main `F8` stock-review screen.
   - `Review GUI` means the planned-trade review screen opened from the Buy GUI.

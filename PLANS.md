@@ -253,7 +253,7 @@
   - tariff parity with vanilla;
   - black-market sale side effects beyond the current best-effort `SNEAK` transaction callback;
   - clearer failure text for commission/illegal-market cases.
-- Consider publishing packaging notes for forum users that clearly explain the core-jar patch/restore requirement.
+- [x] Added `PACKAGING.md` with forum-safe clean-popup packaging notes and separate optional patched-badge patch/restore guidance.
 
 ## Avoid Unless Reopened Deliberately
 
