@@ -40,6 +40,17 @@ final class WimGuiButtonSpec<A> {
                                              Alignment alignment,
                                              Color color,
                                              Color borderColor) {
+        return dimmedInner(width, label, textColor, action, enabled, alignment, color, borderColor);
+    }
+
+    static <A> WimGuiButtonSpec<A> dimmedInner(float width,
+                                               String label,
+                                               Color textColor,
+                                               A action,
+                                               boolean enabled,
+                                               Alignment alignment,
+                                               Color color,
+                                               Color borderColor) {
         return new WimGuiButtonSpec<A>(
                 width,
                 label,
@@ -47,8 +58,18 @@ final class WimGuiButtonSpec<A> {
                 action,
                 enabled,
                 alignment,
-                WimGuiButtonColors.same(color),
+                WimGuiButtonColors.dimmedInner(color),
                 borderColor);
+    }
+
+    static <A> WimGuiButtonSpec<A> toggle(float width,
+                                          String label,
+                                          Color textColor,
+                                          A action,
+                                          Alignment alignment,
+                                          Color color,
+                                          Color borderColor) {
+        return dimmedInner(width, label, textColor, action, true, alignment, color, borderColor);
     }
 
     static <A> WimGuiButtonSpec<A> semantic(float width,

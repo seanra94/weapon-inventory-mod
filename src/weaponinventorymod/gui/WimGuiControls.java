@@ -139,7 +139,7 @@ final class WimGuiControls {
                     x,
                     y,
                     height,
-                    WimGuiButtonSpec.sameColor(
+                    WimGuiButtonSpec.dimmedInner(
                             cell.getWidth(),
                             cell.getLabel(),
                             cell.getTextColor(),

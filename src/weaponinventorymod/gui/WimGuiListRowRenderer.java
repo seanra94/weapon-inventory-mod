@@ -31,21 +31,7 @@ final class WimGuiListRowRenderer {
         float labelLeft = row.getIndent();
         float labelWidth = Math.max(minLabelWidth, width - labelLeft - cellBlockWidth - textLeftPad);
         if (row.getMainAction() != null) {
-            WimGuiControls.addBoundButton(
-                    rowPanel,
-                    labelLeft,
-                    0f,
-                    actionHeight,
-                    WimGuiButtonSpec.sameColor(
-                            labelWidth,
-                            row.getLabel(),
-                            row.getTextColor(),
-                            row.getMainAction(),
-                            true,
-                            row.getMainAlignment(),
-                            row.getButtonFillColor(),
-                            defaultBorder),
-                    buttons);
+            addMainAction(rowPanel, row, labelLeft, labelWidth, actionHeight, defaultBorder, buttons);
         } else {
             addLabel(rowPanel, row.getLabel(), row.getTextColor(), labelLeft, labelWidth, rowHeight);
         }
@@ -58,6 +44,29 @@ final class WimGuiListRowRenderer {
                 x += cell.getWidth() + buttonGap;
             }
         }
+    }
+
+    private static <A> void addMainAction(CustomPanelAPI rowPanel,
+                                          WimGuiListRow<A> row,
+                                          float labelLeft,
+                                          float labelWidth,
+                                          float actionHeight,
+                                          java.awt.Color defaultBorder,
+                                          List<WimGuiButtonBinding<A>> buttons) {
+        WimGuiControls.addBoundButton(
+                rowPanel,
+                labelLeft,
+                0f,
+                actionHeight,
+                WimGuiButtonSpec.toggle(
+                        labelWidth,
+                        row.getLabel(),
+                        row.getTextColor(),
+                        row.getMainAction(),
+                        row.getMainAlignment(),
+                        row.getButtonFillColor(),
+                        defaultBorder),
+                buttons);
     }
 
     private static void addLabel(CustomPanelAPI parent,

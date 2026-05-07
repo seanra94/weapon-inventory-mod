@@ -11,7 +11,11 @@ final class WimGuiButtonColors {
         this.hover = hover == null ? idle : hover;
     }
 
-    static WimGuiButtonColors same(Color color) {
+    static WimGuiButtonColors dimmedInner(Color color) {
         return new WimGuiButtonColors(color, color);
+    }
+
+    static WimGuiButtonColors same(Color color) {
+        return dimmedInner(color);
     }
 }
