@@ -80,6 +80,14 @@ final class StockReviewTradeContext {
         return portfolioQuote.costForLine(weaponId, submarketId);
     }
 
+    int unitCostForWeapon(WeaponStockRecord record) {
+        if (record == null) {
+            return StockReviewQuoteBook.PRICE_UNAVAILABLE;
+        }
+        int unitCost = quoteBook.cheapestUnitPrice(record);
+        return unitCost == Integer.MAX_VALUE ? StockReviewQuoteBook.PRICE_UNAVAILABLE : unitCost;
+    }
+
     List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingPurchase purchase) {
         if (purchase == null) {
             return StockReviewQuote.ZERO.getSellerAllocations();

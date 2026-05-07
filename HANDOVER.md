@@ -72,12 +72,12 @@
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` and `Sellers` use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders; nested `Weapon Data` / `Sellers` heading buttons start after the indent so the left indent remains black.
-  - Weapon entries should keep this order: weapon label, `Storage`, `Inventory`, `Stocked`, `Buying`/`Selling`, `Cost`/`Profit`, `-S`, `-10`, `-1`, `+1`, `+10`, `+S`, `Reset`.
-  - `Storage` is the portion of the snapshot owned count outside player fleet cargo under the active owned-source policy.
-  - `Inventory` is the player fleet cargo count, because only inventory weapons can be sold through this GUI.
-  - `Stocked` is the snapshot stock count across the enabled owned source, normally fleet plus all accessible storage. It should not change while the user clicks buy/sell buttons in the Buy GUI.
-  - `Buying` / `Selling` is the signed planned trade for that weapon. Positive planned quantities use green, negative planned quantities use red, and zero uses pale yellow.
-  - `Cost` uses the red/cancel background; net-profit rows become `Profit` with the green/confirm background. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
+  - Weapon entries should keep this order: weapon label, `Storage`, `Cost`, `Buying`/`Selling`, `-S`, dynamic sell step, `-1`, `+1`, dynamic buy step, `+S`, `Reset`.
+  - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory.
+  - `Cost` in the Buy GUI is the cheapest currently purchasable unit cost for that weapon, formatted with comma-grouped credits.
+  - `Buying` / `Selling` is the signed planned trade for that weapon and includes the full planned trade value in brackets, e.g. `Buying: 5 [50,000cr]`. Positive planned quantities use green, negative planned quantities use red, and zero uses pale yellow.
+  - The dynamic sell/buy step buttons replace the old fixed `-10` / `+10` when fewer than ten additional weapons can be sold/bought. If one or fewer remain, the dynamic step stays visually as disabled `-10` / `+10` because the separate `-1` / `+1` button handles the one-item case.
+  - Cost/profit cells use the red/cancel or green/confirm backgrounds. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
   - `-S` sells down until barely sufficient without crossing into insufficient stock. `+S` buys up until barely sufficient without exceeding desired stock.
   - Disabled controls should render as inert WIM-owned shells with gray text and disabled fill, not as disabled Starsector buttons. Starsector's disabled-button hover can darken/highlight inconsistently and should not be used for WIM action cells.
   - The `Colors` top-row button opens the in-popup Debug Colors screen. Temporary changes mutate the runtime WIM palette until restart; Permanent mode also writes the selected RGB values to Starsector common storage as `WIM_debugGuiColors.json`. Debug samples, RGB incrementors, Confirm/Apply/Restore/Cancel, and the variable selector must stay on the shared WIM row/button path.

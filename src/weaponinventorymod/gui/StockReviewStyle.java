@@ -19,16 +19,16 @@ final class StockReviewStyle {
     static final float SELLER_BUY_BUTTON_WIDTH = 54f;
     static final float STOCK_CELL_WIDTH = 92f;
     static final float INVENTORY_CELL_WIDTH = 102f;
-    static final float PLAN_CELL_WIDTH = 98f;
-    static final float COST_CELL_WIDTH = 124f;
+    static final float PLAN_CELL_WIDTH = 170f;
+    static final float COST_CELL_WIDTH = 104f;
     static final float REVIEW_MARKET_CELL_WIDTH = 180f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
     static final float RESET_BUTTON_WIDTH = 58f;
     static final float TRADE_CONTROL_BLOCK_WIDTH = 6f * TRADE_STEP_BUTTON_WIDTH + RESET_BUTTON_WIDTH + 6f * BUTTON_GAP;
-    static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + INVENTORY_CELL_WIDTH + STOCK_CELL_WIDTH
-            + PLAN_CELL_WIDTH + COST_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 11f * BUTTON_GAP;
-    static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + INVENTORY_CELL_WIDTH
-            + PLAN_CELL_WIDTH + COST_CELL_WIDTH + 3f * BUTTON_GAP;
+    static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + COST_CELL_WIDTH
+            + PLAN_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 9f * BUTTON_GAP;
+    static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + COST_CELL_WIDTH
+            + PLAN_CELL_WIDTH + 2f * BUTTON_GAP;
     static final float DEBUG_VALUE_WIDTH = 430f;
     static final float DEBUG_SAMPLE_WIDTH = 130f;
     static final float DEBUG_DELTA_BUTTON_WIDTH = 48f;

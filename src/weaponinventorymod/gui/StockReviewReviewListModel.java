@@ -26,9 +26,9 @@ final class StockReviewReviewListModel {
         String netLabel = netCost < 0 ? "Net Credits Gained" : "Total Cost";
         String netValue = netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE
                 ? "Price Unavailable"
-                : (netCost < 0 ? (-netCost) + "cr" : netCost + "cr");
+                : StockReviewFormat.credits(netCost);
         rows.add(StockReviewListRow.labelText(netLabel, netValue, true));
-        rows.add(StockReviewListRow.labelText("Credits Available", Math.round(tradeContext.credits()) + "cr"));
+        rows.add(StockReviewListRow.labelText("Credits Available", StockReviewFormat.credits(Math.round(tradeContext.credits()))));
         return rows;
     }
 
@@ -68,15 +68,13 @@ final class StockReviewReviewListModel {
         int quantity = Math.abs(purchase.getQuantity());
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info("All Storage: " + Math.max(0, record.getOwnedCount() - record.getPlayerCargoCount()),
+                WimGuiRowCell.info("Storage: " + record.getOwnedCount(),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
-                WimGuiRowCell.info("Inventory: " + record.getPlayerCargoCount(),
-                        StockReviewStyle.INVENTORY_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT),
+                reviewCostCell(cost, purchase.isSell()),
                 WimGuiRowCell.info((purchase.isSell() ? "Selling: " : "Buying: ") + quantity,
                         StockReviewStyle.PLAN_CELL_WIDTH,
                         purchase.isSell() ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.PLAN_POSITIVE,
-                        StockReviewStyle.TEXT),
-                reviewCostCell(cost, purchase.isSell()));
+                        StockReviewStyle.TEXT));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
                 cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
         if (!expanded) {
@@ -110,7 +108,7 @@ final class StockReviewReviewListModel {
                     StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
             rows.add(StockReviewListRow.labelTextIndented("Buying", String.valueOf(allocation.getQuantity()),
                     StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
-            rows.add(StockReviewListRow.labelTextIndented("Cost", allocation.getCost() + "cr",
+            rows.add(StockReviewListRow.labelTextIndented("Cost", StockReviewFormat.credits(allocation.getCost()),
                     StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
         }
     }
@@ -121,10 +119,10 @@ final class StockReviewReviewListModel {
                     StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
         }
         if (sell) {
-            return WimGuiRowCell.info("Profit: " + (-cost) + "cr", StockReviewStyle.COST_CELL_WIDTH,
+            return WimGuiRowCell.info("Profit: " + StockReviewFormat.credits(cost), StockReviewStyle.COST_CELL_WIDTH,
                     StockReviewStyle.PROFIT_BUTTON, StockReviewStyle.TEXT);
         }
-        return WimGuiRowCell.info("Cost: " + cost + "cr", StockReviewStyle.COST_CELL_WIDTH,
+        return WimGuiRowCell.info("Cost: " + StockReviewFormat.credits(cost), StockReviewStyle.COST_CELL_WIDTH,
                 StockReviewStyle.COST_BUTTON, StockReviewStyle.TEXT);
     }
 
