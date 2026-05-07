@@ -75,36 +75,6 @@ final class StockReviewReviewListModel {
             return;
         }
         StockReviewListModel.addWeaponData(rows, record, state, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH);
-        if (purchase.isBuy()) {
-            addReviewSellers(rows, purchase, record, state, tradeContext);
-        }
-    }
-
-    private static void addReviewSellers(List<WimGuiListRow<StockReviewAction>> rows,
-                                         StockReviewPendingPurchase purchase,
-                                         WeaponStockRecord record,
-                                         StockReviewState state,
-                                         StockReviewTradeContext tradeContext) {
-        boolean expanded = state.isSellersExpanded(record.getWeaponId());
-        rows.add(StockReviewListRow.reviewSection(WimGuiToggleHeading.label("Sellers", expanded),
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));
-        if (!expanded) {
-            return;
-        }
-        List<StockReviewSellerAllocation> allocations = tradeContext.sellerAllocations(purchase);
-        if (allocations.isEmpty()) {
-            rows.add(StockReviewListRow.detail("No seller allocation found."));
-            return;
-        }
-        for (int i = 0; i < allocations.size(); i++) {
-            StockReviewSellerAllocation allocation = allocations.get(i);
-            rows.add(StockReviewListRow.labelTextIndented("Market", allocation.getSubmarketName(),
-                    StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
-            rows.add(StockReviewListRow.labelTextIndented("Buying", String.valueOf(allocation.getQuantity()),
-                    StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
-            rows.add(StockReviewListRow.labelTextIndented("Price", StockReviewFormat.credits(allocation.getCost()),
-                    StockReviewStyle.SELLER_INDENT, false, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH));
-        }
     }
 
     private static WimGuiRowCell<StockReviewAction> reviewCostCell(int cost, boolean sell) {

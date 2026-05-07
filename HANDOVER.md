@@ -65,7 +65,7 @@
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
-  - expanded review weapon rows show stock cells, trade quantity, cost/profit, `Weapon Data`, and seller allocations for buys;
+  - expanded review weapon rows show stock cells, trade quantity, cost/profit, and `Weapon Data`;
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
@@ -74,13 +74,14 @@
 - Popup category layout:
   - stock categories start collapsed;
   - headings are flat full-width peer rows, not nested checkboxes;
-  - weapon rows, nested section rows, seller rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
+  - weapon rows, nested section rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
 - Popup visual rules:
   - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No Stock and sell/decrement controls, yellow/load for Insufficient Stock rows, green/confirm for Sufficient Stock and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
   - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
-  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` and `Sellers` use the ACG dark-gray collapsible heading fill.
+  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
-  - Weapon rows, seller rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders; nested `Weapon Data` / `Sellers` heading buttons start after the indent so the left indent remains black.
+  - Weapon rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders.
+  - Nested weapon-row sizing must be treated as a simple indent stack. If a weapon heading has width `X` and one indent unit is `Y`, the `Weapon Data` heading starts at `Y` and has width `X - Y`; its data rows start at `2Y` and have width `X - 2Y`. The same shrinking rule applies to any future child/grandchild row: increasing indentation must also reduce row width by the same amount, not just shift the row right.
   - Weapon entries should keep this order: weapon label, `Storage`, `Price`, `Buying`/`Selling`, dynamic sell step, `-1`, `+1`, dynamic buy step, `Sufficient`, `Reset`.
   - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.
   - The `Storage` cell is intentionally wider than the other compact stock cells and left-aligned with normal WIM internal text padding for readability.
@@ -305,9 +306,9 @@ Manual validation:
 - Confirm weapon entries show stable `Storage`, unit `Price`, and planned `Buying`/`Selling` cells while queued changes are adjusted.
 - Confirm `Source` and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
 - Confirm `Sort` cycles through `Need`, `Name`, and `Price` without collapsing headings.
-- Confirm weapon rows expand into Weapon Data and Sellers sections.
+- Confirm weapon rows expand into the Weapon Data section.
 - Confirm mouse-wheel scrolling and clickable `^     ^     ^     ^     ^` / `v     v     v     v     v` indicators preserve state and do not appear when all rows fit.
-- Confirm `+1`/dynamic buy-step works from top-level rows and specific seller rows, with credits/space failures blocked.
+- Confirm `+1`/dynamic buy-step works from top-level rows, with credits/space failures blocked.
 - Confirm no crash.
 - Confirm commodities remain vanilla.
 - Confirm weapon and fighter LPC stacks show one bottom-right badge.

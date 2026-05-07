@@ -49,7 +49,7 @@ final class StockReviewListRow {
         return section(label, action, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH);
     }
 
-    private static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action, float rightReserveWidth) {
+    static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action, float rightReserveWidth) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.HEADING_BACKGROUND, null, StockReviewStyle.SECTION_INDENT,
                 action, Alignment.LMID, null, false, null, rightReserveWidth);
@@ -116,27 +116,6 @@ final class StockReviewListRow {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.ROW_BACKGROUND, StockReviewStyle.ROW_BORDER,
                 0f, null, Alignment.LMID, cells, false);
-    }
-
-    static WimGuiListRow<StockReviewAction> seller(String label,
-                                                   String value,
-                                                   boolean buyOneEnabled,
-                                                   int buyStepQuantity,
-                                                   StockReviewAction buyOneAction,
-                                                   StockReviewAction buyStepAction) {
-        boolean buyStepEnabled = buyStepQuantity > 1;
-        String buyStepLabel = buyStepEnabled ? "+" + buyStepQuantity : "+10";
-        List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.infoWithBorder(value, StockReviewStyle.REVIEW_MARKET_CELL_WIDTH,
-                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.MID, StockReviewStyle.ROW_BORDER),
-                WimGuiRowCell.standardAction("+1", StockReviewStyle.SELLER_BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
-                        buyOneAction, buyOneEnabled),
-                WimGuiRowCell.standardAction(buyStepLabel, StockReviewStyle.SELLER_BUY_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
-                        buyStepAction, buyStepEnabled));
-        Color textColor = buyOneEnabled || buyStepEnabled ? StockReviewStyle.MUTED : StockReviewStyle.DISABLED_TEXT;
-        return row(label, textColor, null,
-                StockReviewStyle.ROW_BACKGROUND_DARK, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.SELLER_INDENT, null, Alignment.LMID, cells, false);
     }
 
     static WimGuiListRow<StockReviewAction> empty(String label) {

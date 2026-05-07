@@ -2,7 +2,6 @@ package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.ui.Alignment;
 import weaponinventorymod.core.StockCategory;
-import weaponinventorymod.core.SubmarketWeaponStock;
 import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
@@ -87,7 +86,6 @@ final class StockReviewListModel {
             return;
         }
         addWeaponData(rows, record, state);
-        addSellers(rows, record, state, tradeContext);
     }
 
     private static List<WeaponStockRecord> filteredRecords(List<WeaponStockRecord> records,
@@ -150,59 +148,31 @@ final class StockReviewListModel {
                               StockReviewState state,
                               float rightReserveWidth) {
         boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
+        float nestedRightReserveWidth = nestedRightReserveWidth(rightReserveWidth);
         rows.add(sectionRow(
                 WimGuiToggleHeading.label("Weapon Data", expanded),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA),
-                rightReserveWidth));
+                nestedRightReserveWidth));
         if (!expanded) {
             return;
         }
-        rows.add(StockReviewListRow.labelTextIndented("Desired", String.valueOf(record.getDesiredCount()), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Size", record.getSizeLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Type", record.getTypeLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Damage", record.getDamageLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("EMP", record.getEmpLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Range", record.getRangeLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Flux/Second", record.getFluxPerSecondLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Flux/Damage", record.getFluxPerDamageLabel(), StockReviewStyle.DETAIL_INDENT, false, rightReserveWidth));
-    }
-
-    private static void addSellers(List<WimGuiListRow<StockReviewAction>> rows,
-                                   WeaponStockRecord record,
-                                   StockReviewState state,
-                                   StockReviewTradeContext tradeContext) {
-        boolean expanded = state.isSellersExpanded(record.getWeaponId());
-        rows.add(StockReviewListRow.section(
-                WimGuiToggleHeading.label("Sellers", expanded),
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.SELLERS)));
-        if (!expanded) {
-            return;
-        }
-        List<SubmarketWeaponStock> stocks = record.getSubmarketStocks();
-        if (stocks.isEmpty()) {
-            rows.add(StockReviewListRow.detail("No seller stock found at this market."));
-            return;
-        }
-        for (int i = 0; i < stocks.size(); i++) {
-            SubmarketWeaponStock stock = stocks.get(i);
-            int buyableOne = tradeContext.affordableBuyQuantity(record, stock.getSubmarketId(), 1);
-            int buyStepQuantity = tradeContext.affordableBuyQuantity(record, stock.getSubmarketId(), 10);
-            rows.add(StockReviewListRow.seller(
-                    stock.getSubmarketName(),
-                    stock.getCount() + (stock.getCount() > 0 ? " @ " + StockReviewFormat.credits(stock.getUnitPrice()) : "") + (!stock.isPurchasable() ? " (locked)" : ""),
-                    buyableOne >= 1,
-                    buyStepQuantity,
-                    StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), 1),
-                    StockReviewAction.buyFromSubmarket(record.getWeaponId(), stock.getSubmarketId(), buyStepQuantity)));
-        }
+        rows.add(StockReviewListRow.labelTextIndented("Desired", String.valueOf(record.getDesiredCount()), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Size", record.getSizeLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Type", record.getTypeLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Damage", record.getDamageLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("EMP", record.getEmpLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Range", record.getRangeLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Flux/Second", record.getFluxPerSecondLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Flux/Damage", record.getFluxPerDamageLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth));
     }
 
     private static WimGuiListRow<StockReviewAction> sectionRow(String label,
                                                                StockReviewAction action,
                                                                float rightReserveWidth) {
-        if (rightReserveWidth == StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH) {
-            return StockReviewListRow.reviewSection(label, action);
-        }
-        return StockReviewListRow.section(label, action);
+        return StockReviewListRow.section(label, action, rightReserveWidth);
+    }
+
+    private static float nestedRightReserveWidth(float rightReserveWidth) {
+        return rightReserveWidth + StockReviewStyle.WEAPON_INDENT;
     }
 }

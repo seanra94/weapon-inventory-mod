@@ -15,7 +15,7 @@
   - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup rows are intentionally limited to weapons that are buyable from the active stock source or present in player inventory.
   - popup has sort modes for need, name, and price.
-  - popup row actions now support weapon expansion, nested Weapon Data/Sellers sections, cheapest-first `+1`/dynamic buy steps, and submarket-specific buys.
+  - popup row actions now support weapon expansion, nested Weapon Data sections, and cheapest-first `+1`/dynamic buy steps.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -101,7 +101,7 @@
 - Changed successful popup purchases to rebuild the popup snapshot in place by default instead of force-refreshing the vanilla cargo core UI. The forced refresh fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
 - Added first planned-trade flow:
   - top-level buy buttons plan from the cheapest eligible current-market submarkets;
-  - seller rows can buy from a specific submarket;
+  - visible seller rows were later removed as low-value UI detail;
   - planned trades check credits and cargo space before mutating cargo.
   - successful trades rebuild the popup snapshot in place by default; the older close/reopen fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
 - Added signed planned-trade flow:
@@ -155,6 +155,10 @@
   - widened the `Storage` cell and left-aligned its text with standard internal padding;
   - moved `Total Cost` / `Total Profit` and `Credits Available` out of the scrollable list into fixed bottom summary rows above the footer buttons;
   - summary value cells now use red/green backgrounds for net cost/profit instead of colored text.
+- Corrected nested weapon-row sizing:
+  - `Weapon Data` uses one indent and loses one indent-width from its parent weapon heading width;
+  - Weapon Data rows use two indents and lose two indent-widths from the parent weapon heading width;
+  - visible `Sellers` sections were removed from trade/review rows.
 
 ## Active Manual Validation
 
@@ -167,13 +171,12 @@
   - Black Market toggle updates counts/categories;
   - Sort/source/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
-  - expanded rows show Weapon Data and Sellers sections;
+  - expanded rows show the Weapon Data section;
   - compact buy-step controls plan buys from cheapest eligible seller stock and shrink below `+10` when fewer than ten are available;
   - compact sell-step controls plan sells from player inventory stock and shrink below `-10` when fewer than ten are available;
   - compact sell-step controls also shrink to queued buy quantity when they are only reversing the shopping cart, e.g. `-5` after queuing 5 buys from zero inventory;
   - `Sufficient` buys enough to reach the desired count from the current queued state and turns red when it will reduce the queued plan or sell excess;
   - `Filters: N` opens/closes cleanly, filters rows immediately, and preserves the normal stock/review/color-debug flows;
-  - seller-specific `+1`/dynamic buy-step only buys from that submarket;
   - failed buys show a message instead of mutating cargo;
   - no-weapons and many-weapons markets remain responsive;
   - commodities remain vanilla;
@@ -205,8 +208,8 @@
   - [x] revise sorting: default Need means lowest stored quantity first, then cheapest price, then name; Name then uses need and price tie-breakers; removed low-value For Sale and Owned sorts; added Price sorting;
   - [x] remove the top-row Storage toggle because storage counts are already shown in weapon rows;
   - [x] keep `Storage` as total owned stock, including inventory, while preventing storage-only weapons from creating rows;
-  - [x] keep nested `Weapon Data` and `Sellers` rows inside their parent heading width, ending before the `Storage` cell column;
-  - [x] render Weapon Data and seller detail fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
+  - [x] keep nested `Weapon Data` rows inside their parent heading width, ending before the `Storage` cell column;
+  - [x] render Weapon Data fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
 - Current requested stock-review polish/work queue:
   - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
   - [x] title-case toggle heading labels, including `Weapon Data`;
