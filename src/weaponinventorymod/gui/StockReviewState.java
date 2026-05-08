@@ -75,6 +75,12 @@ public final class StockReviewState implements WimGuiScrollableListState {
         expandedTradeGroups.put(tradeGroup, Boolean.valueOf(!isExpanded(tradeGroup)));
     }
 
+    public void setExpanded(StockReviewTradeGroup tradeGroup, boolean value) {
+        if (tradeGroup != null) {
+            expandedTradeGroups.put(tradeGroup, Boolean.valueOf(value));
+        }
+    }
+
     public boolean isWeaponExpanded(String weaponId) {
         return expandedWeapons.contains(weaponId);
     }

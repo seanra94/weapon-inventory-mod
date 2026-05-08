@@ -285,6 +285,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (StockReviewAction.Type.REVIEW_PURCHASE.equals(type)) {
             if (!pendingTrades.isEmpty()) {
                 state.setListScrollOffset(0);
+                state.setExpanded(StockReviewTradeGroup.BUYING, true);
+                state.setExpanded(StockReviewTradeGroup.SELLING, true);
                 reopen(true);
             }
             return;

@@ -21,18 +21,23 @@ final class StockReviewReviewListModel {
             rows.add(StockReviewListRow.empty("No weapon trades are planned."));
             return rows;
         }
-        addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.BUYING);
-        addReviewGroup(rows, snapshot, pendingPurchases, state, tradeContext, StockReviewTradeGroup.SELLING);
+        List<StockReviewPendingPurchase> buying = reviewPurchasesForGroup(pendingPurchases, StockReviewTradeGroup.BUYING);
+        List<StockReviewPendingPurchase> selling = reviewPurchasesForGroup(pendingPurchases, StockReviewTradeGroup.SELLING);
+        if (buying.isEmpty() && selling.isEmpty()) {
+            rows.add(StockReviewListRow.empty("No weapon trades are planned."));
+            return rows;
+        }
+        addReviewGroup(rows, snapshot, buying, state, tradeContext, StockReviewTradeGroup.BUYING);
+        addReviewGroup(rows, snapshot, selling, state, tradeContext, StockReviewTradeGroup.SELLING);
         return rows;
     }
 
     private static void addReviewGroup(List<WimGuiListRow<StockReviewAction>> rows,
                                        WeaponStockSnapshot snapshot,
-                                       List<StockReviewPendingPurchase> pendingPurchases,
+                                       List<StockReviewPendingPurchase> groupPurchases,
                                        StockReviewState state,
                                        StockReviewTradeContext tradeContext,
                                        StockReviewTradeGroup tradeGroup) {
-        List<StockReviewPendingPurchase> groupPurchases = reviewPurchasesForGroup(pendingPurchases, tradeGroup);
         boolean expanded = state.isExpanded(tradeGroup);
         String label = WimGuiToggleHeading.countedLabel(tradeGroup.getLabel(), groupPurchases.size(), expanded);
         Color headingColor = StockReviewTradeGroup.BUYING.equals(tradeGroup)

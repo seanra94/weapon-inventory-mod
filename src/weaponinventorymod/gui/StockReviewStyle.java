@@ -17,9 +17,9 @@ final class StockReviewStyle {
     static final float FILTER_BUTTON_WIDTH = 108f;
     static final float COLOR_BUTTON_WIDTH = 82f;
     static final float BUTTON_GAP = 5f;
-    static final float STOCK_CELL_WIDTH = 136f;
+    static final float STOCK_CELL_WIDTH = 104f;
     static final float INVENTORY_CELL_WIDTH = 102f;
-    static final float PLAN_CELL_WIDTH = 170f;
+    static final float PLAN_CELL_WIDTH = 184f;
     static final float PRICE_CELL_WIDTH = 120f;
     static final float TRADE_STEP_BUTTON_WIDTH = 38f;
     static final float SUFFICIENT_BUTTON_WIDTH = 82f;

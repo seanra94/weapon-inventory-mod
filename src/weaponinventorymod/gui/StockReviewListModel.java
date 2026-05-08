@@ -40,7 +40,7 @@ final class StockReviewListModel {
                 StockReviewTradePlanner.visibleTradeableRecords(snapshot, category),
                 state.getActiveFilters());
         boolean expanded = state.isExpanded(category);
-        String label = WimGuiToggleHeading.countedLabel(category.getLabel(), records.size(), expanded);
+        String label = WimGuiToggleHeading.label(categoryHeading(category, records, tradeContext), expanded);
         rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap,
                 StockReviewTooltips.category(category)));
         if (!expanded) {
@@ -151,6 +151,25 @@ final class StockReviewListModel {
         return result;
     }
 
+    private static String categoryHeading(StockCategory category,
+                                          List<WeaponStockRecord> records,
+                                          StockReviewTradeContext tradeContext) {
+        int weaponTypes = records == null ? 0 : records.size();
+        int selling = 0;
+        int buying = 0;
+        if (records != null && tradeContext != null) {
+            for (int i = 0; i < records.size(); i++) {
+                WeaponStockRecord record = records.get(i);
+                selling += tradeContext.pendingSellQuantityForWeapon(record.getWeaponId());
+                buying += tradeContext.pendingBuyQuantityForWeapon(record.getWeaponId());
+            }
+        }
+        return category.getLabel()
+                + " [Weapon Types: " + weaponTypes + "]"
+                + "[Selling: " + Math.max(0, selling) + "]"
+                + "[Buying: " + Math.max(0, buying) + "]";
+    }
+
     static WimGuiRowCell<StockReviewAction> planCell(int planQuantity, int transactionCost) {
         String quantity = cappedCount(Math.abs(planQuantity));
         String total = cappedCredits(transactionCost, 999999);
@@ -206,15 +225,34 @@ final class StockReviewListModel {
                               StockReviewState state,
                               float rightReserveWidth,
                               float listWidth) {
-        float dataIndent = StockReviewStyle.SECTION_INDENT;
-        rows.add(StockReviewListRow.labelTextIndented("Desired", String.valueOf(record.getDesiredCount()), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Size", record.getSizeLabel(), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Type", record.getTypeLabel(), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Damage", record.getDamageLabel(), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("EMP", record.getEmpLabel(), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Range", record.getRangeLabel(), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Flux/Second", record.getFluxPerSecondLabel(), dataIndent, false, rightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Flux/Damage", record.getFluxPerDamageLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        float oldIndent = StockReviewStyle.SECTION_INDENT;
+        float dataIndent = 2f * oldIndent;
+        float componentWidth = Math.max(40f,
+                listWidth - oldIndent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
+        float compensatedRightReserve = Math.max(0f,
+                listWidth - dataIndent - componentWidth - 2f * StockReviewStyle.SMALL_PAD);
+        rows.add(dataRow("Desired", String.valueOf(record.getDesiredCount()), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("Size", record.getSizeLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("Type", record.getTypeLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("Damage", record.getDamageLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("EMP", record.getEmpLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("Range", record.getRangeLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("Flux/Second", record.getFluxPerSecondLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        rows.add(dataRow("Flux/Damage", record.getFluxPerDamageLabel(), dataIndent, componentWidth, compensatedRightReserve));
+    }
+
+    private static WimGuiListRow<StockReviewAction> dataRow(String label,
+                                                            String value,
+                                                            float indent,
+                                                            float componentWidth,
+                                                            float rightReserveWidth) {
+        return StockReviewListRow.labelTextIndentedFixedWidth(
+                label,
+                value,
+                indent,
+                false,
+                componentWidth,
+                rightReserveWidth);
     }
 
     private static String cappedCount(int value) {
@@ -237,4 +275,5 @@ final class StockReviewListModel {
         }
         return StockReviewFormat.credits(absolute);
     }
+
 }

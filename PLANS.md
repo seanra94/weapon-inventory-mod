@@ -169,6 +169,14 @@
   - removed the intermediate `Weapon Data` toggle heading;
   - expanded weapon data rows use one child indent and lose one indent-width from the parent weapon heading width;
   - visible `Sellers` sections were removed from trade/review rows.
+- Adjusted the stock row layout after runtime width testing:
+  - shrank `Storage` to fit its capped worst-case label more tightly;
+  - widened the `Buying` / `Selling` plan cell so capped planned-trade values have more room;
+  - moved expanded weapon data rows onto a fixed-width doubled-indent path after the earlier shrink-only indentation still looked wrong in game.
+- Changed top stock category headings to summarize visible weapon types, queued selling units, and queued buying units separately, e.g. `No Stock [Weapon Types: N][Selling: N][Buying: N]`.
+- Hardened Review Trades entry after bulk buy/sell sufficient testing:
+  - entering Review Trades now opens Buying and Selling groups expanded;
+  - the review list shows a no-trades fallback if a pending list contains no real buy/sell rows after netting or filtering.
 - Updated trade/filter presentation:
   - active filters now render directly above the first filter-group heading instead of under an `Active Filters` heading;
   - the filter list panel uses a narrow one-quarter-width list spec;

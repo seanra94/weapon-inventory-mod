@@ -40,16 +40,17 @@ final class StockReviewTooltips {
     }
 
     static String category(StockCategory category) {
+        String summary = " Heading totals show weapon types in this section, queued selling units, and queued buying units. Buying and selling are counted separately and do not cancel each other out.";
         if (StockCategory.NO_STOCK.equals(category)) {
-            return "Weapons with no owned stock that are buyable here or present in inventory.";
+            return "Weapons with no owned stock that are buyable here or present in inventory." + summary;
         }
         if (StockCategory.INSUFFICIENT.equals(category)) {
-            return "Weapons below their desired stock threshold.";
+            return "Weapons below their desired stock threshold." + summary;
         }
         if (StockCategory.SUFFICIENT.equals(category)) {
-            return "Weapons already at or above their desired stock threshold.";
+            return "Weapons already at or above their desired stock threshold." + summary;
         }
-        return "Show or hide weapons in this stock category.";
+        return "Show or hide weapons in this stock category." + summary;
     }
 
     static String weapon(WeaponStockRecord record) {
