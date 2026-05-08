@@ -114,7 +114,7 @@
 - Added first transaction-side-effect hardening:
   - local-market WIM buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
   - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
-  - Secret Market buys remain virtual WIM-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
+  - Fixer's Market buys remain virtual WIM-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
 - Cleaned up the `Cost` to `Price` terminology migration:
   - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
   - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
@@ -202,11 +202,11 @@
 ## High-Value Future Work
 
 - Expanded stock source feature:
-  - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Secret Market` source modes;
+  - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Fixer's Market` source modes;
   - [x] keep `Local` as current-market stock review with the normal Black Market toggle;
   - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wim_sector_market_price_multiplier` Luna setting, defaulting to 4x;
   - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
-  - [x] add `Secret Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_secret_market_price_multiplier` Luna setting, defaulting to 6x;
+  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_secret_market_price_multiplier` Luna setting, defaulting to 6x;
   - [x] disable and gray out the Black Market button for non-local source modes;
   - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
 - Current requested stock-review review/buy page work queue:

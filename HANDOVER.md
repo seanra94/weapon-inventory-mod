@@ -38,11 +38,11 @@
   - Stored-only weapons should not create rows. The `Storage` cell may still show full owned stock, including accessible storage, for a weapon that appears because it is buyable or in player inventory.
   - Local stock collection, local buys, local sells, and sell-price quoting should all use `MarketStockService.isTradeSubmarket(...)` for storage/local-resource/black-market filtering. Do not copy that submarket filter into each caller.
 - Stock source modes:
-  - The Buy GUI now cycles `Source: Local`, `Source: Sector Market`, and `Source: Secret Market`.
+  - The Buy GUI now cycles `Source: Local`, `Source: Sector Market`, and `Source: Fixer's Market`.
   - `Local` behaves like the normal current-market review and honors the Black Market toggle.
   - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wim_sector_market_price_multiplier` (default `4.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
   - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo and must refresh after Sector Market purchases drain actual market stacks.
-  - `Secret Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_secret_market_price_multiplier` (default `6.0`) to buy prices, and does not drain real market cargo. Selling while in Secret Market mode still sells to the current local market.
+  - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_secret_market_price_multiplier` (default `6.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
   - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
   - Optional tag/faction inference is Luna-gated by `wim_enable_global_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
 - Popup sorting:
@@ -72,7 +72,7 @@
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run;
-  - Secret Market buys remain virtual WIM transactions and intentionally do not report to a real submarket plugin. Sector Market buys remove stock from real remote market cargo and report a best-effort transaction to the touched remote submarket. Remote-mode sells use the current local market buyer with black market disabled.
+  - Fixer's Market buys remain virtual WIM transactions and intentionally do not report to a real submarket plugin. Sector Market buys remove stock from real remote market cargo and report a best-effort transaction to the touched remote submarket. Remote-mode sells use the current local market buyer with black market disabled.
 - Popup category layout:
   - stock categories start collapsed;
   - headings are flat full-width peer rows, not nested checkboxes;

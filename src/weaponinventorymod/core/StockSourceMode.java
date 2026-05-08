@@ -3,7 +3,7 @@ package weaponinventorymod.core;
 public enum StockSourceMode {
     LOCAL("Local", false),
     SECTOR("Sector Market", true),
-    SECRET("Secret Market", true);
+    FIXERS("Fixer's Market", true);
 
     private final String label;
     private final boolean remote;

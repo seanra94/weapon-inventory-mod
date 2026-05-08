@@ -510,8 +510,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             }
             return purchaseService.sellToMarket(sector, market, purchase.getWeaponId(), -purchase.getQuantity(), state.isIncludeBlackMarket());
         }
-        if (StockSourceMode.SECRET.equals(sourceMode)) {
-            return purchaseService.buyFromSecretMarket(sector, purchase.getWeaponId(), purchase.getQuantity(),
+        if (StockSourceMode.FIXERS.equals(sourceMode)) {
+            return purchaseService.buyFromFixersMarket(sector, purchase.getWeaponId(), purchase.getQuantity(),
                     virtualUnitPrice(purchase.getWeaponId()), virtualUnitCargoSpace(purchase.getWeaponId()));
         }
         if (StockSourceMode.SECTOR.equals(sourceMode)) {

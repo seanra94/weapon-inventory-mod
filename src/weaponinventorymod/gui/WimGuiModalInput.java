@@ -35,6 +35,10 @@ final class WimGuiModalInput<A> {
         buttonPoller.clearCheckedButtons();
     }
 
+    void suppressNextMouseUpPoll() {
+        buttonPoller.suppressNextMouseUp();
+    }
+
     WimGuiInputResult processInput(List<InputEventAPI> events) {
         if (events == null) {
             return WimGuiInputResult.none();

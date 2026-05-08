@@ -84,8 +84,8 @@ public final class WeaponStockSnapshotBuilder {
                                                        MarketAPI market,
                                                        boolean includeBlackMarket,
                                                        StockSourceMode sourceMode) {
-        if (StockSourceMode.SECRET.equals(sourceMode)) {
-            return globalWeaponMarketService.collectSecretWeaponStock(sector);
+        if (StockSourceMode.FIXERS.equals(sourceMode)) {
+            return globalWeaponMarketService.collectFixersWeaponStock(sector);
         }
         if (StockSourceMode.SECTOR.equals(sourceMode)) {
             return globalWeaponMarketService.collectSectorWeaponStock(sector);

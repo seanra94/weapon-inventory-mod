@@ -173,6 +173,6 @@ final class StockReviewListModel {
     }
 
     private static float nestedRightReserveWidth(float rightReserveWidth) {
-        return rightReserveWidth + StockReviewStyle.WEAPON_INDENT;
+        return rightReserveWidth;
     }
 }

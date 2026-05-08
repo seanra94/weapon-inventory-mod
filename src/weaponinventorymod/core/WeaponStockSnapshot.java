@@ -81,8 +81,8 @@ public final class WeaponStockSnapshot {
     }
 
     public String getMarketName() {
-        if (StockSourceMode.SECRET.equals(sourceMode)) {
-            return GlobalWeaponMarketService.SECRET_MARKET_NAME;
+        if (StockSourceMode.FIXERS.equals(sourceMode)) {
+            return GlobalWeaponMarketService.FIXERS_MARKET_NAME;
         }
         if (StockSourceMode.SECTOR.equals(sourceMode)) {
             return GlobalWeaponMarketService.SECTOR_MARKET_NAME;

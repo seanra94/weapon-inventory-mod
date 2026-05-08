@@ -14,6 +14,7 @@ final class WimGuiButtonPoller<A> {
     private final int framesAfterMouseEvent;
     private int framesRemaining = 0;
     private boolean hasPendingMouseUp = false;
+    private boolean suppressNextMouseUp = false;
     private float pendingMouseUpX = 0f;
     private float pendingMouseUpY = 0f;
 
@@ -41,6 +42,10 @@ final class WimGuiButtonPoller<A> {
                 continue;
             }
             if (event.isMouseUpEvent()) {
+                if (suppressNextMouseUp) {
+                    suppressNextMouseUp = false;
+                    continue;
+                }
                 hasPendingMouseUp = true;
                 pendingMouseUpX = event.getX();
                 pendingMouseUpY = event.getY();
@@ -87,6 +92,12 @@ final class WimGuiButtonPoller<A> {
         for (int i = 0; i < bindings.size(); i++) {
             bindings.get(i).clear();
         }
+        framesRemaining = 0;
+        clearPendingMouseUp();
+    }
+
+    void suppressNextMouseUp() {
+        suppressNextMouseUp = true;
         framesRemaining = 0;
         clearPendingMouseUp();
     }

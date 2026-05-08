@@ -18,7 +18,7 @@ import java.util.Set;
 public final class GlobalWeaponMarketService {
     public static final String VIRTUAL_SUBMARKET_ID = "wim_global_weapon_market";
     public static final String SECTOR_MARKET_NAME = "Sector Market";
-    public static final String SECRET_MARKET_NAME = "Secret Market";
+    public static final String FIXERS_MARKET_NAME = "Fixer's Market";
     public static final int VIRTUAL_STOCK = 999;
 
     private final MarketStockService marketStockService = new MarketStockService();
@@ -28,7 +28,7 @@ public final class GlobalWeaponMarketService {
         return buildSectorWeaponStock(sector, WeaponInventoryConfig.sectorMarketPriceMultiplier());
     }
 
-    public MarketStockService.MarketStock collectSecretWeaponStock(SectorAPI sector) {
+    public MarketStockService.MarketStock collectFixersWeaponStock(SectorAPI sector) {
         boolean includeInferred = WeaponInventoryConfig.isGlobalMarketTagInferenceEnabled();
         float priceMultiplier = WeaponInventoryConfig.secretMarketPriceMultiplier();
         String key = "secret|" + includeInferred + "|" + priceMultiplier;
@@ -36,7 +36,7 @@ public final class GlobalWeaponMarketService {
         if (cached != null) {
             return cached;
         }
-        MarketStockService.MarketStock result = buildSecretWeaponStock(sector, includeInferred, priceMultiplier);
+        MarketStockService.MarketStock result = buildFixersWeaponStock(sector, includeInferred, priceMultiplier);
         cache.put(key, result);
         return result;
     }
@@ -79,7 +79,7 @@ public final class GlobalWeaponMarketService {
         return builder.build();
     }
 
-    private MarketStockService.MarketStock buildSecretWeaponStock(SectorAPI sector,
+    private MarketStockService.MarketStock buildFixersWeaponStock(SectorAPI sector,
                                                                   boolean includeInferred,
                                                                   float priceMultiplier) {
         MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
@@ -117,7 +117,7 @@ public final class GlobalWeaponMarketService {
             SubmarketWeaponStock source = entry.getValue();
             builder.add(entry.getKey(), new SubmarketWeaponStock(
                     VIRTUAL_SUBMARKET_ID,
-                    SECRET_MARKET_NAME,
+                    FIXERS_MARKET_NAME,
                     VIRTUAL_STOCK,
                     markedUpPrice(source.getBaseUnitPrice(), priceMultiplier),
                     source.getBaseUnitPrice(),
@@ -145,7 +145,7 @@ public final class GlobalWeaponMarketService {
                 }
                 cheapestByWeapon.put(weaponId, new SubmarketWeaponStock(
                         VIRTUAL_SUBMARKET_ID,
-                        SECRET_MARKET_NAME,
+                        FIXERS_MARKET_NAME,
                         VIRTUAL_STOCK,
                         Math.max(0, Math.round(spec.getBaseValue())),
                         1f,

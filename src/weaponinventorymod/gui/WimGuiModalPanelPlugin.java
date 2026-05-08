@@ -65,6 +65,7 @@ abstract class WimGuiModalPanelPlugin<A> extends BaseCustomUIPanelPlugin impleme
     public final void buttonPressed(Object buttonId) {
         if (actionClass.isInstance(buttonId)) {
             modalInput.clearCheckedButtons();
+            modalInput.suppressNextMouseUpPoll();
             handle(actionClass.cast(buttonId));
         }
     }

@@ -89,7 +89,7 @@ public final class StockPurchaseService {
         return PurchaseResult.success(message, quantity, -credits);
     }
 
-    public PurchaseResult buyFromSecretMarket(SectorAPI sector,
+    public PurchaseResult buyFromFixersMarket(SectorAPI sector,
                                               String weaponId,
                                               int requestedQuantity,
                                               int unitPrice,
@@ -104,7 +104,7 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("Nothing to buy.");
         }
         if (unitPrice < 0) {
-            return PurchaseResult.failure("No secret-market price is available.");
+            return PurchaseResult.failure("No fixer-market price is available.");
         }
 
         CampaignFleetAPI fleet = sector.getPlayerFleet();
@@ -128,7 +128,7 @@ public final class StockPurchaseService {
         playerCargo.updateSpaceUsed();
 
         String message = "Bought " + requestedQuantity + " " + weaponDisplayName(weaponId)
-                + " from the secret market for " + CreditFormat.creditsLong(totalCost) + ".";
+                + " from the fixer's market for " + CreditFormat.creditsLong(totalCost) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }
