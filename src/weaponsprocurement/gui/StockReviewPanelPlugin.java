@@ -5,17 +5,14 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.ui.CustomPanelAPI;
 import org.apache.log4j.Logger;
 import weaponsprocurement.core.StockReviewConfig;
-import weaponsprocurement.core.StockSourceMode;
 import weaponsprocurement.core.StockPurchaseService;
-import weaponsprocurement.core.SubmarketWeaponStock;
-import weaponsprocurement.core.WeaponStockRecord;
 import weaponsprocurement.core.WeaponStockSnapshot;
 import weaponsprocurement.core.WeaponStockSnapshotBuilder;
 
 import java.util.List;
 
 public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction>
-        implements StockReviewTradeController.Host {
+        implements StockReviewTradeController.Host, StockReviewExecutionController.Host {
     private static final Logger LOG = Logger.getLogger(StockReviewPanelPlugin.class);
 
     private static boolean reviewMode(StockReviewLaunchState launchState) {
@@ -31,6 +28,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private final MarketAPI initialMarket;
     private final StockReviewModeController modes;
     private final StockReviewTradeController trades;
+    private final StockReviewExecutionController execution;
 
     private WeaponStockSnapshot snapshot;
 
@@ -50,6 +48,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         this.modes = new StockReviewModeController(reviewMode(launchState));
         this.trades = new StockReviewTradeController(state, pendingTrades, this);
+        this.execution = new StockReviewExecutionController(state, pendingTrades, purchaseService, this);
     }
 
     boolean isReviewMode() {
@@ -300,7 +299,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.CONFIRM_PURCHASE.equals(type)) {
-            confirmPendingPurchases();
+            execution.confirmPendingPurchases();
             return;
         }
         if (StockReviewAction.Type.CLOSE.equals(type)) {
@@ -320,112 +319,14 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         rebuildContent();
     }
 
-    private void confirmPendingPurchases() {
-        if (pendingTrades.isEmpty()) {
-            reopen(false);
-            return;
-        }
-        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-        int estimatedCost = tradeContext.totalCost();
-        if (estimatedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            reportMessage("Could not price every queued weapon. Adjust the plan and try again.");
-            rebuildContent();
-            return;
-        }
-        float credits = tradeContext.credits();
-        if (estimatedCost > 0 && credits + 0.01f < estimatedCost) {
-            reportMessage("Need " + StockReviewFormat.credits(estimatedCost) + " for these trades.");
-            updateTradeWarning(StockReviewTradeWarnings.NOT_ENOUGH_CREDITS);
-            rebuildContent();
-            return;
-        }
-        float cargoDelta = tradeContext.totalCargoSpaceDelta();
-        if (cargoDelta > tradeContext.cargoSpaceLeft() + 0.01f) {
-            reportMessage("Need " + Math.round(cargoDelta) + " cargo space for these trades.");
-            updateTradeWarning(StockReviewTradeWarnings.NO_CARGO_CAPACITY);
-            rebuildContent();
-            return;
-        }
-
+    public SectorAPI sector() {
         WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
-        SectorAPI sector = host.getSector();
-        MarketAPI market = host.getCurrentMarketOr(initialMarket);
-        List<StockReviewPendingPurchase> executionOrder = StockReviewTradePlanner.executionOrder(pendingTrades.asList());
-        StockSourceMode sourceMode = snapshot == null ? StockSourceMode.LOCAL : snapshot.getSourceMode();
-        for (int i = 0; i < executionOrder.size(); i++) {
-            StockReviewPendingPurchase purchase = executionOrder.get(i);
-            StockPurchaseService.PurchaseResult result = executePendingPurchaseSafely(sector, market, purchase, sourceMode);
-            if (result == null || !result.isSuccess()) {
-                if (result != null) {
-                    reportPurchaseFailure(result);
-                }
-                pendingTrades.removeExecuted(executionOrder, i);
-                rebuildSnapshot();
-                rebuildContent();
-                return;
-            }
-        }
-        pendingTrades.clear();
-        updateTradeWarning(null);
-        modes.exitReview(state);
-        rebuildSnapshot();
-        if (StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE) {
-            StockReviewHotkeyScript.requestReopen(market, state);
-            refreshVanillaCargoScreen();
-            close();
-            return;
-        }
-        reopen(false);
+        return host.getSector();
     }
 
-    private StockPurchaseService.PurchaseResult executePendingPurchaseSafely(SectorAPI sector,
-                                                                             MarketAPI market,
-                                                                             StockReviewPendingPurchase purchase,
-                                                                             StockSourceMode sourceMode) {
-        try {
-            return executePendingPurchase(sector, market, purchase, sourceMode);
-        } catch (Throwable t) {
-            LOG.error("WP_STOCK_REVIEW queued trade execution crashed item="
-                    + (purchase == null ? "null" : purchase.getItemKey())
-                    + " source=" + (purchase == null ? "null" : purchase.getSubmarketId())
-                    + " quantity=" + (purchase == null ? 0 : purchase.getQuantity())
-                    + " sourceMode=" + sourceMode, t);
-            return StockPurchaseService.PurchaseResult.failure("Trade failed during execution. Check starsector.log.");
-        }
-    }
-
-    private StockPurchaseService.PurchaseResult executePendingPurchase(SectorAPI sector,
-                                                                       MarketAPI market,
-                                                                       StockReviewPendingPurchase purchase,
-                                                                       StockSourceMode sourceMode) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(purchase.getItemKey());
-        if (record == null) {
-            return StockPurchaseService.PurchaseResult.failure("No queued item record is available.");
-        }
-        if (purchase.isSell()) {
-            if (sourceMode != null && sourceMode.isRemote()) {
-                return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -purchase.getQuantity(), false);
-            }
-            return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -purchase.getQuantity(), state.isIncludeBlackMarket());
-        }
-        if (StockSourceMode.FIXERS.equals(sourceMode)) {
-            return purchaseService.buyItemFromFixersMarket(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
-                    virtualUnitPrice(purchase.getItemKey()), virtualUnitCargoSpace(purchase.getItemKey()));
-        }
-        if (StockSourceMode.SECTOR.equals(sourceMode)) {
-            return purchaseService.buyItemFromSectorSources(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
-                    stockSources(purchase.getItemKey(), purchase.getSubmarketId()));
-        }
-        if (purchase.getSubmarketId() == null) {
-            return purchaseService.buyCheapestItem(sector, market, record.getItemType(), record.getItemId(), purchase.getQuantity(), state.isIncludeBlackMarket());
-        }
-        return purchaseService.buyCheapestItem(sector, market, record.getItemType(), record.getItemId(),
-                purchase.getQuantity(), state.isIncludeBlackMarket());
-    }
-
-    private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {
-        reportMessage(result.getMessage());
-        LOG.info("WP_STOCK_REVIEW trade blocked: " + result.getMessage());
+    public MarketAPI market() {
+        WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
+        return host.getCurrentMarketOr(initialMarket);
     }
 
     public void postMessage(String message) {
@@ -436,7 +337,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         WimGuiCampaignDialogHost.current().addMessage(message);
     }
 
-    private void rebuildSnapshot() {
+    public void rebuildSnapshot() {
         WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
         SectorAPI sector = host.getSector();
         MarketAPI market = host.getCurrentMarketOr(initialMarket);
@@ -445,47 +346,28 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                 state.getSourceMode());
     }
 
-    private List<SubmarketWeaponStock> stockSources(String itemKey, String sourceId) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(itemKey);
-        if (record == null) {
-            return java.util.Collections.emptyList();
-        }
-        if (sourceId == null || sourceId.isEmpty()) {
-            return record.getSubmarketStocks();
-        }
-        java.util.List<SubmarketWeaponStock> result = new java.util.ArrayList<SubmarketWeaponStock>();
-        for (int i = 0; i < record.getSubmarketStocks().size(); i++) {
-            SubmarketWeaponStock stock = record.getSubmarketStocks().get(i);
-            if (sourceId.equals(stock.getSourceId()) || sourceId.equals(stock.getSubmarketId())) {
-                result.add(stock);
-            }
-        }
-        return result;
+    public void exitReviewMode() {
+        modes.exitReview(state);
     }
 
-    private int virtualUnitPrice(String itemKey) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(itemKey);
-        return record == null ? 0 : record.getCheapestPurchasableUnitPrice();
-    }
-
-    private float virtualUnitCargoSpace(String itemKey) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(itemKey);
-        if (record == null || record.getSubmarketStocks().isEmpty()) {
-            return 1f;
-        }
-        return Math.max(1f, record.getSubmarketStocks().get(0).getUnitCargoSpace());
-    }
-
-    private void refreshVanillaCargoScreen() {
+    public void refreshVanillaCargoScreen() {
         WimGuiCampaignDialogHost.current().refreshCargoCore(
                 LOG,
                 "WP_STOCK_REVIEW refreshed vanilla cargo screen",
                 initialMarket);
     }
 
-    private void reopen(boolean review) {
-        StockReviewHotkeyScript.requestReopen(initialMarket,
+    public void requestReopen(boolean review) {
+        StockReviewHotkeyScript.requestReopen(market(),
                 new StockReviewLaunchState(state, pendingTrades.asList(), review));
+    }
+
+    public void requestClose() {
+        close();
+    }
+
+    public void reopen(boolean review) {
+        requestReopen(review);
         close();
     }
 }

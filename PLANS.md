@@ -68,6 +68,7 @@
   - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
   - `StockReviewModeController` now owns review/filter/color-debug mode booleans plus color-debug draft/persistence state, keeping `StockReviewPanelPlugin` focused on lifecycle, snapshot rebuilds, and action orchestration;
   - `StockReviewTradeController` now owns trade-planning actions such as row adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient, leaving review confirmation and live cargo execution in the panel.
+  - `StockReviewExecutionController` now owns `Confirm Trades` checks, execution ordering, per-line failure handling, and post-confirm reopen/refresh routing, leaving `StockReviewPanelPlugin` as the lifecycle/context host.
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
 - Migrated nested-button fallback polling to reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
 - Migrated popup action/footer button placement to reusable `WimGuiButtonSpec` plus `WimGuiControls.addButtonRow(...)`, removing hand-written x-position chains from `StockReviewRenderer`.
@@ -124,7 +125,7 @@
   - local-market WP buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
   - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
   - Fixer's Market buys remain virtual WP-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
-  - Review-confirm execution now catches unexpected queued-line crashes in the panel, and `StockPurchaseService` catches mutation-phase failures after validation with operation/item/quantity logging before returning a controlled failure message.
+  - Review-confirm execution now catches unexpected queued-line crashes in `StockReviewExecutionController`, and `StockPurchaseService` catches mutation-phase failures after validation with operation/item/quantity logging before returning a controlled failure message.
 - Cleaned up the `Cost` to `Price` terminology migration:
   - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
   - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
