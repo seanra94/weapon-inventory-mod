@@ -1,7 +1,5 @@
 package weaponsprocurement.core;
 
-import com.fs.starfarer.api.Global;
-import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.CargoStackAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
@@ -54,20 +52,23 @@ public final class StockPurchaseService {
                                            String itemId,
                                            int requestedQuantity,
                                            boolean includeBlackMarket) {
-        if (sector == null || market == null) {
-            return PurchaseResult.failure("No active market context.");
+        PurchaseResult validation = StockPurchaseChecks.marketContext(sector, market);
+        if (validation != null) {
+            return validation;
         }
-        if (itemId == null || itemId.isEmpty()) {
-            return PurchaseResult.failure("No " + itemType.getSingularLabel().toLowerCase(java.util.Locale.US) + " selected.");
+        validation = StockPurchaseChecks.selectedItem(itemType, itemId);
+        if (validation != null) {
+            return validation;
         }
-        if (requestedQuantity <= 0) {
-            return PurchaseResult.failure("Nothing to sell.");
+        validation = StockPurchaseChecks.positiveQuantity(requestedQuantity, "sell");
+        if (validation != null) {
+            return validation;
         }
 
-        CampaignFleetAPI fleet = sector.getPlayerFleet();
-        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
-        if (playerCargo == null) {
-            return PurchaseResult.failure("Player cargo is unavailable.");
+        CargoAPI playerCargo = StockPurchaseChecks.playerCargo(sector);
+        validation = StockPurchaseChecks.playerCargoAvailable(playerCargo);
+        if (validation != null) {
+            return validation;
         }
         CargoStackAPI playerStack = StockItemCargo.itemStack(playerCargo, itemType, itemId);
         int available = StockItemCargo.itemCount(playerCargo, itemType, itemId);
@@ -92,9 +93,7 @@ public final class StockPurchaseService {
             StockItemCargo.reconcileItemCount(target.cargo, itemType, itemId, expectedMarketCount);
 
             String message = "Sold " + quantity + " " + StockItemCargo.itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(credits) + ".";
-            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-                Global.getSector().getCampaignUI().addMessage(message);
-            }
+            StockPurchaseChecks.addCampaignMessage(message);
             return PurchaseResult.success(message, quantity, -credits);
         } catch (Throwable t) {
             return executionFailure("sell to market", itemType, itemId, quantity, t);
@@ -115,31 +114,32 @@ public final class StockPurchaseService {
                                                   int requestedQuantity,
                                                   int unitPrice,
                                                   float unitCargoSpace) {
-        if (sector == null) {
-            return PurchaseResult.failure("No active sector context.");
+        PurchaseResult validation = StockPurchaseChecks.sectorContext(sector);
+        if (validation != null) {
+            return validation;
         }
-        if (itemId == null || itemId.isEmpty()) {
-            return PurchaseResult.failure("No " + itemType.getSingularLabel().toLowerCase(java.util.Locale.US) + " selected.");
+        validation = StockPurchaseChecks.selectedItem(itemType, itemId);
+        if (validation != null) {
+            return validation;
         }
-        if (requestedQuantity <= 0) {
-            return PurchaseResult.failure("Nothing to buy.");
+        validation = StockPurchaseChecks.positiveQuantity(requestedQuantity, "buy");
+        if (validation != null) {
+            return validation;
         }
         if (unitPrice < 0) {
             return PurchaseResult.failure("No fixer-market price is available.");
         }
 
-        CampaignFleetAPI fleet = sector.getPlayerFleet();
-        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
-        if (playerCargo == null) {
-            return PurchaseResult.failure("Player cargo is unavailable.");
+        CargoAPI playerCargo = StockPurchaseChecks.playerCargo(sector);
+        validation = StockPurchaseChecks.playerCargoAvailable(playerCargo);
+        if (validation != null) {
+            return validation;
         }
         int totalCost = unitPrice * requestedQuantity;
         float totalSpace = Math.max(1f, unitCargoSpace) * requestedQuantity;
-        if (playerCargo.getCredits().get() + 0.01f < totalCost) {
-            return PurchaseResult.failure("Need " + CreditFormat.creditsLong(totalCost) + " for this order.");
-        }
-        if (playerCargo.getSpaceLeft() + 0.01f < totalSpace) {
-            return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
+        validation = StockPurchaseChecks.canCompletePurchase(playerCargo, totalCost, totalSpace);
+        if (validation != null) {
+            return validation;
         }
 
         try {
@@ -149,9 +149,7 @@ public final class StockPurchaseService {
 
             String message = "Bought " + requestedQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
                     + " from the fixer's market for " + CreditFormat.creditsLong(totalCost) + ".";
-            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-                Global.getSector().getCampaignUI().addMessage(message);
-            }
+            StockPurchaseChecks.addCampaignMessage(message);
             return PurchaseResult.success(message, requestedQuantity, totalCost);
         } catch (Throwable t) {
             return executionFailure("buy from fixer's market", itemType, itemId, requestedQuantity, t);
@@ -170,23 +168,26 @@ public final class StockPurchaseService {
                                                    String itemId,
                                                    int requestedQuantity,
                                                    List<SubmarketWeaponStock> stockSources) {
-        if (sector == null) {
-            return PurchaseResult.failure("No active sector context.");
+        PurchaseResult validation = StockPurchaseChecks.sectorContext(sector);
+        if (validation != null) {
+            return validation;
         }
-        if (itemId == null || itemId.isEmpty()) {
-            return PurchaseResult.failure("No " + itemType.getSingularLabel().toLowerCase(java.util.Locale.US) + " selected.");
+        validation = StockPurchaseChecks.selectedItem(itemType, itemId);
+        if (validation != null) {
+            return validation;
         }
-        if (requestedQuantity <= 0) {
-            return PurchaseResult.failure("Nothing to buy.");
+        validation = StockPurchaseChecks.positiveQuantity(requestedQuantity, "buy");
+        if (validation != null) {
+            return validation;
         }
         if (stockSources == null || stockSources.isEmpty()) {
             return PurchaseResult.failure("No sector-market stock is available.");
         }
 
-        CampaignFleetAPI fleet = sector.getPlayerFleet();
-        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
-        if (playerCargo == null) {
-            return PurchaseResult.failure("Player cargo is unavailable.");
+        CargoAPI playerCargo = StockPurchaseChecks.playerCargo(sector);
+        validation = StockPurchaseChecks.playerCargoAvailable(playerCargo);
+        if (validation != null) {
+            return validation;
         }
 
         List<StockPurchaseSource> sources = StockPurchaseMarketSources.collectSectorSources(sector, itemType, itemId, stockSources);
@@ -196,35 +197,16 @@ public final class StockPurchaseService {
         Collections.sort(sources, StockPurchaseSource.PRICE_ORDER);
 
         StockPurchasePlan plan = StockPurchasePlan.build(sources, requestedQuantity);
-        if (plan.totalQuantity <= 0) {
-            return PurchaseResult.failure("No sector-market stock is available.");
+        validation = StockPurchaseChecks.buyPlanAvailable(plan, "No sector-market stock is available.");
+        if (validation != null) {
+            return validation;
         }
-        if (playerCargo.getCredits().get() + 0.01f < plan.totalCost) {
-            return PurchaseResult.failure("Need " + CreditFormat.creditsLong(plan.totalCost) + " for this order.");
-        }
-        if (playerCargo.getSpaceLeft() + 0.01f < plan.totalSpace) {
-            return PurchaseResult.failure("Need " + Math.round(plan.totalSpace) + " cargo space for this order.");
+        validation = StockPurchaseChecks.canCompletePurchase(playerCargo, plan);
+        if (validation != null) {
+            return validation;
         }
 
-        try {
-            for (StockPurchaseLine line : plan.lines) {
-                StockItemCargo.removeItem(line.source.cargo, itemType, itemId, line.quantity);
-                StockItemCargo.tidyCargo(line.source.cargo);
-                StockMarketTransactionReporter.reportItemTransaction(LOG, line.source.market, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
-            }
-            StockItemCargo.addItem(playerCargo, itemType, itemId, plan.totalQuantity);
-            playerCargo.getCredits().subtract(plan.totalCost);
-            StockItemCargo.tidyCargo(playerCargo);
-
-            String message = "Bought " + plan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
-                    + " from the sector market for " + CreditFormat.creditsLong(plan.totalCost) + ".";
-            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-                Global.getSector().getCampaignUI().addMessage(message);
-            }
-            return PurchaseResult.success(message, plan.totalQuantity, plan.totalCost);
-        } catch (Throwable t) {
-            return executionFailure("buy from sector market", itemType, itemId, plan.totalQuantity, t);
-        }
+        return executeBuyPlan(playerCargo, null, itemType, itemId, plan, " from the sector market", "buy from sector market");
     }
 
     private PurchaseResult buyItem(SectorAPI sector,
@@ -234,20 +216,23 @@ public final class StockPurchaseService {
                                    String onlySubmarketId,
                                    int requestedQuantity,
                                    boolean includeBlackMarket) {
-        if (sector == null || market == null) {
-            return PurchaseResult.failure("No active market context.");
+        PurchaseResult validation = StockPurchaseChecks.marketContext(sector, market);
+        if (validation != null) {
+            return validation;
         }
-        if (itemId == null || itemId.isEmpty()) {
-            return PurchaseResult.failure("No " + itemType.getSingularLabel().toLowerCase(java.util.Locale.US) + " selected.");
+        validation = StockPurchaseChecks.selectedItem(itemType, itemId);
+        if (validation != null) {
+            return validation;
         }
-        if (requestedQuantity <= 0) {
-            return PurchaseResult.failure("Nothing to buy.");
+        validation = StockPurchaseChecks.positiveQuantity(requestedQuantity, "buy");
+        if (validation != null) {
+            return validation;
         }
 
-        CampaignFleetAPI fleet = sector.getPlayerFleet();
-        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
-        if (playerCargo == null) {
-            return PurchaseResult.failure("Player cargo is unavailable.");
+        CargoAPI playerCargo = StockPurchaseChecks.playerCargo(sector);
+        validation = StockPurchaseChecks.playerCargoAvailable(playerCargo);
+        if (validation != null) {
+            return validation;
         }
 
         List<StockPurchaseSource> sources = StockPurchaseMarketSources.collectLocalSources(market, itemType, itemId, onlySubmarketId, includeBlackMarket);
@@ -257,33 +242,42 @@ public final class StockPurchaseService {
         Collections.sort(sources, StockPurchaseSource.PRICE_ORDER);
 
         StockPurchasePlan plan = StockPurchasePlan.build(sources, requestedQuantity);
-        if (plan.totalQuantity <= 0) {
-            return PurchaseResult.failure("No purchasable stock is available.");
+        validation = StockPurchaseChecks.buyPlanAvailable(plan, "No purchasable stock is available.");
+        if (validation != null) {
+            return validation;
         }
-        if (playerCargo.getCredits().get() + 0.01f < plan.totalCost) {
-            return PurchaseResult.failure("Need " + CreditFormat.creditsLong(plan.totalCost) + " for this order.");
-        }
-        if (playerCargo.getSpaceLeft() + 0.01f < plan.totalSpace) {
-            return PurchaseResult.failure("Need " + Math.round(plan.totalSpace) + " cargo space for this order.");
+        validation = StockPurchaseChecks.canCompletePurchase(playerCargo, plan);
+        if (validation != null) {
+            return validation;
         }
 
+        return executeBuyPlan(playerCargo, market, itemType, itemId, plan, "", "buy from local market");
+    }
+
+    private PurchaseResult executeBuyPlan(CargoAPI playerCargo,
+                                          MarketAPI fallbackMarket,
+                                          StockItemType itemType,
+                                          String itemId,
+                                          StockPurchasePlan plan,
+                                          String sourceLabel,
+                                          String operation) {
         try {
             for (StockPurchaseLine line : plan.lines) {
                 StockItemCargo.removeItem(line.source.cargo, itemType, itemId, line.quantity);
                 StockItemCargo.tidyCargo(line.source.cargo);
-                StockMarketTransactionReporter.reportItemTransaction(LOG, market, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
+                MarketAPI reportMarket = line.source.market == null ? fallbackMarket : line.source.market;
+                StockMarketTransactionReporter.reportItemTransaction(LOG, reportMarket, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
             }
             StockItemCargo.addItem(playerCargo, itemType, itemId, plan.totalQuantity);
             playerCargo.getCredits().subtract(plan.totalCost);
             StockItemCargo.tidyCargo(playerCargo);
 
-            String message = "Bought " + plan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(plan.totalCost) + ".";
-            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-                Global.getSector().getCampaignUI().addMessage(message);
-            }
+            String message = "Bought " + plan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
+                    + sourceLabel + " for " + CreditFormat.creditsLong(plan.totalCost) + ".";
+            StockPurchaseChecks.addCampaignMessage(message);
             return PurchaseResult.success(message, plan.totalQuantity, plan.totalCost);
         } catch (Throwable t) {
-            return executionFailure("buy from local market", itemType, itemId, plan.totalQuantity, t);
+            return executionFailure(operation, itemType, itemId, plan.totalQuantity, t);
         }
     }
 

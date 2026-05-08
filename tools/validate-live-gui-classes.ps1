@@ -21,9 +21,11 @@ $requiredClasses = @(
     "weaponsprocurement/core/GlobalWeaponMarketService.class",
     "weaponsprocurement/core/StockItemCargo.class",
     "weaponsprocurement/core/StockMarketTransactionReporter.class",
+    "weaponsprocurement/core/StockPurchaseChecks.class",
     "weaponsprocurement/core/StockPurchaseLine.class",
     "weaponsprocurement/core/StockPurchaseMarketSources.class",
     "weaponsprocurement/core/StockPurchasePlan.class",
+    "weaponsprocurement/core/StockPurchaseService`$PurchaseResult.class",
     "weaponsprocurement/core/StockPurchaseService.class",
     "weaponsprocurement/core/StockPurchaseSource.class",
     "weaponsprocurement/core/StockPurchaseSource`$PurchaseSourcePriceComparator.class",
@@ -72,7 +74,6 @@ $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewTradeGroup.class",
     "weaponsprocurement/gui/StockReviewTradeWarnings.class",
     "weaponsprocurement/core/WeaponStockSnapshotBuilder`$CostComparator.class",
-    "weaponsprocurement/core/StockPurchaseService`$PurchaseSourcePriceComparator.class",
     "weaponsprocurement/internal/WeaponsProcurementFixerCatalogUpdater.class",
     "com/fs/starfarer/api/impl/campaign/rulecmd/WP_OpenDialog.class"
 )
@@ -90,6 +91,11 @@ $forbiddenClasses = @(
     "weaponsprocurement/gui/WimGuiColorDebug`$ColorSetter.class",
     "weaponsprocurement/gui/WimGuiColorDebug`$1.class",
     "weaponsprocurement/core/StockDisplayMode.class",
+    "weaponsprocurement/core/StockPurchaseService`$PurchaseLine.class",
+    "weaponsprocurement/core/StockPurchaseService`$PurchasePlan.class",
+    "weaponsprocurement/core/StockPurchaseService`$PurchaseSource.class",
+    "weaponsprocurement/core/StockPurchaseService`$PurchaseSourcePriceComparator.class",
+    "weaponsprocurement/core/StockPurchaseService`$SellTarget.class",
     "weaponsprocurement/core/StockPurchaseService`$PurchaseSource`$1.class"
 )
 
