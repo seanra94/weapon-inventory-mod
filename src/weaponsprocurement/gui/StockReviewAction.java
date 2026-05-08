@@ -8,7 +8,7 @@ final class StockReviewAction {
         TOGGLE_CATEGORY,
         TOGGLE_ITEM_TYPE,
         TOGGLE_TRADE_GROUP,
-        TOGGLE_WEAPON,
+        TOGGLE_ITEM,
         ADJUST_PLAN,
         BUY_FROM_SUBMARKET,
         ADJUST_TO_SUFFICIENT,
@@ -46,7 +46,7 @@ final class StockReviewAction {
     private final StockReviewTradeGroup tradeGroup;
     private final StockReviewFilterGroup filterGroup;
     private final StockReviewFilter filter;
-    private final String weaponId;
+    private final String itemKey;
     private final String submarketId;
     private final int quantity;
 
@@ -56,7 +56,7 @@ final class StockReviewAction {
                               StockReviewTradeGroup tradeGroup,
                               StockReviewFilterGroup filterGroup,
                               StockReviewFilter filter,
-                              String weaponId,
+                              String itemKey,
                               String submarketId,
                               int quantity) {
         this.type = type;
@@ -65,7 +65,7 @@ final class StockReviewAction {
         this.tradeGroup = tradeGroup;
         this.filterGroup = filterGroup;
         this.filter = filter;
-        this.weaponId = weaponId;
+        this.itemKey = itemKey;
         this.submarketId = submarketId;
         this.quantity = quantity;
     }
@@ -90,28 +90,28 @@ final class StockReviewAction {
         return new StockReviewAction(Type.TOGGLE_FILTER_GROUP, null, null, null, filterGroup, null, null, null, 0);
     }
 
-    static StockReviewAction toggleWeapon(String weaponId) {
-        return new StockReviewAction(Type.TOGGLE_WEAPON, null, null, null, null, null, weaponId, null, 0);
+    static StockReviewAction toggleItem(String itemKey) {
+        return new StockReviewAction(Type.TOGGLE_ITEM, null, null, null, null, null, itemKey, null, 0);
     }
 
-    static StockReviewAction buyBest(String weaponId, int quantity) {
-        return adjustPlan(weaponId, quantity);
+    static StockReviewAction buyBest(String itemKey, int quantity) {
+        return adjustPlan(itemKey, quantity);
     }
 
-    static StockReviewAction adjustPlan(String weaponId, int delta) {
-        return new StockReviewAction(Type.ADJUST_PLAN, null, null, null, null, null, weaponId, null, delta);
+    static StockReviewAction adjustPlan(String itemKey, int delta) {
+        return new StockReviewAction(Type.ADJUST_PLAN, null, null, null, null, null, itemKey, null, delta);
     }
 
-    static StockReviewAction resetPlan(String weaponId) {
-        return new StockReviewAction(Type.RESET_PLAN, null, null, null, null, null, weaponId, null, 0);
+    static StockReviewAction resetPlan(String itemKey) {
+        return new StockReviewAction(Type.RESET_PLAN, null, null, null, null, null, itemKey, null, 0);
     }
 
-    static StockReviewAction buyFromSubmarket(String weaponId, String submarketId, int quantity) {
-        return new StockReviewAction(Type.BUY_FROM_SUBMARKET, null, null, null, null, null, weaponId, submarketId, quantity);
+    static StockReviewAction buyFromSubmarket(String itemKey, String submarketId, int quantity) {
+        return new StockReviewAction(Type.BUY_FROM_SUBMARKET, null, null, null, null, null, itemKey, submarketId, quantity);
     }
 
-    static StockReviewAction adjustToSufficient(String weaponId, int delta) {
-        return new StockReviewAction(Type.ADJUST_TO_SUFFICIENT, null, null, null, null, null, weaponId, null, delta);
+    static StockReviewAction adjustToSufficient(String itemKey, int delta) {
+        return new StockReviewAction(Type.ADJUST_TO_SUFFICIENT, null, null, null, null, null, itemKey, null, delta);
     }
 
     static StockReviewAction cycleSortMode() {
@@ -234,8 +234,8 @@ final class StockReviewAction {
         return filter;
     }
 
-    String getWeaponId() {
-        return weaponId;
+    String getItemKey() {
+        return itemKey;
     }
 
     String getSubmarketId() {

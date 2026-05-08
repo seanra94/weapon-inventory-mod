@@ -6,7 +6,7 @@ import java.util.Map;
 
 final class StockReviewPortfolioQuote {
     private final Map<String, StockReviewQuote> quotesByLine = new HashMap<String, StockReviewQuote>();
-    private final Map<String, Integer> costByWeapon = new HashMap<String, Integer>();
+    private final Map<String, Integer> costByItem = new HashMap<String, Integer>();
     private int totalCost = 0;
     private int totalBuyCost = 0;
     private int totalBaseBuyCost = 0;
@@ -15,13 +15,13 @@ final class StockReviewPortfolioQuote {
     private boolean priceUnavailable = false;
 
     void addLine(StockReviewPendingPurchase purchase, StockReviewQuote quote) {
-        String lineKey = lineKey(purchase.getWeaponId(), purchase.getSubmarketId());
+        String lineKey = lineKey(purchase.getItemKey(), purchase.getSubmarketId());
         quotesByLine.put(lineKey, quote);
         if (quote.getCost() == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             priceUnavailable = true;
-            costByWeapon.put(purchase.getWeaponId(), Integer.valueOf(StockReviewQuoteBook.PRICE_UNAVAILABLE));
+            costByItem.put(purchase.getItemKey(), Integer.valueOf(StockReviewQuoteBook.PRICE_UNAVAILABLE));
         } else {
-            add(costByWeapon, purchase.getWeaponId(), quote.getCost());
+            add(costByItem, purchase.getItemKey(), quote.getCost());
             totalCost += quote.getCost();
             if (purchase.isBuy()) {
                 totalBuyCost += quote.getCost();
@@ -40,8 +40,8 @@ final class StockReviewPortfolioQuote {
         return totalCargoSpaceDelta;
     }
 
-    int costForWeapon(String weaponId) {
-        return get(costByWeapon, weaponId);
+    int costForItem(String itemKey) {
+        return get(costByItem, itemKey);
     }
 
     int totalMarkupPaid() {
@@ -62,36 +62,36 @@ final class StockReviewPortfolioQuote {
         return totalBuyQuantity;
     }
 
-    int costForLine(String weaponId, String submarketId) {
-        return quoteForLine(weaponId, submarketId).getCost();
+    int costForLine(String itemKey, String submarketId) {
+        return quoteForLine(itemKey, submarketId).getCost();
     }
 
-    float cargoSpaceForLine(String weaponId, String submarketId) {
-        return quoteForLine(weaponId, submarketId).getCargoSpaceDelta();
+    float cargoSpaceForLine(String itemKey, String submarketId) {
+        return quoteForLine(itemKey, submarketId).getCargoSpaceDelta();
     }
 
-    List<StockReviewSellerAllocation> sellerAllocations(String weaponId, String submarketId) {
-        return quoteForLine(weaponId, submarketId).getSellerAllocations();
+    List<StockReviewSellerAllocation> sellerAllocations(String itemKey, String submarketId) {
+        return quoteForLine(itemKey, submarketId).getSellerAllocations();
     }
 
-    private StockReviewQuote quoteForLine(String weaponId, String submarketId) {
-        StockReviewQuote quote = quotesByLine.get(lineKey(weaponId, submarketId));
+    private StockReviewQuote quoteForLine(String itemKey, String submarketId) {
+        StockReviewQuote quote = quotesByLine.get(lineKey(itemKey, submarketId));
         return quote == null ? StockReviewQuote.ZERO : quote;
     }
 
-    static String lineKey(String weaponId, String submarketId) {
-        return (weaponId == null ? "" : weaponId) + "|" + (submarketId == null ? "" : submarketId);
+    static String lineKey(String itemKey, String submarketId) {
+        return (itemKey == null ? "" : itemKey) + "|" + (submarketId == null ? "" : submarketId);
     }
 
-    private static void add(Map<String, Integer> counts, String weaponId, int quantity) {
-        if (weaponId == null || quantity == 0) {
+    private static void add(Map<String, Integer> counts, String itemKey, int quantity) {
+        if (itemKey == null || quantity == 0) {
             return;
         }
-        counts.put(weaponId, Integer.valueOf(get(counts, weaponId) + quantity));
+        counts.put(itemKey, Integer.valueOf(get(counts, itemKey) + quantity));
     }
 
-    private static int get(Map<String, Integer> counts, String weaponId) {
-        Integer value = counts.get(weaponId);
+    private static int get(Map<String, Integer> counts, String itemKey) {
+        Integer value = counts.get(itemKey);
         return value == null ? 0 : value.intValue();
     }
 }

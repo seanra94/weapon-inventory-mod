@@ -30,11 +30,6 @@ final class StockReviewPlayerCargo {
         return cargo == null ? 0f : cargo.getMaxCapacity();
     }
 
-    static Map<String, Integer> sellUnitPricesByWeapon(MarketAPI market,
-                                                       boolean includeBlackMarket) {
-        return sellUnitPricesByItem(market, includeBlackMarket);
-    }
-
     static Map<String, Integer> sellUnitPricesByItem(MarketAPI market,
                                                      boolean includeBlackMarket) {
         Map<String, Integer> result = new HashMap<String, Integer>();
@@ -47,14 +42,14 @@ final class StockReviewPlayerCargo {
             if (!MarketStockService.isVisibleItemStack(stack, itemType)) {
                 continue;
             }
-            String weaponId = itemType.key(MarketStockService.itemId(stack, itemType));
+            String itemKey = itemType.key(MarketStockService.itemId(stack, itemType));
             int unitPrice = localSellUnitPrice(market, stack, includeBlackMarket);
             if (unitPrice < 0) {
                 continue;
             }
-            Integer current = result.get(weaponId);
+            Integer current = result.get(itemKey);
             if (current == null || unitPrice > current.intValue()) {
-                result.put(weaponId, Integer.valueOf(unitPrice));
+                result.put(itemKey, Integer.valueOf(unitPrice));
             }
         }
         return result;

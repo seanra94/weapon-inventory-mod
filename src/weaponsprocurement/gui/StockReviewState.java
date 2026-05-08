@@ -23,7 +23,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private boolean includeBlackMarket;
     private StockSourceMode sourceMode;
     private int listScrollOffset = 0;
-    private final Set<String> expandedWeapons = new HashSet<String>();
+    private final Set<String> expandedItems = new HashSet<String>();
     private final Set<StockReviewFilter> activeFilters = EnumSet.noneOf(StockReviewFilter.class);
     private final Map<StockReviewFilterGroup, Boolean> expandedFilterGroups = new EnumMap<StockReviewFilterGroup, Boolean>(StockReviewFilterGroup.class);
     private String tradeWarning = "None";
@@ -58,7 +58,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.includeBlackMarket = source.includeBlackMarket;
         this.sourceMode = source.sourceMode;
         this.listScrollOffset = source.listScrollOffset;
-        this.expandedWeapons.addAll(source.expandedWeapons);
+        this.expandedItems.addAll(source.expandedItems);
         this.activeFilters.addAll(source.activeFilters);
         this.expandedFilterGroups.putAll(source.expandedFilterGroups);
         this.tradeWarning = source.tradeWarning;
@@ -118,12 +118,12 @@ public final class StockReviewState implements WimGuiScrollableListState {
         }
     }
 
-    public boolean isWeaponExpanded(String weaponId) {
-        return expandedWeapons.contains(weaponId);
+    public boolean isItemExpanded(String itemKey) {
+        return expandedItems.contains(itemKey);
     }
 
-    public void toggleWeapon(String weaponId) {
-        toggleSet(expandedWeapons, weaponId);
+    public void toggleItem(String itemKey) {
+        toggleSet(expandedItems, itemKey);
     }
 
     public boolean isFilterActive(StockReviewFilter filter) {

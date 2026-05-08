@@ -75,7 +75,7 @@ final class StockReviewTradePlanner {
     }
 
     static List<StockReviewPendingPurchase> withAdjustment(List<StockReviewPendingPurchase> pendingPurchases,
-                                                           String weaponId,
+                                                           String itemKey,
                                                            String submarketId,
                                                            int delta) {
         List<StockReviewPendingPurchase> result = new ArrayList<StockReviewPendingPurchase>();
@@ -84,17 +84,17 @@ final class StockReviewTradePlanner {
             for (int i = 0; i < pendingPurchases.size(); i++) {
                 StockReviewPendingPurchase purchase = pendingPurchases.get(i);
                 int quantity = purchase.getQuantity();
-                if (purchase.matches(weaponId, submarketId)) {
+                if (purchase.matches(itemKey, submarketId)) {
                     quantity += delta;
                     adjusted = true;
                 }
                 if (quantity != 0) {
-                    result.add(new StockReviewPendingPurchase(purchase.getWeaponId(), purchase.getSubmarketId(), quantity));
+                    result.add(new StockReviewPendingPurchase(purchase.getItemKey(), purchase.getSubmarketId(), quantity));
                 }
             }
         }
         if (!adjusted && delta != 0) {
-            result.add(new StockReviewPendingPurchase(weaponId, submarketId, delta));
+            result.add(new StockReviewPendingPurchase(itemKey, submarketId, delta));
         }
         return result;
     }

@@ -83,11 +83,11 @@ final class StockReviewListModel {
                                   WeaponStockRecord record,
                                   StockReviewState state,
                                   StockReviewTradeContext tradeContext) {
-        boolean expanded = state.isWeaponExpanded(record.getWeaponId());
+        boolean expanded = state.isItemExpanded(record.getItemKey());
         String label = WimGuiToggleHeading.label(record.getDisplayName(), expanded);
-        int planQuantity = tradeContext.netQuantityForWeapon(record.getWeaponId());
+        int planQuantity = tradeContext.netQuantityForItem(record.getItemKey());
         int sellRemaining = tradeContext.negativeAdjustmentRemaining(record, Integer.MAX_VALUE);
-        int transactionCost = tradeContext.transactionCostForWeapon(record.getWeaponId());
+        int transactionCost = tradeContext.transactionCostForItem(record.getItemKey());
         int buyStepQuantity = tradeContext.positiveAdjustmentRemaining(record, 10);
         int sellStepQuantity = Math.min(10, sellRemaining);
         int sufficientDelta = tradeContext.deltaToSufficient(record);
@@ -95,29 +95,29 @@ final class StockReviewListModel {
                 WimGuiRowCell.info(storageLabel(record.getStorageCount(), planQuantity),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
                         Alignment.LMID, StockReviewTooltips.STORAGE),
-                unitPriceCell(tradeContext.unitPriceForWeapon(record)),
+                unitPriceCell(tradeContext.unitPriceForItem(record)),
                 planCell(planQuantity, transactionCost),
                 stepCell("-", sellStepQuantity, StockReviewStyle.SELL_BUTTON,
-                        StockReviewAction.adjustPlan(record.getWeaponId(), -sellStepQuantity),
+                        StockReviewAction.adjustPlan(record.getItemKey(), -sellStepQuantity),
                         StockReviewTooltips.decreasePlan(sellStepQuantity)),
                 WimGuiRowCell.standardAction("-1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.SELL_BUTTON,
-                        StockReviewAction.adjustPlan(record.getWeaponId(), -1), sellRemaining >= 1,
+                        StockReviewAction.adjustPlan(record.getItemKey(), -1), sellRemaining >= 1,
                         StockReviewTooltips.decreasePlan(1)),
                 WimGuiRowCell.standardAction("+1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH, StockReviewStyle.BUY_BUTTON,
-                        StockReviewAction.adjustPlan(record.getWeaponId(), 1),
+                        StockReviewAction.adjustPlan(record.getItemKey(), 1),
                         tradeContext.positiveAdjustmentRemaining(record, 1) >= 1,
                         StockReviewTooltips.increasePlan(1)),
                 stepCell("+", buyStepQuantity, StockReviewStyle.BUY_BUTTON,
-                        StockReviewAction.adjustPlan(record.getWeaponId(), buyStepQuantity),
+                        StockReviewAction.adjustPlan(record.getItemKey(), buyStepQuantity),
                         StockReviewTooltips.increasePlan(buyStepQuantity)),
                 WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH,
                         sufficientDelta < 0 ? StockReviewStyle.SELL_BUTTON : StockReviewStyle.BUY_BUTTON,
-                        StockReviewAction.adjustToSufficient(record.getWeaponId(), sufficientDelta), sufficientDelta != 0,
+                        StockReviewAction.adjustToSufficient(record.getItemKey(), sufficientDelta), sufficientDelta != 0,
                         StockReviewTooltips.sufficient(record)),
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
-                        StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0,
+                        StockReviewAction.resetPlan(record.getItemKey()), planQuantity != 0,
                         StockReviewTooltips.resetPlan()));
-        rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleWeapon(record.getWeaponId()),
+        rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleItem(record.getItemKey()),
                 StockReviewTooltips.weapon(record), StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
@@ -186,8 +186,8 @@ final class StockReviewListModel {
         if (records != null && tradeContext != null) {
             for (int i = 0; i < records.size(); i++) {
                 WeaponStockRecord record = records.get(i);
-                selling += tradeContext.pendingSellQuantityForWeapon(record.getWeaponId());
-                buying += tradeContext.pendingBuyQuantityForWeapon(record.getWeaponId());
+                selling += tradeContext.pendingSellQuantityForItem(record.getItemKey());
+                buying += tradeContext.pendingBuyQuantityForItem(record.getItemKey());
             }
         }
         return category.getLabel()
@@ -347,17 +347,17 @@ final class StockReviewListModel {
                 WimGuiToggleHeading.label(label, expanded),
                 indent,
                 rightReserveWidth,
-                StockReviewAction.toggleWeapon(infoSectionKey(record, section)),
+                StockReviewAction.toggleItem(infoSectionKey(record, section)),
                 false,
                 "Show or hide " + label.toLowerCase(java.util.Locale.US) + " rows.");
     }
 
     private static boolean isInfoSectionExpanded(StockReviewState state, WeaponStockRecord record, String section) {
-        return state == null || !state.isWeaponExpanded(infoSectionKey(record, section));
+        return state == null || !state.isItemExpanded(infoSectionKey(record, section));
     }
 
     private static String infoSectionKey(WeaponStockRecord record, String section) {
-        return record.getWeaponId() + "::info::" + section;
+        return record.getItemKey() + "::info::" + section;
     }
 
     private static void addRequiredDataRow(List<WimGuiListRow<StockReviewAction>> rows,

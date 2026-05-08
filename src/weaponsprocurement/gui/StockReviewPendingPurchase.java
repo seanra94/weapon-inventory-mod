@@ -1,18 +1,18 @@
 package weaponsprocurement.gui;
 
 final class StockReviewPendingPurchase {
-    private final String weaponId;
+    private final String itemKey;
     private final String submarketId;
     private int quantity;
 
-    StockReviewPendingPurchase(String weaponId, String submarketId, int quantity) {
-        this.weaponId = weaponId;
+    StockReviewPendingPurchase(String itemKey, String submarketId, int quantity) {
+        this.itemKey = itemKey;
         this.submarketId = submarketId;
         this.quantity = quantity;
     }
 
-    String getWeaponId() {
-        return weaponId;
+    String getItemKey() {
+        return itemKey;
     }
 
     String getSubmarketId() {
@@ -39,14 +39,14 @@ final class StockReviewPendingPurchase {
         return quantity == 0;
     }
 
-    boolean matches(String otherWeaponId, String otherSubmarketId) {
-        if (weaponId == null ? otherWeaponId != null : !weaponId.equals(otherWeaponId)) {
+    boolean matches(String otherItemKey, String otherSubmarketId) {
+        if (itemKey == null ? otherItemKey != null : !itemKey.equals(otherItemKey)) {
             return false;
         }
         return submarketId == null ? otherSubmarketId == null : submarketId.equals(otherSubmarketId);
     }
 
     StockReviewPendingPurchase copy() {
-        return new StockReviewPendingPurchase(weaponId, submarketId, quantity);
+        return new StockReviewPendingPurchase(itemKey, submarketId, quantity);
     }
 }

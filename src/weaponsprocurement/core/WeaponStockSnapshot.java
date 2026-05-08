@@ -16,7 +16,7 @@ public final class WeaponStockSnapshot {
     private final StockSourceMode sourceMode;
     private final Map<StockCategory, List<WeaponStockRecord>> recordsByCategory;
     private final Map<StockItemType, Map<StockCategory, List<WeaponStockRecord>>> recordsByTypeAndCategory;
-    private final Map<String, WeaponStockRecord> recordsByWeaponId;
+    private final Map<String, WeaponStockRecord> recordsByItemKey;
     private final List<WeaponStockRecord> allRecords;
     private final int totalRecords;
 
@@ -33,7 +33,7 @@ public final class WeaponStockSnapshot {
         this.sourceMode = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
         this.recordsByCategory = immutableCategoryMap(recordsByCategory);
         this.recordsByTypeAndCategory = immutableTypeCategoryMap(this.recordsByCategory);
-        this.recordsByWeaponId = immutableWeaponMap(this.recordsByCategory);
+        this.recordsByItemKey = immutableItemKeyMap(this.recordsByCategory);
         this.allRecords = immutableAllRecords(this.recordsByCategory);
         this.totalRecords = allRecords.size();
     }
@@ -93,11 +93,11 @@ public final class WeaponStockSnapshot {
         return totalRecords;
     }
 
-    public WeaponStockRecord getRecord(String weaponId) {
-        if (weaponId == null) {
+    public WeaponStockRecord getRecord(String itemKey) {
+        if (itemKey == null) {
             return null;
         }
-        return recordsByWeaponId.get(weaponId);
+        return recordsByItemKey.get(itemKey);
     }
 
     public List<WeaponStockRecord> getAllRecords() {
@@ -152,7 +152,7 @@ public final class WeaponStockSnapshot {
         return Collections.unmodifiableMap(result);
     }
 
-    private static Map<String, WeaponStockRecord> immutableWeaponMap(Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
+    private static Map<String, WeaponStockRecord> immutableItemKeyMap(Map<StockCategory, List<WeaponStockRecord>> recordsByCategory) {
         Map<String, WeaponStockRecord> result = new java.util.HashMap<String, WeaponStockRecord>();
         for (StockCategory category : StockCategory.values()) {
             List<WeaponStockRecord> records = recordsByCategory.get(category);
@@ -161,7 +161,7 @@ public final class WeaponStockSnapshot {
             }
             for (int i = 0; i < records.size(); i++) {
                 WeaponStockRecord record = records.get(i);
-                result.put(record.getWeaponId(), record);
+                result.put(record.getItemKey(), record);
             }
         }
         return Collections.unmodifiableMap(result);

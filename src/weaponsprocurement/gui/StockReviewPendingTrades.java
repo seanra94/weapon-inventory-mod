@@ -32,10 +32,13 @@ final class StockReviewPendingTrades {
         }
     }
 
-    void add(String weaponId, String submarketId, int quantity) {
-        StockReviewPendingPurchase existing = find(weaponId, submarketId);
+    void add(String itemKey, String submarketId, int quantity) {
+        if (itemKey == null || itemKey.isEmpty() || quantity == 0) {
+            return;
+        }
+        StockReviewPendingPurchase existing = find(itemKey, submarketId);
         if (existing == null) {
-            trades.add(new StockReviewPendingPurchase(weaponId, submarketId, quantity));
+            trades.add(new StockReviewPendingPurchase(itemKey, submarketId, quantity));
             return;
         }
         existing.addQuantity(quantity);
@@ -44,27 +47,27 @@ final class StockReviewPendingTrades {
         }
     }
 
-    void adjustWeaponNet(String weaponId, int delta) {
-        if (weaponId == null || weaponId.isEmpty() || delta == 0) {
+    void adjustItemNet(String itemKey, int delta) {
+        if (itemKey == null || itemKey.isEmpty() || delta == 0) {
             return;
         }
         int remaining = delta;
         if (delta < 0) {
-            remaining = reduceExistingBuys(weaponId, -delta);
+            remaining = reduceExistingBuys(itemKey, -delta);
             if (remaining > 0) {
-                add(weaponId, null, -remaining);
+                add(itemKey, null, -remaining);
             }
             return;
         }
-        remaining = reduceExistingSells(weaponId, delta);
+        remaining = reduceExistingSells(itemKey, delta);
         if (remaining > 0) {
-            add(weaponId, null, remaining);
+            add(itemKey, null, remaining);
         }
     }
 
-    void resetWeapon(String weaponId) {
+    void resetItem(String itemKey) {
         for (int i = trades.size() - 1; i >= 0; i--) {
-            if (weaponId != null && weaponId.equals(trades.get(i).getWeaponId())) {
+            if (itemKey != null && itemKey.equals(trades.get(i).getItemKey())) {
                 trades.remove(i);
             }
         }
@@ -75,25 +78,39 @@ final class StockReviewPendingTrades {
             return;
         }
         for (int i = 0; i < failedIndex; i++) {
-            trades.remove(executionOrder.get(i));
+            removeMatching(executionOrder.get(i));
         }
     }
 
-    private StockReviewPendingPurchase find(String weaponId, String submarketId) {
+    private void removeMatching(StockReviewPendingPurchase executed) {
+        if (executed == null) {
+            return;
+        }
+        for (int i = trades.size() - 1; i >= 0; i--) {
+            StockReviewPendingPurchase trade = trades.get(i);
+            if (trade.matches(executed.getItemKey(), executed.getSubmarketId())
+                    && trade.getQuantity() == executed.getQuantity()) {
+                trades.remove(i);
+                return;
+            }
+        }
+    }
+
+    private StockReviewPendingPurchase find(String itemKey, String submarketId) {
         for (int i = 0; i < trades.size(); i++) {
             StockReviewPendingPurchase purchase = trades.get(i);
-            if (purchase.matches(weaponId, submarketId)) {
+            if (purchase.matches(itemKey, submarketId)) {
                 return purchase;
             }
         }
         return null;
     }
 
-    private int reduceExistingBuys(String weaponId, int quantity) {
+    private int reduceExistingBuys(String itemKey, int quantity) {
         int remaining = quantity;
         for (int i = trades.size() - 1; i >= 0 && remaining > 0; i--) {
             StockReviewPendingPurchase trade = trades.get(i);
-            if (!weaponId.equals(trade.getWeaponId()) || !trade.isBuy()) {
+            if (!itemKey.equals(trade.getItemKey()) || !trade.isBuy()) {
                 continue;
             }
             int reduced = Math.min(remaining, trade.getQuantity());
@@ -106,11 +123,11 @@ final class StockReviewPendingTrades {
         return remaining;
     }
 
-    private int reduceExistingSells(String weaponId, int quantity) {
+    private int reduceExistingSells(String itemKey, int quantity) {
         int remaining = quantity;
         for (int i = trades.size() - 1; i >= 0 && remaining > 0; i--) {
             StockReviewPendingPurchase trade = trades.get(i);
-            if (!weaponId.equals(trade.getWeaponId()) || !trade.isSell()) {
+            if (!itemKey.equals(trade.getItemKey()) || !trade.isSell()) {
                 continue;
             }
             int reduced = Math.min(remaining, -trade.getQuantity());

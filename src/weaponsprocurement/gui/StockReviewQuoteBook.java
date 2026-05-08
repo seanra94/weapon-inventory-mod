@@ -14,9 +14,9 @@ final class StockReviewQuoteBook {
     static final int PRICE_UNAVAILABLE = Integer.MIN_VALUE;
 
     private final WeaponStockSnapshot snapshot;
-    private final Map<String, List<SubmarketWeaponStock>> sortedBuyStocksByWeapon = new HashMap<String, List<SubmarketWeaponStock>>();
-    private final Map<String, Integer> sellUnitPriceByWeapon = new HashMap<String, Integer>();
-    private final Map<String, Float> unitCargoSpaceByWeapon = new HashMap<String, Float>();
+    private final Map<String, List<SubmarketWeaponStock>> sortedBuyStocksByItem = new HashMap<String, List<SubmarketWeaponStock>>();
+    private final Map<String, Integer> sellUnitPriceByItem = new HashMap<String, Integer>();
+    private final Map<String, Float> unitCargoSpaceByItem = new HashMap<String, Float>();
     private final Map<String, StockReviewQuote> quotesByLine = new HashMap<String, StockReviewQuote>();
     private Map<String, Integer> playerSellUnitPrices;
 
@@ -82,11 +82,11 @@ final class StockReviewQuoteBook {
     }
 
     private StockReviewQuote quoteSell(StockReviewPendingPurchase purchase) {
-        int unitPrice = sellUnitPrice(purchase.getWeaponId());
+        int unitPrice = sellUnitPrice(purchase.getItemKey());
         if (unitPrice < 0) {
             return StockReviewQuote.priceUnavailable();
         }
-        float cargo = purchase.getQuantity() * fallbackUnitCargoSpace(purchase.getWeaponId());
+        float cargo = purchase.getQuantity() * fallbackUnitCargoSpace(purchase.getItemKey());
         return new StockReviewQuote(purchase.getQuantity() * unitPrice, cargo,
                 Collections.<StockReviewSellerAllocation>emptyList());
     }
@@ -104,13 +104,13 @@ final class StockReviewQuoteBook {
         float totalCargo = 0f;
         List<StockReviewSellerAllocation> allocations =
                 new ArrayList<StockReviewSellerAllocation>();
-        List<SubmarketWeaponStock> stocks = sortedBuyStocks(purchase.getWeaponId());
+        List<SubmarketWeaponStock> stocks = sortedBuyStocks(purchase.getItemKey());
         for (int i = 0; i < stocks.size() && remaining > 0; i++) {
             SubmarketWeaponStock stock = stocks.get(i);
             if (purchase.getSubmarketId() != null && !matchesSource(purchase.getSubmarketId(), stock)) {
                 continue;
             }
-            int available = remainingBySource == null ? stock.getCount() : remainingStock(purchase.getWeaponId(), stock, remainingBySource);
+            int available = remainingBySource == null ? stock.getCount() : remainingStock(purchase.getItemKey(), stock, remainingBySource);
             int quantity = Math.min(remaining, available);
             if (quantity <= 0) {
                 continue;
@@ -124,7 +124,7 @@ final class StockReviewQuoteBook {
                     stock.getSourceId(), quantity, cost));
             remaining -= quantity;
             if (remainingBySource != null) {
-                remainingBySource.put(sourceKey(purchase.getWeaponId(), stock), Integer.valueOf(available - quantity));
+                remainingBySource.put(sourceKey(purchase.getItemKey(), stock), Integer.valueOf(available - quantity));
             }
         }
         if (remaining > 0) {
@@ -133,8 +133,8 @@ final class StockReviewQuoteBook {
         return new StockReviewQuote(totalCost, totalCargo, totalBaseCost, totalQuantity, allocations);
     }
 
-    private int remainingStock(String weaponId, SubmarketWeaponStock stock, Map<String, Integer> remainingBySource) {
-        String key = sourceKey(weaponId, stock);
+    private int remainingStock(String itemKey, SubmarketWeaponStock stock, Map<String, Integer> remainingBySource) {
+        String key = sourceKey(itemKey, stock);
         Integer cached = remainingBySource.get(key);
         if (cached != null) {
             return cached.intValue();
@@ -143,17 +143,17 @@ final class StockReviewQuoteBook {
         return stock.getCount();
     }
 
-    private List<SubmarketWeaponStock> sortedBuyStocks(String weaponId) {
-        if (weaponId == null) {
+    private List<SubmarketWeaponStock> sortedBuyStocks(String itemKey) {
+        if (itemKey == null) {
             return Collections.emptyList();
         }
-        List<SubmarketWeaponStock> cached = sortedBuyStocksByWeapon.get(weaponId);
+        List<SubmarketWeaponStock> cached = sortedBuyStocksByItem.get(itemKey);
         if (cached != null) {
             return cached;
         }
-        WeaponStockRecord record = findRecord(weaponId);
+        WeaponStockRecord record = findRecord(itemKey);
         if (record == null) {
-            sortedBuyStocksByWeapon.put(weaponId, Collections.<SubmarketWeaponStock>emptyList());
+            sortedBuyStocksByItem.put(itemKey, Collections.<SubmarketWeaponStock>emptyList());
             return Collections.emptyList();
         }
         List<SubmarketWeaponStock> result = new ArrayList<SubmarketWeaponStock>();
@@ -165,7 +165,7 @@ final class StockReviewQuoteBook {
         }
         sortByPrice(result);
         result = Collections.unmodifiableList(result);
-        sortedBuyStocksByWeapon.put(weaponId, result);
+        sortedBuyStocksByItem.put(itemKey, result);
         return result;
     }
 
@@ -173,8 +173,8 @@ final class StockReviewQuoteBook {
         if (record == null) {
             return Collections.emptyList();
         }
-        String weaponId = record.getWeaponId();
-        List<SubmarketWeaponStock> cached = sortedBuyStocksByWeapon.get(weaponId);
+        String itemKey = record.getItemKey();
+        List<SubmarketWeaponStock> cached = sortedBuyStocksByItem.get(itemKey);
         if (cached != null) {
             return cached;
         }
@@ -187,20 +187,20 @@ final class StockReviewQuoteBook {
         }
         sortByPrice(result);
         result = Collections.unmodifiableList(result);
-        sortedBuyStocksByWeapon.put(weaponId, result);
+        sortedBuyStocksByItem.put(itemKey, result);
         return result;
     }
 
-    private float fallbackUnitCargoSpace(String weaponId) {
-        if (weaponId == null) {
+    private float fallbackUnitCargoSpace(String itemKey) {
+        if (itemKey == null) {
             return 1f;
         }
-        Float cached = unitCargoSpaceByWeapon.get(weaponId);
+        Float cached = unitCargoSpaceByItem.get(itemKey);
         if (cached != null) {
             return cached.floatValue();
         }
         float result = 1f;
-        WeaponStockRecord record = findRecord(weaponId);
+        WeaponStockRecord record = findRecord(itemKey);
         if (record != null) {
             for (int i = 0; i < record.getSubmarketStocks().size(); i++) {
                 SubmarketWeaponStock stock = record.getSubmarketStocks().get(i);
@@ -210,15 +210,15 @@ final class StockReviewQuoteBook {
                 }
             }
         }
-        unitCargoSpaceByWeapon.put(weaponId, Float.valueOf(result));
+        unitCargoSpaceByItem.put(itemKey, Float.valueOf(result));
         return result;
     }
 
-    int sellUnitPrice(String weaponId) {
-        if (weaponId == null) {
+    int sellUnitPrice(String itemKey) {
+        if (itemKey == null) {
             return -1;
         }
-        Integer cached = sellUnitPriceByWeapon.get(weaponId);
+        Integer cached = sellUnitPriceByItem.get(itemKey);
         if (cached != null) {
             return cached.intValue();
         }
@@ -227,17 +227,17 @@ final class StockReviewQuoteBook {
                     snapshot == null ? null : snapshot.getMarket(),
                     snapshot != null && snapshot.isIncludeBlackMarket());
         }
-        Integer price = playerSellUnitPrices.get(weaponId);
+        Integer price = playerSellUnitPrices.get(itemKey);
         int result = price == null ? -1 : price.intValue();
-        sellUnitPriceByWeapon.put(weaponId, Integer.valueOf(result));
+        sellUnitPriceByItem.put(itemKey, Integer.valueOf(result));
         return result;
     }
 
-    private WeaponStockRecord findRecord(String weaponId) {
-        if (snapshot == null || weaponId == null) {
+    private WeaponStockRecord findRecord(String itemKey) {
+        if (snapshot == null || itemKey == null) {
             return null;
         }
-        return snapshot.getRecord(weaponId);
+        return snapshot.getRecord(itemKey);
     }
 
     private static void sortByPrice(List<SubmarketWeaponStock> stocks) {
@@ -261,13 +261,13 @@ final class StockReviewQuoteBook {
     }
 
     private static String lineKey(StockReviewPendingPurchase purchase) {
-        return (purchase.getWeaponId() == null ? "" : purchase.getWeaponId())
+        return (purchase.getItemKey() == null ? "" : purchase.getItemKey())
                 + "|" + (purchase.getSubmarketId() == null ? "" : purchase.getSubmarketId())
                 + "|" + purchase.getQuantity();
     }
 
-    private static String sourceKey(String weaponId, SubmarketWeaponStock stock) {
-        return (weaponId == null ? "" : weaponId)
+    private static String sourceKey(String itemKey, SubmarketWeaponStock stock) {
+        return (itemKey == null ? "" : itemKey)
                 + "|" + (stock == null || stock.getSourceId() == null ? "" : stock.getSourceId());
     }
 

@@ -71,8 +71,16 @@ public final class WeaponStockRecord {
         this.submarketStocks = Collections.unmodifiableList(submarketStocks);
     }
 
-    public String getWeaponId() {
+    public String getItemKey() {
         return itemKey;
+    }
+
+    /**
+     * @deprecated Stock rows now also represent fighter LPCs. Use {@link #getItemKey()}.
+     */
+    @Deprecated
+    public String getWeaponId() {
+        return getItemKey();
     }
 
     public String getItemId() {

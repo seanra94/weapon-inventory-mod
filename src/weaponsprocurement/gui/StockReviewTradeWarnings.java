@@ -75,7 +75,7 @@ final class StockReviewTradeWarnings {
         }
         StockReviewPortfolioQuote fullQuote = quoteBook.quotePortfolio(StockReviewTradePlanner.withAdjustment(
                 pendingPurchases,
-                record.getWeaponId(),
+                record.getItemKey(),
                 null,
                 target));
         int fullCost = fullQuote.totalCost();

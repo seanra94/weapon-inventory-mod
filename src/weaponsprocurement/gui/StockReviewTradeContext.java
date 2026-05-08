@@ -11,9 +11,9 @@ import java.util.Map;
 final class StockReviewTradeContext {
     private final List<StockReviewPendingPurchase> pendingPurchases;
     private final StockReviewQuoteBook quoteBook;
-    private final Map<String, Integer> netByWeapon = new HashMap<String, Integer>();
-    private final Map<String, Integer> buyByWeapon = new HashMap<String, Integer>();
-    private final Map<String, Integer> sellByWeapon = new HashMap<String, Integer>();
+    private final Map<String, Integer> netByItem = new HashMap<String, Integer>();
+    private final Map<String, Integer> buyByItem = new HashMap<String, Integer>();
+    private final Map<String, Integer> sellByItem = new HashMap<String, Integer>();
     private final Map<String, Integer> affordableCache = new HashMap<String, Integer>();
     private final StockReviewPortfolioQuote portfolioQuote;
     private final int totalCost;
@@ -27,11 +27,11 @@ final class StockReviewTradeContext {
         if (pendingPurchases != null) {
             for (int i = 0; i < pendingPurchases.size(); i++) {
                 StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-                add(netByWeapon, purchase.getWeaponId(), purchase.getQuantity());
+                add(netByItem, purchase.getItemKey(), purchase.getQuantity());
                 if (purchase.getQuantity() > 0) {
-                    add(buyByWeapon, purchase.getWeaponId(), purchase.getQuantity());
+                    add(buyByItem, purchase.getItemKey(), purchase.getQuantity());
                 } else if (purchase.getQuantity() < 0) {
-                    add(sellByWeapon, purchase.getWeaponId(), -purchase.getQuantity());
+                    add(sellByItem, purchase.getItemKey(), -purchase.getQuantity());
                 }
             }
         }
@@ -42,24 +42,24 @@ final class StockReviewTradeContext {
         cargoSpaceLeft = StockReviewPlayerCargo.currentCargoSpaceLeft();
     }
 
-    int netQuantityForWeapon(String weaponId) {
-        return get(netByWeapon, weaponId);
+    int netQuantityForItem(String itemKey) {
+        return get(netByItem, itemKey);
     }
 
-    int pendingBuyQuantityForWeapon(String weaponId) {
-        return get(buyByWeapon, weaponId);
+    int pendingBuyQuantityForItem(String itemKey) {
+        return get(buyByItem, itemKey);
     }
 
-    int pendingSellQuantityForWeapon(String weaponId) {
-        return get(sellByWeapon, weaponId);
+    int pendingSellQuantityForItem(String itemKey) {
+        return get(sellByItem, itemKey);
     }
 
     int buyableRemaining(WeaponStockRecord record) {
-        return Math.max(0, record.getBuyableCount() - pendingBuyQuantityForWeapon(record.getWeaponId()));
+        return Math.max(0, record.getBuyableCount() - pendingBuyQuantityForItem(record.getItemKey()));
     }
 
     int sellableRemaining(WeaponStockRecord record) {
-        return Math.max(0, record.getPlayerCargoCount() - pendingSellQuantityForWeapon(record.getWeaponId()));
+        return Math.max(0, record.getPlayerCargoCount() - pendingSellQuantityForItem(record.getItemKey()));
     }
 
     int positiveAdjustmentRemaining(WeaponStockRecord record, int requestedQuantity) {
@@ -67,7 +67,7 @@ final class StockReviewTradeContext {
         if (requested <= 0) {
             return 0;
         }
-        int sellCancellation = Math.min(requested, pendingSellQuantityForWeapon(record.getWeaponId()));
+        int sellCancellation = Math.min(requested, pendingSellQuantityForItem(record.getItemKey()));
         int remainingRequest = requested - sellCancellation;
         if (remainingRequest <= 0) {
             return sellCancellation;
@@ -80,7 +80,7 @@ final class StockReviewTradeContext {
         if (requested <= 0) {
             return 0;
         }
-        int buyCancellation = Math.min(requested, pendingBuyQuantityForWeapon(record.getWeaponId()));
+        int buyCancellation = Math.min(requested, pendingBuyQuantityForItem(record.getItemKey()));
         int remainingRequest = requested - buyCancellation;
         if (remainingRequest <= 0) {
             return buyCancellation;
@@ -89,34 +89,34 @@ final class StockReviewTradeContext {
     }
 
     int buyNeededForSufficiency(WeaponStockRecord record) {
-        return Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + netQuantityForWeapon(record.getWeaponId())));
+        return Math.max(0, record.getDesiredCount() - (record.getOwnedCount() + netQuantityForItem(record.getItemKey())));
     }
 
     int sellableUntilSufficient(WeaponStockRecord record) {
-        int stockAfterPlan = record.getOwnedCount() + netQuantityForWeapon(record.getWeaponId());
+        int stockAfterPlan = record.getOwnedCount() + netQuantityForItem(record.getItemKey());
         int excess = Math.max(0, stockAfterPlan - record.getDesiredCount());
         return Math.min(excess, sellableRemaining(record));
     }
 
-    int transactionCostForWeapon(String weaponId) {
-        return portfolioQuote.costForWeapon(weaponId);
+    int transactionCostForItem(String itemKey) {
+        return portfolioQuote.costForItem(itemKey);
     }
 
-    int transactionCostForLine(String weaponId, String submarketId) {
-        return portfolioQuote.costForLine(weaponId, submarketId);
+    int transactionCostForLine(String itemKey, String submarketId) {
+        return portfolioQuote.costForLine(itemKey, submarketId);
     }
 
-    int unitPriceForWeapon(WeaponStockRecord record) {
+    int unitPriceForItem(WeaponStockRecord record) {
         if (record == null) {
             return StockReviewQuoteBook.PRICE_UNAVAILABLE;
         }
-        int unitCost = quoteBook.nextBuyUnitPriceAfterPlannedBuys(record, pendingBuyQuantityForWeapon(record.getWeaponId()));
-        return unitCost == Integer.MAX_VALUE ? quoteBook.sellUnitPrice(record.getWeaponId()) : unitCost;
+        int unitCost = quoteBook.nextBuyUnitPriceAfterPlannedBuys(record, pendingBuyQuantityForItem(record.getItemKey()));
+        return unitCost == Integer.MAX_VALUE ? quoteBook.sellUnitPrice(record.getItemKey()) : unitCost;
     }
 
     int deltaToSufficient(WeaponStockRecord record) {
         int targetNet = record.getDesiredCount() - record.getOwnedCount();
-        int delta = targetNet - netQuantityForWeapon(record.getWeaponId());
+        int delta = targetNet - netQuantityForItem(record.getItemKey());
         if (delta > 0) {
             return positiveAdjustmentRemaining(record, delta);
         }
@@ -130,7 +130,7 @@ final class StockReviewTradeContext {
         if (purchase == null) {
             return StockReviewQuote.ZERO.getSellerAllocations();
         }
-        return portfolioQuote.sellerAllocations(purchase.getWeaponId(), purchase.getSubmarketId());
+        return portfolioQuote.sellerAllocations(purchase.getItemKey(), purchase.getSubmarketId());
     }
 
     int totalCost() {
@@ -171,7 +171,7 @@ final class StockReviewTradeContext {
         if (maxByStock <= 0) {
             return 0;
         }
-        String key = record.getWeaponId() + "|" + (submarketId == null ? "" : submarketId) + "|" + maxByStock;
+        String key = record.getItemKey() + "|" + (submarketId == null ? "" : submarketId) + "|" + maxByStock;
         Integer cached = affordableCache.get(key);
         if (cached != null) {
             return cached.intValue();
@@ -192,7 +192,7 @@ final class StockReviewTradeContext {
 
     private boolean canAffordAdjustment(WeaponStockRecord record, String submarketId, int quantity) {
         StockReviewPortfolioQuote adjusted = quoteBook.quotePortfolio(StockReviewTradePlanner.withAdjustment(
-                pendingPurchases, record.getWeaponId(), submarketId, quantity));
+                pendingPurchases, record.getItemKey(), submarketId, quantity));
         int adjustedCost = adjusted.totalCost();
         if (adjustedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return false;
@@ -215,7 +215,7 @@ final class StockReviewTradeContext {
         if (pendingPurchases != null) {
             for (int i = 0; i < pendingPurchases.size(); i++) {
                 StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-                if (purchase.matches(record.getWeaponId(), submarketId) && purchase.getQuantity() > 0) {
+                if (purchase.matches(record.getItemKey(), submarketId) && purchase.getQuantity() > 0) {
                     pendingFromSource += purchase.getQuantity();
                 }
             }
@@ -223,15 +223,15 @@ final class StockReviewTradeContext {
         return Math.max(0, sourceCount - pendingFromSource);
     }
 
-    private static void add(Map<String, Integer> counts, String weaponId, int quantity) {
-        if (weaponId == null || quantity == 0) {
+    private static void add(Map<String, Integer> counts, String itemKey, int quantity) {
+        if (itemKey == null || quantity == 0) {
             return;
         }
-        counts.put(weaponId, Integer.valueOf(get(counts, weaponId) + quantity));
+        counts.put(itemKey, Integer.valueOf(get(counts, itemKey) + quantity));
     }
 
-    private static int get(Map<String, Integer> counts, String weaponId) {
-        Integer value = counts.get(weaponId);
+    private static int get(Map<String, Integer> counts, String itemKey) {
+        Integer value = counts.get(itemKey);
         return value == null ? 0 : value.intValue();
     }
 

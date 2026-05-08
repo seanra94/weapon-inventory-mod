@@ -137,8 +137,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             rebuildContent();
             return;
         }
-        if (StockReviewAction.Type.TOGGLE_WEAPON.equals(type)) {
-            state.toggleWeapon(action.getWeaponId());
+        if (StockReviewAction.Type.TOGGLE_ITEM.equals(type)) {
+            state.toggleItem(action.getItemKey());
             rebuildContent();
             return;
         }
@@ -190,7 +190,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.RESET_PLAN.equals(type)) {
-            resetPlan(action.getWeaponId());
+            resetPlan(action.getItemKey());
             return;
         }
         if (StockReviewAction.Type.PURCHASE_ALL_UNTIL_SUFFICIENT.equals(type)) {
@@ -337,7 +337,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         int requested = action.getQuantity();
         int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
-        pendingTrades.add(action.getWeaponId(), action.getSubmarketId(), quantity);
+        pendingTrades.add(action.getItemKey(), action.getSubmarketId(), quantity);
         if (Math.abs(quantity) < Math.abs(requested)) {
             reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
         }
@@ -355,7 +355,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         int requested = action.getQuantity();
         int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
-        pendingTrades.adjustWeaponNet(action.getWeaponId(), quantity);
+        pendingTrades.adjustItemNet(action.getItemKey(), quantity);
         if (Math.abs(quantity) < Math.abs(requested)) {
             reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
         }
@@ -363,8 +363,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         rebuildContent();
     }
 
-    private void resetPlan(String weaponId) {
-        pendingTrades.resetWeapon(weaponId);
+    private void resetPlan(String itemKey) {
+        pendingTrades.resetItem(itemKey);
         updateTradeWarning(null);
         rebuildContent();
     }
@@ -393,7 +393,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             if (quantity <= 0) {
                 continue;
             }
-            pendingTrades.add(record.getWeaponId(), null, quantity);
+            pendingTrades.add(record.getItemKey(), null, quantity);
             tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
             added += quantity;
         }
@@ -420,7 +420,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             if (quantity <= 0) {
                 continue;
             }
-            pendingTrades.add(record.getWeaponId(), null, -quantity);
+            pendingTrades.add(record.getItemKey(), null, -quantity);
             tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
             removed += quantity;
         }
@@ -439,7 +439,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     }
 
     private int availableFor(StockReviewAction action) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(action.getWeaponId());
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(action.getItemKey());
         if (record == null) {
             return 0;
         }
@@ -516,7 +516,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                                                                        MarketAPI market,
                                                                        StockReviewPendingPurchase purchase,
                                                                        StockSourceMode sourceMode) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(purchase.getWeaponId());
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(purchase.getItemKey());
         if (record == null) {
             return StockPurchaseService.PurchaseResult.failure("No queued item record is available.");
         }
@@ -528,11 +528,11 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockSourceMode.FIXERS.equals(sourceMode)) {
             return purchaseService.buyItemFromFixersMarket(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
-                    virtualUnitPrice(purchase.getWeaponId()), virtualUnitCargoSpace(purchase.getWeaponId()));
+                    virtualUnitPrice(purchase.getItemKey()), virtualUnitCargoSpace(purchase.getItemKey()));
         }
         if (StockSourceMode.SECTOR.equals(sourceMode)) {
             return purchaseService.buyItemFromSectorSources(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
-                    stockSources(purchase.getWeaponId(), purchase.getSubmarketId()));
+                    stockSources(purchase.getItemKey(), purchase.getSubmarketId()));
         }
         if (purchase.getSubmarketId() == null) {
             return purchaseService.buyCheapestItem(sector, market, record.getItemType(), record.getItemId(), purchase.getQuantity(), state.isIncludeBlackMarket());
@@ -559,8 +559,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                 state.getSourceMode());
     }
 
-    private List<SubmarketWeaponStock> stockSources(String weaponId, String sourceId) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(weaponId);
+    private List<SubmarketWeaponStock> stockSources(String itemKey, String sourceId) {
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(itemKey);
         if (record == null) {
             return java.util.Collections.emptyList();
         }
@@ -577,13 +577,13 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         return result;
     }
 
-    private int virtualUnitPrice(String weaponId) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(weaponId);
+    private int virtualUnitPrice(String itemKey) {
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(itemKey);
         return record == null ? 0 : record.getCheapestPurchasableUnitPrice();
     }
 
-    private float virtualUnitCargoSpace(String weaponId) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(weaponId);
+    private float virtualUnitCargoSpace(String itemKey) {
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(itemKey);
         if (record == null || record.getSubmarketStocks().isEmpty()) {
             return 1f;
         }
