@@ -11,6 +11,8 @@ $liveJar = Join-Path $StarsectorDir "mods\Weapons Procurement\jars\weapons-procu
 $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewPanelPlugin.class",
     "weaponsprocurement/gui/StockReviewModeController.class",
+    "weaponsprocurement/gui/StockReviewUiController.class",
+    "weaponsprocurement/gui/StockReviewUiController`$Host.class",
     "weaponsprocurement/gui/StockReviewTradeController.class",
     "weaponsprocurement/gui/StockReviewTradeController`$Host.class",
     "weaponsprocurement/gui/StockReviewExecutionController.class",

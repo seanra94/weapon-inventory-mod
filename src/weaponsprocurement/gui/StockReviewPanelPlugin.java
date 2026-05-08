@@ -12,7 +12,9 @@ import weaponsprocurement.core.WeaponStockSnapshotBuilder;
 import java.util.List;
 
 public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction>
-        implements StockReviewTradeController.Host, StockReviewExecutionController.Host {
+        implements StockReviewUiController.Host,
+        StockReviewTradeController.Host,
+        StockReviewExecutionController.Host {
     private static final Logger LOG = Logger.getLogger(StockReviewPanelPlugin.class);
 
     private static boolean reviewMode(StockReviewLaunchState launchState) {
@@ -27,6 +29,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private final StockReviewPendingTrades pendingTrades = new StockReviewPendingTrades();
     private final MarketAPI initialMarket;
     private final StockReviewModeController modes;
+    private final StockReviewUiController ui;
     private final StockReviewTradeController trades;
     private final StockReviewExecutionController execution;
 
@@ -47,6 +50,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             this.pendingTrades.replaceWith(launchState.getPendingTrades());
         }
         this.modes = new StockReviewModeController(reviewMode(launchState));
+        this.ui = new StockReviewUiController(state, modes, pendingTrades, this);
         this.trades = new StockReviewTradeController(state, pendingTrades, this);
         this.execution = new StockReviewExecutionController(state, pendingTrades, purchaseService, this);
     }
@@ -64,22 +68,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     @Override
     protected void onCloseRequested() {
-        if (modes.isColorDebugMode()) {
-            modes.leaveColorDebug(state);
-            rebuildContent();
-            return;
-        }
-        if (modes.isFilterMode()) {
-            modes.leaveFilters(state);
-            rebuildContent();
-            return;
-        }
-        if (modes.isReviewMode()) {
-            state.setListScrollOffset(0);
-            reopen(false);
-            return;
-        }
-        close();
+        ui.handleCloseRequested();
     }
 
     @Override
@@ -120,26 +109,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         StockReviewAction.Type type = action.getType();
-        if (StockReviewAction.Type.TOGGLE_CATEGORY.equals(type)) {
-            state.toggle(action.getItemType(), action.getCategory());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.TOGGLE_ITEM_TYPE.equals(type)) {
-            state.toggle(action.getItemType());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.TOGGLE_TRADE_GROUP.equals(type)) {
-            state.toggle(action.getTradeGroup());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.TOGGLE_ITEM.equals(type)) {
-            state.toggleItem(action.getItemKey());
-            rebuildContent();
-            return;
-        }
         if (StockReviewAction.Type.ADJUST_PLAN.equals(type)) {
             trades.adjustPendingTrade(action);
             return;
@@ -150,40 +119,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
             trades.addPendingTrade(action);
-            return;
-        }
-        if (StockReviewAction.Type.CYCLE_SORT_MODE.equals(type)) {
-            state.cycleSortMode();
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.CYCLE_SOURCE_MODE.equals(type)) {
-            state.cycleSourceMode();
-            pendingTrades.clear();
-            StockReviewTradeWarnings.clear(state);
-            modes.setReviewMode(false);
-            state.setListScrollOffset(0);
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
-            if (state.getSourceMode().isRemote()) {
-                rebuildContent();
-                return;
-            }
-            state.toggleBlackMarket();
-            pendingTrades.clear();
-            StockReviewTradeWarnings.clear(state);
-            modes.setReviewMode(false);
-            rebuildSnapshot();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.SCROLL_LIST.equals(type)) {
-            state.adjustListScrollOffset(action.getQuantity(), maxScrollOffset());
-            rebuildContent();
             return;
         }
         if (StockReviewAction.Type.RESET_PLAN.equals(type)) {
@@ -198,112 +133,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             trades.sellAllUntilSufficient();
             return;
         }
-        if (StockReviewAction.Type.RESET_ALL_TRADES.equals(type)) {
-            pendingTrades.clear();
-            updateTradeWarning(null);
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.OPEN_FILTERS.equals(type)) {
-            modes.enterFilters(state);
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.TOGGLE_FILTER_GROUP.equals(type)) {
-            state.toggle(action.getFilterGroup());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.TOGGLE_FILTER.equals(type)) {
-            state.toggleFilter(action.getFilter());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.RESET_FILTERS.equals(type)) {
-            state.clearFilters();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.OPEN_COLOR_DEBUG.equals(type)) {
-            modes.enterColorDebug(state);
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_CYCLE_TARGET.equals(type)) {
-            modes.cycleColorDebugTarget(action.getQuantity());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_TOGGLE_PERSISTENCE.equals(type)) {
-            modes.toggleColorDebugPersistence();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_ADJUST_RED.equals(type)) {
-            modes.adjustColorDebugDraft(action.getQuantity(), 0, 0);
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_ADJUST_GREEN.equals(type)) {
-            modes.adjustColorDebugDraft(0, action.getQuantity(), 0);
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_ADJUST_BLUE.equals(type)) {
-            modes.adjustColorDebugDraft(0, 0, action.getQuantity());
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_APPLY.equals(type)) {
-            modes.applyColorDebugDraft();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_CONFIRM.equals(type)) {
-            modes.applyColorDebugDraft();
-            modes.leaveColorDebug(state);
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_RESTORE.equals(type)) {
-            modes.restoreColorDebugDraft();
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.DEBUG_NOOP.equals(type)) {
-            rebuildContent();
-            return;
-        }
-        if (StockReviewAction.Type.REVIEW_PURCHASE.equals(type)) {
-            if (!pendingTrades.isEmpty()) {
-                state.setListScrollOffset(0);
-                state.setExpanded(StockReviewTradeGroup.BUYING, true);
-                state.setExpanded(StockReviewTradeGroup.SELLING, true);
-                reopen(true);
-            }
-            return;
-        }
-        if (StockReviewAction.Type.GO_BACK.equals(type)) {
-            if (modes.isColorDebugMode()) {
-                modes.leaveColorDebug(state);
-                rebuildContent();
-                return;
-            }
-            if (modes.isFilterMode()) {
-                modes.leaveFilters(state);
-                rebuildContent();
-                return;
-            }
-            state.setListScrollOffset(0);
-            reopen(false);
-            return;
-        }
         if (StockReviewAction.Type.CONFIRM_PURCHASE.equals(type)) {
             execution.confirmPendingPurchases();
             return;
         }
-        if (StockReviewAction.Type.CLOSE.equals(type)) {
-            close();
+        if (ui.handle(action)) {
+            return;
         }
     }
 
@@ -317,6 +152,10 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     public void requestContentRebuild() {
         rebuildContent();
+    }
+
+    public int currentMaxScrollOffset() {
+        return maxScrollOffset();
     }
 
     public SectorAPI sector() {
