@@ -6,11 +6,11 @@ import java.util.List;
 
 final class StockReviewLaunchState {
     private final StockReviewState state;
-    private final List<StockReviewPendingPurchase> pendingTrades;
+    private final List<StockReviewPendingTrade> pendingTrades;
     private final boolean reviewMode;
 
     StockReviewLaunchState(StockReviewState state,
-                           List<StockReviewPendingPurchase> pendingTrades,
+                           List<StockReviewPendingTrade> pendingTrades,
                            boolean reviewMode) {
         this.state = state == null ? null : new StockReviewState(state);
         this.pendingTrades = immutableCopy(pendingTrades);
@@ -21,7 +21,7 @@ final class StockReviewLaunchState {
         return state;
     }
 
-    List<StockReviewPendingPurchase> getPendingTrades() {
+    List<StockReviewPendingTrade> getPendingTrades() {
         return pendingTrades;
     }
 
@@ -29,15 +29,15 @@ final class StockReviewLaunchState {
         return reviewMode;
     }
 
-    private static List<StockReviewPendingPurchase> immutableCopy(List<StockReviewPendingPurchase> source) {
+    private static List<StockReviewPendingTrade> immutableCopy(List<StockReviewPendingTrade> source) {
         if (source == null || source.isEmpty()) {
             return Collections.emptyList();
         }
-        List<StockReviewPendingPurchase> result = new ArrayList<StockReviewPendingPurchase>();
+        List<StockReviewPendingTrade> result = new ArrayList<StockReviewPendingTrade>();
         for (int i = 0; i < source.size(); i++) {
-            StockReviewPendingPurchase purchase = source.get(i);
-            if (purchase != null) {
-                result.add(purchase.copy());
+            StockReviewPendingTrade trade = source.get(i);
+            if (trade != null) {
+                result.add(trade.copy());
             }
         }
         return Collections.unmodifiableList(result);

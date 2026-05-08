@@ -14,7 +14,7 @@ final class StockReviewFooterRenderer {
 
     static void render(CustomPanelAPI root,
                        StockReviewTradeContext tradeContext,
-                       List<StockReviewPendingPurchase> pendingPurchases,
+                       List<StockReviewPendingTrade> pendingTrades,
                        boolean reviewMode,
                        boolean filterMode,
                        boolean colorDebugMode,
@@ -28,10 +28,10 @@ final class StockReviewFooterRenderer {
             return;
         }
         if (reviewMode) {
-            renderReviewFooter(root, tradeContext, pendingPurchases, buttons);
+            renderReviewFooter(root, tradeContext, pendingTrades, buttons);
             return;
         }
-        renderTradeFooter(root, pendingPurchases, buttons);
+        renderTradeFooter(root, pendingTrades, buttons);
     }
 
     private static void renderColorDebugFooter(CustomPanelAPI root,
@@ -72,7 +72,7 @@ final class StockReviewFooterRenderer {
 
     private static void renderReviewFooter(CustomPanelAPI root,
                                            StockReviewTradeContext tradeContext,
-                                           List<StockReviewPendingPurchase> pendingPurchases,
+                                           List<StockReviewPendingTrade> pendingTrades,
                                            List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         WimGuiModalFooter.addLeftRowAndRightButton(
                 root,
@@ -80,7 +80,7 @@ final class StockReviewFooterRenderer {
                 StockReviewStyle.ACTION_BUTTON_HEIGHT,
                 StockReviewStyle.BUTTON_GAP,
                 WimGuiButtonSpecs.of(footerButton("Confirm Trades", StockReviewAction.confirmPurchase(),
-                        pendingPurchases != null && !pendingPurchases.isEmpty() && tradeContext.canConfirm(),
+                        pendingTrades != null && !pendingTrades.isEmpty() && tradeContext.canConfirm(),
                         StockReviewStyle.CONFIRM_BUTTON,
                         "Execute the queued buys and sells.")),
                 footerButton("Go Back", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON,
@@ -89,7 +89,7 @@ final class StockReviewFooterRenderer {
     }
 
     private static void renderTradeFooter(CustomPanelAPI root,
-                                          List<StockReviewPendingPurchase> pendingPurchases,
+                                          List<StockReviewPendingTrade> pendingTrades,
                                           List<WimGuiButtonBinding<StockReviewAction>> buttons) {
         WimGuiModalFooter.addLeftRowAndRightButton(
                 root,
@@ -98,7 +98,7 @@ final class StockReviewFooterRenderer {
                 StockReviewStyle.BUTTON_GAP,
                 WimGuiButtonSpecs.of(
                         footerButton("Review Trades", StockReviewAction.reviewPurchase(),
-                                pendingPurchases != null && !pendingPurchases.isEmpty(), StockReviewStyle.CONFIRM_BUTTON,
+                                pendingTrades != null && !pendingTrades.isEmpty(), StockReviewStyle.CONFIRM_BUTTON,
                                 "Review the queued trades before confirming them."),
                         bulkButton("Purchase All Until Sufficient", StockReviewAction.purchaseAllUntilSufficient(), true,
                                 StockReviewStyle.BUY_BUTTON, StockReviewTooltips.purchaseAllUntilSufficient()),
@@ -108,7 +108,7 @@ final class StockReviewFooterRenderer {
                                 StockReviewStyle.RESET_ALL_BUTTON_WIDTH,
                                 "Reset All Trades",
                                 StockReviewAction.resetAllTrades(),
-                                pendingPurchases != null && !pendingPurchases.isEmpty(),
+                                pendingTrades != null && !pendingTrades.isEmpty(),
                                 StockReviewStyle.ACTION_BACKGROUND,
                                 "Clear every queued buy and sell.")),
                 footerButton("Cancel", StockReviewAction.close(), true, StockReviewStyle.CANCEL_BUTTON,

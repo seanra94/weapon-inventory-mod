@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 final class StockReviewTradeContext {
-    private final List<StockReviewPendingPurchase> pendingPurchases;
+    private final List<StockReviewPendingTrade> pendingTrades;
     private final StockReviewQuoteBook quoteBook;
     private final Map<String, Integer> netByItem = new HashMap<String, Integer>();
     private final Map<String, Integer> buyByItem = new HashMap<String, Integer>();
@@ -21,21 +21,21 @@ final class StockReviewTradeContext {
     private final float credits;
     private final float cargoSpaceLeft;
 
-    StockReviewTradeContext(WeaponStockSnapshot snapshot, List<StockReviewPendingPurchase> pendingPurchases) {
-        this.pendingPurchases = pendingPurchases;
+    StockReviewTradeContext(WeaponStockSnapshot snapshot, List<StockReviewPendingTrade> pendingTrades) {
+        this.pendingTrades = pendingTrades;
         this.quoteBook = new StockReviewQuoteBook(snapshot);
-        if (pendingPurchases != null) {
-            for (int i = 0; i < pendingPurchases.size(); i++) {
-                StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-                add(netByItem, purchase.getItemKey(), purchase.getQuantity());
-                if (purchase.getQuantity() > 0) {
-                    add(buyByItem, purchase.getItemKey(), purchase.getQuantity());
-                } else if (purchase.getQuantity() < 0) {
-                    add(sellByItem, purchase.getItemKey(), -purchase.getQuantity());
+        if (pendingTrades != null) {
+            for (int i = 0; i < pendingTrades.size(); i++) {
+                StockReviewPendingTrade trade = pendingTrades.get(i);
+                add(netByItem, trade.getItemKey(), trade.getQuantity());
+                if (trade.getQuantity() > 0) {
+                    add(buyByItem, trade.getItemKey(), trade.getQuantity());
+                } else if (trade.getQuantity() < 0) {
+                    add(sellByItem, trade.getItemKey(), -trade.getQuantity());
                 }
             }
         }
-        portfolioQuote = quoteBook.quotePortfolio(pendingPurchases);
+        portfolioQuote = quoteBook.quotePortfolio(pendingTrades);
         totalCost = portfolioQuote.totalCost();
         totalCargoSpaceDelta = portfolioQuote.totalCargoSpaceDelta();
         credits = StockReviewPlayerCargo.currentCredits();
@@ -126,11 +126,11 @@ final class StockReviewTradeContext {
         return 0;
     }
 
-    List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingPurchase purchase) {
-        if (purchase == null) {
+    List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingTrade trade) {
+        if (trade == null) {
             return StockReviewQuote.ZERO.getSellerAllocations();
         }
-        return portfolioQuote.sellerAllocations(purchase.getItemKey(), purchase.getSubmarketId());
+        return portfolioQuote.sellerAllocations(trade.getItemKey(), trade.getSubmarketId());
     }
 
     int totalCost() {
@@ -192,7 +192,7 @@ final class StockReviewTradeContext {
 
     private boolean canAffordAdjustment(WeaponStockRecord record, String submarketId, int quantity) {
         StockReviewPortfolioQuote adjusted = quoteBook.quotePortfolio(StockReviewTradePlanner.withAdjustment(
-                pendingPurchases, record.getItemKey(), submarketId, quantity));
+                pendingTrades, record.getItemKey(), submarketId, quantity));
         int adjustedCost = adjusted.totalCost();
         if (adjustedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return false;
@@ -212,11 +212,11 @@ final class StockReviewTradeContext {
             }
         }
         int pendingFromSource = 0;
-        if (pendingPurchases != null) {
-            for (int i = 0; i < pendingPurchases.size(); i++) {
-                StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-                if (purchase.matches(record.getItemKey(), submarketId) && purchase.getQuantity() > 0) {
-                    pendingFromSource += purchase.getQuantity();
+        if (pendingTrades != null) {
+            for (int i = 0; i < pendingTrades.size(); i++) {
+                StockReviewPendingTrade trade = pendingTrades.get(i);
+                if (trade.matches(record.getItemKey(), submarketId) && trade.getQuantity() > 0) {
+                    pendingFromSource += trade.getQuantity();
                 }
             }
         }

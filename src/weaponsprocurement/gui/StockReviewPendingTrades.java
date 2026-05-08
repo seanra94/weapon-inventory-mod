@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.List;
 
 final class StockReviewPendingTrades {
-    private final List<StockReviewPendingPurchase> trades = new ArrayList<StockReviewPendingPurchase>();
+    private final List<StockReviewPendingTrade> trades = new ArrayList<StockReviewPendingTrade>();
 
-    List<StockReviewPendingPurchase> asList() {
+    List<StockReviewPendingTrade> asList() {
         return Collections.unmodifiableList(trades);
     }
 
@@ -19,15 +19,15 @@ final class StockReviewPendingTrades {
         trades.clear();
     }
 
-    void replaceWith(List<StockReviewPendingPurchase> source) {
+    void replaceWith(List<StockReviewPendingTrade> source) {
         trades.clear();
         if (source == null) {
             return;
         }
         for (int i = 0; i < source.size(); i++) {
-            StockReviewPendingPurchase purchase = source.get(i);
-            if (purchase != null && !purchase.isZero()) {
-                StockReviewPendingPurchase copy = purchase.copy();
+            StockReviewPendingTrade trade = source.get(i);
+            if (trade != null && !trade.isZero()) {
+                StockReviewPendingTrade copy = trade.copy();
                 if (copy != null) {
                     trades.add(copy);
                 }
@@ -39,11 +39,11 @@ final class StockReviewPendingTrades {
         if (itemKey == null || itemKey.isEmpty() || quantity == 0) {
             return;
         }
-        StockReviewPendingPurchase existing = find(itemKey, submarketId);
+        StockReviewPendingTrade existing = find(itemKey, submarketId);
         if (existing == null) {
-            StockReviewPendingPurchase purchase = StockReviewPendingPurchase.create(itemKey, submarketId, quantity);
-            if (purchase != null) {
-                trades.add(purchase);
+            StockReviewPendingTrade trade = StockReviewPendingTrade.create(itemKey, submarketId, quantity);
+            if (trade != null) {
+                trades.add(trade);
             }
             return;
         }
@@ -79,7 +79,7 @@ final class StockReviewPendingTrades {
         }
     }
 
-    void removeExecuted(List<StockReviewPendingPurchase> executionOrder, int failedIndex) {
+    void removeExecuted(List<StockReviewPendingTrade> executionOrder, int failedIndex) {
         if (executionOrder == null) {
             return;
         }
@@ -88,12 +88,12 @@ final class StockReviewPendingTrades {
         }
     }
 
-    private void removeMatching(StockReviewPendingPurchase executed) {
+    private void removeMatching(StockReviewPendingTrade executed) {
         if (executed == null) {
             return;
         }
         for (int i = trades.size() - 1; i >= 0; i--) {
-            StockReviewPendingPurchase trade = trades.get(i);
+            StockReviewPendingTrade trade = trades.get(i);
             if (trade.matches(executed.getItemKey(), executed.getSubmarketId())
                     && trade.getQuantity() == executed.getQuantity()) {
                 trades.remove(i);
@@ -102,11 +102,11 @@ final class StockReviewPendingTrades {
         }
     }
 
-    private StockReviewPendingPurchase find(String itemKey, String submarketId) {
+    private StockReviewPendingTrade find(String itemKey, String submarketId) {
         for (int i = 0; i < trades.size(); i++) {
-            StockReviewPendingPurchase purchase = trades.get(i);
-            if (purchase.matches(itemKey, submarketId)) {
-                return purchase;
+            StockReviewPendingTrade trade = trades.get(i);
+            if (trade.matches(itemKey, submarketId)) {
+                return trade;
             }
         }
         return null;
@@ -115,7 +115,7 @@ final class StockReviewPendingTrades {
     private int reduceExistingBuys(String itemKey, int quantity) {
         int remaining = quantity;
         for (int i = trades.size() - 1; i >= 0 && remaining > 0; i--) {
-            StockReviewPendingPurchase trade = trades.get(i);
+            StockReviewPendingTrade trade = trades.get(i);
             if (!itemKey.equals(trade.getItemKey()) || !trade.isBuy()) {
                 continue;
             }
@@ -132,7 +132,7 @@ final class StockReviewPendingTrades {
     private int reduceExistingSells(String itemKey, int quantity) {
         int remaining = quantity;
         for (int i = trades.size() - 1; i >= 0 && remaining > 0; i--) {
-            StockReviewPendingPurchase trade = trades.get(i);
+            StockReviewPendingTrade trade = trades.get(i);
             if (!itemKey.equals(trade.getItemKey()) || !trade.isSell()) {
                 continue;
             }

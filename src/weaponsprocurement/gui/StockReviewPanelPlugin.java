@@ -134,7 +134,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.CONFIRM_PURCHASE.equals(type)) {
-            execution.confirmPendingPurchases();
+            execution.confirmPendingTrades();
             return;
         }
         if (ui.handle(action)) {

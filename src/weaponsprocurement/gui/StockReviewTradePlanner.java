@@ -64,22 +64,22 @@ final class StockReviewTradePlanner {
         return result;
     }
 
-    static List<StockReviewPendingPurchase> withAdjustment(List<StockReviewPendingPurchase> pendingPurchases,
+    static List<StockReviewPendingTrade> withAdjustment(List<StockReviewPendingTrade> pendingTrades,
                                                            String itemKey,
                                                            String submarketId,
                                                            int delta) {
-        List<StockReviewPendingPurchase> result = new ArrayList<StockReviewPendingPurchase>();
+        List<StockReviewPendingTrade> result = new ArrayList<StockReviewPendingTrade>();
         boolean adjusted = false;
-        if (pendingPurchases != null) {
-            for (int i = 0; i < pendingPurchases.size(); i++) {
-                StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-                int quantity = purchase.getQuantity();
-                if (purchase.matches(itemKey, submarketId)) {
+        if (pendingTrades != null) {
+            for (int i = 0; i < pendingTrades.size(); i++) {
+                StockReviewPendingTrade trade = pendingTrades.get(i);
+                int quantity = trade.getQuantity();
+                if (trade.matches(itemKey, submarketId)) {
                     quantity += delta;
                     adjusted = true;
                 }
                 if (quantity != 0) {
-                    addPending(result, purchase.getItemKey(), purchase.getSubmarketId(), quantity);
+                    addPending(result, trade.getItemKey(), trade.getSubmarketId(), quantity);
                 }
             }
         }
@@ -89,46 +89,46 @@ final class StockReviewTradePlanner {
         return result;
     }
 
-    private static void addPending(List<StockReviewPendingPurchase> result,
+    private static void addPending(List<StockReviewPendingTrade> result,
                                    String itemKey,
                                    String submarketId,
                                    int quantity) {
-        StockReviewPendingPurchase purchase = StockReviewPendingPurchase.create(itemKey, submarketId, quantity);
-        if (purchase != null) {
-            result.add(purchase);
+        StockReviewPendingTrade trade = StockReviewPendingTrade.create(itemKey, submarketId, quantity);
+        if (trade != null) {
+            result.add(trade);
         }
     }
 
-    static List<StockReviewPendingPurchase> executionOrder(List<StockReviewPendingPurchase> pendingPurchases) {
-        List<StockReviewPendingPurchase> result = new ArrayList<StockReviewPendingPurchase>();
-        if (pendingPurchases == null || pendingPurchases.isEmpty()) {
+    static List<StockReviewPendingTrade> executionOrder(List<StockReviewPendingTrade> pendingTrades) {
+        List<StockReviewPendingTrade> result = new ArrayList<StockReviewPendingTrade>();
+        if (pendingTrades == null || pendingTrades.isEmpty()) {
             return result;
         }
-        addMatching(result, pendingPurchases, MATCH_SELL);
-        addMatching(result, pendingPurchases, MATCH_SELLER_BUY);
-        addMatching(result, pendingPurchases, MATCH_GENERIC_BUY);
+        addMatching(result, pendingTrades, MATCH_SELL);
+        addMatching(result, pendingTrades, MATCH_SELLER_BUY);
+        addMatching(result, pendingTrades, MATCH_GENERIC_BUY);
         return result;
     }
 
-    private static void addMatching(List<StockReviewPendingPurchase> result,
-                                    List<StockReviewPendingPurchase> pendingPurchases,
+    private static void addMatching(List<StockReviewPendingTrade> result,
+                                    List<StockReviewPendingTrade> pendingTrades,
                                     int match) {
-        for (int i = 0; i < pendingPurchases.size(); i++) {
-            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-            if (matches(purchase, match)) {
-                result.add(purchase);
+        for (int i = 0; i < pendingTrades.size(); i++) {
+            StockReviewPendingTrade trade = pendingTrades.get(i);
+            if (matches(trade, match)) {
+                result.add(trade);
             }
         }
     }
 
-    private static boolean matches(StockReviewPendingPurchase purchase, int match) {
+    private static boolean matches(StockReviewPendingTrade trade, int match) {
         if (match == MATCH_SELL) {
-            return purchase.isSell();
+            return trade.isSell();
         }
         if (match == MATCH_SELLER_BUY) {
-            return purchase.isBuy() && purchase.getSubmarketId() != null;
+            return trade.isBuy() && trade.getSubmarketId() != null;
         }
-        return purchase.isBuy() && purchase.getSubmarketId() == null;
+        return trade.isBuy() && trade.getSubmarketId() == null;
     }
 
     private static void addVisibleBuyableRecords(List<WeaponStockRecord> result, List<WeaponStockRecord> records) {

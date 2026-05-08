@@ -15,7 +15,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
     WimGuiListBounds render(CustomPanelAPI root,
                             WeaponStockSnapshot snapshot,
                             StockReviewState state,
-                            List<StockReviewPendingPurchase> pendingPurchases,
+                            List<StockReviewPendingTrade> pendingTrades,
                             boolean reviewMode,
                             boolean filterMode,
                             boolean colorDebugMode,
@@ -29,18 +29,18 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         if (!reviewMode && !filterMode && !colorDebugMode) {
             renderActionRow(root, snapshot, state, buttons);
         }
-        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingPurchases);
+        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades);
         WimGuiListBounds result = colorDebugMode
                 ? renderColorDebugList(root, colorDebugTargetIndex, colorDebugDraft, colorDebugPersistent, state, buttons)
                 : filterMode
                 ? renderFilterList(root, state, buttons)
                 : reviewMode
-                ? renderReviewList(root, snapshot, pendingPurchases, state, tradeContext, buttons)
+                ? renderReviewList(root, snapshot, pendingTrades, state, tradeContext, buttons)
                 : renderStockList(root, snapshot, state, tradeContext, buttons);
         if (!filterMode && !colorDebugMode) {
             StockReviewTradeSummaryRenderer.render(root, tradeContext, state, reviewMode);
         }
-        StockReviewFooterRenderer.render(root, tradeContext, pendingPurchases, reviewMode, filterMode,
+        StockReviewFooterRenderer.render(root, tradeContext, pendingTrades, reviewMode, filterMode,
                 colorDebugMode, buttons);
         return result;
     }
@@ -108,11 +108,11 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
 
     private WimGuiListBounds renderReviewList(CustomPanelAPI root,
                                               WeaponStockSnapshot snapshot,
-                                              List<StockReviewPendingPurchase> pendingPurchases,
+                                              List<StockReviewPendingTrade> pendingTrades,
                                               StockReviewState state,
                                               StockReviewTradeContext tradeContext,
                                               List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        List<WimGuiListRow<StockReviewAction>> rows = StockReviewReviewListModel.build(snapshot, pendingPurchases, state, tradeContext);
+        List<WimGuiListRow<StockReviewAction>> rows = StockReviewReviewListModel.build(snapshot, pendingTrades, state, tradeContext);
         return renderRows(root, rows, state, StockReviewStyle.REVIEW_LIST, buttons);
     }
 

@@ -82,6 +82,7 @@ $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewTradeRowCells.class",
     "weaponsprocurement/gui/StockReviewTradeGroup.class",
     "weaponsprocurement/gui/StockReviewTradeWarnings.class",
+    "weaponsprocurement/gui/StockReviewPendingTrade.class",
     "weaponsprocurement/core/WeaponStockSnapshotBuilder`$CostComparator.class",
     "weaponsprocurement/internal/WeaponsProcurementFixerCatalogUpdater.class",
     "com/fs/starfarer/api/impl/campaign/rulecmd/WP_OpenDialog.class"
@@ -95,6 +96,7 @@ $forbiddenClasses = @(
     "weaponsprocurement/gui/StockReviewRowRenderer.class",
     "weaponsprocurement/gui/StockReviewText.class",
     "weaponsprocurement/gui/StockReviewSection.class",
+    "weaponsprocurement/gui/StockReviewPendingPurchase.class",
     "weaponsprocurement/gui/WimGuiModalListLayout`$ExtraGapProvider.class",
     "weaponsprocurement/gui/WimGuiModalListGapAdapter.class",
     "weaponsprocurement/gui/WimGuiColorDebug`$ColorSetter.class",

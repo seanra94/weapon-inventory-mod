@@ -25,23 +25,23 @@ final class StockReviewQuoteBook {
         this.snapshot = snapshot;
     }
 
-    List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingPurchase purchase) {
-        return quote(purchase).getSellerAllocations();
+    List<StockReviewSellerAllocation> sellerAllocations(StockReviewPendingTrade trade) {
+        return quote(trade).getSellerAllocations();
     }
 
-    StockReviewPortfolioQuote quotePortfolio(List<StockReviewPendingPurchase> pendingPurchases) {
+    StockReviewPortfolioQuote quotePortfolio(List<StockReviewPendingTrade> pendingTrades) {
         StockReviewPortfolioQuote result = new StockReviewPortfolioQuote();
-        if (pendingPurchases == null || pendingPurchases.isEmpty()) {
+        if (pendingTrades == null || pendingTrades.isEmpty()) {
             return result;
         }
         Map<String, Integer> remainingBySource = new HashMap<String, Integer>();
-        List<StockReviewPendingPurchase> ordered = StockReviewTradePlanner.executionOrder(pendingPurchases);
+        List<StockReviewPendingTrade> ordered = StockReviewTradePlanner.executionOrder(pendingTrades);
         for (int i = 0; i < ordered.size(); i++) {
-            StockReviewPendingPurchase purchase = ordered.get(i);
-            StockReviewQuote quote = purchase.isBuy()
-                    ? quoteBuyWithRemaining(purchase, remainingBySource)
-                    : quote(purchase);
-            result.addLine(purchase, quote);
+            StockReviewPendingTrade trade = ordered.get(i);
+            StockReviewQuote quote = trade.isBuy()
+                    ? quoteBuyWithRemaining(trade, remainingBySource)
+                    : quote(trade);
+            result.addLine(trade, quote);
         }
         return result;
     }
@@ -68,50 +68,50 @@ final class StockReviewQuoteBook {
         return Integer.MAX_VALUE;
     }
 
-    private StockReviewQuote quote(StockReviewPendingPurchase purchase) {
-        if (purchase == null || purchase.isZero()) {
+    private StockReviewQuote quote(StockReviewPendingTrade trade) {
+        if (trade == null || trade.isZero()) {
             return StockReviewQuote.ZERO;
         }
-        String key = lineKey(purchase);
+        String key = lineKey(trade);
         StockReviewQuote cached = quotesByLine.get(key);
         if (cached != null) {
             return cached;
         }
-        StockReviewQuote result = purchase.isSell() ? quoteSell(purchase) : quoteBuy(purchase);
+        StockReviewQuote result = trade.isSell() ? quoteSell(trade) : quoteBuy(trade);
         quotesByLine.put(key, result);
         return result;
     }
 
-    private StockReviewQuote quoteSell(StockReviewPendingPurchase purchase) {
-        int unitPrice = sellUnitPrice(purchase.getItemKey());
+    private StockReviewQuote quoteSell(StockReviewPendingTrade trade) {
+        int unitPrice = sellUnitPrice(trade.getItemKey());
         if (unitPrice < 0) {
             return StockReviewQuote.priceUnavailable();
         }
-        float cargo = purchase.getQuantity() * fallbackUnitCargoSpace(purchase.getItemKey());
-        return new StockReviewQuote(purchase.getQuantity() * unitPrice, cargo,
+        float cargo = trade.getQuantity() * fallbackUnitCargoSpace(trade.getItemKey());
+        return new StockReviewQuote(trade.getQuantity() * unitPrice, cargo,
                 Collections.<StockReviewSellerAllocation>emptyList());
     }
 
-    private StockReviewQuote quoteBuy(StockReviewPendingPurchase purchase) {
-        return quoteBuyWithRemaining(purchase, null);
+    private StockReviewQuote quoteBuy(StockReviewPendingTrade trade) {
+        return quoteBuyWithRemaining(trade, null);
     }
 
-    private StockReviewQuote quoteBuyWithRemaining(StockReviewPendingPurchase purchase,
+    private StockReviewQuote quoteBuyWithRemaining(StockReviewPendingTrade trade,
                                                    Map<String, Integer> remainingBySource) {
-        int remaining = purchase.getQuantity();
+        int remaining = trade.getQuantity();
         int totalCost = 0;
         int totalBaseCost = 0;
         int totalQuantity = 0;
         float totalCargo = 0f;
         List<StockReviewSellerAllocation> allocations =
                 new ArrayList<StockReviewSellerAllocation>();
-        List<SubmarketWeaponStock> stocks = sortedBuyStocks(purchase.getItemKey());
+        List<SubmarketWeaponStock> stocks = sortedBuyStocks(trade.getItemKey());
         for (int i = 0; i < stocks.size() && remaining > 0; i++) {
             SubmarketWeaponStock stock = stocks.get(i);
-            if (purchase.getSubmarketId() != null && !matchesSource(purchase.getSubmarketId(), stock)) {
+            if (trade.getSubmarketId() != null && !matchesSource(trade.getSubmarketId(), stock)) {
                 continue;
             }
-            int available = remainingBySource == null ? stock.getCount() : remainingStock(purchase.getItemKey(), stock, remainingBySource);
+            int available = remainingBySource == null ? stock.getCount() : remainingStock(trade.getItemKey(), stock, remainingBySource);
             int quantity = Math.min(remaining, available);
             if (quantity <= 0) {
                 continue;
@@ -125,7 +125,7 @@ final class StockReviewQuoteBook {
                     stock.getSourceId(), quantity, cost));
             remaining -= quantity;
             if (remainingBySource != null) {
-                remainingBySource.put(sourceKey(purchase.getItemKey(), stock), Integer.valueOf(available - quantity));
+                remainingBySource.put(sourceKey(trade.getItemKey(), stock), Integer.valueOf(available - quantity));
             }
         }
         if (remaining > 0) {
@@ -244,10 +244,10 @@ final class StockReviewQuoteBook {
         }
     }
 
-    private static String lineKey(StockReviewPendingPurchase purchase) {
-        return (purchase.getItemKey() == null ? "" : purchase.getItemKey())
-                + "|" + (purchase.getSubmarketId() == null ? "" : purchase.getSubmarketId())
-                + "|" + purchase.getQuantity();
+    private static String lineKey(StockReviewPendingTrade trade) {
+        return (trade.getItemKey() == null ? "" : trade.getItemKey())
+                + "|" + (trade.getSubmarketId() == null ? "" : trade.getSubmarketId())
+                + "|" + trade.getQuantity();
     }
 
     private static String sourceKey(String itemKey, SubmarketWeaponStock stock) {

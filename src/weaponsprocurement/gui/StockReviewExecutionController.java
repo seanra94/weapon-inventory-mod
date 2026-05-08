@@ -57,7 +57,7 @@ final class StockReviewExecutionController {
         this.host = host;
     }
 
-    void confirmPendingPurchases() {
+    void confirmPendingTrades() {
         if (pendingTrades.isEmpty()) {
             host.reopen(false);
             return;
@@ -87,11 +87,11 @@ final class StockReviewExecutionController {
 
         SectorAPI sector = host.sector();
         MarketAPI market = host.market();
-        List<StockReviewPendingPurchase> executionOrder = StockReviewTradePlanner.executionOrder(pendingTrades.asList());
+        List<StockReviewPendingTrade> executionOrder = StockReviewTradePlanner.executionOrder(pendingTrades.asList());
         StockSourceMode sourceMode = snapshot == null ? StockSourceMode.LOCAL : snapshot.getSourceMode();
         for (int i = 0; i < executionOrder.size(); i++) {
-            StockReviewPendingPurchase purchase = executionOrder.get(i);
-            StockPurchaseService.PurchaseResult result = executePendingPurchaseSafely(sector, market, purchase, sourceMode);
+            StockReviewPendingTrade trade = executionOrder.get(i);
+            StockPurchaseService.PurchaseResult result = executePendingTradeSafely(sector, market, trade, sourceMode);
             if (result == null || !result.isSuccess()) {
                 if (result != null) {
                     reportPurchaseFailure(result);
@@ -115,47 +115,47 @@ final class StockReviewExecutionController {
         host.reopen(false);
     }
 
-    private StockPurchaseService.PurchaseResult executePendingPurchaseSafely(SectorAPI sector,
-                                                                             MarketAPI market,
-                                                                             StockReviewPendingPurchase purchase,
-                                                                             StockSourceMode sourceMode) {
+    private StockPurchaseService.PurchaseResult executePendingTradeSafely(SectorAPI sector,
+                                                                          MarketAPI market,
+                                                                          StockReviewPendingTrade trade,
+                                                                          StockSourceMode sourceMode) {
         try {
-            return executePendingPurchase(sector, market, purchase, sourceMode);
+            return executePendingTrade(sector, market, trade, sourceMode);
         } catch (Throwable t) {
             LOG.error("WP_STOCK_REVIEW queued trade execution crashed item="
-                    + (purchase == null ? "null" : purchase.getItemKey())
-                    + " source=" + (purchase == null ? "null" : purchase.getSubmarketId())
-                    + " quantity=" + (purchase == null ? 0 : purchase.getQuantity())
+                    + (trade == null ? "null" : trade.getItemKey())
+                    + " source=" + (trade == null ? "null" : trade.getSubmarketId())
+                    + " quantity=" + (trade == null ? 0 : trade.getQuantity())
                     + " sourceMode=" + sourceMode, t);
             return StockPurchaseService.PurchaseResult.failure("Trade failed during execution. Check starsector.log.");
         }
     }
 
-    private StockPurchaseService.PurchaseResult executePendingPurchase(SectorAPI sector,
-                                                                       MarketAPI market,
-                                                                       StockReviewPendingPurchase purchase,
-                                                                       StockSourceMode sourceMode) {
+    private StockPurchaseService.PurchaseResult executePendingTrade(SectorAPI sector,
+                                                                    MarketAPI market,
+                                                                    StockReviewPendingTrade trade,
+                                                                    StockSourceMode sourceMode) {
         WeaponStockSnapshot snapshot = host.snapshot();
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(purchase.getItemKey());
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(trade.getItemKey());
         if (record == null) {
             return StockPurchaseService.PurchaseResult.failure("No queued item record is available.");
         }
-        if (purchase.isSell()) {
+        if (trade.isSell()) {
             if (sourceMode != null && sourceMode.isRemote()) {
-                return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -purchase.getQuantity(), false);
+                return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -trade.getQuantity(), false);
             }
-            return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -purchase.getQuantity(), state.isIncludeBlackMarket());
+            return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -trade.getQuantity(), state.isIncludeBlackMarket());
         }
         if (StockSourceMode.FIXERS.equals(sourceMode)) {
-            return purchaseService.buyItemFromFixersMarket(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
-                    virtualUnitPrice(purchase.getItemKey()), virtualUnitCargoSpace(purchase.getItemKey()));
+            return purchaseService.buyItemFromFixersMarket(sector, record.getItemType(), record.getItemId(), trade.getQuantity(),
+                    virtualUnitPrice(trade.getItemKey()), virtualUnitCargoSpace(trade.getItemKey()));
         }
         if (StockSourceMode.SECTOR.equals(sourceMode)) {
-            return purchaseService.buyItemFromSectorSources(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
-                    stockSources(purchase.getItemKey(), purchase.getSubmarketId()));
+            return purchaseService.buyItemFromSectorSources(sector, record.getItemType(), record.getItemId(), trade.getQuantity(),
+                    stockSources(trade.getItemKey(), trade.getSubmarketId()));
         }
         return purchaseService.buyCheapestItem(sector, market, record.getItemType(), record.getItemId(),
-                purchase.getQuantity(), state.isIncludeBlackMarket());
+                trade.getQuantity(), state.isIncludeBlackMarket());
     }
 
     private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {

@@ -13,16 +13,16 @@ final class StockReviewReviewListModel {
     }
 
     static List<WimGuiListRow<StockReviewAction>> build(WeaponStockSnapshot snapshot,
-                                          List<StockReviewPendingPurchase> pendingPurchases,
+                                          List<StockReviewPendingTrade> pendingTrades,
                                           StockReviewState state,
                                           StockReviewTradeContext tradeContext) {
         List<WimGuiListRow<StockReviewAction>> rows = new ArrayList<WimGuiListRow<StockReviewAction>>();
-        if (pendingPurchases == null || pendingPurchases.isEmpty()) {
+        if (pendingTrades == null || pendingTrades.isEmpty()) {
             rows.add(StockReviewListRow.empty("No weapon trades are planned."));
             return rows;
         }
-        List<StockReviewPendingPurchase> buying = reviewPurchasesForGroup(pendingPurchases, StockReviewTradeGroup.BUYING);
-        List<StockReviewPendingPurchase> selling = reviewPurchasesForGroup(pendingPurchases, StockReviewTradeGroup.SELLING);
+        List<StockReviewPendingTrade> buying = reviewTradesForGroup(pendingTrades, StockReviewTradeGroup.BUYING);
+        List<StockReviewPendingTrade> selling = reviewTradesForGroup(pendingTrades, StockReviewTradeGroup.SELLING);
         if (buying.isEmpty() && selling.isEmpty()) {
             rows.add(StockReviewListRow.empty("No weapon trades are planned."));
             return rows;
@@ -34,12 +34,12 @@ final class StockReviewReviewListModel {
 
     private static void addReviewGroup(List<WimGuiListRow<StockReviewAction>> rows,
                                        WeaponStockSnapshot snapshot,
-                                       List<StockReviewPendingPurchase> groupPurchases,
+                                       List<StockReviewPendingTrade> groupTrades,
                                        StockReviewState state,
                                        StockReviewTradeContext tradeContext,
                                        StockReviewTradeGroup tradeGroup) {
         boolean expanded = state.isExpanded(tradeGroup);
-        String label = WimGuiToggleHeading.countedLabel(tradeGroup.getLabel(), groupPurchases.size(), expanded);
+        String label = WimGuiToggleHeading.countedLabel(tradeGroup.getLabel(), groupTrades.size(), expanded);
         Color headingColor = StockReviewTradeGroup.BUYING.equals(tradeGroup)
                 ? StockReviewStyle.CONFIRM_BUTTON
                 : StockReviewStyle.CANCEL_BUTTON;
@@ -52,26 +52,26 @@ final class StockReviewReviewListModel {
         if (StockReviewTradeGroup.SELLING.equals(tradeGroup)) {
             addWorstCaseReviewRow(rows);
         }
-        for (int i = 0; i < groupPurchases.size(); i++) {
-            addReviewTrade(rows, snapshot, groupPurchases.get(i), state, tradeContext);
+        for (int i = 0; i < groupTrades.size(); i++) {
+            addReviewTrade(rows, snapshot, groupTrades.get(i), state, tradeContext);
         }
     }
 
     private static void addReviewTrade(List<WimGuiListRow<StockReviewAction>> rows,
                                        WeaponStockSnapshot snapshot,
-                                       StockReviewPendingPurchase purchase,
+                                       StockReviewPendingTrade trade,
                                        StockReviewState state,
                                        StockReviewTradeContext tradeContext) {
-        WeaponStockRecord record = snapshot.getRecord(purchase.getItemKey());
+        WeaponStockRecord record = snapshot.getRecord(trade.getItemKey());
         if (record == null) {
-            rows.add(StockReviewListRow.review(purchase.getItemKey()));
+            rows.add(StockReviewListRow.review(trade.getItemKey()));
             return;
         }
         boolean expanded = state.isItemExpanded(record.getItemKey());
-        int cost = tradeContext.transactionCostForLine(purchase.getItemKey(), purchase.getSubmarketId());
+        int cost = tradeContext.transactionCostForLine(trade.getItemKey(), trade.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                StockReviewTradeRowCells.storage(record.getStorageCount(), purchase.getQuantity(), StockReviewStyle.REVIEW_STOCK_CELL_WIDTH),
-                StockReviewTradeRowCells.plan(purchase.getQuantity(), cost));
+                StockReviewTradeRowCells.storage(record.getStorageCount(), trade.getQuantity(), StockReviewStyle.REVIEW_STOCK_CELL_WIDTH),
+                StockReviewTradeRowCells.plan(trade.getQuantity(), cost));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
                 cells, StockReviewAction.toggleItem(record.getItemKey()), StockReviewTooltips.weapon(record),
                 StockReviewStyle.SECTION_INDENT));
@@ -106,18 +106,18 @@ final class StockReviewReviewListModel {
                 StockReviewStyle.SECTION_INDENT));
     }
 
-    private static List<StockReviewPendingPurchase> reviewPurchasesForGroup(List<StockReviewPendingPurchase> pendingPurchases,
+    private static List<StockReviewPendingTrade> reviewTradesForGroup(List<StockReviewPendingTrade> pendingTrades,
                                                                             StockReviewTradeGroup tradeGroup) {
-        List<StockReviewPendingPurchase> result = new ArrayList<StockReviewPendingPurchase>();
-        if (pendingPurchases == null) {
+        List<StockReviewPendingTrade> result = new ArrayList<StockReviewPendingTrade>();
+        if (pendingTrades == null) {
             return result;
         }
-        for (int i = 0; i < pendingPurchases.size(); i++) {
-            StockReviewPendingPurchase purchase = pendingPurchases.get(i);
-            if (StockReviewTradeGroup.BUYING.equals(tradeGroup) && purchase.isBuy()) {
-                result.add(purchase);
-            } else if (StockReviewTradeGroup.SELLING.equals(tradeGroup) && purchase.isSell()) {
-                result.add(purchase);
+        for (int i = 0; i < pendingTrades.size(); i++) {
+            StockReviewPendingTrade trade = pendingTrades.get(i);
+            if (StockReviewTradeGroup.BUYING.equals(tradeGroup) && trade.isBuy()) {
+                result.add(trade);
+            } else if (StockReviewTradeGroup.SELLING.equals(tradeGroup) && trade.isSell()) {
+                result.add(trade);
             }
         }
         return result;

@@ -31,7 +31,7 @@ final class StockReviewTradeWarnings {
 
     static void update(WeaponStockSnapshot snapshot,
                        StockReviewState state,
-                       List<StockReviewPendingPurchase> pendingPurchases,
+                       List<StockReviewPendingTrade> pendingTrades,
                        String explicitWarning) {
         if (state == null) {
             return;
@@ -40,7 +40,7 @@ final class StockReviewTradeWarnings {
             state.setTradeWarning(explicitWarning);
             return;
         }
-        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingPurchases);
+        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades);
         if (tradeContext.cargoSpaceLeft() <= 0.01f
                 || tradeContext.totalCargoSpaceDelta() > tradeContext.cargoSpaceLeft() + 0.01f) {
             state.setTradeWarning(NO_CARGO_CAPACITY);
@@ -63,7 +63,7 @@ final class StockReviewTradeWarnings {
     }
 
     static String purchaseAllLimitWarning(StockReviewQuoteBook quoteBook,
-                                          List<StockReviewPendingPurchase> pendingPurchases,
+                                          List<StockReviewPendingTrade> pendingTrades,
                                           WeaponStockRecord record,
                                           StockReviewTradeContext tradeContext,
                                           int needed,
@@ -74,7 +74,7 @@ final class StockReviewTradeWarnings {
             return currentWarning;
         }
         StockReviewPortfolioQuote fullQuote = quoteBook.quotePortfolio(StockReviewTradePlanner.withAdjustment(
-                pendingPurchases,
+                pendingTrades,
                 record.getItemKey(),
                 null,
                 target));

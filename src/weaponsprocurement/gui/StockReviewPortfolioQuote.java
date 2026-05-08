@@ -14,16 +14,16 @@ final class StockReviewPortfolioQuote {
     private float totalCargoSpaceDelta = 0f;
     private boolean priceUnavailable = false;
 
-    void addLine(StockReviewPendingPurchase purchase, StockReviewQuote quote) {
-        String lineKey = lineKey(purchase.getItemKey(), purchase.getSubmarketId());
+    void addLine(StockReviewPendingTrade trade, StockReviewQuote quote) {
+        String lineKey = lineKey(trade.getItemKey(), trade.getSubmarketId());
         quotesByLine.put(lineKey, quote);
         if (quote.getCost() == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             priceUnavailable = true;
-            costByItem.put(purchase.getItemKey(), Integer.valueOf(StockReviewQuoteBook.PRICE_UNAVAILABLE));
+            costByItem.put(trade.getItemKey(), Integer.valueOf(StockReviewQuoteBook.PRICE_UNAVAILABLE));
         } else {
-            add(costByItem, purchase.getItemKey(), quote.getCost());
+            add(costByItem, trade.getItemKey(), quote.getCost());
             totalCost += quote.getCost();
-            if (purchase.isBuy()) {
+            if (trade.isBuy()) {
                 totalBuyCost += quote.getCost();
                 totalBaseBuyCost += quote.getBaseCost();
                 totalBuyQuantity += quote.getBuyQuantity();
