@@ -30,9 +30,9 @@ public final class MarketStockService {
 
     private MarketStock collectCurrentMarketStock(MarketAPI market, boolean includeBlackMarket, StockItemType itemType) {
         Map<String, Integer> totals = new HashMap<String, Integer>();
-        Map<String, List<SubmarketWeaponStock>> byWeapon = new HashMap<String, List<SubmarketWeaponStock>>();
+        Map<String, List<SubmarketWeaponStock>> byItemKey = new HashMap<String, List<SubmarketWeaponStock>>();
         if (market == null || market.getSubmarketsCopy() == null) {
-            return new MarketStock(totals, byWeapon);
+            return new MarketStock(totals, byItemKey);
         }
 
         for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
@@ -47,16 +47,16 @@ public final class MarketStockService {
                 if (!StockItemStacks.isVisibleItemStack(stack, itemType)) {
                     continue;
                 }
-                String weaponId = itemType.key(StockItemStacks.itemId(stack, itemType));
+                String itemKey = itemType.key(StockItemStacks.itemId(stack, itemType));
                 int count = Math.round(stack.getSize());
                 if (count <= 0) {
                     continue;
                 }
-                InventoryCountService.add(totals, weaponId, count);
-                List<SubmarketWeaponStock> stocks = byWeapon.get(weaponId);
+                InventoryCountService.add(totals, itemKey, count);
+                List<SubmarketWeaponStock> stocks = byItemKey.get(itemKey);
                 if (stocks == null) {
                     stocks = new ArrayList<SubmarketWeaponStock>();
-                    byWeapon.put(weaponId, stocks);
+                    byItemKey.put(itemKey, stocks);
                 }
                 stocks.add(new SubmarketWeaponStock(
                         market.getId(),
@@ -71,7 +71,7 @@ public final class MarketStockService {
             }
         }
 
-        return new MarketStock(totals, byWeapon);
+        return new MarketStock(totals, byItemKey);
     }
 
     public static boolean isTradeSubmarket(SubmarketAPI submarket, boolean includeBlackMarket) {
@@ -98,28 +98,24 @@ public final class MarketStockService {
 
     public static final class MarketStock {
         private final Map<String, Integer> totals;
-        private final Map<String, List<SubmarketWeaponStock>> byWeapon;
+        private final Map<String, List<SubmarketWeaponStock>> byItemKey;
 
-        private MarketStock(Map<String, Integer> totals, Map<String, List<SubmarketWeaponStock>> byWeapon) {
+        private MarketStock(Map<String, Integer> totals, Map<String, List<SubmarketWeaponStock>> byItemKey) {
             this.totals = totals;
-            this.byWeapon = byWeapon;
+            this.byItemKey = byItemKey;
         }
 
-        public int getTotal(String weaponId) {
-            Integer count = totals.get(weaponId);
+        public int getTotal(String itemKey) {
+            Integer count = totals.get(itemKey);
             return count == null ? 0 : count.intValue();
         }
 
-        public List<SubmarketWeaponStock> getSubmarketStocks(String weaponId) {
-            List<SubmarketWeaponStock> stocks = byWeapon.get(weaponId);
+        public List<SubmarketWeaponStock> getSubmarketStocks(String itemKey) {
+            List<SubmarketWeaponStock> stocks = byItemKey.get(itemKey);
             if (stocks == null) {
                 return Collections.emptyList();
             }
             return Collections.unmodifiableList(stocks);
-        }
-
-        public Iterable<String> weaponIds() {
-            return totals.keySet();
         }
 
         public Iterable<String> itemKeys() {
@@ -129,17 +125,17 @@ public final class MarketStockService {
 
     public static final class MarketStockBuilder {
         private final Map<String, Integer> totals = new HashMap<String, Integer>();
-        private final Map<String, List<SubmarketWeaponStock>> byWeapon = new HashMap<String, List<SubmarketWeaponStock>>();
+        private final Map<String, List<SubmarketWeaponStock>> byItemKey = new HashMap<String, List<SubmarketWeaponStock>>();
 
-        public void add(String weaponId, SubmarketWeaponStock stock) {
-            if (weaponId == null || weaponId.isEmpty() || stock == null || stock.getCount() <= 0) {
+        public void add(String itemKey, SubmarketWeaponStock stock) {
+            if (itemKey == null || itemKey.isEmpty() || stock == null || stock.getCount() <= 0) {
                 return;
             }
-            InventoryCountService.add(totals, weaponId, stock.getCount());
-            List<SubmarketWeaponStock> stocks = byWeapon.get(weaponId);
+            InventoryCountService.add(totals, itemKey, stock.getCount());
+            List<SubmarketWeaponStock> stocks = byItemKey.get(itemKey);
             if (stocks == null) {
                 stocks = new ArrayList<SubmarketWeaponStock>();
-                byWeapon.put(weaponId, stocks);
+                byItemKey.put(itemKey, stocks);
             }
             stocks.add(stock);
         }
@@ -157,7 +153,7 @@ public final class MarketStockService {
         }
 
         public MarketStock build() {
-            return new MarketStock(totals, byWeapon);
+            return new MarketStock(totals, byItemKey);
         }
     }
 }
