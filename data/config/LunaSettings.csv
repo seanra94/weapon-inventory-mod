@@ -1,7 +1,7 @@
 fieldID,fieldName,fieldType,defaultValue,secondaryValue,fieldDescription,minValue,maxValue,tab
 wp_header,Weapons Procurement,Header,Settings,,,,,
 wp_update_interval_seconds,Update interval (seconds),Double,0.20,,"How often counts refresh while paused/open trade. Lower is more responsive but can cost more CPU.",0.05,2.00,
-wp_enable_patched_badges,Enable patched cargo-cell badges,Boolean,true,,"Personal-use optional feature. The clean stock-review popup does not require this.",,,
+wp_enable_patched_badges,Enable patched cargo-cell badges,Boolean,false,,"Personal-use optional feature. The clean stock-review popup does not require this.",,,
 wp_enable_dialog_option,Enable market dialogue option,Boolean,false,,"When enabled, adds an Open ""Weapon Procurement"" option to normal market interaction dialogs. The F8 hotkey remains available.",,,
 wp_enable_sector_market,Enable Sector Market,Boolean,true,,"When enabled, the stock review source button can select the Sector Market. The Sector Market sells weapons currently present in live sector markets.",,,
 wp_enable_fixers_market,Enable Fixer's Market,Boolean,true,,"When enabled, the stock review source button can select the Fixer's Market. The Fixer's Market sells virtual stock for eligible weapons.",,,

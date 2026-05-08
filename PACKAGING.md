@@ -26,7 +26,7 @@ Include:
 - `jars/weapons-procurement.jar`
 - `mod_info.json`
 
-Do not require users to run the patcher for the clean package. The Luna setting `wp_enable_patched_badges` can stay present, but it has no visible effect without a patched core jar.
+Do not require users to run the patcher for the clean package. In clean builds, keep `wp_enable_patched_badges=false` by default.
 
 ## Patched Badge Package
 

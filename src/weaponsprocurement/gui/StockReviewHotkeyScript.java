@@ -9,8 +9,8 @@ import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 import weaponsprocurement.core.StockReviewConfig;
 import weaponsprocurement.core.SubmarketWeaponStock;
-import weaponsprocurement.core.GlobalWeaponMarketService;
 import weaponsprocurement.core.MarketStockService;
+import weaponsprocurement.internal.WeaponsProcurementConfig;
 
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
@@ -71,7 +71,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
 
         MarketAPI market = host.getCurrentMarket();
         if (!canOpenAtCurrentMarket(market)) {
-            host.addMessage("Weapon Stock Review is only available while shopping at a market or carrying weapons to sell.");
+            host.addMessage("Weapon Stock Review requires an active market or storage dialog.");
             return;
         }
         try {
@@ -97,15 +97,17 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
                     }
                 }
             }
-            MarketStockService.MarketStock globalStock =
-                    new GlobalWeaponMarketService().collectSectorWeaponStock(Global.getSector());
-            for (String ignored : globalStock.itemKeys()) {
+            if (playerHasTradeableCargo()) {
                 return true;
             }
-            return playerHasTradeableCargo();
+            return hasEnabledRemoteSource();
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    private static boolean hasEnabledRemoteSource() {
+        return WeaponsProcurementConfig.isSectorMarketEnabled() || WeaponsProcurementConfig.isFixersMarketEnabled();
     }
 
     private static boolean playerHasTradeableCargo() {
