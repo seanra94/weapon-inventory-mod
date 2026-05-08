@@ -30,6 +30,9 @@ public final class WeaponStockSnapshotBuilder {
                                      boolean includeBlackMarket,
                                      StockSourceMode sourceMode) {
         StockSourceMode resolvedSourceMode = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
+        if (!resolvedSourceMode.isEnabled()) {
+            resolvedSourceMode = StockSourceMode.LOCAL;
+        }
         OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
         DesiredStockService desiredStockService = new DesiredStockService(config);
         Map<String, Integer> owned = inventoryCountService.collectOwnedItemCounts(sector, market, ownedSourcePolicy);

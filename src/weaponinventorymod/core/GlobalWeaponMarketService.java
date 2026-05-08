@@ -29,14 +29,15 @@ public final class GlobalWeaponMarketService {
     }
 
     public MarketStockService.MarketStock collectFixersWeaponStock(SectorAPI sector) {
-        boolean includeInferred = WeaponInventoryConfig.isGlobalMarketTagInferenceEnabled();
-        float priceMultiplier = WeaponInventoryConfig.secretMarketPriceMultiplier();
-        String key = "secret|" + includeInferred + "|" + priceMultiplier;
+        boolean includeInferred = WeaponInventoryConfig.isFixersMarketTagInferenceEnabled();
+        float priceMultiplier = WeaponInventoryConfig.fixersMarketPriceMultiplier();
+        WeaponMarketBlacklist blacklist = WeaponMarketBlacklist.load();
+        String key = "fixers|" + includeInferred + "|" + priceMultiplier + "|" + blacklist.cacheKey();
         MarketStockService.MarketStock cached = cache.get(key);
         if (cached != null) {
             return cached;
         }
-        MarketStockService.MarketStock result = buildFixersWeaponStock(sector, includeInferred, priceMultiplier);
+        MarketStockService.MarketStock result = buildFixersWeaponStock(sector, includeInferred, priceMultiplier, blacklist);
         cache.put(key, result);
         return result;
     }
@@ -47,6 +48,7 @@ public final class GlobalWeaponMarketService {
      * confirmation can drain the actual remote cargo stacks.
      */
     private MarketStockService.MarketStock buildSectorWeaponStock(SectorAPI sector, float priceMultiplier) {
+        WeaponMarketBlacklist blacklist = WeaponMarketBlacklist.load();
         MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
         EconomyAPI economy = sector == null ? null : sector.getEconomy();
         List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
@@ -57,6 +59,9 @@ public final class GlobalWeaponMarketService {
             MarketAPI market = markets.get(i);
             MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketItemStock(market, true);
             for (String itemKey : stock.itemKeys()) {
+                if (blacklist.isBannedFromSector(itemKey)) {
+                    continue;
+                }
                 List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(itemKey);
                 for (int j = 0; j < sources.size(); j++) {
                     SubmarketWeaponStock source = sources.get(j);
@@ -81,7 +86,8 @@ public final class GlobalWeaponMarketService {
 
     private MarketStockService.MarketStock buildFixersWeaponStock(SectorAPI sector,
                                                                   boolean includeInferred,
-                                                                  float priceMultiplier) {
+                                                                  float priceMultiplier,
+                                                                  WeaponMarketBlacklist blacklist) {
         MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
         EconomyAPI economy = sector == null ? null : sector.getEconomy();
         List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
@@ -97,6 +103,9 @@ public final class GlobalWeaponMarketService {
             }
             MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketItemStock(market, true);
             for (String itemKey : stock.itemKeys()) {
+                if (blacklist.isBannedFromFixers(itemKey)) {
+                    continue;
+                }
                 List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(itemKey);
                 for (int j = 0; j < sources.size(); j++) {
                     SubmarketWeaponStock source = sources.get(j);
@@ -111,7 +120,7 @@ public final class GlobalWeaponMarketService {
             }
         }
         if (includeInferred) {
-            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon);
+            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon, blacklist);
         }
         for (Map.Entry<String, SubmarketWeaponStock> entry : cheapestByWeapon.entrySet()) {
             SubmarketWeaponStock source = entry.getValue();
@@ -129,7 +138,8 @@ public final class GlobalWeaponMarketService {
 
     private static void addInferredFactionWeapons(SectorAPI sector,
                                                   Set<String> activeFactionIds,
-                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon) {
+                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon,
+                                                  WeaponMarketBlacklist blacklist) {
         if (sector == null || activeFactionIds == null || activeFactionIds.isEmpty()) {
             return;
         }
@@ -137,7 +147,9 @@ public final class GlobalWeaponMarketService {
             FactionAPI faction = sector.getFaction(factionId);
             for (String weaponId : inferredWeaponIds(faction)) {
                 String itemKey = StockItemType.WEAPON.key(weaponId);
-                if (cheapestByWeapon.containsKey(itemKey) || !isSafeInferredWeapon(weaponId)) {
+                if (cheapestByWeapon.containsKey(itemKey)
+                        || blacklist.isBannedFromFixers(itemKey)
+                        || !isSafeInferredWeapon(weaponId)) {
                     continue;
                 }
                 WeaponSpecAPI spec = safeWeaponSpec(weaponId);

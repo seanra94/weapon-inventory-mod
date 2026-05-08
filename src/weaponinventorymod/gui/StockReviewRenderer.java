@@ -81,7 +81,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND,
                                 StockReviewTooltips.sort(snapshot.getSortMode())),
-                        buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + snapshot.getSourceMode().getLabel(),
+                        buttonFactory.enabledButton(StockReviewStyle.SOURCE_BUTTON_WIDTH, "Source: " + snapshot.getSourceMode().getLabel(),
                                 StockReviewAction.cycleSourceMode(), StockReviewStyle.ACTION_BACKGROUND,
                                 StockReviewTooltips.source(snapshot.getSourceMode())),
                         buttonFactory.button(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),

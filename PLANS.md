@@ -94,7 +94,7 @@
 - Added `tools\validate-live-gui-classes.ps1` after a runtime `NoClassDefFoundError` exposed stale live-jar/classloader risk. It verifies required extracted GUI helper classes exist in both repo and live jars and that repo/live SHA-256 hashes match.
 - Expanded `tools\validate-live-gui-classes.ps1` to reject stale removed GUI helper classes as well as missing required helpers, so future migrations catch old adapter classes reappearing in jars.
 - Added explicit live-jar checks for reusable nested helper interfaces such as `WimGuiButtonPoller.ActionHandler` and `WimGuiModalListLayout.ExtraGapProvider`, keeping intentional nested classes covered without allowing anonymous GUI companion drift.
-- Restored `WeaponStockSnapshotBuilder$CostComparator` as a compatibility shim delegating to the newer `PriceComparator`, after runtime sorting on the global market showed Starsector could keep stale outer-class references across hot-copied jars.
+- Restored `WeaponStockSnapshotBuilder$CostComparator` as a compatibility shim delegating to the newer `PriceComparator`, after runtime sorting on the remote market source showed Starsector could keep stale outer-class references across hot-copied jars.
 - Ported the accepted ACG GUI palette into `StockReviewStyle` and applied it to the stock review popup:
   - top stock category headings use red/yellow/green fills with white text;
   - nested toggle headings use the dark-gray collapsible heading color;
@@ -228,7 +228,8 @@
   - [x] keep `Local` as current-market stock review with the normal Black Market toggle;
   - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wim_sector_market_price_multiplier` Luna setting, defaulting to 3x;
   - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
-  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_secret_market_price_multiplier` Luna setting, defaulting to 5x;
+  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
+  - [x] add independent Luna toggles for Sector and Fixer's Market availability plus a JSON blacklist for banning weapons from either remote source;
   - [x] disable and gray out the Black Market button for non-local source modes;
   - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
 - Current requested stock-review review/buy page work queue:

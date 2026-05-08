@@ -9,20 +9,22 @@ public final class WeaponInventoryConfig {
     private static final String MOD_ID = "weapon_inventory_mod";
     private static final String SETTING_UPDATE_INTERVAL = "wim_update_interval_seconds";
     private static final String SETTING_ENABLE_PATCHED_BADGES = "wim_enable_patched_badges";
-    private static final String SETTING_ENABLE_GLOBAL_MARKET_TAG_INFERENCE = "wim_enable_global_market_tag_inference";
-    private static final String SETTING_GLOBAL_MARKET_PRICE_MULTIPLIER = "wim_global_market_price_multiplier";
+    private static final String SETTING_ENABLE_SECTOR_MARKET = "wim_enable_sector_market";
+    private static final String SETTING_ENABLE_FIXERS_MARKET = "wim_enable_fixers_market";
+    private static final String SETTING_ENABLE_FIXERS_MARKET_TAG_INFERENCE = "wim_enable_fixers_market_tag_inference";
     private static final String SETTING_SECTOR_MARKET_PRICE_MULTIPLIER = "wim_sector_market_price_multiplier";
-    private static final String SETTING_SECRET_MARKET_PRICE_MULTIPLIER = "wim_secret_market_price_multiplier";
+    private static final String SETTING_FIXERS_MARKET_PRICE_MULTIPLIER = "wim_fixers_market_price_multiplier";
     private static final String SETTING_DESIRED_SMALL_WEAPON_COUNT = "wim_desired_small_weapon_count";
     private static final String SETTING_DESIRED_MEDIUM_WEAPON_COUNT = "wim_desired_medium_weapon_count";
     private static final String SETTING_DESIRED_LARGE_WEAPON_COUNT = "wim_desired_large_weapon_count";
     private static final String SETTING_DESIRED_FIGHTER_WING_COUNT = "wim_desired_fighter_wing_count";
     private static final String KEY_UPDATE_INTERVAL = "wim.config.updateIntervalSeconds";
     private static final String KEY_PATCHED_BADGES_ENABLED = "wim.config.patchedBadgesEnabled";
-    private static final String KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED = "wim.config.globalMarketTagInferenceEnabled";
-    private static final String KEY_GLOBAL_MARKET_PRICE_MULTIPLIER = "wim.config.globalMarketPriceMultiplier";
+    private static final String KEY_SECTOR_MARKET_ENABLED = "wim.config.sectorMarketEnabled";
+    private static final String KEY_FIXERS_MARKET_ENABLED = "wim.config.fixersMarketEnabled";
+    private static final String KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED = "wim.config.fixersMarketTagInferenceEnabled";
     private static final String KEY_SECTOR_MARKET_PRICE_MULTIPLIER = "wim.config.sectorMarketPriceMultiplier";
-    private static final String KEY_SECRET_MARKET_PRICE_MULTIPLIER = "wim.config.secretMarketPriceMultiplier";
+    private static final String KEY_FIXERS_MARKET_PRICE_MULTIPLIER = "wim.config.fixersMarketPriceMultiplier";
     private static final String KEY_DESIRED_SMALL_WEAPON_COUNT = "wim.config.desiredSmallWeaponCount";
     private static final String KEY_DESIRED_MEDIUM_WEAPON_COUNT = "wim.config.desiredMediumWeaponCount";
     private static final String KEY_DESIRED_LARGE_WEAPON_COUNT = "wim.config.desiredLargeWeaponCount";
@@ -31,11 +33,10 @@ public final class WeaponInventoryConfig {
     private static final float DEFAULT_UPDATE_INTERVAL_SEC = 0.20f;
     private static final float MIN_UPDATE_INTERVAL_SEC = 0.05f;
     private static final float MAX_UPDATE_INTERVAL_SEC = 2.00f;
-    private static final float DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER = 4.00f;
     private static final float DEFAULT_SECTOR_MARKET_PRICE_MULTIPLIER = 3.00f;
-    private static final float DEFAULT_SECRET_MARKET_PRICE_MULTIPLIER = 5.00f;
-    private static final float MIN_GLOBAL_MARKET_PRICE_MULTIPLIER = 1.00f;
-    private static final float MAX_GLOBAL_MARKET_PRICE_MULTIPLIER = 20.00f;
+    private static final float DEFAULT_FIXERS_MARKET_PRICE_MULTIPLIER = 5.00f;
+    private static final float MIN_REMOTE_MARKET_PRICE_MULTIPLIER = 1.00f;
+    private static final float MAX_REMOTE_MARKET_PRICE_MULTIPLIER = 20.00f;
     private static final int DEFAULT_DESIRED_SMALL_WEAPON_COUNT = 16;
     private static final int DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT = 8;
     private static final int DEFAULT_DESIRED_LARGE_WEAPON_COUNT = 4;
@@ -57,10 +58,11 @@ public final class WeaponInventoryConfig {
     public static float refreshAndPublishSettings() {
         float effective = DEFAULT_UPDATE_INTERVAL_SEC;
         boolean badgesEnabled = true;
-        boolean globalMarketTagInferenceEnabled = true;
-        float globalMarketPriceMultiplier = DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER;
+        boolean sectorMarketEnabled = true;
+        boolean fixersMarketEnabled = true;
+        boolean fixersMarketTagInferenceEnabled = true;
         float sectorMarketPriceMultiplier = DEFAULT_SECTOR_MARKET_PRICE_MULTIPLIER;
-        float secretMarketPriceMultiplier = DEFAULT_SECRET_MARKET_PRICE_MULTIPLIER;
+        float fixersMarketPriceMultiplier = DEFAULT_FIXERS_MARKET_PRICE_MULTIPLIER;
         int desiredSmallWeaponCount = DEFAULT_DESIRED_SMALL_WEAPON_COUNT;
         int desiredMediumWeaponCount = DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT;
         int desiredLargeWeaponCount = DEFAULT_DESIRED_LARGE_WEAPON_COUNT;
@@ -74,21 +76,25 @@ public final class WeaponInventoryConfig {
             if (enabled != null) {
                 badgesEnabled = enabled.booleanValue();
             }
-            Boolean inferenceEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_GLOBAL_MARKET_TAG_INFERENCE);
-            if (inferenceEnabled != null) {
-                globalMarketTagInferenceEnabled = inferenceEnabled.booleanValue();
+            Boolean sectorEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_SECTOR_MARKET);
+            if (sectorEnabled != null) {
+                sectorMarketEnabled = sectorEnabled.booleanValue();
             }
-            Double multiplier = LunaSettings.getDouble(MOD_ID, SETTING_GLOBAL_MARKET_PRICE_MULTIPLIER);
-            if (multiplier != null) {
-                globalMarketPriceMultiplier = (float) multiplier.doubleValue();
+            Boolean fixersEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_FIXERS_MARKET);
+            if (fixersEnabled != null) {
+                fixersMarketEnabled = fixersEnabled.booleanValue();
+            }
+            Boolean inferenceEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_FIXERS_MARKET_TAG_INFERENCE);
+            if (inferenceEnabled != null) {
+                fixersMarketTagInferenceEnabled = inferenceEnabled.booleanValue();
             }
             Double sectorMultiplier = LunaSettings.getDouble(MOD_ID, SETTING_SECTOR_MARKET_PRICE_MULTIPLIER);
             if (sectorMultiplier != null) {
                 sectorMarketPriceMultiplier = (float) sectorMultiplier.doubleValue();
             }
-            Double secretMultiplier = LunaSettings.getDouble(MOD_ID, SETTING_SECRET_MARKET_PRICE_MULTIPLIER);
-            if (secretMultiplier != null) {
-                secretMarketPriceMultiplier = (float) secretMultiplier.doubleValue();
+            Double fixersMultiplier = LunaSettings.getDouble(MOD_ID, SETTING_FIXERS_MARKET_PRICE_MULTIPLIER);
+            if (fixersMultiplier != null) {
+                fixersMarketPriceMultiplier = (float) fixersMultiplier.doubleValue();
             }
             desiredSmallWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_SMALL_WEAPON_COUNT, DEFAULT_DESIRED_SMALL_WEAPON_COUNT);
             desiredMediumWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_MEDIUM_WEAPON_COUNT, DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT);
@@ -102,15 +108,15 @@ public final class WeaponInventoryConfig {
         }
 
         effective = clamp(effective, MIN_UPDATE_INTERVAL_SEC, MAX_UPDATE_INTERVAL_SEC);
-        globalMarketPriceMultiplier = clamp(globalMarketPriceMultiplier, MIN_GLOBAL_MARKET_PRICE_MULTIPLIER, MAX_GLOBAL_MARKET_PRICE_MULTIPLIER);
-        sectorMarketPriceMultiplier = clamp(sectorMarketPriceMultiplier, MIN_GLOBAL_MARKET_PRICE_MULTIPLIER, MAX_GLOBAL_MARKET_PRICE_MULTIPLIER);
-        secretMarketPriceMultiplier = clamp(secretMarketPriceMultiplier, MIN_GLOBAL_MARKET_PRICE_MULTIPLIER, MAX_GLOBAL_MARKET_PRICE_MULTIPLIER);
+        sectorMarketPriceMultiplier = clamp(sectorMarketPriceMultiplier, MIN_REMOTE_MARKET_PRICE_MULTIPLIER, MAX_REMOTE_MARKET_PRICE_MULTIPLIER);
+        fixersMarketPriceMultiplier = clamp(fixersMarketPriceMultiplier, MIN_REMOTE_MARKET_PRICE_MULTIPLIER, MAX_REMOTE_MARKET_PRICE_MULTIPLIER);
         System.setProperty(KEY_UPDATE_INTERVAL, Float.toString(effective));
         System.setProperty(KEY_PATCHED_BADGES_ENABLED, Boolean.toString(badgesEnabled));
-        System.setProperty(KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED, Boolean.toString(globalMarketTagInferenceEnabled));
-        System.setProperty(KEY_GLOBAL_MARKET_PRICE_MULTIPLIER, Float.toString(globalMarketPriceMultiplier));
+        System.setProperty(KEY_SECTOR_MARKET_ENABLED, Boolean.toString(sectorMarketEnabled));
+        System.setProperty(KEY_FIXERS_MARKET_ENABLED, Boolean.toString(fixersMarketEnabled));
+        System.setProperty(KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED, Boolean.toString(fixersMarketTagInferenceEnabled));
         System.setProperty(KEY_SECTOR_MARKET_PRICE_MULTIPLIER, Float.toString(sectorMarketPriceMultiplier));
-        System.setProperty(KEY_SECRET_MARKET_PRICE_MULTIPLIER, Float.toString(secretMarketPriceMultiplier));
+        System.setProperty(KEY_FIXERS_MARKET_PRICE_MULTIPLIER, Float.toString(fixersMarketPriceMultiplier));
         System.setProperty(KEY_DESIRED_SMALL_WEAPON_COUNT, Integer.toString(desiredSmallWeaponCount));
         System.setProperty(KEY_DESIRED_MEDIUM_WEAPON_COUNT, Integer.toString(desiredMediumWeaponCount));
         System.setProperty(KEY_DESIRED_LARGE_WEAPON_COUNT, Integer.toString(desiredLargeWeaponCount));
@@ -119,10 +125,11 @@ public final class WeaponInventoryConfig {
             configLogs++;
             LOG.info("WIM_CONFIG updateIntervalSeconds=" + effective
                     + " patchedBadgesEnabled=" + badgesEnabled
-                    + " globalMarketTagInferenceEnabled=" + globalMarketTagInferenceEnabled
-                    + " globalMarketPriceMultiplier=" + globalMarketPriceMultiplier
+                    + " sectorMarketEnabled=" + sectorMarketEnabled
+                    + " fixersMarketEnabled=" + fixersMarketEnabled
+                    + " fixersMarketTagInferenceEnabled=" + fixersMarketTagInferenceEnabled
                     + " sectorMarketPriceMultiplier=" + sectorMarketPriceMultiplier
-                    + " secretMarketPriceMultiplier=" + secretMarketPriceMultiplier
+                    + " fixersMarketPriceMultiplier=" + fixersMarketPriceMultiplier
                     + " desiredSmallWeaponCount=" + desiredSmallWeaponCount
                     + " desiredMediumWeaponCount=" + desiredMediumWeaponCount
                     + " desiredLargeWeaponCount=" + desiredLargeWeaponCount
@@ -131,28 +138,32 @@ public final class WeaponInventoryConfig {
         return effective;
     }
 
-    public static boolean isGlobalMarketTagInferenceEnabled() {
-        return Boolean.parseBoolean(System.getProperty(KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED, "true"));
+    public static boolean isSectorMarketEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KEY_SECTOR_MARKET_ENABLED, "true"));
     }
 
-    public static float globalMarketPriceMultiplier() {
-        return readMultiplier(KEY_GLOBAL_MARKET_PRICE_MULTIPLIER, DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER);
+    public static boolean isFixersMarketEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KEY_FIXERS_MARKET_ENABLED, "true"));
+    }
+
+    public static boolean isFixersMarketTagInferenceEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED, "true"));
     }
 
     public static float sectorMarketPriceMultiplier() {
         return readMultiplier(KEY_SECTOR_MARKET_PRICE_MULTIPLIER, DEFAULT_SECTOR_MARKET_PRICE_MULTIPLIER);
     }
 
-    public static float secretMarketPriceMultiplier() {
-        return readMultiplier(KEY_SECRET_MARKET_PRICE_MULTIPLIER, DEFAULT_SECRET_MARKET_PRICE_MULTIPLIER);
+    public static float fixersMarketPriceMultiplier() {
+        return readMultiplier(KEY_FIXERS_MARKET_PRICE_MULTIPLIER, DEFAULT_FIXERS_MARKET_PRICE_MULTIPLIER);
     }
 
     private static float readMultiplier(String propertyKey, float defaultValue) {
         try {
             return clamp(Float.parseFloat(System.getProperty(propertyKey,
                             Float.toString(defaultValue))),
-                    MIN_GLOBAL_MARKET_PRICE_MULTIPLIER,
-                    MAX_GLOBAL_MARKET_PRICE_MULTIPLIER);
+                    MIN_REMOTE_MARKET_PRICE_MULTIPLIER,
+                    MAX_REMOTE_MARKET_PRICE_MULTIPLIER);
         } catch (Throwable ignored) {
             return defaultValue;
         }

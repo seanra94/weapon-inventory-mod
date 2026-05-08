@@ -189,7 +189,13 @@ public final class StockReviewState implements WimGuiScrollableListState {
     }
 
     public StockSourceMode getSourceMode() {
-        return sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
+        StockSourceMode resolved = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
+        if (!resolved.isEnabled()) {
+            sourceMode = StockSourceMode.LOCAL;
+            includeBlackMarket = false;
+            return sourceMode;
+        }
+        return resolved;
     }
 
     public void cycleSourceMode() {

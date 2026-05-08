@@ -37,9 +37,9 @@ final class StockReviewListRow {
                                                             Color textColor,
                                                             StockReviewAction action,
                                                             boolean topGap,
-                                                            String tooltip,
-                                                            float indent) {
-        return row(label, StockReviewStyle.TEXT, textColor, textColor, null,
+                                                           String tooltip,
+                                                           float indent) {
+        return row(label, StockReviewStyle.TEXT, null, textColor, null,
                 indent, action, Alignment.LMID, null, topGap, tooltip);
     }
 
@@ -63,7 +63,7 @@ final class StockReviewListRow {
                                                           StockReviewAction action,
                                                           boolean topGap,
                                                           String tooltip) {
-        return row(label, StockReviewStyle.TEXT, StockReviewStyle.HEADING_BACKGROUND,
+        return row(label, StockReviewStyle.TEXT, null,
                 StockReviewStyle.HEADING_BACKGROUND, null, indent, action, Alignment.LMID,
                 null, topGap, null, rightReserveWidth, tooltip);
     }

@@ -12,6 +12,7 @@ $requiredClasses = @(
     "weaponinventorymod/gui/StockReviewPanelPlugin.class",
     "weaponinventorymod/gui/StockReviewLaunchState.class",
     "weaponinventorymod/core/GlobalWeaponMarketService.class",
+    "weaponinventorymod/core/WeaponMarketBlacklist.class",
     "weaponinventorymod/core/StockItemType.class",
     "weaponinventorymod/core/StockSourceMode.class",
     "weaponinventorymod/gui/WimGuiCampaignDialogHost.class",

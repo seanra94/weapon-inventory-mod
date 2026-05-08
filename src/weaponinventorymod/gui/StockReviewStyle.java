@@ -12,7 +12,7 @@ final class StockReviewStyle {
     static final float ACTION_ROW_HEIGHT = 28f;
     static final float FOOTER_HEIGHT = 34f;
     static final float SORT_BUTTON_WIDTH = 140f;
-    static final float GLOBAL_MARKET_BUTTON_WIDTH = 170f;
+    static final float SOURCE_BUTTON_WIDTH = 170f;
     static final float BLACK_MARKET_BUTTON_WIDTH = 160f;
     static final float FILTER_BUTTON_WIDTH = 108f;
     static final float COLOR_BUTTON_WIDTH = 82f;

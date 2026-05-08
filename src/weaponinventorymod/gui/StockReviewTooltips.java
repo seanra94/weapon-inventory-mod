@@ -33,7 +33,7 @@ final class StockReviewTooltips {
         }
         if (StockSourceMode.FIXERS.equals(resolved)) {
             return "Buy from the Fixer Market. Includes every weapon that could normally appear for sale in the sector, excluding REDACTED weapons and similar special cases. Sold weapons are deposited into either the local open market or black market, depending on whether black-market transactions are enabled. Prices are "
-                    + oneDecimal(WeaponInventoryConfig.secretMarketPriceMultiplier())
+                    + oneDecimal(WeaponInventoryConfig.fixersMarketPriceMultiplier())
                     + "x normal due to the difficulty of procuring weapons that may not be in stock anywhere.";
         }
         return "Buy from local markets. Includes weapons from the local open market, black market, and other eligible local markets, such as faction markets, if you meet their requirements. Purchased weapons are removed from the appropriate market inventory. Sold weapons are deposited into either the open market or black market, depending on whether black-market transactions are enabled.";
@@ -78,7 +78,7 @@ final class StockReviewTooltips {
         return "Extra credits paid above base weapon value due to source markup. Tariffs are much higher on the Sector Market ("
                 + oneDecimal(WeaponInventoryConfig.sectorMarketPriceMultiplier())
                 + "x) and Fixer Market ("
-                + oneDecimal(WeaponInventoryConfig.secretMarketPriceMultiplier())
+                + oneDecimal(WeaponInventoryConfig.fixersMarketPriceMultiplier())
                 + "x).";
     }
 
