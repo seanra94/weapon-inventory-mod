@@ -223,6 +223,9 @@
   - [x] keep nested `Weapon Data` rows inside their parent heading width, ending before the `Storage` cell column;
   - [x] render Weapon Data fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
 - Current requested stock-review polish/work queue:
+  - [x] keep Sector Market stock uncached across snapshot rebuilds so confirmed remote purchases are reflected immediately;
+  - [x] calculate `Tariffs Paid` / average markup from true base weapon value rather than tariff-included source prices;
+  - [x] remove stale Global-source and Sellers-section helper paths after the source split;
   - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
   - [x] title-case toggle heading labels, including `Weapon Data`;
   - [x] fix stock-review toggle headings not opening by routing enabled WIM controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;

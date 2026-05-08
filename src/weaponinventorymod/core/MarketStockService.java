@@ -51,6 +51,7 @@ public final class MarketStockService {
                         submarket.getNameOneLine(),
                         count,
                         unitPrice(submarket, stack),
+                        baseUnitPrice(stack),
                         unitCargoSpace(stack),
                         isPurchasableWeaponStack(submarket, stack)));
             }
@@ -102,6 +103,13 @@ public final class MarketStockService {
             tariff = plugin == null ? submarket.getTariff() : plugin.getTariff();
         }
         return Math.max(0, Math.round(stack.getBaseValuePerUnit() * (1f + Math.max(0f, tariff))));
+    }
+
+    public static int baseUnitPrice(CargoStackAPI stack) {
+        if (stack == null) {
+            return 0;
+        }
+        return Math.max(0, Math.round(stack.getBaseValuePerUnit()));
     }
 
     public static int sellUnitPrice(SubmarketAPI submarket, CargoStackAPI stack) {

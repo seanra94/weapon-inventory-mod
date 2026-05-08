@@ -89,51 +89,11 @@ public final class StockPurchaseService {
         return PurchaseResult.success(message, quantity, -credits);
     }
 
-    public PurchaseResult sellVirtualGlobal(SectorAPI sector,
-                                            String weaponId,
-                                            int requestedQuantity) {
-        if (sector == null) {
-            return PurchaseResult.failure("No active sector context.");
-        }
-        if (weaponId == null || weaponId.isEmpty()) {
-            return PurchaseResult.failure("No weapon selected.");
-        }
-        if (requestedQuantity <= 0) {
-            return PurchaseResult.failure("Nothing to sell.");
-        }
-
-        CampaignFleetAPI fleet = sector.getPlayerFleet();
-        CargoAPI playerCargo = fleet == null ? null : fleet.getCargo();
-        if (playerCargo == null) {
-            return PurchaseResult.failure("Player cargo is unavailable.");
-        }
-        CargoStackAPI playerStack = playerWeaponStack(playerCargo, weaponId);
-        int available = playerWeaponCount(playerCargo, weaponId);
-        if (playerStack == null || available <= 0) {
-            return PurchaseResult.failure("No player-cargo stock is available to sell.");
-        }
-
-        int quantity = Math.min(requestedQuantity, available);
-        int credits = Math.max(0, Math.round(playerStack.getBaseValuePerUnit())) * quantity;
-        playerCargo.removeWeapons(weaponId, quantity);
-        playerCargo.getCredits().add(credits);
-        playerCargo.removeEmptyStacks();
-        playerCargo.sort();
-        playerCargo.updateSpaceUsed();
-
-        String message = "Sold " + quantity + " " + weaponDisplayName(weaponId)
-                + " to the global weapon market for " + CreditFormat.creditsLong(credits) + ".";
-        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-            Global.getSector().getCampaignUI().addMessage(message);
-        }
-        return PurchaseResult.success(message, quantity, -credits);
-    }
-
-    public PurchaseResult buyVirtualGlobal(SectorAPI sector,
-                                           String weaponId,
-                                           int requestedQuantity,
-                                           int unitPrice,
-                                           float unitCargoSpace) {
+    public PurchaseResult buyFromSecretMarket(SectorAPI sector,
+                                              String weaponId,
+                                              int requestedQuantity,
+                                              int unitPrice,
+                                              float unitCargoSpace) {
         if (sector == null) {
             return PurchaseResult.failure("No active sector context.");
         }
@@ -144,7 +104,7 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("Nothing to buy.");
         }
         if (unitPrice < 0) {
-            return PurchaseResult.failure("No global-market price is available.");
+            return PurchaseResult.failure("No secret-market price is available.");
         }
 
         CampaignFleetAPI fleet = sector.getPlayerFleet();
@@ -168,7 +128,7 @@ public final class StockPurchaseService {
         playerCargo.updateSpaceUsed();
 
         String message = "Bought " + requestedQuantity + " " + weaponDisplayName(weaponId)
-                + " from the global weapon market for " + CreditFormat.creditsLong(totalCost) + ".";
+                + " from the secret market for " + CreditFormat.creditsLong(totalCost) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
             Global.getSector().getCampaignUI().addMessage(message);
         }

@@ -211,8 +211,7 @@ final class StockReviewQuoteBook {
         if (playerSellUnitPrices == null) {
             playerSellUnitPrices = StockReviewPlayerCargo.sellUnitPricesByWeapon(
                     snapshot == null ? null : snapshot.getMarket(),
-                    snapshot != null && snapshot.isIncludeBlackMarket(),
-                    false);
+                    snapshot != null && snapshot.isIncludeBlackMarket());
         }
         Integer price = playerSellUnitPrices.get(weaponId);
         int result = price == null ? -1 : price.intValue();

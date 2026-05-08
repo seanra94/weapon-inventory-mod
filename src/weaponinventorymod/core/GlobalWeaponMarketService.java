@@ -25,15 +25,7 @@ public final class GlobalWeaponMarketService {
     private final Map<String, MarketStockService.MarketStock> cache = new HashMap<String, MarketStockService.MarketStock>();
 
     public MarketStockService.MarketStock collectSectorWeaponStock(SectorAPI sector) {
-        float priceMultiplier = WeaponInventoryConfig.sectorMarketPriceMultiplier();
-        String key = "sector|" + priceMultiplier;
-        MarketStockService.MarketStock cached = cache.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        MarketStockService.MarketStock result = buildSectorWeaponStock(sector, priceMultiplier);
-        cache.put(key, result);
-        return result;
+        return buildSectorWeaponStock(sector, WeaponInventoryConfig.sectorMarketPriceMultiplier());
     }
 
     public MarketStockService.MarketStock collectSecretWeaponStock(SectorAPI sector) {
@@ -77,8 +69,8 @@ public final class GlobalWeaponMarketService {
                             source.getSubmarketId(),
                             source.getSubmarketName(),
                             source.getCount(),
-                            markedUpPrice(source.getUnitPrice(), priceMultiplier),
-                            source.getUnitPrice(),
+                            markedUpPrice(source.getBaseUnitPrice(), priceMultiplier),
+                            source.getBaseUnitPrice(),
                             source.getUnitCargoSpace(),
                             source.isPurchasable()));
                 }
@@ -127,8 +119,8 @@ public final class GlobalWeaponMarketService {
                     VIRTUAL_SUBMARKET_ID,
                     SECRET_MARKET_NAME,
                     VIRTUAL_STOCK,
-                    markedUpPrice(source.getUnitPrice(), priceMultiplier),
-                    source.getUnitPrice(),
+                    markedUpPrice(source.getBaseUnitPrice(), priceMultiplier),
+                    source.getBaseUnitPrice(),
                     source.getUnitCargoSpace(),
                     true));
         }

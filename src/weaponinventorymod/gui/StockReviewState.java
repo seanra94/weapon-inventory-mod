@@ -21,7 +21,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private int listScrollOffset = 0;
     private final Set<String> expandedWeapons = new HashSet<String>();
     private final Set<String> expandedWeaponData = new HashSet<String>();
-    private final Set<String> expandedSellers = new HashSet<String>();
     private final Set<StockReviewFilter> activeFilters = EnumSet.noneOf(StockReviewFilter.class);
     private final Map<StockReviewFilterGroup, Boolean> expandedFilterGroups = new EnumMap<StockReviewFilterGroup, Boolean>(StockReviewFilterGroup.class);
     private String tradeWarning = "None";
@@ -53,7 +52,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
         this.listScrollOffset = source.listScrollOffset;
         this.expandedWeapons.addAll(source.expandedWeapons);
         this.expandedWeaponData.addAll(source.expandedWeaponData);
-        this.expandedSellers.addAll(source.expandedSellers);
         this.activeFilters.addAll(source.activeFilters);
         this.expandedFilterGroups.putAll(source.expandedFilterGroups);
         this.tradeWarning = source.tradeWarning;
@@ -91,15 +89,9 @@ public final class StockReviewState implements WimGuiScrollableListState {
         return expandedWeaponData.contains(weaponId);
     }
 
-    public boolean isSellersExpanded(String weaponId) {
-        return expandedSellers.contains(weaponId);
-    }
-
     public void toggleWeaponSection(String weaponId, StockReviewSection section) {
         if (StockReviewSection.WEAPON_DATA.equals(section)) {
             toggleSet(expandedWeaponData, weaponId);
-        } else if (StockReviewSection.SELLERS.equals(section)) {
-            toggleSet(expandedSellers, weaponId);
         }
     }
 
@@ -163,10 +155,6 @@ public final class StockReviewState implements WimGuiScrollableListState {
             return;
         }
         includeBlackMarket = !includeBlackMarket;
-    }
-
-    public boolean isGlobalMarketMode() {
-        return getSourceMode().isRemote();
     }
 
     public StockSourceMode getSourceMode() {

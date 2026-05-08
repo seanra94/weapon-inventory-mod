@@ -52,10 +52,6 @@ public final class WeaponStockSnapshot {
         return includeBlackMarket;
     }
 
-    public boolean isGlobalMarketMode() {
-        return sourceMode.isRemote();
-    }
-
     public StockSourceMode getSourceMode() {
         return sourceMode;
     }

@@ -30,8 +30,7 @@ final class StockReviewPlayerCargo {
     }
 
     static Map<String, Integer> sellUnitPricesByWeapon(MarketAPI market,
-                                                       boolean includeBlackMarket,
-                                                       boolean globalMarketMode) {
+                                                       boolean includeBlackMarket) {
         Map<String, Integer> result = new HashMap<String, Integer>();
         CargoAPI cargo = WimGuiCampaignDialogHost.current().getPlayerCargo();
         if (cargo == null || cargo.getStacksCopy() == null) {
@@ -42,9 +41,7 @@ final class StockReviewPlayerCargo {
                 continue;
             }
             String weaponId = stack.getWeaponSpecIfWeapon().getWeaponId();
-            int unitPrice = globalMarketMode
-                    ? Math.max(0, Math.round(stack.getBaseValuePerUnit()))
-                    : bestLocalSellUnitPrice(market, stack, includeBlackMarket);
+            int unitPrice = bestLocalSellUnitPrice(market, stack, includeBlackMarket);
             if (unitPrice < 0) {
                 continue;
             }
