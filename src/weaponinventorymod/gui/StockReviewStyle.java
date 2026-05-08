@@ -45,6 +45,7 @@ final class StockReviewStyle {
     static final float WEAPON_INDENT = 18f;
     static final float SECTION_INDENT = 2f * WEAPON_INDENT;
     static final float DETAIL_INDENT = 3f * WEAPON_INDENT;
+    static final float DATA_INDENT = 4f * WEAPON_INDENT;
     static final float FOOTER_BUTTON_WIDTH = 180f;
     static final float BULK_BUTTON_WIDTH = 210f;
     static final float RESET_ALL_BUTTON_WIDTH = 150f;

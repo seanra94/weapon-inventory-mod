@@ -259,6 +259,12 @@ public final class WeaponStockRecord {
         return sustained == burst ? String.valueOf(sustained) : sustained + " (" + burst + ")";
     }
 
+    public boolean hasDifferentSustainedDamagePerSecond() {
+        return spec != null
+                && spec.getDerivedStats() != null
+                && Math.round(spec.getDerivedStats().getSustainedDps()) != Math.round(spec.getDerivedStats().getDps());
+    }
+
     public String getSustainedFluxPerSecondLabel() {
         if (spec == null || spec.getDerivedStats() == null) {
             return "?";
@@ -268,8 +274,18 @@ public final class WeaponStockRecord {
         return sustained == burst ? String.valueOf(sustained) : sustained + " (" + burst + ")";
     }
 
+    public boolean hasDifferentSustainedFluxPerSecond() {
+        return spec != null
+                && spec.getDerivedStats() != null
+                && Math.round(spec.getDerivedStats().getSustainedFluxPerSecond()) != Math.round(spec.getDerivedStats().getFluxPerSecond());
+    }
+
     public String getSustainedEmpPerSecondLabel() {
         return spec == null || spec.getDerivedStats() == null ? "?" : String.valueOf(Math.round(spec.getDerivedStats().getEmpPerSecond()));
+    }
+
+    public boolean hasDifferentSustainedEmpPerSecond() {
+        return false;
     }
 
     public String getFluxPerEmpLabel() {

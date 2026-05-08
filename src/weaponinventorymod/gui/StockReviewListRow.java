@@ -21,8 +21,26 @@ final class StockReviewListRow {
                                                      StockReviewAction action,
                                                      boolean topGap,
                                                      String tooltip) {
+        return category(label, textColor, action, topGap, tooltip, 0f);
+    }
+
+    static WimGuiListRow<StockReviewAction> categoryIndented(String label,
+                                                             Color textColor,
+                                                             StockReviewAction action,
+                                                             boolean topGap,
+                                                             String tooltip,
+                                                             float indent) {
+        return category(label, textColor, action, topGap, tooltip, indent);
+    }
+
+    private static WimGuiListRow<StockReviewAction> category(String label,
+                                                            Color textColor,
+                                                            StockReviewAction action,
+                                                            boolean topGap,
+                                                            String tooltip,
+                                                            float indent) {
         return row(label, StockReviewStyle.TEXT, textColor, textColor, null,
-                0f, action, Alignment.LMID, null, topGap, tooltip);
+                indent, action, Alignment.LMID, null, topGap, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> filterHeading(String label,
@@ -77,9 +95,17 @@ final class StockReviewListRow {
                                                    List<WimGuiRowCell<StockReviewAction>> cells,
                                                    StockReviewAction action,
                                                    String tooltip) {
+        return weapon(label, cells, action, tooltip, StockReviewStyle.WEAPON_INDENT);
+    }
+
+    static WimGuiListRow<StockReviewAction> weapon(String label,
+                                                   List<WimGuiRowCell<StockReviewAction>> cells,
+                                                   StockReviewAction action,
+                                                   String tooltip,
+                                                   float indent) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, cells, false, tooltip);
+                indent, action, Alignment.LMID, cells, false, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> labelTextIndented(String label, String value, float indent) {
@@ -116,11 +142,12 @@ final class StockReviewListRow {
                                                                  float componentWidth,
                                                                  float rightReserveWidth,
                                                                  Color valueColor) {
-        float cellWidth = componentWidth / 2f;
+        float labelWidth = componentWidth * 0.65f;
+        float valueWidth = componentWidth - labelWidth;
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.infoWithBorder(label, cellWidth,
+                WimGuiRowCell.infoWithBorder(label, labelWidth,
                         null, StockReviewStyle.TEXT, Alignment.LMID, StockReviewStyle.ROW_BORDER),
-                WimGuiRowCell.infoWithBorder(value, cellWidth,
+                WimGuiRowCell.infoWithBorder(value, valueWidth,
                         StockReviewStyle.CELL_BACKGROUND, valueColor, Alignment.MID, StockReviewStyle.ROW_BORDER));
         return row("", StockReviewStyle.TEXT, null,
                 null, null,

@@ -168,8 +168,10 @@
   - extracted trade-warning policy to `StockReviewTradeWarnings`, keeping warning text, initial credit/cargo baselines, low-balance thresholds, and purchase-all partial-fill warning detection out of `StockReviewPanelPlugin`.
 - Corrected nested weapon-row sizing:
   - removed the intermediate `Weapon Data` toggle heading;
-  - expanded weapon data rows use the shared indent-minus-width layout rule so each deeper level starts one indent farther right and shrinks by that same indent width, keeping the right edge aligned with the parent row;
+  - stock-review rows now use the shared indent-minus-width layout rule so each deeper level starts one indent farther right and shrinks by that same indent width, keeping the right edge aligned with the parent row;
+  - `Weapons/Wings`, stock categories, item rows, info headings, and data rows each occupy their own hierarchy depth;
   - added nested `Basic Info` and `Advanced Info` toggle headings under expanded weapon rows;
+  - data rows use a 65% label / 35% value split;
   - visible `Sellers` sections were removed from trade/review rows.
 - Adjusted the stock row layout after runtime width testing:
   - shrank `Storage` to fit its capped worst-case label more tightly;
