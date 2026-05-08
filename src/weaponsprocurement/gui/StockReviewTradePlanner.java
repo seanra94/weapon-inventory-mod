@@ -6,6 +6,8 @@ import weaponsprocurement.core.WeaponStockRecord;
 import weaponsprocurement.core.WeaponStockSnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 final class StockReviewTradePlanner {
@@ -58,19 +60,7 @@ final class StockReviewTradePlanner {
 
     static List<WeaponStockRecord> cheapestFirstVisibleBuyableRecords(WeaponStockSnapshot snapshot) {
         List<WeaponStockRecord> result = visibleBuyableRecords(snapshot);
-        StockReviewQuoteBook quoteBook = new StockReviewQuoteBook(snapshot);
-        for (int i = 0; i < result.size(); i++) {
-            for (int j = i + 1; j < result.size(); j++) {
-                int left = quoteBook.cheapestUnitPrice(result.get(i));
-                int right = quoteBook.cheapestUnitPrice(result.get(j));
-                if (right < left || (right == left
-                        && result.get(j).getDisplayName().compareToIgnoreCase(result.get(i).getDisplayName()) < 0)) {
-                    WeaponStockRecord temp = result.get(i);
-                    result.set(i, result.get(j));
-                    result.set(j, temp);
-                }
-            }
-        }
+        Collections.sort(result, new CheapestBuyRecordComparator(snapshot));
         return result;
     }
 
@@ -152,6 +142,23 @@ final class StockReviewTradePlanner {
             if (record.getBuyableCount() > 0 || record.getPlayerCargoCount() > 0) {
                 result.add(record);
             }
+        }
+    }
+
+    private static final class CheapestBuyRecordComparator implements Comparator<WeaponStockRecord> {
+        private final StockReviewQuoteBook quoteBook;
+
+        CheapestBuyRecordComparator(WeaponStockSnapshot snapshot) {
+            this.quoteBook = new StockReviewQuoteBook(snapshot);
+        }
+
+        @Override
+        public int compare(WeaponStockRecord left, WeaponStockRecord right) {
+            int result = Integer.compare(quoteBook.cheapestUnitPrice(left), quoteBook.cheapestUnitPrice(right));
+            if (result != 0) {
+                return result;
+            }
+            return left.getDisplayName().compareToIgnoreCase(right.getDisplayName());
         }
     }
 

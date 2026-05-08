@@ -90,19 +90,23 @@ public final class StockPurchaseService {
 
         int credits = target.unitPrice * quantity;
         int expectedMarketCount = playerItemCount(target.cargo, itemType, itemId) + quantity;
-        removeItem(playerCargo, itemType, itemId, quantity);
-        playerCargo.getCredits().add(credits);
-        tidyCargo(playerCargo);
-        addItem(target.cargo, itemType, itemId, quantity);
-        tidyCargo(target.cargo);
-        reportItemTransaction(market, target.submarket, itemType, itemId, quantity, target.unitPrice, false);
-        reconcileItemCount(target.cargo, itemType, itemId, expectedMarketCount);
+        try {
+            removeItem(playerCargo, itemType, itemId, quantity);
+            playerCargo.getCredits().add(credits);
+            tidyCargo(playerCargo);
+            addItem(target.cargo, itemType, itemId, quantity);
+            tidyCargo(target.cargo);
+            reportItemTransaction(market, target.submarket, itemType, itemId, quantity, target.unitPrice, false);
+            reconcileItemCount(target.cargo, itemType, itemId, expectedMarketCount);
 
-        String message = "Sold " + quantity + " " + itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(credits) + ".";
-        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-            Global.getSector().getCampaignUI().addMessage(message);
+            String message = "Sold " + quantity + " " + itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(credits) + ".";
+            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
+                Global.getSector().getCampaignUI().addMessage(message);
+            }
+            return PurchaseResult.success(message, quantity, -credits);
+        } catch (Throwable t) {
+            return executionFailure("sell to market", itemType, itemId, quantity, t);
         }
-        return PurchaseResult.success(message, quantity, -credits);
     }
 
     public PurchaseResult buyFromFixersMarket(SectorAPI sector,
@@ -146,18 +150,20 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
         }
 
-        addItem(playerCargo, itemType, itemId, requestedQuantity);
-        playerCargo.getCredits().subtract(totalCost);
-        playerCargo.removeEmptyStacks();
-        playerCargo.sort();
-        playerCargo.updateSpaceUsed();
+        try {
+            addItem(playerCargo, itemType, itemId, requestedQuantity);
+            playerCargo.getCredits().subtract(totalCost);
+            tidyCargo(playerCargo);
 
-        String message = "Bought " + requestedQuantity + " " + itemDisplayName(itemType, itemId)
-                + " from the fixer's market for " + CreditFormat.creditsLong(totalCost) + ".";
-        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-            Global.getSector().getCampaignUI().addMessage(message);
+            String message = "Bought " + requestedQuantity + " " + itemDisplayName(itemType, itemId)
+                    + " from the fixer's market for " + CreditFormat.creditsLong(totalCost) + ".";
+            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
+                Global.getSector().getCampaignUI().addMessage(message);
+            }
+            return PurchaseResult.success(message, requestedQuantity, totalCost);
+        } catch (Throwable t) {
+            return executionFailure("buy from fixer's market", itemType, itemId, requestedQuantity, t);
         }
-        return PurchaseResult.success(message, requestedQuantity, totalCost);
     }
 
     public PurchaseResult buyFromSectorSources(SectorAPI sector,
@@ -227,25 +233,25 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
         }
 
-        for (PurchaseLine line : plan) {
-            removeItem(line.source.cargo, itemType, itemId, line.quantity);
-            line.source.cargo.removeEmptyStacks();
-            line.source.cargo.sort();
-            line.source.cargo.updateSpaceUsed();
-            reportItemTransaction(line.source.market, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
-        }
-        addItem(playerCargo, itemType, itemId, totalQuantity);
-        playerCargo.getCredits().subtract(totalCost);
-        playerCargo.removeEmptyStacks();
-        playerCargo.sort();
-        playerCargo.updateSpaceUsed();
+        try {
+            for (PurchaseLine line : plan) {
+                removeItem(line.source.cargo, itemType, itemId, line.quantity);
+                tidyCargo(line.source.cargo);
+                reportItemTransaction(line.source.market, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
+            }
+            addItem(playerCargo, itemType, itemId, totalQuantity);
+            playerCargo.getCredits().subtract(totalCost);
+            tidyCargo(playerCargo);
 
-        String message = "Bought " + totalQuantity + " " + itemDisplayName(itemType, itemId)
-                + " from the sector market for " + CreditFormat.creditsLong(totalCost) + ".";
-        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-            Global.getSector().getCampaignUI().addMessage(message);
+            String message = "Bought " + totalQuantity + " " + itemDisplayName(itemType, itemId)
+                    + " from the sector market for " + CreditFormat.creditsLong(totalCost) + ".";
+            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
+                Global.getSector().getCampaignUI().addMessage(message);
+            }
+            return PurchaseResult.success(message, totalQuantity, totalCost);
+        } catch (Throwable t) {
+            return executionFailure("buy from sector market", itemType, itemId, totalQuantity, t);
         }
-        return PurchaseResult.success(message, totalQuantity, totalCost);
     }
 
     private PurchaseResult buyItem(SectorAPI sector,
@@ -307,24 +313,24 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("Need " + Math.round(totalSpace) + " cargo space for this order.");
         }
 
-        for (PurchaseLine line : plan) {
-            removeItem(line.source.cargo, itemType, itemId, line.quantity);
-            line.source.cargo.removeEmptyStacks();
-            line.source.cargo.sort();
-            line.source.cargo.updateSpaceUsed();
-            reportItemTransaction(market, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
-        }
-        addItem(playerCargo, itemType, itemId, totalQuantity);
-        playerCargo.getCredits().subtract(totalCost);
-        playerCargo.removeEmptyStacks();
-        playerCargo.sort();
-        playerCargo.updateSpaceUsed();
+        try {
+            for (PurchaseLine line : plan) {
+                removeItem(line.source.cargo, itemType, itemId, line.quantity);
+                tidyCargo(line.source.cargo);
+                reportItemTransaction(market, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
+            }
+            addItem(playerCargo, itemType, itemId, totalQuantity);
+            playerCargo.getCredits().subtract(totalCost);
+            tidyCargo(playerCargo);
 
-        String message = "Bought " + totalQuantity + " " + itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(totalCost) + ".";
-        if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
-            Global.getSector().getCampaignUI().addMessage(message);
+            String message = "Bought " + totalQuantity + " " + itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(totalCost) + ".";
+            if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
+                Global.getSector().getCampaignUI().addMessage(message);
+            }
+            return PurchaseResult.success(message, totalQuantity, totalCost);
+        } catch (Throwable t) {
+            return executionFailure("buy from local market", itemType, itemId, totalQuantity, t);
         }
-        return PurchaseResult.success(message, totalQuantity, totalCost);
     }
 
     private static List<PurchaseSource> collectSources(MarketAPI market,
@@ -556,6 +562,17 @@ public final class StockPurchaseService {
             LOG.warn("WP_STOCK_REVIEW transaction report failed for " + itemId
                     + " at " + submarket.getSpecId(), t);
         }
+    }
+
+    private static PurchaseResult executionFailure(String operation,
+                                                   StockItemType itemType,
+                                                   String itemId,
+                                                   int quantity,
+                                                   Throwable t) {
+        LOG.error("WP_STOCK_REVIEW trade execution failed operation=" + operation
+                + " item=" + itemType.key(itemId)
+                + " quantity=" + quantity, t);
+        return PurchaseResult.failure("Trade failed during execution. Check starsector.log.");
     }
 
     private static void addItem(CargoAPI cargo, StockItemType itemType, String itemId, int quantity) {

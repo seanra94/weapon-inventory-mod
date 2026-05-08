@@ -6,6 +6,7 @@ import weaponsprocurement.core.WeaponStockSnapshot;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -241,23 +242,20 @@ final class StockReviewQuoteBook {
     }
 
     private static void sortByPrice(List<SubmarketWeaponStock> stocks) {
-        for (int i = 0; i < stocks.size(); i++) {
-            for (int j = i + 1; j < stocks.size(); j++) {
-                if (compareSourceOrder(stocks.get(j), stocks.get(i)) < 0) {
-                    SubmarketWeaponStock temp = stocks.get(i);
-                    stocks.set(i, stocks.get(j));
-                    stocks.set(j, temp);
-                }
-            }
-        }
+        Collections.sort(stocks, SubmarketStockPriceComparator.INSTANCE);
     }
 
-    private static int compareSourceOrder(SubmarketWeaponStock left, SubmarketWeaponStock right) {
-        int result = Integer.compare(left.getUnitPrice(), right.getUnitPrice());
-        if (result != 0) {
-            return result;
+    private static final class SubmarketStockPriceComparator implements Comparator<SubmarketWeaponStock> {
+        static final SubmarketStockPriceComparator INSTANCE = new SubmarketStockPriceComparator();
+
+        @Override
+        public int compare(SubmarketWeaponStock left, SubmarketWeaponStock right) {
+            int result = Integer.compare(left.getUnitPrice(), right.getUnitPrice());
+            if (result != 0) {
+                return result;
+            }
+            return left.getDisplaySourceName().compareToIgnoreCase(right.getDisplaySourceName());
         }
-        return left.getDisplaySourceName().compareToIgnoreCase(right.getDisplaySourceName());
     }
 
     private static String lineKey(StockReviewPendingPurchase purchase) {

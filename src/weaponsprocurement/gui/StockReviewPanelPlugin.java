@@ -12,7 +12,6 @@ import weaponsprocurement.core.WeaponStockRecord;
 import weaponsprocurement.core.WeaponStockSnapshot;
 import weaponsprocurement.core.WeaponStockSnapshotBuilder;
 
-import java.awt.Color;
 import java.util.List;
 
 public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction> {
@@ -29,16 +28,9 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private final StockPurchaseService purchaseService = new StockPurchaseService();
     private final StockReviewPendingTrades pendingTrades = new StockReviewPendingTrades();
     private final MarketAPI initialMarket;
+    private final StockReviewModeController modes;
 
     private WeaponStockSnapshot snapshot;
-    private boolean reviewMode = false;
-    private boolean filterMode = false;
-    private boolean colorDebugMode = false;
-    private boolean colorDebugReturnToReview = false;
-    private int colorDebugReturnScrollOffset = 0;
-    private boolean colorDebugPersistent = false;
-    private int colorDebugTargetIndex = 0;
-    private Color colorDebugDraft = null;
 
     public StockReviewPanelPlugin(MarketAPI initialMarket, StockReviewLaunchState launchState) {
         super(
@@ -53,12 +45,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                 : new StockReviewState(launchState.getState());
         if (launchState != null) {
             this.pendingTrades.replaceWith(launchState.getPendingTrades());
-            this.reviewMode = launchState.isReviewMode();
         }
+        this.modes = new StockReviewModeController(reviewMode(launchState));
     }
 
     boolean isReviewMode() {
-        return reviewMode;
+        return modes.isReviewMode();
     }
 
     @Override
@@ -70,18 +62,17 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     @Override
     protected void onCloseRequested() {
-        if (colorDebugMode) {
-            leaveColorDebug();
+        if (modes.isColorDebugMode()) {
+            modes.leaveColorDebug(state);
             rebuildContent();
             return;
         }
-        if (filterMode) {
-            filterMode = false;
-            state.setListScrollOffset(0);
+        if (modes.isFilterMode()) {
+            modes.leaveFilters(state);
             rebuildContent();
             return;
         }
-        if (reviewMode) {
+        if (modes.isReviewMode()) {
             state.setListScrollOffset(0);
             reopen(false);
             return;
@@ -102,8 +93,13 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     @Override
     protected WimGuiListBounds renderContent(CustomPanelAPI content,
                                              List<WimGuiButtonBinding<StockReviewAction>> buttonBindings) {
-        return renderer.render(content, snapshot, state, pendingTrades.asList(), reviewMode,
-                filterMode, colorDebugMode, colorDebugTargetIndex, currentColorDebugDraft(), colorDebugPersistent, buttonBindings);
+        return renderer.render(content, snapshot, state, pendingTrades.asList(), modes.isReviewMode(),
+                modes.isFilterMode(),
+                modes.isColorDebugMode(),
+                modes.getColorDebugTargetIndex(),
+                modes.currentColorDebugDraft(),
+                modes.isColorDebugPersistent(),
+                buttonBindings);
     }
 
     @Override
@@ -164,7 +160,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             state.cycleSourceMode();
             pendingTrades.clear();
             StockReviewTradeWarnings.clear(state);
-            reviewMode = false;
+            modes.setReviewMode(false);
             state.setListScrollOffset(0);
             rebuildSnapshot();
             rebuildContent();
@@ -172,14 +168,13 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockReviewAction.Type.TOGGLE_BLACK_MARKET.equals(type)) {
             if (state.getSourceMode().isRemote()) {
-                state.toggleBlackMarket();
                 rebuildContent();
                 return;
             }
             state.toggleBlackMarket();
             pendingTrades.clear();
             StockReviewTradeWarnings.clear(state);
-            reviewMode = false;
+            modes.setReviewMode(false);
             rebuildSnapshot();
             rebuildContent();
             return;
@@ -208,10 +203,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.OPEN_FILTERS.equals(type)) {
-            filterMode = true;
-            reviewMode = false;
-            colorDebugMode = false;
-            state.setListScrollOffset(0);
+            modes.enterFilters(state);
             rebuildContent();
             return;
         }
@@ -231,55 +223,48 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.OPEN_COLOR_DEBUG.equals(type)) {
-            colorDebugReturnToReview = reviewMode;
-            colorDebugReturnScrollOffset = state.getListScrollOffset();
-            colorDebugMode = true;
-            reviewMode = false;
-            filterMode = false;
-            state.setListScrollOffset(0);
-            ensureColorDebugDraft();
+            modes.enterColorDebug(state);
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_CYCLE_TARGET.equals(type)) {
-            cycleColorDebugTarget(action.getQuantity());
+            modes.cycleColorDebugTarget(action.getQuantity());
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_TOGGLE_PERSISTENCE.equals(type)) {
-            colorDebugPersistent = !colorDebugPersistent;
+            modes.toggleColorDebugPersistence();
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_ADJUST_RED.equals(type)) {
-            colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), action.getQuantity(), 0, 0);
+            modes.adjustColorDebugDraft(action.getQuantity(), 0, 0);
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_ADJUST_GREEN.equals(type)) {
-            colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), 0, action.getQuantity(), 0);
+            modes.adjustColorDebugDraft(0, action.getQuantity(), 0);
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_ADJUST_BLUE.equals(type)) {
-            colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), 0, 0, action.getQuantity());
+            modes.adjustColorDebugDraft(0, 0, action.getQuantity());
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_APPLY.equals(type)) {
-            applyColorDebugDraft();
+            modes.applyColorDebugDraft();
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_CONFIRM.equals(type)) {
-            applyColorDebugDraft();
-            leaveColorDebug();
+            modes.applyColorDebugDraft();
+            modes.leaveColorDebug(state);
             rebuildContent();
             return;
         }
         if (StockReviewAction.Type.DEBUG_RESTORE.equals(type)) {
-            WimGuiColorDebug.Target target = WimGuiColorDebug.targetAt(colorDebugTargetIndex);
-            colorDebugDraft = target == null ? null : target.getDefaultColor();
+            modes.restoreColorDebugDraft();
             rebuildContent();
             return;
         }
@@ -297,14 +282,13 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.GO_BACK.equals(type)) {
-            if (colorDebugMode) {
-                leaveColorDebug();
+            if (modes.isColorDebugMode()) {
+                modes.leaveColorDebug(state);
                 rebuildContent();
                 return;
             }
-            if (filterMode) {
-                filterMode = false;
-                state.setListScrollOffset(0);
+            if (modes.isFilterMode()) {
+                modes.leaveFilters(state);
                 rebuildContent();
                 return;
             }
@@ -319,12 +303,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         if (StockReviewAction.Type.CLOSE.equals(type)) {
             close();
         }
-    }
-
-    private void leaveColorDebug() {
-        colorDebugMode = false;
-        reviewMode = colorDebugReturnToReview;
-        state.setListScrollOffset(colorDebugReturnScrollOffset);
     }
 
     private void addPendingTrade(StockReviewAction action) {
@@ -487,7 +465,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         StockSourceMode sourceMode = snapshot == null ? StockSourceMode.LOCAL : snapshot.getSourceMode();
         for (int i = 0; i < executionOrder.size(); i++) {
             StockReviewPendingPurchase purchase = executionOrder.get(i);
-            StockPurchaseService.PurchaseResult result = executePendingPurchase(sector, market, purchase, sourceMode);
+            StockPurchaseService.PurchaseResult result = executePendingPurchaseSafely(sector, market, purchase, sourceMode);
             if (result == null || !result.isSuccess()) {
                 if (result != null) {
                     reportPurchaseFailure(result);
@@ -500,8 +478,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         pendingTrades.clear();
         updateTradeWarning(null);
-        reviewMode = false;
-        state.setListScrollOffset(0);
+        modes.exitReview(state);
         rebuildSnapshot();
         if (StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE) {
             StockReviewHotkeyScript.requestReopen(market, state);
@@ -510,6 +487,22 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         reopen(false);
+    }
+
+    private StockPurchaseService.PurchaseResult executePendingPurchaseSafely(SectorAPI sector,
+                                                                             MarketAPI market,
+                                                                             StockReviewPendingPurchase purchase,
+                                                                             StockSourceMode sourceMode) {
+        try {
+            return executePendingPurchase(sector, market, purchase, sourceMode);
+        } catch (Throwable t) {
+            LOG.error("WP_STOCK_REVIEW queued trade execution crashed item="
+                    + (purchase == null ? "null" : purchase.getItemKey())
+                    + " source=" + (purchase == null ? "null" : purchase.getSubmarketId())
+                    + " quantity=" + (purchase == null ? 0 : purchase.getQuantity())
+                    + " sourceMode=" + sourceMode, t);
+            return StockPurchaseService.PurchaseResult.failure("Trade failed during execution. Check starsector.log.");
+        }
     }
 
     private StockPurchaseService.PurchaseResult executePendingPurchase(SectorAPI sector,
@@ -588,41 +581,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return 1f;
         }
         return Math.max(1f, record.getSubmarketStocks().get(0).getUnitCargoSpace());
-    }
-
-    private void cycleColorDebugTarget(int delta) {
-        List<WimGuiColorDebug.Target> targets = WimGuiColorDebug.targets();
-        if (targets.isEmpty()) {
-            colorDebugTargetIndex = 0;
-            colorDebugDraft = null;
-            return;
-        }
-        int size = targets.size();
-        colorDebugTargetIndex = ((colorDebugTargetIndex + delta) % size + size) % size;
-        colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex));
-    }
-
-    private Color currentColorDebugDraft() {
-        ensureColorDebugDraft();
-        return colorDebugDraft;
-    }
-
-    private void ensureColorDebugDraft() {
-        if (colorDebugDraft != null) {
-            return;
-        }
-        colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex));
-    }
-
-    private void applyColorDebugDraft() {
-        WimGuiColorDebug.Target target = WimGuiColorDebug.targetAt(colorDebugTargetIndex);
-        if (target == null) {
-            return;
-        }
-        target.apply(currentColorDebugDraft());
-        if (colorDebugPersistent) {
-            WimGuiColorDebug.save(target, currentColorDebugDraft());
-        }
     }
 
     private void refreshVanillaCargoScreen() {

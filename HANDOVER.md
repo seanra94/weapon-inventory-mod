@@ -29,6 +29,7 @@
   - `StockReviewListModel` builds Buy GUI rows and `StockReviewReviewListModel` builds Review GUI rows.
   - `StockReviewRenderer` owns the popup shell, header, action row, footer, mode-specific row selection, and stock-specific scroll rows/top gaps; `WimGuiListRow` / `WimGuiListRowRenderer`, `WimGuiModalListLayout`, `WimGuiScrollableListState`, and `WimGuiScroll` own shared row rendering, modal-list, offset preservation, and scroll-window math.
   - `StockReviewPanelPlugin` rebuilds one root content panel for state changes through `WimGuiContentPanel`.
+  - `StockReviewModeController` owns review/filter/color-debug mode state and color-debug draft/persistence state. Keep those concerns out of `StockReviewPanelPlugin`; the panel should orchestrate lifecycle, snapshot rebuilds, and trade execution rather than accumulating more mode booleans.
   - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
 - Popup button rule:
   - Buttons use real Starsector buttons with blank built-in labels plus a reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` registry as a polling fallback. In runtime, nested custom-panel controls did not reliably arrive through `buttonPressed(...)` alone.
@@ -76,10 +77,12 @@
   - `Sell All Until Sufficient` queues inventory sales only where the post-trade stock level remains sufficient;
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
+  - `StockReviewPendingTrades.removeExecuted(...)` removes by queued trade value, not list object identity. Preserve that behavior so future execution-order copies do not leave already-executed trades queued.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
   - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon data rows;
   - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants. The review `Storage` cell must stay tied to the trade-screen storage width through `StockReviewStyle.REVIEW_STOCK_CELL_WIDTH = STOCK_CELL_WIDTH`.
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
+  - trade execution must fail closed. `StockReviewPanelPlugin` catches unexpected queued-line crashes, and `StockPurchaseService` catches mutation-phase failures after validation, logs operation/item/quantity details, and returns a controlled failure message instead of letting the GUI crash.
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run. Runtime testing currently suggests expected black-market penalties fire, so do not add extra suspicion/reputation simulation unless testing proves the callback path is insufficient;
