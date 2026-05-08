@@ -230,6 +230,7 @@
   - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
   - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
   - [x] add independent Luna toggles for Sector and Fixer's Market availability plus a JSON blacklist for banning weapons from either remote source;
+  - [x] use commit `a02e507` as the confirmed-good reference for stock-review nested indentation and button right-edge sizing.
   - [x] disable and gray out the Black Market button for non-local source modes;
   - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
 - Current requested stock-review review/buy page work queue:

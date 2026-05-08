@@ -87,6 +87,7 @@
   - weapon rows, nested section rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
 - Popup visual rules:
   - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No Stock and sell/decrement controls, yellow/load for Insufficient Stock rows, green/confirm for Sufficient Stock and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
+  - Commit `a02e507` was user-confirmed as the reference point where stock-review indentation and button right-edge sizing finally worked. If future changes break nested row alignment, compare against that commit before trying a new layout theory.
   - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.

@@ -4,7 +4,6 @@ import java.awt.Color;
 
 final class StockReviewStyle {
     static final float WIDTH = 1180f;
-    static final float REVIEW_WIDTH = WIDTH * 0.5f;
     static final float HEIGHT = 640f;
     static final float PAD = 10f;
     static final float SMALL_PAD = 4f;
@@ -28,6 +27,7 @@ final class StockReviewStyle {
     static final float TRADE_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + PRICE_CELL_WIDTH
             + PLAN_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 3f * BUTTON_GAP;
     static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = STOCK_CELL_WIDTH + PLAN_CELL_WIDTH + BUTTON_GAP;
+    static final float REVIEW_WIDTH = WIDTH - TRADE_ROW_RIGHT_BLOCK_WIDTH + REVIEW_ROW_RIGHT_BLOCK_WIDTH;
     static final float DEBUG_VALUE_WIDTH = 430f;
     static final float DEBUG_SAMPLE_WIDTH = 130f;
     static final float DEBUG_DELTA_BUTTON_WIDTH = 48f;

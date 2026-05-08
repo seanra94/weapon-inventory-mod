@@ -223,20 +223,20 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
             return StockReviewStyle.CANCEL_BUTTON;
         }
         if (netCost > 0) {
-            return StockReviewStyle.BUY_BUTTON;
+            return StockReviewStyle.CANCEL_BUTTON;
         }
         if (netCost < 0) {
-            return StockReviewStyle.SELL_BUTTON;
+            return StockReviewStyle.CONFIRM_BUTTON;
         }
         return StockReviewStyle.CELL_BACKGROUND;
     }
 
     private static Color cargoDeltaFill(float cargoDelta) {
         if (cargoDelta > 0.01f) {
-            return StockReviewStyle.BUY_BUTTON;
+            return StockReviewStyle.CANCEL_BUTTON;
         }
         if (cargoDelta < -0.01f) {
-            return StockReviewStyle.SELL_BUTTON;
+            return StockReviewStyle.CONFIRM_BUTTON;
         }
         return StockReviewStyle.CELL_BACKGROUND;
     }

@@ -49,6 +49,9 @@ final class StockReviewReviewListModel {
         if (!expanded) {
             return;
         }
+        if (StockReviewTradeGroup.SELLING.equals(tradeGroup)) {
+            addWorstCaseReviewRow(rows);
+        }
         for (int i = 0; i < groupPurchases.size(); i++) {
             addReviewTrade(rows, snapshot, groupPurchases.get(i), state, tradeContext);
         }
@@ -72,13 +75,37 @@ final class StockReviewReviewListModel {
                         Alignment.LMID, StockReviewTooltips.STORAGE),
                 StockReviewListModel.planCell(purchase.getQuantity(), cost));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
-                cells, StockReviewAction.toggleWeapon(record.getWeaponId()), StockReviewTooltips.weapon(record)));
+                cells, StockReviewAction.toggleWeapon(record.getWeaponId()), StockReviewTooltips.weapon(record),
+                StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
         }
         StockReviewListModel.addWeaponData(rows, record, state,
                 StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH,
-                StockReviewStyle.REVIEW_LIST_WIDTH);
+                StockReviewStyle.REVIEW_LIST_WIDTH,
+                StockReviewStyle.DETAIL_INDENT,
+                StockReviewStyle.DATA_INDENT);
+    }
+
+    private static void addWorstCaseReviewRow(List<WimGuiListRow<StockReviewAction>> rows) {
+        List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
+                WimGuiRowCell.info("Storage: 99+ [-99+]",
+                        StockReviewStyle.STOCK_CELL_WIDTH,
+                        StockReviewStyle.CELL_BACKGROUND,
+                        StockReviewStyle.TEXT,
+                        Alignment.LMID,
+                        StockReviewTooltips.STORAGE),
+                WimGuiRowCell.info("Selling: 99+ [999,999+\u00a2]",
+                        StockReviewStyle.PLAN_CELL_WIDTH,
+                        StockReviewStyle.PLAN_NEGATIVE,
+                        StockReviewStyle.TEXT,
+                        Alignment.LMID,
+                        StockReviewTooltips.PLAN));
+        rows.add(StockReviewListRow.weapon("Suzuki-Clapteryon Thermal Prokector... (+)",
+                cells,
+                StockReviewAction.debugNoop(),
+                "Worst-case review-row width test sample. It does not affect trades.",
+                StockReviewStyle.SECTION_INDENT));
     }
 
     private static List<StockReviewPendingPurchase> reviewPurchasesForGroup(List<StockReviewPendingPurchase> pendingPurchases,
