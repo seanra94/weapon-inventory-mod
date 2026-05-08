@@ -6,6 +6,7 @@ import com.fs.starfarer.api.campaign.SubmarketPlugin;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import weaponsprocurement.core.MarketStockService;
+import weaponsprocurement.core.StockItemStacks;
 import weaponsprocurement.core.StockItemType;
 
 import java.util.HashMap;
@@ -38,11 +39,11 @@ final class StockReviewPlayerCargo {
             return result;
         }
         for (CargoStackAPI stack : cargo.getStacksCopy()) {
-            StockItemType itemType = MarketStockService.isVisibleWingStack(stack) ? StockItemType.WING : StockItemType.WEAPON;
-            if (!MarketStockService.isVisibleItemStack(stack, itemType)) {
+            StockItemType itemType = StockItemStacks.isVisibleWingStack(stack) ? StockItemType.WING : StockItemType.WEAPON;
+            if (!StockItemStacks.isVisibleItemStack(stack, itemType)) {
                 continue;
             }
-            String itemKey = itemType.key(MarketStockService.itemId(stack, itemType));
+            String itemKey = itemType.key(StockItemStacks.itemId(stack, itemType));
             int unitPrice = localSellUnitPrice(market, stack, includeBlackMarket);
             if (unitPrice < 0) {
                 continue;
@@ -74,7 +75,7 @@ final class StockReviewPlayerCargo {
             if (plugin != null && plugin.isIllegalOnSubmarket(stack, SubmarketPlugin.TransferAction.PLAYER_SELL)) {
                 continue;
             }
-            int unitPrice = MarketStockService.sellUnitPrice(submarket, stack);
+            int unitPrice = StockItemStacks.sellUnitPrice(submarket, stack);
             if (plugin != null && plugin.isBlackMarket()) {
                 bestBlackMarket = Math.max(bestBlackMarket, unitPrice);
             } else {

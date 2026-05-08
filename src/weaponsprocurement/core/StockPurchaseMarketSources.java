@@ -35,17 +35,17 @@ final class StockPurchaseMarketSources {
                 continue;
             }
             for (CargoStackAPI stack : cargo.getStacksCopy()) {
-                if (!MarketStockService.isPurchasableItemStack(submarket, stack, itemType)) {
+                if (!StockItemStacks.isPurchasableItemStack(submarket, stack, itemType)) {
                     continue;
                 }
-                if (!itemId.equals(MarketStockService.itemId(stack, itemType))) {
+                if (!itemId.equals(StockItemStacks.itemId(stack, itemType))) {
                     continue;
                 }
                 int available = Math.round(stack.getSize());
                 if (available > 0) {
                     result.add(new StockPurchaseSource(submarket, cargo, available,
-                            MarketStockService.unitPrice(submarket, stack),
-                            MarketStockService.unitCargoSpace(stack)));
+                            StockItemStacks.unitPrice(submarket, stack),
+                            StockItemStacks.unitCargoSpace(stack)));
                 }
             }
         }
@@ -76,7 +76,7 @@ final class StockPurchaseMarketSources {
             }
             result.add(new StockPurchaseSource(market, submarket, cargo, available,
                     stock.getUnitPrice(),
-                    MarketStockService.unitCargoSpace(stack)));
+                    StockItemStacks.unitCargoSpace(stack)));
         }
         return result;
     }
@@ -102,7 +102,7 @@ final class StockPurchaseMarketSources {
             if (plugin != null && plugin.isIllegalOnSubmarket(playerStack, SubmarketPlugin.TransferAction.PLAYER_SELL)) {
                 continue;
             }
-            StockSellTarget candidate = new StockSellTarget(submarket, cargo, MarketStockService.sellUnitPrice(submarket, playerStack));
+            StockSellTarget candidate = new StockSellTarget(submarket, cargo, StockItemStacks.sellUnitPrice(submarket, playerStack));
             if (plugin != null && plugin.isBlackMarket()) {
                 bestBlackMarket = betterSellTarget(bestBlackMarket, candidate);
             } else {

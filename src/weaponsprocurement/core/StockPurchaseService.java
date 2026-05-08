@@ -81,23 +81,7 @@ public final class StockPurchaseService {
             return PurchaseResult.failure("No valid market buyer is available.");
         }
 
-        int credits = target.unitPrice * quantity;
-        int expectedMarketCount = StockItemCargo.itemCount(target.cargo, itemType, itemId) + quantity;
-        try {
-            StockItemCargo.removeItem(playerCargo, itemType, itemId, quantity);
-            playerCargo.getCredits().add(credits);
-            StockItemCargo.tidyCargo(playerCargo);
-            StockItemCargo.addItem(target.cargo, itemType, itemId, quantity);
-            StockItemCargo.tidyCargo(target.cargo);
-            StockMarketTransactionReporter.reportItemTransaction(LOG, market, target.submarket, itemType, itemId, quantity, target.unitPrice, false);
-            StockItemCargo.reconcileItemCount(target.cargo, itemType, itemId, expectedMarketCount);
-
-            String message = "Sold " + quantity + " " + StockItemCargo.itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(credits) + ".";
-            StockPurchaseChecks.addCampaignMessage(message);
-            return PurchaseResult.success(message, quantity, -credits);
-        } catch (Throwable t) {
-            return executionFailure("sell to market", itemType, itemId, quantity, t);
-        }
+        return StockPurchaseExecutor.sellToMarket(LOG, market, playerCargo, target, itemType, itemId, quantity);
     }
 
     public PurchaseResult buyFromFixersMarket(SectorAPI sector,
@@ -142,18 +126,7 @@ public final class StockPurchaseService {
             return validation;
         }
 
-        try {
-            StockItemCargo.addItem(playerCargo, itemType, itemId, requestedQuantity);
-            playerCargo.getCredits().subtract(totalCost);
-            StockItemCargo.tidyCargo(playerCargo);
-
-            String message = "Bought " + requestedQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
-                    + " from the fixer's market for " + CreditFormat.creditsLong(totalCost) + ".";
-            StockPurchaseChecks.addCampaignMessage(message);
-            return PurchaseResult.success(message, requestedQuantity, totalCost);
-        } catch (Throwable t) {
-            return executionFailure("buy from fixer's market", itemType, itemId, requestedQuantity, t);
-        }
+        return StockPurchaseExecutor.buyFromFixersMarket(LOG, playerCargo, itemType, itemId, requestedQuantity, totalCost);
     }
 
     public PurchaseResult buyFromSectorSources(SectorAPI sector,
@@ -206,7 +179,7 @@ public final class StockPurchaseService {
             return validation;
         }
 
-        return executeBuyPlan(playerCargo, null, itemType, itemId, plan, " from the sector market", "buy from sector market");
+        return StockPurchaseExecutor.buyPlan(LOG, playerCargo, null, itemType, itemId, plan, " from the sector market", "buy from sector market");
     }
 
     private PurchaseResult buyItem(SectorAPI sector,
@@ -251,45 +224,7 @@ public final class StockPurchaseService {
             return validation;
         }
 
-        return executeBuyPlan(playerCargo, market, itemType, itemId, plan, "", "buy from local market");
-    }
-
-    private PurchaseResult executeBuyPlan(CargoAPI playerCargo,
-                                          MarketAPI fallbackMarket,
-                                          StockItemType itemType,
-                                          String itemId,
-                                          StockPurchasePlan plan,
-                                          String sourceLabel,
-                                          String operation) {
-        try {
-            for (StockPurchaseLine line : plan.lines) {
-                StockItemCargo.removeItem(line.source.cargo, itemType, itemId, line.quantity);
-                StockItemCargo.tidyCargo(line.source.cargo);
-                MarketAPI reportMarket = line.source.market == null ? fallbackMarket : line.source.market;
-                StockMarketTransactionReporter.reportItemTransaction(LOG, reportMarket, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
-            }
-            StockItemCargo.addItem(playerCargo, itemType, itemId, plan.totalQuantity);
-            playerCargo.getCredits().subtract(plan.totalCost);
-            StockItemCargo.tidyCargo(playerCargo);
-
-            String message = "Bought " + plan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
-                    + sourceLabel + " for " + CreditFormat.creditsLong(plan.totalCost) + ".";
-            StockPurchaseChecks.addCampaignMessage(message);
-            return PurchaseResult.success(message, plan.totalQuantity, plan.totalCost);
-        } catch (Throwable t) {
-            return executionFailure(operation, itemType, itemId, plan.totalQuantity, t);
-        }
-    }
-
-    private static PurchaseResult executionFailure(String operation,
-                                                   StockItemType itemType,
-                                                   String itemId,
-                                                   int quantity,
-                                                   Throwable t) {
-        LOG.error("WP_STOCK_REVIEW trade execution failed operation=" + operation
-                + " item=" + itemType.key(itemId)
-                + " quantity=" + quantity, t);
-        return PurchaseResult.failure("Trade failed during execution. Check starsector.log.");
+        return StockPurchaseExecutor.buyPlan(LOG, playerCargo, market, itemType, itemId, plan, "", "buy from local market");
     }
 
     public static final class PurchaseResult {

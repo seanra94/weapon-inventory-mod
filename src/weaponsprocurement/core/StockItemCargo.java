@@ -13,7 +13,7 @@ final class StockItemCargo {
             return null;
         }
         for (CargoStackAPI stack : cargo.getStacksCopy()) {
-            if (MarketStockService.isVisibleItemStack(stack, itemType) && itemId.equals(MarketStockService.itemId(stack, itemType))) {
+            if (StockItemStacks.isVisibleItemStack(stack, itemType) && itemId.equals(StockItemStacks.itemId(stack, itemType))) {
                 return stack;
             }
         }
@@ -26,7 +26,7 @@ final class StockItemCargo {
             return count;
         }
         for (CargoStackAPI stack : cargo.getStacksCopy()) {
-            if (MarketStockService.isVisibleItemStack(stack, itemType) && itemId.equals(MarketStockService.itemId(stack, itemType))) {
+            if (StockItemStacks.isVisibleItemStack(stack, itemType) && itemId.equals(StockItemStacks.itemId(stack, itemType))) {
                 count += Math.round(stack.getSize());
             }
         }

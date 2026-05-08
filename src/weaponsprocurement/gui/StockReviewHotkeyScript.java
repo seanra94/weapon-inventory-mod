@@ -10,6 +10,7 @@ import org.lwjgl.input.Keyboard;
 import weaponsprocurement.core.StockReviewConfig;
 import weaponsprocurement.core.SubmarketWeaponStock;
 import weaponsprocurement.core.MarketStockService;
+import weaponsprocurement.core.StockItemStacks;
 import weaponsprocurement.internal.WeaponsProcurementConfig;
 
 public final class StockReviewHotkeyScript implements EveryFrameScript {
@@ -119,7 +120,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             return false;
         }
         for (CargoStackAPI stack : cargo.getStacksCopy()) {
-            if (MarketStockService.isVisibleWeaponStack(stack) || MarketStockService.isVisibleWingStack(stack)) {
+            if (StockItemStacks.isVisibleWeaponStack(stack) || StockItemStacks.isVisibleWingStack(stack)) {
                 return true;
             }
         }
