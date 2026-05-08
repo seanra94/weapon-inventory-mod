@@ -239,19 +239,11 @@ final class StockReviewQuoteBook {
     }
 
     private static int compareSourceOrder(SubmarketWeaponStock left, SubmarketWeaponStock right) {
-        int result = Boolean.compare(isBlackMarket(left), isBlackMarket(right));
-        if (result != 0) {
-            return result;
-        }
-        result = Integer.compare(left.getUnitPrice(), right.getUnitPrice());
+        int result = Integer.compare(left.getUnitPrice(), right.getUnitPrice());
         if (result != 0) {
             return result;
         }
         return left.getDisplaySourceName().compareToIgnoreCase(right.getDisplaySourceName());
-    }
-
-    private static boolean isBlackMarket(SubmarketWeaponStock stock) {
-        return stock != null && weaponinventorymod.core.MarketStockService.isBlackMarketSubmarket(stock.getSubmarketId());
     }
 
     private static String lineKey(StockReviewPendingPurchase purchase) {

@@ -1,5 +1,6 @@
 param(
-    [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY
+    [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY,
+    [switch]$SkipClean
 )
 
 if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
@@ -50,7 +51,9 @@ $jarPath = Join-Path $jarDir "weapon-inventory-mod.jar"
 New-Item -ItemType Directory -Force -Path $classesDir | Out-Null
 New-Item -ItemType Directory -Force -Path $jarDir | Out-Null
 
-Get-ChildItem -Path $classesDir -Recurse -File -ErrorAction SilentlyContinue | Remove-Item -Force
+if (-not $SkipClean) {
+    Get-ChildItem -Path $classesDir -Recurse -File -ErrorAction SilentlyContinue | Remove-Item -Force
+}
 
 $sources = @(Get-ChildItem -Path $srcDir -Recurse -Filter *.java | Select-Object -ExpandProperty FullName)
 if ($sources.Count -eq 0) {
@@ -63,13 +66,19 @@ if ($LASTEXITCODE -ne 0) {
     throw "javac failed with exit code $LASTEXITCODE."
 }
 
-if (Test-Path -LiteralPath $jarPath) {
-    Remove-Item -LiteralPath $jarPath -Force
-}
-
-& jar cf $jarPath -C $classesDir .
+$tempJarPath = Join-Path (Join-Path $PSScriptRoot "build") ("weapon-inventory-mod." + [guid]::NewGuid().ToString("N") + ".tmp.jar")
+& jar cf $tempJarPath -C $classesDir .
 if ($LASTEXITCODE -ne 0) {
     throw "jar failed with exit code $LASTEXITCODE."
 }
+
+$jarBytes = [System.IO.File]::ReadAllBytes($tempJarPath)
+$jarStream = [System.IO.File]::Open($jarPath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::Read)
+try {
+    $jarStream.Write($jarBytes, 0, $jarBytes.Length)
+} finally {
+    $jarStream.Close()
+}
+Remove-Item -LiteralPath $tempJarPath -Force -ErrorAction SilentlyContinue
 
 Write-Host "Built $jarPath"

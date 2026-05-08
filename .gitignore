@@ -2,3 +2,4 @@ build/
 tools/patcher/build/
 *.class
 *.wim_tmp
+jars/*.tmp.jar

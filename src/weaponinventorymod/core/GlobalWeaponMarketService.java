@@ -192,19 +192,11 @@ public final class GlobalWeaponMarketService {
     }
 
     private static int compareReferenceSource(SubmarketWeaponStock left, SubmarketWeaponStock right) {
-        int result = Boolean.compare(isBlackMarket(left), isBlackMarket(right));
-        if (result != 0) {
-            return result;
-        }
-        result = Integer.compare(left.getBaseUnitPrice(), right.getBaseUnitPrice());
+        int result = Integer.compare(left.getBaseUnitPrice(), right.getBaseUnitPrice());
         if (result != 0) {
             return result;
         }
         return left.getDisplaySourceName().compareToIgnoreCase(right.getDisplaySourceName());
-    }
-
-    private static boolean isBlackMarket(SubmarketWeaponStock stock) {
-        return stock != null && MarketStockService.isBlackMarketSubmarket(stock.getSubmarketId());
     }
 
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {

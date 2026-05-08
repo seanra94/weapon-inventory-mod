@@ -531,21 +531,11 @@ public final class StockPurchaseService {
 
         @Override
         public int compare(PurchaseSource left, PurchaseSource right) {
-            int result = Boolean.compare(isBlackMarket(left), isBlackMarket(right));
-            if (result != 0) {
-                return result;
-            }
-            result = Integer.compare(left.unitPrice, right.unitPrice);
+            int result = Integer.compare(left.unitPrice, right.unitPrice);
             if (result != 0) {
                 return result;
             }
             return sourceName(left).compareToIgnoreCase(sourceName(right));
-        }
-
-        private static boolean isBlackMarket(PurchaseSource source) {
-            return source != null
-                    && source.submarket != null
-                    && MarketStockService.isBlackMarketSubmarket(source.submarket.getSpecId());
         }
 
         private static String sourceName(PurchaseSource source) {
