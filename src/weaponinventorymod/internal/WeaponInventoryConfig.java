@@ -16,6 +16,7 @@ public final class WeaponInventoryConfig {
     private static final String SETTING_DESIRED_SMALL_WEAPON_COUNT = "wim_desired_small_weapon_count";
     private static final String SETTING_DESIRED_MEDIUM_WEAPON_COUNT = "wim_desired_medium_weapon_count";
     private static final String SETTING_DESIRED_LARGE_WEAPON_COUNT = "wim_desired_large_weapon_count";
+    private static final String SETTING_DESIRED_FIGHTER_WING_COUNT = "wim_desired_fighter_wing_count";
     private static final String KEY_UPDATE_INTERVAL = "wim.config.updateIntervalSeconds";
     private static final String KEY_PATCHED_BADGES_ENABLED = "wim.config.patchedBadgesEnabled";
     private static final String KEY_GLOBAL_MARKET_TAG_INFERENCE_ENABLED = "wim.config.globalMarketTagInferenceEnabled";
@@ -25,6 +26,7 @@ public final class WeaponInventoryConfig {
     private static final String KEY_DESIRED_SMALL_WEAPON_COUNT = "wim.config.desiredSmallWeaponCount";
     private static final String KEY_DESIRED_MEDIUM_WEAPON_COUNT = "wim.config.desiredMediumWeaponCount";
     private static final String KEY_DESIRED_LARGE_WEAPON_COUNT = "wim.config.desiredLargeWeaponCount";
+    private static final String KEY_DESIRED_FIGHTER_WING_COUNT = "wim.config.desiredFighterWingCount";
 
     private static final float DEFAULT_UPDATE_INTERVAL_SEC = 0.20f;
     private static final float MIN_UPDATE_INTERVAL_SEC = 0.05f;
@@ -37,6 +39,7 @@ public final class WeaponInventoryConfig {
     private static final int DEFAULT_DESIRED_SMALL_WEAPON_COUNT = 16;
     private static final int DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT = 8;
     private static final int DEFAULT_DESIRED_LARGE_WEAPON_COUNT = 4;
+    private static final int DEFAULT_DESIRED_FIGHTER_WING_COUNT = 4;
     private static final int MIN_DESIRED_WEAPON_COUNT = 0;
     private static final int MAX_DESIRED_WEAPON_COUNT = 999;
     private static final int MAX_CONFIG_LOGS = 10;
@@ -61,6 +64,7 @@ public final class WeaponInventoryConfig {
         int desiredSmallWeaponCount = DEFAULT_DESIRED_SMALL_WEAPON_COUNT;
         int desiredMediumWeaponCount = DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT;
         int desiredLargeWeaponCount = DEFAULT_DESIRED_LARGE_WEAPON_COUNT;
+        int desiredFighterWingCount = DEFAULT_DESIRED_FIGHTER_WING_COUNT;
         try {
             Double value = LunaSettings.getDouble(MOD_ID, SETTING_UPDATE_INTERVAL);
             if (value != null) {
@@ -89,6 +93,7 @@ public final class WeaponInventoryConfig {
             desiredSmallWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_SMALL_WEAPON_COUNT, DEFAULT_DESIRED_SMALL_WEAPON_COUNT);
             desiredMediumWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_MEDIUM_WEAPON_COUNT, DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT);
             desiredLargeWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_LARGE_WEAPON_COUNT, DEFAULT_DESIRED_LARGE_WEAPON_COUNT);
+            desiredFighterWingCount = readDesiredWeaponCount(SETTING_DESIRED_FIGHTER_WING_COUNT, DEFAULT_DESIRED_FIGHTER_WING_COUNT);
         } catch (Throwable t) {
             if (!configErrorLogged) {
                 configErrorLogged = true;
@@ -109,6 +114,7 @@ public final class WeaponInventoryConfig {
         System.setProperty(KEY_DESIRED_SMALL_WEAPON_COUNT, Integer.toString(desiredSmallWeaponCount));
         System.setProperty(KEY_DESIRED_MEDIUM_WEAPON_COUNT, Integer.toString(desiredMediumWeaponCount));
         System.setProperty(KEY_DESIRED_LARGE_WEAPON_COUNT, Integer.toString(desiredLargeWeaponCount));
+        System.setProperty(KEY_DESIRED_FIGHTER_WING_COUNT, Integer.toString(desiredFighterWingCount));
         if (configLogs < MAX_CONFIG_LOGS) {
             configLogs++;
             LOG.info("WIM_CONFIG updateIntervalSeconds=" + effective
@@ -119,7 +125,8 @@ public final class WeaponInventoryConfig {
                     + " secretMarketPriceMultiplier=" + secretMarketPriceMultiplier
                     + " desiredSmallWeaponCount=" + desiredSmallWeaponCount
                     + " desiredMediumWeaponCount=" + desiredMediumWeaponCount
-                    + " desiredLargeWeaponCount=" + desiredLargeWeaponCount);
+                    + " desiredLargeWeaponCount=" + desiredLargeWeaponCount
+                    + " desiredFighterWingCount=" + desiredFighterWingCount);
         }
         return effective;
     }
@@ -161,6 +168,10 @@ public final class WeaponInventoryConfig {
 
     public static int desiredLargeWeaponCount(int fallback) {
         return readPublishedDesiredWeaponCount(KEY_DESIRED_LARGE_WEAPON_COUNT, fallback);
+    }
+
+    public static int desiredFighterWingCount(int fallback) {
+        return readPublishedDesiredWeaponCount(KEY_DESIRED_FIGHTER_WING_COUNT, fallback);
     }
 
     private static int readDesiredWeaponCount(String settingId, int defaultValue) {

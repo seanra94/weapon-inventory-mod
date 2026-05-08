@@ -24,6 +24,7 @@
 - Current config baseline:
   - LunaLib dependency is present;
   - Luna settings control updater interval and whether optional patched cargo-cell badges are enabled.
+  - Luna settings now include sufficient-stock thresholds for small/medium/large weapons and fighter LPCs.
 
 ## Completed Meaningful Work
 
@@ -183,6 +184,12 @@
   - `Buying`/`Selling` row cells are left-aligned with standard internal padding;
   - `Price` cells are wider, with the extra width taken from the weapon heading area;
   - buy-side controls use yellow, sell-side controls use purple, and general top/footer controls use the dark-gray heading color.
+- Added first fighter LPC/wing support to the clean stock-review popup:
+  - snapshot records now have a `StockItemType` and use type-prefixed internal keys;
+  - local, Sector Market, and Fixer's Market stock scans include visible fighter LPC stacks as well as weapons;
+  - player cargo and accessible storage counts include fighter LPC stacks;
+  - the Buy GUI renders top-level `Weapons` and `Wings` toggle headings, each with the usual stock categories beneath;
+  - wing rows share the same queue/review/confirm trade flow as weapons and use wing-specific detail rows.
 
 ## Active Manual Validation
 

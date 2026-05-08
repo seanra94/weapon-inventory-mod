@@ -55,15 +55,15 @@ public final class GlobalWeaponMarketService {
         }
         for (int i = 0; i < markets.size(); i++) {
             MarketAPI market = markets.get(i);
-            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketWeaponStock(market, true);
-            for (String weaponId : stock.weaponIds()) {
-                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(weaponId);
+            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketItemStock(market, true);
+            for (String itemKey : stock.itemKeys()) {
+                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(itemKey);
                 for (int j = 0; j < sources.size(); j++) {
                     SubmarketWeaponStock source = sources.get(j);
                     if (source.getCount() <= 0) {
                         continue;
                     }
-                    builder.add(weaponId, new SubmarketWeaponStock(
+                    builder.add(itemKey, new SubmarketWeaponStock(
                             source.getMarketId(),
                             source.getMarketName(),
                             source.getSubmarketId(),
@@ -95,17 +95,17 @@ public final class GlobalWeaponMarketService {
             if (market != null && market.getFactionId() != null && !market.getFactionId().isEmpty()) {
                 activeFactionIds.add(market.getFactionId());
             }
-            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketWeaponStock(market, true);
-            for (String weaponId : stock.weaponIds()) {
-                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(weaponId);
+            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketItemStock(market, true);
+            for (String itemKey : stock.itemKeys()) {
+                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(itemKey);
                 for (int j = 0; j < sources.size(); j++) {
                     SubmarketWeaponStock source = sources.get(j);
                     if (source.getCount() <= 0) {
                         continue;
                     }
-                    SubmarketWeaponStock current = cheapestByWeapon.get(weaponId);
+                    SubmarketWeaponStock current = cheapestByWeapon.get(itemKey);
                     if (current == null || compareReferenceSource(source, current) < 0) {
-                        cheapestByWeapon.put(weaponId, source);
+                        cheapestByWeapon.put(itemKey, source);
                     }
                 }
             }
@@ -136,14 +136,15 @@ public final class GlobalWeaponMarketService {
         for (String factionId : activeFactionIds) {
             FactionAPI faction = sector.getFaction(factionId);
             for (String weaponId : inferredWeaponIds(faction)) {
-                if (cheapestByWeapon.containsKey(weaponId) || !isSafeInferredWeapon(weaponId)) {
+                String itemKey = StockItemType.WEAPON.key(weaponId);
+                if (cheapestByWeapon.containsKey(itemKey) || !isSafeInferredWeapon(weaponId)) {
                     continue;
                 }
                 WeaponSpecAPI spec = safeWeaponSpec(weaponId);
                 if (spec == null) {
                     continue;
                 }
-                cheapestByWeapon.put(weaponId, new SubmarketWeaponStock(
+                cheapestByWeapon.put(itemKey, new SubmarketWeaponStock(
                         VIRTUAL_SUBMARKET_ID,
                         FIXERS_MARKET_NAME,
                         VIRTUAL_STOCK,

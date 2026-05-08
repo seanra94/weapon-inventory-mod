@@ -10,6 +10,7 @@
 - Terminology:
   - `Buy GUI` means the main `F8` stock-review screen.
   - `Review GUI` means the planned-trade review screen opened from the Buy GUI.
+  - `stock item` means either a weapon or fighter LPC/wing in the clean popup. Runtime trade state uses type-prefixed item keys internally (`W:` / `F:`) so a weapon id and wing id cannot collide.
   - `main headings` / `top level headings` means `No Stock`, `Insufficient Stock`, and `Sufficient Stock`.
   - `weapon entries` means rows under those main headings, such as `Light Needler (-)` plus stock, plan, cost/profit, and buy/sell controls.
 - Popup configuration lives in `data/config/weapon_inventory_stock.json`:
@@ -35,6 +36,7 @@
   - Clickable rows/buttons now use blank Starsector button text with WIM-rendered labels layered separately, so hover/base colors stay ACG-like while visible text remains white/gray under WIM control.
 - Popup scope:
   - The old display-mode button and config mode were removed. The Buy GUI should show only weapons that are buyable from the active stock source or present in player inventory and therefore sellable through the GUI.
+  - The Buy GUI now has top-level `Weapons` and `Wings` toggle headings. Each section then renders the usual `No Stock`, `Insufficient Stock`, and `Sufficient Stock` headings. Weapon filters apply only to weapons; wings remain visible while weapon filters are active until wing-specific filters are deliberately added.
   - Stored-only weapons should not create rows. The `Storage` cell may still show full owned stock, including accessible storage, for a weapon that appears because it is buyable or in player inventory.
   - Local stock collection, local buys, local sells, and sell-price quoting should all use `MarketStockService.isTradeSubmarket(...)` for storage/local-resource/black-market filtering. Do not copy that submarket filter into each caller.
 - Stock source modes:
@@ -59,6 +61,7 @@
 - Popup purchase flow:
   - weapon entries in the Buy GUI use a signed `Plan`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
   - top-level buy buttons queue pending buys from cheapest eligible current-market seller stock;
+  - the same queued trade/review/confirm path is used for weapons and fighter LPCs; cargo mutation branches only at the final `StockPurchaseService` add/remove/report step.
   - visible Seller rows were removed from the Buy and Review GUIs. Generic buy allocation still tracks source stock internally through the quote/purchase services, but the user-facing row model should not reintroduce seller-detail sections unless that feature is explicitly reopened.
   - sell buttons queue pending sells from player cargo only, not broader owned stock that may include market storage;
   - row-level buy/sell adjustment buttons first unwind the opposite queued plan before adding a real buy/sell. Example: if 5 weapons are queued to buy, row `-1` / dynamic `-5` remove those queued buys rather than requiring existing player cargo.

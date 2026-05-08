@@ -84,9 +84,9 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
         }
         try {
             StockReviewConfig config = StockReviewConfig.load();
-            MarketStockService.MarketStock stock = new MarketStockService().collectCurrentMarketWeaponStock(market, config.isIncludeBlackMarket());
-            for (String weaponId : stock.weaponIds()) {
-                for (SubmarketWeaponStock submarketStock : stock.getSubmarketStocks(weaponId)) {
+            MarketStockService.MarketStock stock = new MarketStockService().collectCurrentMarketItemStock(market, config.isIncludeBlackMarket());
+            for (String itemKey : stock.itemKeys()) {
+                for (SubmarketWeaponStock submarketStock : stock.getSubmarketStocks(itemKey)) {
                     if (submarketStock.isPurchasable() && submarketStock.getCount() > 0) {
                         return true;
                     }
@@ -94,16 +94,16 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             }
             MarketStockService.MarketStock globalStock =
                     new GlobalWeaponMarketService().collectSectorWeaponStock(Global.getSector());
-            for (String ignored : globalStock.weaponIds()) {
+            for (String ignored : globalStock.itemKeys()) {
                 return true;
             }
-            return playerHasWeaponCargo();
+            return playerHasTradeableCargo();
         } catch (Throwable ignored) {
             return false;
         }
     }
 
-    private static boolean playerHasWeaponCargo() {
+    private static boolean playerHasTradeableCargo() {
         if (Global.getSector() == null || Global.getSector().getPlayerFleet() == null) {
             return false;
         }
@@ -112,7 +112,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             return false;
         }
         for (CargoStackAPI stack : cargo.getStacksCopy()) {
-            if (MarketStockService.isVisibleWeaponStack(stack)) {
+            if (MarketStockService.isVisibleWeaponStack(stack) || MarketStockService.isVisibleWingStack(stack)) {
                 return true;
             }
         }

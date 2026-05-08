@@ -223,7 +223,7 @@ final class StockReviewQuoteBook {
             return cached.intValue();
         }
         if (playerSellUnitPrices == null) {
-            playerSellUnitPrices = StockReviewPlayerCargo.sellUnitPricesByWeapon(
+            playerSellUnitPrices = StockReviewPlayerCargo.sellUnitPricesByItem(
                     snapshot == null ? null : snapshot.getMarket(),
                     snapshot != null && snapshot.isIncludeBlackMarket());
         }

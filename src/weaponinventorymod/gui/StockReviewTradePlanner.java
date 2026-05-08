@@ -1,6 +1,7 @@
 package weaponinventorymod.gui;
 
 import weaponinventorymod.core.StockCategory;
+import weaponinventorymod.core.StockItemType;
 import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
@@ -21,6 +22,15 @@ final class StockReviewTradePlanner {
             return result;
         }
         addVisibleTradeableRecords(result, snapshot.getRecords(category));
+        return result;
+    }
+
+    static List<WeaponStockRecord> visibleTradeableRecords(WeaponStockSnapshot snapshot, StockItemType itemType, StockCategory category) {
+        List<WeaponStockRecord> result = new ArrayList<WeaponStockRecord>();
+        if (snapshot == null || category == null) {
+            return result;
+        }
+        addVisibleTradeableRecords(result, snapshot.getRecords(itemType, category));
         return result;
     }
 

@@ -9,7 +9,8 @@
   "desiredDefaults": {
     "smallWeapon": 16,
     "mediumWeapon": 8,
-    "largeWeapon": 4
+    "largeWeapon": 4,
+    "fighterWing": 4
   },
   "perWeapon": {
   }

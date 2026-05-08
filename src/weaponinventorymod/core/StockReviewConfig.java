@@ -17,10 +17,12 @@ public final class StockReviewConfig {
     private static final int DEFAULT_SMALL_WEAPON_COUNT = 16;
     private static final int DEFAULT_MEDIUM_WEAPON_COUNT = 8;
     private static final int DEFAULT_LARGE_WEAPON_COUNT = 4;
+    private static final int DEFAULT_FIGHTER_WING_COUNT = 4;
 
     private final int smallWeaponDesired;
     private final int mediumWeaponDesired;
     private final int largeWeaponDesired;
+    private final int fighterWingDesired;
     private final boolean includeCurrentMarketStorage;
     private final boolean includeBlackMarket;
     private final StockSortMode sortMode;
@@ -30,6 +32,7 @@ public final class StockReviewConfig {
     private StockReviewConfig(int smallWeaponDesired,
                               int mediumWeaponDesired,
                               int largeWeaponDesired,
+                              int fighterWingDesired,
                               boolean includeCurrentMarketStorage,
                               boolean includeBlackMarket,
                               StockSortMode sortMode,
@@ -38,6 +41,7 @@ public final class StockReviewConfig {
         this.smallWeaponDesired = smallWeaponDesired;
         this.mediumWeaponDesired = mediumWeaponDesired;
         this.largeWeaponDesired = largeWeaponDesired;
+        this.fighterWingDesired = fighterWingDesired;
         this.includeCurrentMarketStorage = includeCurrentMarketStorage;
         this.includeBlackMarket = includeBlackMarket;
         this.sortMode = sortMode;
@@ -61,6 +65,7 @@ public final class StockReviewConfig {
                 WeaponInventoryConfig.desiredSmallWeaponCount(DEFAULT_SMALL_WEAPON_COUNT),
                 WeaponInventoryConfig.desiredMediumWeaponCount(DEFAULT_MEDIUM_WEAPON_COUNT),
                 WeaponInventoryConfig.desiredLargeWeaponCount(DEFAULT_LARGE_WEAPON_COUNT),
+                WeaponInventoryConfig.desiredFighterWingCount(DEFAULT_FIGHTER_WING_COUNT),
                 true,
                 true,
                 StockSortMode.NEED,
@@ -76,6 +81,8 @@ public final class StockReviewConfig {
                 clampDesired(optInt(desiredDefaults, "mediumWeapon", DEFAULT_MEDIUM_WEAPON_COUNT)));
         int large = WeaponInventoryConfig.desiredLargeWeaponCount(
                 clampDesired(optInt(desiredDefaults, "largeWeapon", DEFAULT_LARGE_WEAPON_COUNT)));
+        int fighterWing = WeaponInventoryConfig.desiredFighterWingCount(
+                clampDesired(optInt(desiredDefaults, "fighterWing", DEFAULT_FIGHTER_WING_COUNT)));
 
         JSONObject sources = json.optJSONObject("sources");
         boolean includeStorage = optBoolean(sources, "includeCurrentMarketStorage", true);
@@ -104,7 +111,7 @@ public final class StockReviewConfig {
             }
         }
 
-        return new StockReviewConfig(small, medium, large, includeStorage, includeBlackMarket, sortMode, overrides, ignored);
+        return new StockReviewConfig(small, medium, large, fighterWing, includeStorage, includeBlackMarket, sortMode, overrides, ignored);
     }
 
     public int desiredCount(String weaponId, WeaponAPI.WeaponSize size) {
@@ -127,6 +134,14 @@ public final class StockReviewConfig {
     public boolean isIgnored(String weaponId) {
         Boolean ignored = ignoredWeapons.get(weaponId);
         return ignored != null && ignored.booleanValue();
+    }
+
+    public int desiredFighterWingCount(String wingId) {
+        Integer override = desiredOverrides.get(StockItemType.WING.key(wingId));
+        if (override == null) {
+            override = desiredOverrides.get(wingId);
+        }
+        return override == null ? fighterWingDesired : override.intValue();
     }
 
     public boolean isIncludeCurrentMarketStorage() {

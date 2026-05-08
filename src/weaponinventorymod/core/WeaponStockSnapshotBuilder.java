@@ -4,6 +4,7 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
+import com.fs.starfarer.api.loading.FighterWingSpecAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
 
 import java.util.ArrayList;
@@ -31,8 +32,8 @@ public final class WeaponStockSnapshotBuilder {
         StockSourceMode resolvedSourceMode = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
         OwnedSourcePolicy ownedSourcePolicy = config.ownedSourcePolicy(includeCurrentMarketStorage);
         DesiredStockService desiredStockService = new DesiredStockService(config);
-        Map<String, Integer> owned = inventoryCountService.collectOwnedWeaponCounts(sector, market, ownedSourcePolicy);
-        Map<String, Integer> playerCargoCounts = InventoryCountService.collectCargoWeaponCounts(playerCargo(sector));
+        Map<String, Integer> owned = inventoryCountService.collectOwnedItemCounts(sector, market, ownedSourcePolicy);
+        Map<String, Integer> playerCargoCounts = InventoryCountService.collectCargoItemCounts(playerCargo(sector));
         MarketStockService.MarketStock marketStock = marketStock(sector, market, includeBlackMarket, resolvedSourceMode);
 
         Set<String> ids = new HashSet<String>();
@@ -43,31 +44,38 @@ public final class WeaponStockSnapshotBuilder {
             grouped.put(category, new ArrayList<WeaponStockRecord>());
         }
 
-        for (String weaponId : ids) {
-            WeaponSpecAPI spec = safeWeaponSpec(weaponId);
-            if (spec == null) {
+        for (String itemKey : ids) {
+            StockItemType itemType = StockItemType.fromKey(itemKey);
+            String itemId = StockItemType.rawId(itemKey);
+            WeaponSpecAPI spec = StockItemType.WEAPON.equals(itemType) ? safeWeaponSpec(itemId) : null;
+            FighterWingSpecAPI wingSpec = StockItemType.WING.equals(itemType) ? safeWingSpec(itemId) : null;
+            if (spec == null && wingSpec == null) {
                 continue;
             }
-            if (config.isIgnored(weaponId)) {
+            if (config.isIgnored(itemKey) || config.isIgnored(itemId)) {
                 continue;
             }
-            int ownedCount = getCount(owned, weaponId);
-            int purchasableCount = marketStock.getTotal(weaponId);
-            if (!shouldInclude(getCount(playerCargoCounts, weaponId), marketStock.getSubmarketStocks(weaponId))) {
+            int ownedCount = getCount(owned, itemKey);
+            int purchasableCount = marketStock.getTotal(itemKey);
+            if (!shouldInclude(getCount(playerCargoCounts, itemKey), marketStock.getSubmarketStocks(itemKey))) {
                 continue;
             }
-            int desiredCount = desiredStockService.desiredCount(weaponId, spec);
+            int desiredCount = StockItemType.WING.equals(itemType)
+                    ? desiredStockService.desiredWingCount(itemId, wingSpec)
+                    : desiredStockService.desiredCount(itemId, spec);
             StockCategory category = classifier.classify(ownedCount, desiredCount);
             grouped.get(category).add(new WeaponStockRecord(
-                    weaponId,
-                    spec.getWeaponName(),
+                    itemType,
+                    itemId,
+                    StockItemType.WING.equals(itemType) ? wingSpec.getWingName() : spec.getWeaponName(),
                     spec,
+                    wingSpec,
                     ownedCount,
-                    getCount(playerCargoCounts, weaponId),
+                    getCount(playerCargoCounts, itemKey),
                     purchasableCount,
                     desiredCount,
                     category,
-                    marketStock.getSubmarketStocks(weaponId)));
+                    marketStock.getSubmarketStocks(itemKey)));
         }
 
         for (List<WeaponStockRecord> records : grouped.values()) {
@@ -90,14 +98,14 @@ public final class WeaponStockSnapshotBuilder {
         if (StockSourceMode.SECTOR.equals(sourceMode)) {
             return globalWeaponMarketService.collectSectorWeaponStock(sector);
         }
-        return marketStockService.collectCurrentMarketWeaponStock(market, includeBlackMarket);
+        return marketStockService.collectCurrentMarketItemStock(market, includeBlackMarket);
     }
 
     private static void addTradeableIds(Set<String> ids,
                                         Map<String, Integer> playerCargoCounts,
                                         MarketStockService.MarketStock marketStock) {
         ids.addAll(playerCargoCounts.keySet());
-        for (String id : marketStock.weaponIds()) {
+        for (String id : marketStock.itemKeys()) {
             if (hasPurchasableStock(marketStock.getSubmarketStocks(id))) {
                 ids.add(id);
             }
@@ -124,6 +132,14 @@ public final class WeaponStockSnapshotBuilder {
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {
         try {
             return Global.getSettings().getWeaponSpec(weaponId);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static FighterWingSpecAPI safeWingSpec(String wingId) {
+        try {
+            return Global.getSettings().getFighterWingSpec(wingId);
         } catch (Throwable ignored) {
             return null;
         }

@@ -3,6 +3,7 @@ package weaponinventorymod.gui;
 import com.fs.starfarer.api.ui.Alignment;
 import weaponinventorymod.core.CreditFormat;
 import weaponinventorymod.core.StockCategory;
+import weaponinventorymod.core.StockItemType;
 import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
 
@@ -20,33 +21,56 @@ final class StockReviewListModel {
                                           StockReviewTradeContext tradeContext) {
         List<WimGuiListRow<StockReviewAction>> rows = new ArrayList<WimGuiListRow<StockReviewAction>>();
         int displayed = 0;
-        displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
-        displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
-        displayed += addCategory(rows, snapshot, state, tradeContext, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
+        displayed += addItemType(rows, snapshot, state, tradeContext, StockItemType.WEAPON, false);
+        displayed += addItemType(rows, snapshot, state, tradeContext, StockItemType.WING, true);
         if (displayed == 0) {
-            rows.add(StockReviewListRow.empty("No tradeable weapons were found at this market."));
+            rows.add(StockReviewListRow.empty("No tradeable weapons or wings were found at this market."));
         }
         return rows;
+    }
+
+    private static int addItemType(List<WimGuiListRow<StockReviewAction>> rows,
+                                   WeaponStockSnapshot snapshot,
+                                   StockReviewState state,
+                                   StockReviewTradeContext tradeContext,
+                                   StockItemType itemType,
+                                   boolean topGap) {
+        int count = snapshot == null ? 0 : snapshot.getCount(itemType);
+        boolean expanded = state.isExpanded(itemType);
+        rows.add(StockReviewListRow.filterHeading(
+                WimGuiToggleHeading.countedLabel(itemType.getSectionLabel(), count, expanded),
+                StockReviewAction.toggle(itemType),
+                topGap,
+                "Show or hide " + itemType.getSectionLabel().toLowerCase(java.util.Locale.US) + "."));
+        if (!expanded) {
+            return count;
+        }
+        int displayed = 0;
+        displayed += addCategory(rows, snapshot, state, tradeContext, itemType, StockCategory.NO_STOCK, StockReviewStyle.NO_STOCK, false);
+        displayed += addCategory(rows, snapshot, state, tradeContext, itemType, StockCategory.INSUFFICIENT, StockReviewStyle.INSUFFICIENT, true);
+        displayed += addCategory(rows, snapshot, state, tradeContext, itemType, StockCategory.SUFFICIENT, StockReviewStyle.SUFFICIENT, true);
+        return displayed;
     }
 
     private static int addCategory(List<WimGuiListRow<StockReviewAction>> rows,
                                    WeaponStockSnapshot snapshot,
                                    StockReviewState state,
                                    StockReviewTradeContext tradeContext,
+                                   StockItemType itemType,
                                    StockCategory category,
                                    Color color,
                                    boolean topGap) {
         List<WeaponStockRecord> records = filteredRecords(
-                StockReviewTradePlanner.visibleTradeableRecords(snapshot, category),
+                StockReviewTradePlanner.visibleTradeableRecords(snapshot, itemType, category),
                 state.getActiveFilters());
-        boolean expanded = state.isExpanded(category);
+        boolean expanded = state.isExpanded(itemType, category);
         String label = WimGuiToggleHeading.label(categoryHeading(category, records, tradeContext), expanded);
-        rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap,
+        rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(itemType, category), topGap,
                 StockReviewTooltips.category(category)));
         if (!expanded) {
             return records.size();
         }
-        if (StockCategory.NO_STOCK.equals(category)) {
+        if (StockItemType.WEAPON.equals(itemType) && StockCategory.NO_STOCK.equals(category)) {
             addWorstCaseTestRow(rows);
         }
         for (int i = 0; i < records.size(); i++) {
@@ -232,6 +256,14 @@ final class StockReviewListModel {
         float compensatedRightReserve = Math.max(0f,
                 listWidth - dataIndent - componentWidth - 2f * StockReviewStyle.SMALL_PAD);
         rows.add(dataRow("Desired", String.valueOf(record.getDesiredCount()), dataIndent, componentWidth, compensatedRightReserve));
+        if (record.isWing()) {
+            rows.add(dataRow("Role", record.getTypeLabel(), dataIndent, componentWidth, compensatedRightReserve));
+            rows.add(dataRow("Fighters", record.getWingFighterCountLabel(), dataIndent, componentWidth, compensatedRightReserve));
+            rows.add(dataRow("OP", record.getWingOpCostLabel(), dataIndent, componentWidth, compensatedRightReserve));
+            rows.add(dataRow("Range", record.getRangeLabel(), dataIndent, componentWidth, compensatedRightReserve));
+            rows.add(dataRow("Refit", record.getWingRefitTimeLabel(), dataIndent, componentWidth, compensatedRightReserve));
+            return;
+        }
         rows.add(dataRow("Size", record.getSizeLabel(), dataIndent, componentWidth, compensatedRightReserve));
         rows.add(dataRow("Type", record.getTypeLabel(), dataIndent, componentWidth, compensatedRightReserve));
         rows.add(dataRow("Damage", record.getDamageLabel(), dataIndent, componentWidth, compensatedRightReserve));

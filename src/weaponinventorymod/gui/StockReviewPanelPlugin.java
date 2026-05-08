@@ -123,7 +123,12 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         StockReviewAction.Type type = action.getType();
         if (StockReviewAction.Type.TOGGLE_CATEGORY.equals(type)) {
-            state.toggle(action.getCategory());
+            state.toggle(action.getItemType(), action.getCategory());
+            rebuildContent();
+            return;
+        }
+        if (StockReviewAction.Type.TOGGLE_ITEM_TYPE.equals(type)) {
+            state.toggle(action.getItemType());
             rebuildContent();
             return;
         }
@@ -511,24 +516,28 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                                                                        MarketAPI market,
                                                                        StockReviewPendingPurchase purchase,
                                                                        StockSourceMode sourceMode) {
+        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(purchase.getWeaponId());
+        if (record == null) {
+            return StockPurchaseService.PurchaseResult.failure("No queued item record is available.");
+        }
         if (purchase.isSell()) {
             if (sourceMode != null && sourceMode.isRemote()) {
-                return purchaseService.sellToMarket(sector, market, purchase.getWeaponId(), -purchase.getQuantity(), false);
+                return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -purchase.getQuantity(), false);
             }
-            return purchaseService.sellToMarket(sector, market, purchase.getWeaponId(), -purchase.getQuantity(), state.isIncludeBlackMarket());
+            return purchaseService.sellItemToMarket(sector, market, record.getItemType(), record.getItemId(), -purchase.getQuantity(), state.isIncludeBlackMarket());
         }
         if (StockSourceMode.FIXERS.equals(sourceMode)) {
-            return purchaseService.buyFromFixersMarket(sector, purchase.getWeaponId(), purchase.getQuantity(),
+            return purchaseService.buyItemFromFixersMarket(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
                     virtualUnitPrice(purchase.getWeaponId()), virtualUnitCargoSpace(purchase.getWeaponId()));
         }
         if (StockSourceMode.SECTOR.equals(sourceMode)) {
-            return purchaseService.buyFromSectorSources(sector, purchase.getWeaponId(), purchase.getQuantity(),
+            return purchaseService.buyItemFromSectorSources(sector, record.getItemType(), record.getItemId(), purchase.getQuantity(),
                     stockSources(purchase.getWeaponId(), purchase.getSubmarketId()));
         }
         if (purchase.getSubmarketId() == null) {
-            return purchaseService.buyCheapest(sector, market, purchase.getWeaponId(), purchase.getQuantity(), state.isIncludeBlackMarket());
+            return purchaseService.buyCheapestItem(sector, market, record.getItemType(), record.getItemId(), purchase.getQuantity(), state.isIncludeBlackMarket());
         }
-        return purchaseService.buyFromSubmarket(sector, market, purchase.getWeaponId(), purchase.getSubmarketId(),
+        return purchaseService.buyCheapestItem(sector, market, record.getItemType(), record.getItemId(),
                 purchase.getQuantity(), state.isIncludeBlackMarket());
     }
 

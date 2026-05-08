@@ -15,6 +15,21 @@ import java.util.Map;
 
 public final class MarketStockService {
     public MarketStock collectCurrentMarketWeaponStock(MarketAPI market, boolean includeBlackMarket) {
+        return collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WEAPON);
+    }
+
+    public MarketStock collectCurrentMarketWingStock(MarketAPI market, boolean includeBlackMarket) {
+        return collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WING);
+    }
+
+    public MarketStock collectCurrentMarketItemStock(MarketAPI market, boolean includeBlackMarket) {
+        MarketStockBuilder builder = new MarketStockBuilder();
+        builder.addAll(collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WEAPON));
+        builder.addAll(collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WING));
+        return builder.build();
+    }
+
+    private MarketStock collectCurrentMarketStock(MarketAPI market, boolean includeBlackMarket, StockItemType itemType) {
         Map<String, Integer> totals = new HashMap<String, Integer>();
         Map<String, List<SubmarketWeaponStock>> byWeapon = new HashMap<String, List<SubmarketWeaponStock>>();
         if (market == null || market.getSubmarketsCopy() == null) {
@@ -30,10 +45,10 @@ public final class MarketStockService {
                 continue;
             }
             for (CargoStackAPI stack : cargo.getStacksCopy()) {
-                if (!isVisibleWeaponStack(stack)) {
+                if (!isVisibleItemStack(stack, itemType)) {
                     continue;
                 }
-                String weaponId = stack.getWeaponSpecIfWeapon().getWeaponId();
+                String weaponId = itemType.key(itemId(stack, itemType));
                 int count = Math.round(stack.getSize());
                 if (count <= 0) {
                     continue;
@@ -53,7 +68,7 @@ public final class MarketStockService {
                         unitPrice(submarket, stack),
                         baseUnitPrice(stack),
                         unitCargoSpace(stack),
-                        isPurchasableWeaponStack(submarket, stack)));
+                        isPurchasableItemStack(submarket, stack, itemType)));
             }
         }
 
@@ -86,6 +101,14 @@ public final class MarketStockService {
         return stack != null && stack.isWeaponStack() && stack.getWeaponSpecIfWeapon() != null && stack.getSize() > 0f;
     }
 
+    public static boolean isVisibleWingStack(CargoStackAPI stack) {
+        return stack != null && stack.isFighterWingStack() && stack.getFighterWingSpecIfWing() != null && stack.getSize() > 0f;
+    }
+
+    public static boolean isVisibleItemStack(CargoStackAPI stack, StockItemType itemType) {
+        return StockItemType.WING.equals(itemType) ? isVisibleWingStack(stack) : isVisibleWeaponStack(stack);
+    }
+
     public static boolean isPurchasableWeaponStack(SubmarketAPI submarket, CargoStackAPI stack) {
         if (submarket == null || stack == null || !stack.isWeaponStack() || stack.getWeaponSpecIfWeapon() == null) {
             return false;
@@ -95,6 +118,33 @@ public final class MarketStockService {
             return false;
         }
         return stack.getSize() > 0f;
+    }
+
+    public static boolean isPurchasableWingStack(SubmarketAPI submarket, CargoStackAPI stack) {
+        if (submarket == null || stack == null || !stack.isFighterWingStack() || stack.getFighterWingSpecIfWing() == null) {
+            return false;
+        }
+        SubmarketPlugin plugin = submarket.getPlugin();
+        if (plugin != null && plugin.isIllegalOnSubmarket(stack, SubmarketPlugin.TransferAction.PLAYER_BUY)) {
+            return false;
+        }
+        return stack.getSize() > 0f;
+    }
+
+    public static boolean isPurchasableItemStack(SubmarketAPI submarket, CargoStackAPI stack, StockItemType itemType) {
+        return StockItemType.WING.equals(itemType)
+                ? isPurchasableWingStack(submarket, stack)
+                : isPurchasableWeaponStack(submarket, stack);
+    }
+
+    public static String itemId(CargoStackAPI stack, StockItemType itemType) {
+        if (stack == null) {
+            return null;
+        }
+        if (StockItemType.WING.equals(itemType)) {
+            return stack.getFighterWingSpecIfWing() == null ? null : stack.getFighterWingSpecIfWing().getId();
+        }
+        return stack.getWeaponSpecIfWeapon() == null ? null : stack.getWeaponSpecIfWeapon().getWeaponId();
     }
 
     public static int unitPrice(SubmarketAPI submarket, CargoStackAPI stack) {
@@ -161,6 +211,10 @@ public final class MarketStockService {
         public Iterable<String> weaponIds() {
             return totals.keySet();
         }
+
+        public Iterable<String> itemKeys() {
+            return totals.keySet();
+        }
     }
 
     public static final class MarketStockBuilder {
@@ -178,6 +232,18 @@ public final class MarketStockService {
                 byWeapon.put(weaponId, stocks);
             }
             stocks.add(stock);
+        }
+
+        public void addAll(MarketStock stock) {
+            if (stock == null) {
+                return;
+            }
+            for (String id : stock.itemKeys()) {
+                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(id);
+                for (int i = 0; i < sources.size(); i++) {
+                    add(id, sources.get(i));
+                }
+            }
         }
 
         public MarketStock build() {

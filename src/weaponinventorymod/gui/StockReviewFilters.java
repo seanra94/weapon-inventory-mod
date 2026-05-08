@@ -13,6 +13,9 @@ final class StockReviewFilters {
         if (activeFilters == null || activeFilters.isEmpty()) {
             return true;
         }
+        if (record != null && record.isWing()) {
+            return true;
+        }
         for (StockReviewFilterGroup group : StockReviewFilterGroup.values()) {
             if (!matchesGroup(record, activeFilters, group)) {
                 return false;

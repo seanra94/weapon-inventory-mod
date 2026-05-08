@@ -6,6 +6,7 @@ import com.fs.starfarer.api.campaign.SubmarketPlugin;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import weaponinventorymod.core.MarketStockService;
+import weaponinventorymod.core.StockItemType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,16 +32,22 @@ final class StockReviewPlayerCargo {
 
     static Map<String, Integer> sellUnitPricesByWeapon(MarketAPI market,
                                                        boolean includeBlackMarket) {
+        return sellUnitPricesByItem(market, includeBlackMarket);
+    }
+
+    static Map<String, Integer> sellUnitPricesByItem(MarketAPI market,
+                                                     boolean includeBlackMarket) {
         Map<String, Integer> result = new HashMap<String, Integer>();
         CargoAPI cargo = WimGuiCampaignDialogHost.current().getPlayerCargo();
         if (cargo == null || cargo.getStacksCopy() == null) {
             return result;
         }
         for (CargoStackAPI stack : cargo.getStacksCopy()) {
-            if (!MarketStockService.isVisibleWeaponStack(stack)) {
+            StockItemType itemType = MarketStockService.isVisibleWingStack(stack) ? StockItemType.WING : StockItemType.WEAPON;
+            if (!MarketStockService.isVisibleItemStack(stack, itemType)) {
                 continue;
             }
-            String weaponId = stack.getWeaponSpecIfWeapon().getWeaponId();
+            String weaponId = itemType.key(MarketStockService.itemId(stack, itemType));
             int unitPrice = bestLocalSellUnitPrice(market, stack, includeBlackMarket);
             if (unitPrice < 0) {
                 continue;
