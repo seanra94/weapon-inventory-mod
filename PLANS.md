@@ -14,6 +14,7 @@
   - popup has a scrollable `Filters` screen with active filters, expandable filter groups, and immediate row/category filtering.
   - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup rows are intentionally limited to weapons that are buyable from the active stock source or present in player inventory.
+  - Fixer's Market eligibility now uses a save-persistent observed catalog seeded from real market stock over time, so its virtual stock can include items that have previously appeared in legitimate market cargo without relying on spoiler-prone tag/faction inference.
   - popup has sort modes for need, name, and price.
   - popup row actions now support weapon expansion, nested weapon data rows, and cheapest-first `+1`/dynamic buy steps.
 - Current visual baseline:
@@ -196,6 +197,10 @@
   - the Buy GUI renders top-level `Weapons` and `Wings` toggle headings, each with the usual stock categories beneath;
   - wing rows share the same queue/review/confirm trade flow as weapons and use wing-specific detail rows;
   - wing sufficiency defaults to 4 and is configurable through LunaLib.
+- Added the observed Fixer's Market catalog:
+  - a transient updater scans live sector market cargo on load and about once per in-game day;
+  - observed safe weapons and fighter LPCs are stored in save persistent data under type-prefixed stock item keys;
+  - Fixer's Market virtual stock uses the observed legal catalog plus currently visible live market stock, while optional tag/faction inference remains off by default.
 
 ## Active Manual Validation
 
@@ -233,6 +238,7 @@
   - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wp_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
   - [x] add independent Luna toggles for Sector and Fixer's Market availability plus a JSON blacklist for banning weapons from either remote source;
   - [x] keep Fixer's Market live-scanned eligible weapons on by default, but make tag/faction inference opt-in because that path is more likely to admit secret or restricted weapons;
+  - [x] make Fixer's Market learn from observed real market cargo over time, preserving spoiler-safe legal weapons/wings in save data so the Fixer catalog becomes more complete across market refreshes;
   - [x] use commit `a02e507` as the confirmed-good reference for stock-review nested indentation and button right-edge sizing.
   - [x] disable and gray out the Black Market button for non-local source modes;
   - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.

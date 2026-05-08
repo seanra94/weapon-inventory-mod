@@ -12,6 +12,8 @@ $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewPanelPlugin.class",
     "weaponsprocurement/gui/StockReviewLaunchState.class",
     "weaponsprocurement/core/GlobalWeaponMarketService.class",
+    "weaponsprocurement/core/FixerMarketObservedCatalog.class",
+    "weaponsprocurement/core/FixerMarketObservedCatalog`$ObservedItem.class",
     "weaponsprocurement/core/WeaponMarketBlacklist.class",
     "weaponsprocurement/core/StockItemType.class",
     "weaponsprocurement/core/StockSourceMode.class",
@@ -55,6 +57,7 @@ $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewTradeWarnings.class",
     "weaponsprocurement/core/WeaponStockSnapshotBuilder`$CostComparator.class",
     "weaponsprocurement/core/StockPurchaseService`$PurchaseSourcePriceComparator.class",
+    "weaponsprocurement/internal/WeaponsProcurementFixerCatalogUpdater.class",
     "com/fs/starfarer/api/impl/campaign/rulecmd/WP_OpenDialog.class"
 )
 $forbiddenClasses = @(

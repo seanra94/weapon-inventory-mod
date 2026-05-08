@@ -47,10 +47,12 @@
   - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wp_sector_market_price_multiplier` (default `3.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
   - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo and must refresh after Sector Market purchases drain actual market stacks.
   - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wp_fixers_market_price_multiplier` (default `5.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
+  - Fixer's Market also uses a save-persistent observed catalog. `WeaponsProcurementFixerCatalogUpdater` scans real market cargo on load and about once per in-game day, records safe observed weapon/wing item keys in sector persistent data, and lets the Fixer source keep offering virtual stock for those previously observed legal items even after they are no longer present in current live stock.
   - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
   - Generic buy allocation is intentionally cheapest-first among all currently eligible sources. If the Black Market toggle/source rules include black-market stock and it is cheaper than legal stock, generic `+1` should consume the black-market stock first. Keep `StockReviewQuoteBook` preview ordering and `StockPurchaseService` execution ordering in sync.
   - Fixer's Market reference pricing also uses the cheapest live source as its base reference, regardless of whether that source is legal or black-market stock.
   - Optional tag/faction inference is Luna-gated by `wp_enable_fixers_market_tag_inference`, default off. Keep it separate from the live-scan path so it can stay opt-in if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
+  - The observed Fixer catalog is the preferred public-build path over tag/faction inference: it may be incomplete early in a save, but it only learns from real generated market stock and therefore has much lower spoiler-leak risk.
   - Sector and Fixer's Market can be independently disabled in LunaLib. `data/config/weapons_procurement_market_blacklist.json` blocks weapon ids/display names from `BANNED_FROM_SECTOR_MARKET` and `BANNED_FROM_FIXERS_MARKET` before those remote source rows are created.
 - Popup sorting:
   - `Stock`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
@@ -139,6 +141,7 @@
 - Normal mod-side code owns all campaign state:
   - `WeaponsProcurementModPlugin` registers `WeaponsProcurementCountUpdater` as a transient script on game load.
   - `WeaponsProcurementCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
+  - `WeaponsProcurementFixerCatalogUpdater` runs while paused, but uses campaign-clock elapsed days for its scan interval. It scans immediately after load, then roughly once per in-game day, and stores only simple Java collections in sector persistent data to avoid custom save-object compatibility problems.
   - `WeaponsProcurementBadgeHelper` is embedded in patched core and only reads `System` properties to select a precomposed badge sprite path.
 - Active visual path:
   - one precomposed `graphics/ui/wp_total_*.png` badge sprite;

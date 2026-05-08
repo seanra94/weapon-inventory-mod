@@ -5,6 +5,7 @@ import com.fs.starfarer.api.EveryFrameScript;
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import org.apache.log4j.Logger;
+import weaponsprocurement.internal.WeaponsProcurementFixerCatalogUpdater;
 import weaponsprocurement.internal.WeaponsProcurementCountUpdater;
 import weaponsprocurement.gui.StockReviewHotkeyScript;
 
@@ -29,6 +30,11 @@ public class WeaponsProcurementModPlugin extends BaseModPlugin {
                 && !hasScript(sector.getScripts(), StockReviewHotkeyScript.class)) {
             sector.addTransientScript(new StockReviewHotkeyScript());
             LOG.info("WP_STOCK_REVIEW hotkey registered");
+        }
+        if (!hasScript(sector.getTransientScripts(), WeaponsProcurementFixerCatalogUpdater.class)
+                && !hasScript(sector.getScripts(), WeaponsProcurementFixerCatalogUpdater.class)) {
+            sector.addTransientScript(new WeaponsProcurementFixerCatalogUpdater());
+            LOG.info("WP_FIXER_CATALOG updater registered");
         }
     }
 

@@ -22,6 +22,7 @@ public final class GlobalWeaponMarketService {
     public static final int VIRTUAL_STOCK = 999;
 
     private final MarketStockService marketStockService = new MarketStockService();
+    private final FixerMarketObservedCatalog observedCatalog = new FixerMarketObservedCatalog();
     private final Map<String, MarketStockService.MarketStock> cache = new HashMap<String, MarketStockService.MarketStock>();
 
     public MarketStockService.MarketStock collectSectorWeaponStock(SectorAPI sector) {
@@ -32,7 +33,8 @@ public final class GlobalWeaponMarketService {
         boolean includeInferred = WeaponsProcurementConfig.isFixersMarketTagInferenceEnabled();
         float priceMultiplier = WeaponsProcurementConfig.fixersMarketPriceMultiplier();
         WeaponMarketBlacklist blacklist = WeaponMarketBlacklist.load();
-        String key = "fixers|" + includeInferred + "|" + priceMultiplier + "|" + blacklist.cacheKey();
+        String key = "fixers|" + includeInferred + "|" + priceMultiplier + "|" + blacklist.cacheKey()
+                + "|" + observedCatalog.cacheKey(sector);
         MarketStockService.MarketStock cached = cache.get(key);
         if (cached != null) {
             return cached;
@@ -106,6 +108,9 @@ public final class GlobalWeaponMarketService {
                 if (blacklist.isBannedFromFixers(itemKey)) {
                     continue;
                 }
+                if (!FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) {
+                    continue;
+                }
                 List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(itemKey);
                 for (int j = 0; j < sources.size(); j++) {
                     SubmarketWeaponStock source = sources.get(j);
@@ -119,6 +124,7 @@ public final class GlobalWeaponMarketService {
                 }
             }
         }
+        addObservedCatalogItems(sector, cheapestByWeapon, blacklist);
         if (includeInferred) {
             addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon, blacklist);
         }
@@ -136,6 +142,27 @@ public final class GlobalWeaponMarketService {
         return builder.build();
     }
 
+    private void addObservedCatalogItems(SectorAPI sector,
+                                         Map<String, SubmarketWeaponStock> cheapestByWeapon,
+                                         WeaponMarketBlacklist blacklist) {
+        Map<String, FixerMarketObservedCatalog.ObservedItem> observed = observedCatalog.observedItems(sector, blacklist);
+        for (Map.Entry<String, FixerMarketObservedCatalog.ObservedItem> entry : observed.entrySet()) {
+            String itemKey = entry.getKey();
+            if (cheapestByWeapon.containsKey(itemKey)) {
+                continue;
+            }
+            FixerMarketObservedCatalog.ObservedItem item = entry.getValue();
+            cheapestByWeapon.put(itemKey, new SubmarketWeaponStock(
+                    VIRTUAL_SUBMARKET_ID,
+                    FIXERS_MARKET_NAME,
+                    VIRTUAL_STOCK,
+                    item.getBaseUnitPrice(),
+                    item.getBaseUnitPrice(),
+                    item.getUnitCargoSpace(),
+                    true));
+        }
+    }
+
     private static void addInferredFactionWeapons(SectorAPI sector,
                                                   Set<String> activeFactionIds,
                                                   Map<String, SubmarketWeaponStock> cheapestByWeapon,
@@ -149,7 +176,7 @@ public final class GlobalWeaponMarketService {
                 String itemKey = StockItemType.WEAPON.key(weaponId);
                 if (cheapestByWeapon.containsKey(itemKey)
                         || blacklist.isBannedFromFixers(itemKey)
-                        || !isSafeInferredWeapon(weaponId)) {
+                        || !FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) {
                     continue;
                 }
                 WeaponSpecAPI spec = safeWeaponSpec(weaponId);
@@ -177,27 +204,6 @@ public final class GlobalWeaponMarketService {
         }
         Set<String> knownWeapons = faction.getKnownWeapons();
         return knownWeapons == null ? Collections.<String>emptySet() : knownWeapons;
-    }
-
-    private static boolean isSafeInferredWeapon(String weaponId) {
-        WeaponSpecAPI spec = safeWeaponSpec(weaponId);
-        if (spec == null || spec.getTags() == null) {
-            return false;
-        }
-        Set<String> tags = spec.getTags();
-        return !contains(tags, "restricted")
-                && !contains(tags, "no_dealer")
-                && !contains(tags, "no_drop")
-                && !contains(tags, "no_bp_drop")
-                && !contains(tags, "omega")
-                && !contains(tags, "dweller")
-                && !contains(tags, "threat")
-                && !contains(tags, "hide_in_codex")
-                && !contains(tags, "codex_unlockable");
-    }
-
-    private static boolean contains(Set<String> tags, String tag) {
-        return tags != null && tag != null && tags.contains(tag);
     }
 
     private static int markedUpPrice(int unitPrice, float priceMultiplier) {

@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-final class WeaponMarketBlacklist {
+public final class WeaponMarketBlacklist {
     private static final Logger LOG = Logger.getLogger(WeaponMarketBlacklist.class);
     private static final String CONFIG_PATH = "data/config/weapons_procurement_market_blacklist.json";
     private static final String SECTOR_KEY = "BANNED_FROM_SECTOR_MARKET";
@@ -28,7 +28,7 @@ final class WeaponMarketBlacklist {
         this.fixers = Collections.unmodifiableSet(new HashSet<String>(fixers));
     }
 
-    static WeaponMarketBlacklist load() {
+    public static WeaponMarketBlacklist load() {
         if (cached != null) {
             return cached;
         }
