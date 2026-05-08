@@ -26,12 +26,13 @@
   These override the JSON defaults, while per-weapon JSON `desired` overrides still take precedence for specific weapons.
 - Popup redraw rule:
   - The clean popup now renders through an explicit custom-panel shell, not one long tooltip row pile.
-  - `StockReviewListModel` builds Buy GUI rows and `StockReviewReviewListModel` builds Review GUI rows.
+  - `StockReviewListModel` builds Buy GUI section/category rows and `StockReviewReviewListModel` builds Review GUI section rows. Shared item detail rows belong in `StockReviewItemInfoRows`, and shared trade-row storage/price/plan/dynamic-step cells belong in `StockReviewTradeRowCells`.
   - `StockReviewRenderer` owns the popup shell, header, action row, footer, mode-specific row selection, and stock-specific scroll rows/top gaps; `WimGuiListRow` / `WimGuiListRowRenderer`, `WimGuiModalListLayout`, `WimGuiScrollableListState`, and `WimGuiScroll` own shared row rendering, modal-list, offset preservation, and scroll-window math.
   - `StockReviewPanelPlugin` rebuilds one root content panel for state changes through `WimGuiContentPanel`.
   - `StockReviewModeController` owns review/filter/color-debug mode state and color-debug draft/persistence state. Keep those concerns out of `StockReviewPanelPlugin`; the panel should orchestrate lifecycle, snapshot rebuilds, and trade execution rather than accumulating more mode booleans.
   - `StockReviewUiController` owns non-trade UI action dispatch: expand/collapse rows, source/sort toggles, black-market toggles, scroll indicators, reset-all, filter/color-debug actions, review entry/back, and close/Escape behavior.
   - `StockReviewTradeController` owns trade-planning actions such as row buy/sell adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient. Keep planning mutations there and reserve `StockReviewPanelPlugin` for popup lifecycle, snapshot rebuilds, source changes, review confirmation, and live cargo execution.
+  - `StockReviewTradeSummaryRenderer` owns the fixed bottom `Warning`, `Tariffs Paid`, `Credits Available`, and `Cargo Space Available` rows for trade and review screens.
   - `StockReviewExecutionController` owns `Confirm Trades`: final affordability/cargo checks, execution ordering, per-line failure handling, pending-trade cleanup after partial success, review exit, and post-confirm reopen/refresh routing.
   - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
 - Popup button rule:

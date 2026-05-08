@@ -60,8 +60,9 @@
 - Optimized that polling fallback so it only scans buttons for a few frames after mouse events instead of every frame.
 - Changed stock categories to start collapsed and render as flat full-width heading rows, so `No Stock`, `Insufficient Stock`, and `Sufficient Stock` are visually peer sections.
 - Replaced the tooltip-row popup renderer with an explicit custom-panel/list foundation:
-  - `StockReviewListModel` builds render-ready row descriptors from the snapshot and state;
+  - `StockReviewListModel` builds render-ready section/category row descriptors from the snapshot and state;
   - `StockReviewReviewListModel` builds Review GUI row descriptors so the renderer does not own review-table business logic;
+  - `StockReviewItemInfoRows` owns shared Basic/Advanced Info row construction for trade and review screens, while `StockReviewTradeRowCells` owns shared storage/price/plan/dynamic-step row cells and the deliberate worst-case row-width sample;
   - `StockReviewRenderer` owns shell/header/footer composition and stock-specific scroll row/top-gap rules while shared list helpers render fixed-height custom row panels for category headings, weapon rows, nested sections, sellers, buttons, and scroll indicators;
   - `WimGuiScroll` and `WimGuiModalListLayout` own shared visible-row/window math for scrollable modal lists;
   - `WimGuiPanelPlugin` owns reusable row/container fill and border drawing;
@@ -69,6 +70,7 @@
   - `StockReviewModeController` now owns review/filter/color-debug mode booleans plus color-debug draft/persistence state, keeping `StockReviewPanelPlugin` focused on lifecycle, snapshot rebuilds, and action orchestration;
   - `StockReviewUiController` now owns UI-only action dispatch: row/category expansion, source/sort/black-market state changes, list scrolling, reset-all, filters, color debug, review/back routing, and close/Escape behavior;
   - `StockReviewTradeController` now owns trade-planning actions such as row adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient, leaving review confirmation and live cargo execution in the panel.
+  - `StockReviewTradeSummaryRenderer` owns the fixed bottom warning/tariff/credit/cargo rows shared by trade and review screens.
   - `StockReviewExecutionController` now owns `Confirm Trades` checks, execution ordering, per-line failure handling, and post-confirm reopen/refresh routing, leaving `StockReviewPanelPlugin` as the lifecycle/context host.
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
 - Migrated nested-button fallback polling to reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.

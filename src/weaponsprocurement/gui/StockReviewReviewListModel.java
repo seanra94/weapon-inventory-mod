@@ -70,17 +70,15 @@ final class StockReviewReviewListModel {
         boolean expanded = state.isItemExpanded(record.getItemKey());
         int cost = tradeContext.transactionCostForLine(purchase.getItemKey(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
-                WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getStorageCount(), purchase.getQuantity()),
-                        StockReviewStyle.REVIEW_STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
-                        Alignment.LMID, StockReviewTooltips.STORAGE),
-                StockReviewListModel.planCell(purchase.getQuantity(), cost));
+                StockReviewTradeRowCells.storage(record.getStorageCount(), purchase.getQuantity(), StockReviewStyle.REVIEW_STOCK_CELL_WIDTH),
+                StockReviewTradeRowCells.plan(purchase.getQuantity(), cost));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
                 cells, StockReviewAction.toggleItem(record.getItemKey()), StockReviewTooltips.weapon(record),
                 StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
         }
-        StockReviewListModel.addWeaponData(rows, record, state,
+        StockReviewItemInfoRows.add(rows, record, state,
                 StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH,
                 StockReviewStyle.REVIEW_LIST_WIDTH,
                 StockReviewStyle.DETAIL_INDENT,
