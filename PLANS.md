@@ -67,6 +67,7 @@
   - `WimGuiPanelPlugin` owns reusable row/container fill and border drawing;
   - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
   - `StockReviewModeController` now owns review/filter/color-debug mode booleans plus color-debug draft/persistence state, keeping `StockReviewPanelPlugin` focused on lifecycle, snapshot rebuilds, and action orchestration;
+  - `StockReviewTradeController` now owns trade-planning actions such as row adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient, leaving review confirmation and live cargo execution in the panel.
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
 - Migrated nested-button fallback polling to reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
 - Migrated popup action/footer button placement to reusable `WimGuiButtonSpec` plus `WimGuiControls.addButtonRow(...)`, removing hand-written x-position chains from `StockReviewRenderer`.

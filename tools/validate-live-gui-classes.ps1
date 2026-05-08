@@ -10,6 +10,9 @@ $repoJar = Join-Path (Split-Path -Parent $PSScriptRoot) "jars\weapons-procuremen
 $liveJar = Join-Path $StarsectorDir "mods\Weapons Procurement\jars\weapons-procurement.jar"
 $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewPanelPlugin.class",
+    "weaponsprocurement/gui/StockReviewModeController.class",
+    "weaponsprocurement/gui/StockReviewTradeController.class",
+    "weaponsprocurement/gui/StockReviewTradeController`$Host.class",
     "weaponsprocurement/gui/StockReviewLaunchState.class",
     "weaponsprocurement/core/GlobalWeaponMarketService.class",
     "weaponsprocurement/core/FixerMarketObservedCatalog.class",

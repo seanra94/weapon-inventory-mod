@@ -14,7 +14,8 @@ import weaponsprocurement.core.WeaponStockSnapshotBuilder;
 
 import java.util.List;
 
-public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction> {
+public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction>
+        implements StockReviewTradeController.Host {
     private static final Logger LOG = Logger.getLogger(StockReviewPanelPlugin.class);
 
     private static boolean reviewMode(StockReviewLaunchState launchState) {
@@ -29,6 +30,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private final StockReviewPendingTrades pendingTrades = new StockReviewPendingTrades();
     private final MarketAPI initialMarket;
     private final StockReviewModeController modes;
+    private final StockReviewTradeController trades;
 
     private WeaponStockSnapshot snapshot;
 
@@ -47,6 +49,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             this.pendingTrades.replaceWith(launchState.getPendingTrades());
         }
         this.modes = new StockReviewModeController(reviewMode(launchState));
+        this.trades = new StockReviewTradeController(state, pendingTrades, this);
     }
 
     boolean isReviewMode() {
@@ -139,15 +142,15 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.ADJUST_PLAN.equals(type)) {
-            adjustPendingTrade(action);
+            trades.adjustPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.ADJUST_TO_SUFFICIENT.equals(type)) {
-            adjustPendingTrade(action);
+            trades.adjustPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
-            addPendingTrade(action);
+            trades.addPendingTrade(action);
             return;
         }
         if (StockReviewAction.Type.CYCLE_SORT_MODE.equals(type)) {
@@ -185,15 +188,15 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (StockReviewAction.Type.RESET_PLAN.equals(type)) {
-            resetPlan(action.getItemKey());
+            trades.resetPlan(action.getItemKey());
             return;
         }
         if (StockReviewAction.Type.PURCHASE_ALL_UNTIL_SUFFICIENT.equals(type)) {
-            purchaseAllUntilSufficient();
+            trades.purchaseAllUntilSufficient();
             return;
         }
         if (StockReviewAction.Type.SELL_ALL_UNTIL_SUFFICIENT.equals(type)) {
-            sellAllUntilSufficient();
+            trades.sellAllUntilSufficient();
             return;
         }
         if (StockReviewAction.Type.RESET_ALL_TRADES.equals(type)) {
@@ -305,130 +308,16 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
     }
 
-    private void addPendingTrade(StockReviewAction action) {
-        int available = availableFor(action);
-        if (available <= 0) {
-            reportMessage(action.getQuantity() < 0 ? "No more player-cargo stock is available to sell." : "No more buyable stock is available for that plan.");
-            updateTradeWarning(null);
-            rebuildContent();
-            return;
-        }
-        int requested = action.getQuantity();
-        int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
-        pendingTrades.add(action.getItemKey(), action.getSubmarketId(), quantity);
-        if (Math.abs(quantity) < Math.abs(requested)) {
-            reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
-        }
-        updateTradeWarning(null);
-        rebuildContent();
+    public WeaponStockSnapshot snapshot() {
+        return snapshot;
     }
 
-    private void adjustPendingTrade(StockReviewAction action) {
-        int available = availableFor(action);
-        if (available <= 0) {
-            reportMessage(action.getQuantity() < 0 ? "No more queued or player-cargo stock is available to remove from the plan." : "No more queued sales or buyable stock is available for that plan.");
-            updateTradeWarning(null);
-            rebuildContent();
-            return;
-        }
-        int requested = action.getQuantity();
-        int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
-        pendingTrades.adjustItemNet(action.getItemKey(), quantity);
-        if (Math.abs(quantity) < Math.abs(requested)) {
-            reportMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
-        }
-        updateTradeWarning(null);
-        rebuildContent();
-    }
-
-    private void resetPlan(String itemKey) {
-        pendingTrades.resetItem(itemKey);
-        updateTradeWarning(null);
-        rebuildContent();
-    }
-
-    private void purchaseAllUntilSufficient() {
-        if (snapshot == null) {
-            return;
-        }
-        int added = 0;
-        String explicitWarning = null;
-        StockReviewQuoteBook quoteBook = new StockReviewQuoteBook(snapshot);
-        List<WeaponStockRecord> records = StockReviewTradePlanner.cheapestFirstVisibleBuyableRecords(snapshot);
-        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-        for (int i = 0; i < records.size(); i++) {
-            WeaponStockRecord record = records.get(i);
-            int needed = tradeContext.buyNeededForSufficiency(record);
-            int quantity = tradeContext.affordableBuyQuantity(record, null, needed);
-            explicitWarning = StockReviewTradeWarnings.purchaseAllLimitWarning(
-                    quoteBook,
-                    pendingTrades.asList(),
-                    record,
-                    tradeContext,
-                    needed,
-                    quantity,
-                    explicitWarning);
-            if (quantity <= 0) {
-                continue;
-            }
-            pendingTrades.add(record.getItemKey(), null, quantity);
-            tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-            added += quantity;
-        }
-        if (added <= 0) {
-            reportMessage("No additional sufficient-stock purchases are available.");
-            updateTradeWarning(explicitWarning);
-            rebuildContent();
-            return;
-        }
-        updateTradeWarning(explicitWarning);
-        rebuildContent();
-    }
-
-    private void sellAllUntilSufficient() {
-        if (snapshot == null) {
-            return;
-        }
-        int removed = 0;
-        List<WeaponStockRecord> records = StockReviewTradePlanner.visibleTradeableRecords(snapshot);
-        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-        for (int i = 0; i < records.size(); i++) {
-            WeaponStockRecord record = records.get(i);
-            int quantity = tradeContext.sellableUntilSufficient(record);
-            if (quantity <= 0) {
-                continue;
-            }
-            pendingTrades.add(record.getItemKey(), null, -quantity);
-            tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-            removed += quantity;
-        }
-        if (removed <= 0) {
-            reportMessage("No sufficient-stock sales are available.");
-            updateTradeWarning(null);
-            rebuildContent();
-            return;
-        }
-        updateTradeWarning(null);
-        rebuildContent();
-    }
-
-    private void updateTradeWarning(String explicitWarning) {
+    public void updateTradeWarning(String explicitWarning) {
         StockReviewTradeWarnings.update(snapshot, state, pendingTrades.asList(), explicitWarning);
     }
 
-    private int availableFor(StockReviewAction action) {
-        WeaponStockRecord record = snapshot == null ? null : snapshot.getRecord(action.getItemKey());
-        if (record == null) {
-            return 0;
-        }
-        StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-        if (action.getQuantity() < 0) {
-            return tradeContext.negativeAdjustmentRemaining(record, -action.getQuantity());
-        }
-        if (action.getSubmarketId() == null) {
-            return tradeContext.positiveAdjustmentRemaining(record, action.getQuantity());
-        }
-        return tradeContext.affordableBuyQuantity(record, action.getSubmarketId(), action.getQuantity());
+    public void requestContentRebuild() {
+        rebuildContent();
     }
 
     private void confirmPendingPurchases() {
@@ -537,6 +426,10 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private void reportPurchaseFailure(StockPurchaseService.PurchaseResult result) {
         reportMessage(result.getMessage());
         LOG.info("WP_STOCK_REVIEW trade blocked: " + result.getMessage());
+    }
+
+    public void postMessage(String message) {
+        reportMessage(message);
     }
 
     private void reportMessage(String message) {

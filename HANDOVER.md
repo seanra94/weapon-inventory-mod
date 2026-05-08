@@ -30,6 +30,7 @@
   - `StockReviewRenderer` owns the popup shell, header, action row, footer, mode-specific row selection, and stock-specific scroll rows/top gaps; `WimGuiListRow` / `WimGuiListRowRenderer`, `WimGuiModalListLayout`, `WimGuiScrollableListState`, and `WimGuiScroll` own shared row rendering, modal-list, offset preservation, and scroll-window math.
   - `StockReviewPanelPlugin` rebuilds one root content panel for state changes through `WimGuiContentPanel`.
   - `StockReviewModeController` owns review/filter/color-debug mode state and color-debug draft/persistence state. Keep those concerns out of `StockReviewPanelPlugin`; the panel should orchestrate lifecycle, snapshot rebuilds, and trade execution rather than accumulating more mode booleans.
+  - `StockReviewTradeController` owns trade-planning actions such as row buy/sell adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient. Keep planning mutations there and reserve `StockReviewPanelPlugin` for popup lifecycle, snapshot rebuilds, source changes, review confirmation, and live cargo execution.
   - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
 - Popup button rule:
   - Buttons use real Starsector buttons with blank built-in labels plus a reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` registry as a polling fallback. In runtime, nested custom-panel controls did not reliably arrive through `buttonPressed(...)` alone.
@@ -77,6 +78,7 @@
   - `Sell All Until Sufficient` queues inventory sales only where the post-trade stock level remains sufficient;
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
+  - trade-planning button handling belongs in `StockReviewTradeController`, which talks back to the panel through a narrow host interface for messages, warning refreshes, and content rebuilds.
   - `StockReviewPendingTrades.removeExecuted(...)` removes by queued trade value, not list object identity. Preserve that behavior so future execution-order copies do not leave already-executed trades queued.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
   - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon data rows;
