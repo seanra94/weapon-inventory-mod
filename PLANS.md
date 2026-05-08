@@ -65,6 +65,8 @@
   - `StockReviewItemInfoRows` owns shared Basic/Advanced Info row construction for trade and review screens, while `StockReviewTradeRowCells` owns shared storage/price/plan/dynamic-step row cells and the deliberate worst-case row-width sample;
   - `StockReviewRenderer` owns shell/header/footer composition and stock-specific scroll row/top-gap rules while shared list helpers render fixed-height custom row panels for category headings, weapon rows, nested sections, sellers, buttons, and scroll indicators;
   - `StockReviewExpansionState` owns category, item-type, item, and review-trade-group expansion maps, keeping expansion details out of the broader `StockReviewState`;
+  - `StockReviewFilterState` owns active filters and filter-group expansion, keeping filter bookkeeping out of the broader `StockReviewState`;
+  - `StockReviewSourceState` owns sort/source/black-market/storage-source settings, keeping procurement-source bookkeeping out of the broader `StockReviewState`;
   - `WimGuiScroll` and `WimGuiModalListLayout` own shared visible-row/window math for scrollable modal lists;
   - `WimGuiPanelPlugin` owns reusable row/container fill and border drawing;
   - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;

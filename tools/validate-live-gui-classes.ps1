@@ -18,6 +18,8 @@ $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewExecutionController.class",
     "weaponsprocurement/gui/StockReviewExecutionController`$Host.class",
     "weaponsprocurement/gui/StockReviewExpansionState.class",
+    "weaponsprocurement/gui/StockReviewFilterState.class",
+    "weaponsprocurement/gui/StockReviewSourceState.class",
     "weaponsprocurement/gui/StockReviewFooterRenderer.class",
     "weaponsprocurement/gui/StockReviewTradeSummaryRenderer.class",
     "weaponsprocurement/gui/StockReviewLaunchState.class",

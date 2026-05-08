@@ -6,44 +6,28 @@ import weaponsprocurement.core.StockSortMode;
 import weaponsprocurement.core.StockSourceMode;
 import weaponsprocurement.core.StockItemType;
 
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.Map;
 import java.util.Set;
 
 public final class StockReviewState implements WimGuiScrollableListState {
     private final StockReviewExpansionState expansion;
-    private StockSortMode sortMode;
-    private boolean includeCurrentMarketStorage;
-    private boolean includeBlackMarket;
-    private StockSourceMode sourceMode;
+    private final StockReviewFilterState filters;
+    private final StockReviewSourceState source;
     private int listScrollOffset = 0;
-    private final Set<StockReviewFilter> activeFilters = EnumSet.noneOf(StockReviewFilter.class);
-    private final Map<StockReviewFilterGroup, Boolean> expandedFilterGroups = new EnumMap<StockReviewFilterGroup, Boolean>(StockReviewFilterGroup.class);
     private String tradeWarning = "None";
     private float initialCredits = -1f;
     private float initialCargoCapacity = -1f;
 
     public StockReviewState(StockReviewConfig config) {
         this.expansion = new StockReviewExpansionState();
-        for (StockReviewFilterGroup group : StockReviewFilterGroup.values()) {
-            expandedFilterGroups.put(group, Boolean.FALSE);
-        }
-        this.sortMode = config.getSortMode();
-        this.includeCurrentMarketStorage = config.isIncludeCurrentMarketStorage();
-        this.includeBlackMarket = config.isIncludeBlackMarket();
-        this.sourceMode = StockSourceMode.LOCAL;
+        this.filters = new StockReviewFilterState();
+        this.source = new StockReviewSourceState(config);
     }
 
     public StockReviewState(StockReviewState source) {
         this.expansion = new StockReviewExpansionState(source.expansion);
-        this.sortMode = source.sortMode;
-        this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
-        this.includeBlackMarket = source.includeBlackMarket;
-        this.sourceMode = source.sourceMode;
+        this.filters = new StockReviewFilterState(source.filters);
+        this.source = new StockReviewSourceState(source.source);
         this.listScrollOffset = source.listScrollOffset;
-        this.activeFilters.addAll(source.activeFilters);
-        this.expandedFilterGroups.putAll(source.expandedFilterGroups);
         this.tradeWarning = source.tradeWarning;
         this.initialCredits = source.initialCredits;
         this.initialCargoCapacity = source.initialCargoCapacity;
@@ -94,82 +78,61 @@ public final class StockReviewState implements WimGuiScrollableListState {
     }
 
     public boolean isFilterActive(StockReviewFilter filter) {
-        return activeFilters.contains(filter);
+        return filters.isFilterActive(filter);
     }
 
     public void toggleFilter(StockReviewFilter filter) {
-        if (filter == null) {
-            return;
-        }
-        if (activeFilters.contains(filter)) {
-            activeFilters.remove(filter);
-        } else {
-            activeFilters.add(filter);
-        }
+        filters.toggleFilter(filter);
         listScrollOffset = 0;
     }
 
     public Set<StockReviewFilter> getActiveFilters() {
-        return EnumSet.copyOf(activeFilters);
+        return filters.getActiveFilters();
     }
 
     public int getActiveFilterCount() {
-        return activeFilters.size();
+        return filters.getActiveFilterCount();
     }
 
     public void clearFilters() {
-        activeFilters.clear();
+        filters.clearFilters();
         listScrollOffset = 0;
     }
 
     public boolean isExpanded(StockReviewFilterGroup group) {
-        Boolean value = expandedFilterGroups.get(group);
-        return value != null && value.booleanValue();
+        return filters.isExpanded(group);
     }
 
     public void toggle(StockReviewFilterGroup group) {
-        expandedFilterGroups.put(group, Boolean.valueOf(!isExpanded(group)));
+        filters.toggle(group);
     }
 
     public StockSortMode getSortMode() {
-        return sortMode;
+        return source.getSortMode();
     }
 
     public void cycleSortMode() {
-        sortMode = sortMode.next();
+        source.cycleSortMode();
     }
 
     public boolean isIncludeCurrentMarketStorage() {
-        return includeCurrentMarketStorage;
+        return source.isIncludeCurrentMarketStorage();
     }
 
     public boolean isIncludeBlackMarket() {
-        return !getSourceMode().isRemote() && includeBlackMarket;
+        return source.isIncludeBlackMarket();
     }
 
     public void toggleBlackMarket() {
-        if (getSourceMode().isRemote()) {
-            includeBlackMarket = false;
-            return;
-        }
-        includeBlackMarket = !includeBlackMarket;
+        source.toggleBlackMarket();
     }
 
     public StockSourceMode getSourceMode() {
-        StockSourceMode resolved = sourceMode == null ? StockSourceMode.LOCAL : sourceMode;
-        if (!resolved.isEnabled()) {
-            sourceMode = StockSourceMode.LOCAL;
-            includeBlackMarket = false;
-            return sourceMode;
-        }
-        return resolved;
+        return source.getSourceMode();
     }
 
     public void cycleSourceMode() {
-        sourceMode = getSourceMode().next();
-        if (sourceMode.isRemote()) {
-            includeBlackMarket = false;
-        }
+        source.cycleSourceMode();
     }
 
     public int getListScrollOffset() {
