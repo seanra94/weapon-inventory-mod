@@ -8,22 +8,16 @@ import weaponsprocurement.core.StockItemType;
 
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public final class StockReviewState implements WimGuiScrollableListState {
-    private final Map<StockCategory, Boolean> expanded = new EnumMap<StockCategory, Boolean>(StockCategory.class);
-    private final Map<StockItemType, Boolean> expandedItemTypes = new EnumMap<StockItemType, Boolean>(StockItemType.class);
-    private final Map<StockItemType, Map<StockCategory, Boolean>> expandedByItemType =
-            new EnumMap<StockItemType, Map<StockCategory, Boolean>>(StockItemType.class);
-    private final Map<StockReviewTradeGroup, Boolean> expandedTradeGroups = new EnumMap<StockReviewTradeGroup, Boolean>(StockReviewTradeGroup.class);
+    private final StockReviewExpansionState expansion;
     private StockSortMode sortMode;
     private boolean includeCurrentMarketStorage;
     private boolean includeBlackMarket;
     private StockSourceMode sourceMode;
     private int listScrollOffset = 0;
-    private final Set<String> expandedItems = new HashSet<String>();
     private final Set<StockReviewFilter> activeFilters = EnumSet.noneOf(StockReviewFilter.class);
     private final Map<StockReviewFilterGroup, Boolean> expandedFilterGroups = new EnumMap<StockReviewFilterGroup, Boolean>(StockReviewFilterGroup.class);
     private String tradeWarning = "None";
@@ -31,14 +25,7 @@ public final class StockReviewState implements WimGuiScrollableListState {
     private float initialCargoCapacity = -1f;
 
     public StockReviewState(StockReviewConfig config) {
-        expanded.put(StockCategory.NO_STOCK, Boolean.FALSE);
-        expanded.put(StockCategory.INSUFFICIENT, Boolean.FALSE);
-        expanded.put(StockCategory.SUFFICIENT, Boolean.FALSE);
-        expandedItemTypes.put(StockItemType.WEAPON, Boolean.TRUE);
-        expandedItemTypes.put(StockItemType.WING, Boolean.TRUE);
-        initializeItemCategoryExpansion();
-        expandedTradeGroups.put(StockReviewTradeGroup.BUYING, Boolean.FALSE);
-        expandedTradeGroups.put(StockReviewTradeGroup.SELLING, Boolean.FALSE);
+        this.expansion = new StockReviewExpansionState();
         for (StockReviewFilterGroup group : StockReviewFilterGroup.values()) {
             expandedFilterGroups.put(group, Boolean.FALSE);
         }
@@ -49,16 +36,12 @@ public final class StockReviewState implements WimGuiScrollableListState {
     }
 
     public StockReviewState(StockReviewState source) {
-        expanded.putAll(source.expanded);
-        expandedItemTypes.putAll(source.expandedItemTypes);
-        copyItemCategoryExpansion(source.expandedByItemType);
-        expandedTradeGroups.putAll(source.expandedTradeGroups);
+        this.expansion = new StockReviewExpansionState(source.expansion);
         this.sortMode = source.sortMode;
         this.includeCurrentMarketStorage = source.includeCurrentMarketStorage;
         this.includeBlackMarket = source.includeBlackMarket;
         this.sourceMode = source.sourceMode;
         this.listScrollOffset = source.listScrollOffset;
-        this.expandedItems.addAll(source.expandedItems);
         this.activeFilters.addAll(source.activeFilters);
         this.expandedFilterGroups.putAll(source.expandedFilterGroups);
         this.tradeWarning = source.tradeWarning;
@@ -67,63 +50,47 @@ public final class StockReviewState implements WimGuiScrollableListState {
     }
 
     public boolean isExpanded(StockCategory category) {
-        Boolean value = expanded.get(category);
-        return value != null && value.booleanValue();
+        return expansion.isExpanded(category);
     }
 
     public void toggle(StockCategory category) {
-        expanded.put(category, Boolean.valueOf(!isExpanded(category)));
+        expansion.toggle(category);
     }
 
     public boolean isExpanded(StockItemType itemType, StockCategory category) {
-        Map<StockCategory, Boolean> byCategory = expandedByItemType.get(itemType);
-        Boolean value = byCategory == null ? null : byCategory.get(category);
-        return value != null && value.booleanValue();
+        return expansion.isExpanded(itemType, category);
     }
 
     public void toggle(StockItemType itemType, StockCategory category) {
-        if (itemType == null) {
-            toggle(category);
-            return;
-        }
-        Map<StockCategory, Boolean> byCategory = expandedByItemType.get(itemType);
-        if (byCategory == null) {
-            byCategory = new EnumMap<StockCategory, Boolean>(StockCategory.class);
-            expandedByItemType.put(itemType, byCategory);
-        }
-        byCategory.put(category, Boolean.valueOf(!isExpanded(itemType, category)));
+        expansion.toggle(itemType, category);
     }
 
     public boolean isExpanded(StockItemType itemType) {
-        Boolean value = expandedItemTypes.get(itemType);
-        return value != null && value.booleanValue();
+        return expansion.isExpanded(itemType);
     }
 
     public void toggle(StockItemType itemType) {
-        expandedItemTypes.put(itemType, Boolean.valueOf(!isExpanded(itemType)));
+        expansion.toggle(itemType);
     }
 
     public boolean isExpanded(StockReviewTradeGroup tradeGroup) {
-        Boolean value = expandedTradeGroups.get(tradeGroup);
-        return value != null && value.booleanValue();
+        return expansion.isExpanded(tradeGroup);
     }
 
     public void toggle(StockReviewTradeGroup tradeGroup) {
-        expandedTradeGroups.put(tradeGroup, Boolean.valueOf(!isExpanded(tradeGroup)));
+        expansion.toggle(tradeGroup);
     }
 
     public void setExpanded(StockReviewTradeGroup tradeGroup, boolean value) {
-        if (tradeGroup != null) {
-            expandedTradeGroups.put(tradeGroup, Boolean.valueOf(value));
-        }
+        expansion.setExpanded(tradeGroup, value);
     }
 
     public boolean isItemExpanded(String itemKey) {
-        return expandedItems.contains(itemKey);
+        return expansion.isItemExpanded(itemKey);
     }
 
     public void toggleItem(String itemKey) {
-        toggleSet(expandedItems, itemKey);
+        expansion.toggleItem(itemKey);
     }
 
     public boolean isFilterActive(StockReviewFilter filter) {
@@ -246,40 +213,4 @@ public final class StockReviewState implements WimGuiScrollableListState {
         }
     }
 
-    private static void toggleSet(Set<String> set, String key) {
-        if (key == null || key.isEmpty()) {
-            return;
-        }
-        if (set.contains(key)) {
-            set.remove(key);
-        } else {
-            set.add(key);
-        }
-    }
-
-    private void initializeItemCategoryExpansion() {
-        for (StockItemType itemType : StockItemType.values()) {
-            Map<StockCategory, Boolean> byCategory = new EnumMap<StockCategory, Boolean>(StockCategory.class);
-            for (StockCategory category : StockCategory.values()) {
-                byCategory.put(category, Boolean.FALSE);
-            }
-            expandedByItemType.put(itemType, byCategory);
-        }
-    }
-
-    private void copyItemCategoryExpansion(Map<StockItemType, Map<StockCategory, Boolean>> source) {
-        if (source == null || source.isEmpty()) {
-            initializeItemCategoryExpansion();
-            return;
-        }
-        for (StockItemType itemType : StockItemType.values()) {
-            Map<StockCategory, Boolean> sourceByCategory = source.get(itemType);
-            Map<StockCategory, Boolean> byCategory = new EnumMap<StockCategory, Boolean>(StockCategory.class);
-            for (StockCategory category : StockCategory.values()) {
-                Boolean value = sourceByCategory == null ? null : sourceByCategory.get(category);
-                byCategory.put(category, Boolean.valueOf(value != null && value.booleanValue()));
-            }
-            expandedByItemType.put(itemType, byCategory);
-        }
-    }
 }
