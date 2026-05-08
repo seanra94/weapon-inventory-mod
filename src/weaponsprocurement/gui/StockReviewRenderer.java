@@ -40,7 +40,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         if (!filterMode && !colorDebugMode) {
             StockReviewTradeSummaryRenderer.render(root, tradeContext, state, reviewMode);
         }
-        renderFooter(root, tradeContext, pendingPurchases, reviewMode, filterMode, colorDebugMode, colorDebugPersistent, buttons);
+        StockReviewFooterRenderer.render(root, tradeContext, pendingPurchases, reviewMode, filterMode,
+                colorDebugMode, buttons);
         return result;
     }
 
@@ -145,124 +146,6 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 this,
                 this,
                 buttons);
-    }
-
-    private void renderFooter(CustomPanelAPI root,
-                              StockReviewTradeContext tradeContext,
-                              List<StockReviewPendingPurchase> pendingPurchases,
-                              boolean reviewMode,
-                              boolean filterMode,
-                              boolean colorDebugMode,
-                              boolean colorDebugPersistent,
-                              List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        if (colorDebugMode) {
-            WimGuiModalFooter.addLeftRowAndRightButton(
-                    root,
-                    StockReviewStyle.MODAL,
-                    StockReviewStyle.ACTION_BUTTON_HEIGHT,
-                    StockReviewStyle.BUTTON_GAP,
-                    WimGuiButtonSpecs.of(
-                            footerButton("Confirm", StockReviewAction.debugConfirm(), true, StockReviewStyle.CONFIRM_BUTTON,
-                                    "Apply the color and return to the trade screen."),
-                        footerButton("Apply", StockReviewAction.debugApply(), true, StockReviewStyle.SAVE_BUTTON,
-                                "Apply the color without closing the debug menu."),
-                            footerButton("Restore", StockReviewAction.debugRestore(), true, StockReviewStyle.LOAD_BUTTON,
-                                    "Restore the selected color to its default value.")),
-                    footerButton("Cancel", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON,
-                            "Return without applying additional changes."),
-                    buttons);
-            return;
-        }
-        if (filterMode) {
-            WimGuiModalFooter.addLeftRowAndRightButton(
-                    root,
-                    StockReviewStyle.MODAL,
-                    StockReviewStyle.ACTION_BUTTON_HEIGHT,
-                    StockReviewStyle.BUTTON_GAP,
-                    WimGuiButtonSpecs.of(footerButton("Confirm", StockReviewAction.goBack(), true, StockReviewStyle.CONFIRM_BUTTON,
-                                    "Return to the trade screen with the current filters."),
-                            footerButton("Reset Filters", StockReviewAction.resetFilters(),
-                                    true, StockReviewStyle.LOAD_BUTTON,
-                                    "Clear every active filter.")),
-                    footerButton("Cancel", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON,
-                            "Return to the trade screen."),
-                    buttons);
-            return;
-        }
-        if (reviewMode) {
-            WimGuiModalFooter.addLeftRowAndRightButton(
-                    root,
-                    StockReviewStyle.REVIEW_MODAL,
-                    StockReviewStyle.ACTION_BUTTON_HEIGHT,
-                    StockReviewStyle.BUTTON_GAP,
-                    WimGuiButtonSpecs.of(footerButton("Confirm Trades", StockReviewAction.confirmPurchase(),
-                            pendingPurchases != null && !pendingPurchases.isEmpty() && tradeContext.canConfirm(),
-                            StockReviewStyle.CONFIRM_BUTTON,
-                            "Execute the queued buys and sells.")),
-                    footerButton("Go Back", StockReviewAction.goBack(), true, StockReviewStyle.CANCEL_BUTTON,
-                            "Return to the trade screen without executing trades."),
-                    buttons);
-            return;
-        }
-        WimGuiModalFooter.addLeftRowAndRightButton(
-                root,
-                StockReviewStyle.MODAL,
-                StockReviewStyle.ACTION_BUTTON_HEIGHT,
-                StockReviewStyle.BUTTON_GAP,
-                WimGuiButtonSpecs.of(
-                        footerButton("Review Trades", StockReviewAction.reviewPurchase(),
-                                pendingPurchases != null && !pendingPurchases.isEmpty(), StockReviewStyle.CONFIRM_BUTTON,
-                                "Review the queued trades before confirming them."),
-                        bulkButton("Purchase All Until Sufficient", StockReviewAction.purchaseAllUntilSufficient(), true,
-                                StockReviewStyle.BUY_BUTTON, StockReviewTooltips.purchaseAllUntilSufficient()),
-                        bulkButton("Sell All Until Sufficient", StockReviewAction.sellAllUntilSufficient(), true, StockReviewStyle.SELL_BUTTON,
-                                StockReviewTooltips.sellAllUntilSufficient()),
-                        buttonFactory.button(
-                                StockReviewStyle.RESET_ALL_BUTTON_WIDTH,
-                                "Reset All Trades",
-                                StockReviewAction.resetAllTrades(),
-                                pendingPurchases != null && !pendingPurchases.isEmpty(),
-                                StockReviewStyle.ACTION_BACKGROUND,
-                                "Clear every queued buy and sell.")),
-                footerButton("Cancel", StockReviewAction.close(), true, StockReviewStyle.CANCEL_BUTTON,
-                        "Close Weapon Stock Review."),
-                buttons);
-    }
-
-    private WimGuiButtonSpec<StockReviewAction> footerButton(String label,
-                                                             StockReviewAction action,
-                                                             boolean enabled,
-                                                             Color fill) {
-        return footerButton(label, action, enabled, fill, null);
-    }
-
-    private WimGuiButtonSpec<StockReviewAction> footerButton(String label,
-                                                             StockReviewAction action,
-                                                             boolean enabled,
-                                                             Color fill,
-                                                             String tooltip) {
-        return buttonFactory.button(StockReviewStyle.FOOTER_BUTTON_WIDTH, label, action, enabled, fill, tooltip);
-    }
-
-    private WimGuiButtonSpec<StockReviewAction> bulkButton(String label,
-                                                           StockReviewAction action,
-                                                           boolean enabled) {
-        return bulkButton(label, action, enabled, StockReviewStyle.BUY_BUTTON);
-    }
-
-    private WimGuiButtonSpec<StockReviewAction> bulkButton(String label,
-                                                           StockReviewAction action,
-                                                           boolean enabled,
-                                                           Color fill) {
-        return bulkButton(label, action, enabled, fill, null);
-    }
-
-    private WimGuiButtonSpec<StockReviewAction> bulkButton(String label,
-                                                           StockReviewAction action,
-                                                           boolean enabled,
-                                                           Color fill,
-                                                           String tooltip) {
-        return buttonFactory.button(StockReviewStyle.BULK_BUTTON_WIDTH, label, action, enabled, fill, tooltip);
     }
 
     @Override

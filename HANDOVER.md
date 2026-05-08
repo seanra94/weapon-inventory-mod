@@ -32,6 +32,7 @@
   - `StockReviewModeController` owns review/filter/color-debug mode state and color-debug draft/persistence state. Keep those concerns out of `StockReviewPanelPlugin`; the panel should orchestrate lifecycle, snapshot rebuilds, and trade execution rather than accumulating more mode booleans.
   - `StockReviewUiController` owns non-trade UI action dispatch: expand/collapse rows, source/sort toggles, black-market toggles, scroll indicators, reset-all, filter/color-debug actions, review entry/back, and close/Escape behavior.
   - `StockReviewTradeController` owns trade-planning actions such as row buy/sell adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient. Keep planning mutations there and reserve `StockReviewPanelPlugin` for popup lifecycle, snapshot rebuilds, source changes, review confirmation, and live cargo execution.
+  - `StockReviewFooterRenderer` owns mode-specific modal footers for trade, review, filter, and color-debug screens.
   - `StockReviewTradeSummaryRenderer` owns the fixed bottom `Warning`, `Tariffs Paid`, `Credits Available`, and `Cargo Space Available` rows for trade and review screens.
   - `StockReviewExecutionController` owns `Confirm Trades`: final affordability/cargo checks, execution ordering, per-line failure handling, pending-trade cleanup after partial success, review exit, and post-confirm reopen/refresh routing.
   - State-changing category/weapon/section/mode/sort/filter actions should rebuild the custom content panel in place and preserve `StockReviewState`, including list scroll offset.
