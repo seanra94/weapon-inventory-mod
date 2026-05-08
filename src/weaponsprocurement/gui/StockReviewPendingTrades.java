@@ -27,7 +27,10 @@ final class StockReviewPendingTrades {
         for (int i = 0; i < source.size(); i++) {
             StockReviewPendingPurchase purchase = source.get(i);
             if (purchase != null && !purchase.isZero()) {
-                trades.add(purchase.copy());
+                StockReviewPendingPurchase copy = purchase.copy();
+                if (copy != null) {
+                    trades.add(copy);
+                }
             }
         }
     }
@@ -38,7 +41,10 @@ final class StockReviewPendingTrades {
         }
         StockReviewPendingPurchase existing = find(itemKey, submarketId);
         if (existing == null) {
-            trades.add(new StockReviewPendingPurchase(itemKey, submarketId, quantity));
+            StockReviewPendingPurchase purchase = StockReviewPendingPurchase.create(itemKey, submarketId, quantity);
+            if (purchase != null) {
+                trades.add(purchase);
+            }
             return;
         }
         existing.addQuantity(quantity);

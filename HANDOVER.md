@@ -82,6 +82,7 @@
   - `Sell All Until Sufficient` queues inventory sales only where the post-trade stock level remains sufficient;
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
+  - `StockReviewPendingPurchase.create(...)` is the only valid construction path for queued trades; it rejects empty item keys and zero quantities before they can enter quote/execution logic.
   - UI-only action routing belongs in `StockReviewUiController`. Keep source changes, filters, color debug, scroll, review/back, and reset-all there so the panel does not become the dispatcher again.
   - trade-planning button handling belongs in `StockReviewTradeController`, which talks back to the panel through a narrow host interface for messages, warning refreshes, and content rebuilds.
   - `StockReviewPendingTrades.removeExecuted(...)` removes by queued trade value, not list object identity. Preserve that behavior so future execution-order copies do not leave already-executed trades queued.

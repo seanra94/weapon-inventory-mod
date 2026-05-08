@@ -79,14 +79,24 @@ final class StockReviewTradePlanner {
                     adjusted = true;
                 }
                 if (quantity != 0) {
-                    result.add(new StockReviewPendingPurchase(purchase.getItemKey(), purchase.getSubmarketId(), quantity));
+                    addPending(result, purchase.getItemKey(), purchase.getSubmarketId(), quantity);
                 }
             }
         }
         if (!adjusted && delta != 0) {
-            result.add(new StockReviewPendingPurchase(itemKey, submarketId, delta));
+            addPending(result, itemKey, submarketId, delta);
         }
         return result;
+    }
+
+    private static void addPending(List<StockReviewPendingPurchase> result,
+                                   String itemKey,
+                                   String submarketId,
+                                   int quantity) {
+        StockReviewPendingPurchase purchase = StockReviewPendingPurchase.create(itemKey, submarketId, quantity);
+        if (purchase != null) {
+            result.add(purchase);
+        }
     }
 
     static List<StockReviewPendingPurchase> executionOrder(List<StockReviewPendingPurchase> pendingPurchases) {
