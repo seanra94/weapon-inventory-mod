@@ -157,17 +157,7 @@ final class StockReviewQuoteBook {
             sortedBuyStocksByItem.put(itemKey, Collections.<SubmarketWeaponStock>emptyList());
             return Collections.emptyList();
         }
-        List<SubmarketWeaponStock> result = new ArrayList<SubmarketWeaponStock>();
-        for (int i = 0; i < record.getSubmarketStocks().size(); i++) {
-            SubmarketWeaponStock stock = record.getSubmarketStocks().get(i);
-            if (stock.isPurchasable() && stock.getCount() > 0) {
-                result.add(stock);
-            }
-        }
-        sortByPrice(result);
-        result = Collections.unmodifiableList(result);
-        sortedBuyStocksByItem.put(itemKey, result);
-        return result;
+        return sortedBuyStocks(record);
     }
 
     private List<SubmarketWeaponStock> sortedBuyStocks(WeaponStockRecord record) {
@@ -186,7 +176,7 @@ final class StockReviewQuoteBook {
                 result.add(stock);
             }
         }
-        sortByPrice(result);
+        Collections.sort(result, SubmarketStockPriceComparator.INSTANCE);
         result = Collections.unmodifiableList(result);
         sortedBuyStocksByItem.put(itemKey, result);
         return result;
@@ -239,10 +229,6 @@ final class StockReviewQuoteBook {
             return null;
         }
         return snapshot.getRecord(itemKey);
-    }
-
-    private static void sortByPrice(List<SubmarketWeaponStock> stocks) {
-        Collections.sort(stocks, SubmarketStockPriceComparator.INSTANCE);
     }
 
     private static final class SubmarketStockPriceComparator implements Comparator<SubmarketWeaponStock> {
