@@ -140,7 +140,7 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 "Tariffs Paid",
                 tariffsPaidLabel(tradeContext),
                 tradeContext.totalMarkupPaid() > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND,
-                "Extra credits paid above base weapon value because of source markup.");
+                StockReviewTooltips.tariffs());
         rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
@@ -340,9 +340,9 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                 pendingPurchases != null && !pendingPurchases.isEmpty(), StockReviewStyle.CONFIRM_BUTTON,
                                 "Review the queued trades before confirming them."),
                         bulkButton("Purchase All Until Sufficient", StockReviewAction.purchaseAllUntilSufficient(), true,
-                                StockReviewStyle.BUY_BUTTON, "Queue buys until visible weapons are barely sufficient."),
+                                StockReviewStyle.BUY_BUTTON, StockReviewTooltips.purchaseAllUntilSufficient()),
                         bulkButton("Sell All Until Sufficient", StockReviewAction.sellAllUntilSufficient(), true, StockReviewStyle.SELL_BUTTON,
-                                "Queue sells until visible excess weapons are barely sufficient."),
+                                StockReviewTooltips.sellAllUntilSufficient()),
                         buttonFactory.button(
                                 StockReviewStyle.RESET_ALL_BUTTON_WIDTH,
                                 "Reset All Trades",

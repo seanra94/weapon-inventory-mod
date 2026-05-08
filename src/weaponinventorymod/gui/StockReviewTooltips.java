@@ -53,10 +53,40 @@ final class StockReviewTooltips {
     }
 
     static String weapon(WeaponStockRecord record) {
-        if (record == null) {
-            return "Toggle the weapon data display.";
-        }
         return "Toggle the weapon data display.";
+    }
+
+    static String decreasePlan(int quantity) {
+        return "Decrease the queued trade quantity by " + Math.max(1, quantity) + ", selling if applicable.";
+    }
+
+    static String increasePlan(int quantity) {
+        return "Increase the queued trade quantity by " + Math.max(1, quantity) + ", buying if applicable.";
+    }
+
+    static String sufficient(WeaponStockRecord record) {
+        int threshold = record == null ? 0 : record.getDesiredCount();
+        return "Adjust the queued trade quantity so that your stock of this weapon just meets the sufficiency threshold for this weapon mount size (" + threshold + ").";
+    }
+
+    static String resetPlan() {
+        return "Reset the queued trade quantity to 0.";
+    }
+
+    static String tariffs() {
+        return "Extra credits paid above base weapon value due to source markup. Tariffs are much higher on the Sector Market ("
+                + oneDecimal(WeaponInventoryConfig.sectorMarketPriceMultiplier())
+                + "x) and Fixer Market ("
+                + oneDecimal(WeaponInventoryConfig.secretMarketPriceMultiplier())
+                + "x).";
+    }
+
+    static String purchaseAllUntilSufficient() {
+        return "Queue purchases from cheapest to most expensive until your stock reaches the sufficiency threshold, or until you run out of money, cargo space, or available weapons to buy.";
+    }
+
+    static String sellAllUntilSufficient() {
+        return "Queue sales until you have sold as many weapons as possible without reducing stock below the sufficiency threshold.";
     }
 
     static String filterHeading(StockReviewFilterGroup group) {
