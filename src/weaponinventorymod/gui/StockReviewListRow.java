@@ -39,6 +39,17 @@ final class StockReviewListRow {
                 StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.LMID, null, topGap, tooltip);
     }
 
+    static WimGuiListRow<StockReviewAction> nestedHeading(String label,
+                                                          float indent,
+                                                          float rightReserveWidth,
+                                                          StockReviewAction action,
+                                                          boolean topGap,
+                                                          String tooltip) {
+        return row(label, StockReviewStyle.TEXT, StockReviewStyle.HEADING_BACKGROUND,
+                StockReviewStyle.HEADING_BACKGROUND, null, indent, action, Alignment.LMID,
+                null, topGap, null, rightReserveWidth, tooltip);
+    }
+
     static WimGuiListRow<StockReviewAction> filter(String label,
                                                    boolean active,
                                                    StockReviewAction action,
@@ -96,18 +107,6 @@ final class StockReviewListRow {
         float componentWidth = Math.max(40f,
                 listWidth - indent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
         return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth, StockReviewStyle.TEXT);
-    }
-
-    static WimGuiListRow<StockReviewAction> labelTextIndentedFixedWidth(String label,
-                                                                         String value,
-                                                                         float indent,
-                                                                         boolean topGap,
-                                                                         float componentWidth,
-                                                                         float rightReserveWidth) {
-        return labelTextRow(label, value, indent, topGap,
-                Math.max(40f, componentWidth),
-                Math.max(0f, rightReserveWidth),
-                StockReviewStyle.TEXT);
     }
 
     private static WimGuiListRow<StockReviewAction> labelTextRow(String label,

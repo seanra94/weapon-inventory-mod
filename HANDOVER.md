@@ -37,6 +37,7 @@
 - Popup scope:
   - The old display-mode button and config mode were removed. The Buy GUI should show only weapons that are buyable from the active stock source or present in player inventory and therefore sellable through the GUI.
   - The Buy GUI now has top-level `Weapons` and `Wings` toggle headings. Each section then renders the usual `No Stock`, `Insufficient Stock`, and `Sufficient Stock` headings. Weapon filters apply only to weapons; wings remain visible while weapon filters are active until wing-specific filters are deliberately added.
+  - Wing sufficiency defaults to 4 and is configurable through LunaLib as `wim_desired_fighter_wing_count`.
   - Stored-only weapons should not create rows. The `Storage` cell may still show full owned stock, including accessible storage, for a weapon that appears because it is buyable or in player inventory.
   - Local stock collection, local buys, local sells, and sell-price quoting should all use `MarketStockService.isTradeSubmarket(...)` for storage/local-resource/black-market filtering. Do not copy that submarket filter into each caller.
 - Stock source modes:
@@ -89,8 +90,8 @@
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders.
-  - Nested weapon-row sizing must be treated as a simple indent stack. If a parent weapon heading has visible width `X` and one indent unit is `Y`, expanded weapon data rows start one extra indent deeper and have width `X - Y`, so their right edge aligns with the parent heading. The same shrinking rule applies to any future child/grandchild row: increasing indentation must also reduce row width by the same amount, not just shift the row right.
-  - Current expanded weapon data rows deliberately use a fixed-width row helper with a doubled visual indent. This was added after runtime testing showed the earlier shrink-only indentation still looked wrong. If revisiting this, preserve the fixed-width helper path unless in-game screenshots prove the right-edge alignment rule looks better than the doubled-indent rule.
+  - Nested weapon-row sizing must be treated as a simple indent stack. If a parent weapon heading has visible width `X` and one indent unit is `Y`, a child row starts one indent deeper and has width `X - Y`; a grandchild row starts two indents deeper and has width `X - 2Y`. The right edge must align with the parent row. Do this by adding an invisible borderless indent spacer and reducing the child component width by the same indent, not by shifting a full-width component right.
+  - Expanded weapon rows now contain `Basic Info` and `Advanced Info` nested toggle headings. Their data rows are LabelTextComponents one level deeper than the heading and use the shared indent-minus-width layout path.
   - Weapon entries should keep this order: weapon label, `Storage`, `Price`, `Buying`/`Selling`, dynamic sell step, `-1`, `+1`, dynamic buy step, `Sufficient`, `Reset`.
   - Width increases for right-side row cells such as `Storage`, `Price`, or `Buying`/`Selling` should come out of the weapon toggle-heading width. The weapon label area has slack; do not compensate by widening the popup or squeezing other fixed cells unless explicitly requested.
   - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.

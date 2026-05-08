@@ -249,42 +249,128 @@ final class StockReviewListModel {
                               StockReviewState state,
                               float rightReserveWidth,
                               float listWidth) {
-        float oldIndent = StockReviewStyle.SECTION_INDENT;
-        float dataIndent = 2f * oldIndent;
-        float componentWidth = Math.max(40f,
-                listWidth - oldIndent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
-        float compensatedRightReserve = Math.max(0f,
-                listWidth - dataIndent - componentWidth - 2f * StockReviewStyle.SMALL_PAD);
-        rows.add(dataRow("Desired", String.valueOf(record.getDesiredCount()), dataIndent, componentWidth, compensatedRightReserve));
+        boolean basicExpanded = isInfoSectionExpanded(state, record, "basic");
+        rows.add(infoHeading("Basic Info", record, "basic", basicExpanded, rightReserveWidth));
+        if (basicExpanded) {
+            addBasicInfo(rows, record, rightReserveWidth, listWidth);
+        }
         if (record.isWing()) {
-            rows.add(dataRow("Role", record.getTypeLabel(), dataIndent, componentWidth, compensatedRightReserve));
-            rows.add(dataRow("Fighters", record.getWingFighterCountLabel(), dataIndent, componentWidth, compensatedRightReserve));
-            rows.add(dataRow("OP", record.getWingOpCostLabel(), dataIndent, componentWidth, compensatedRightReserve));
-            rows.add(dataRow("Range", record.getRangeLabel(), dataIndent, componentWidth, compensatedRightReserve));
-            rows.add(dataRow("Refit", record.getWingRefitTimeLabel(), dataIndent, componentWidth, compensatedRightReserve));
             return;
         }
-        rows.add(dataRow("Size", record.getSizeLabel(), dataIndent, componentWidth, compensatedRightReserve));
-        rows.add(dataRow("Type", record.getTypeLabel(), dataIndent, componentWidth, compensatedRightReserve));
-        rows.add(dataRow("Damage", record.getDamageLabel(), dataIndent, componentWidth, compensatedRightReserve));
-        rows.add(dataRow("EMP", record.getEmpLabel(), dataIndent, componentWidth, compensatedRightReserve));
-        rows.add(dataRow("Range", record.getRangeLabel(), dataIndent, componentWidth, compensatedRightReserve));
-        rows.add(dataRow("Flux/Second", record.getFluxPerSecondLabel(), dataIndent, componentWidth, compensatedRightReserve));
-        rows.add(dataRow("Flux/Damage", record.getFluxPerDamageLabel(), dataIndent, componentWidth, compensatedRightReserve));
+        boolean advancedExpanded = isInfoSectionExpanded(state, record, "advanced");
+        rows.add(infoHeading("Advanced Info", record, "advanced", advancedExpanded, rightReserveWidth));
+        if (advancedExpanded) {
+            addAdvancedInfo(rows, record, rightReserveWidth, listWidth);
+        }
+    }
+
+    private static void addBasicInfo(List<WimGuiListRow<StockReviewAction>> rows,
+                                     WeaponStockRecord record,
+                                     float rightReserveWidth,
+                                     float listWidth) {
+        addRequiredDataRow(rows, "Desired", String.valueOf(record.getDesiredCount()), rightReserveWidth, listWidth);
+        if (record.isWing()) {
+            addDataRow(rows, "Primary Role", record.getTypeLabel(), rightReserveWidth, listWidth);
+            addRequiredDataRow(rows, "Size", "WING", rightReserveWidth, listWidth);
+            addDataRow(rows, "Fighters", record.getWingFighterCountLabel(), rightReserveWidth, listWidth);
+            addDataRow(rows, "OP", record.getWingOpCostLabel(), rightReserveWidth, listWidth);
+            addDataRow(rows, "Range", record.getRangeLabel(), rightReserveWidth, listWidth);
+            addDataRow(rows, "Refit(Sec)", record.getWingRefitTimeLabel(), rightReserveWidth, listWidth);
+            return;
+        }
+        addDataRow(rows, "Primary Role", record.getPrimaryRoleLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Size", record.getSizeLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Type", record.getTypeLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "OP", record.getOpCostLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Range", record.getRangeLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Refire(Sec)", record.getRefireSecondsLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Damage", record.getDamageLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Damage/Sec (sustained)", record.getSustainedDamagePerSecondLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Flux/Sec (sustained)", record.getSustainedFluxPerSecondLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Flux/Damage", record.getFluxPerDamageLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "EMP", record.getEmpLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Max Ammo", record.getMaxAmmoLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Sec / Reload", record.getSecPerReloadLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Ammo Gain", record.getAmmoGainLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Accuracy", record.getAccuracyLabel(), rightReserveWidth, listWidth);
+    }
+
+    private static void addAdvancedInfo(List<WimGuiListRow<StockReviewAction>> rows,
+                                        WeaponStockRecord record,
+                                        float rightReserveWidth,
+                                        float listWidth) {
+        addDataRow(rows, "EMP/Second (sustained)", record.getSustainedEmpPerSecondLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Flux/EMP", record.getFluxPerEmpLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Beam DPS", record.getBeamDpsLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Charge Up", record.getBeamChargeUpLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Charge Down", record.getBeamChargeDownLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Burst Delay", record.getBurstDelayLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Turn Rate/Second", record.getTurnRateLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Min Spread", record.getMinSpreadLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Max Spread", record.getMaxSpreadLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Spread / Shot", record.getSpreadPerShotLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Spread Decay", record.getSpreadDecayLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Proj. Speed", record.getProjectileSpeedLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Launch Speed", record.getLaunchSpeedLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Flight Time", record.getFlightTimeLabel(), rightReserveWidth, listWidth);
+        addDataRow(rows, "Guided", record.getGuidedLabel(), rightReserveWidth, listWidth);
+    }
+
+    private static WimGuiListRow<StockReviewAction> infoHeading(String label,
+                                                                WeaponStockRecord record,
+                                                                String section,
+                                                                boolean expanded,
+                                                                float rightReserveWidth) {
+        return StockReviewListRow.nestedHeading(
+                WimGuiToggleHeading.label(label, expanded),
+                StockReviewStyle.SECTION_INDENT,
+                rightReserveWidth,
+                StockReviewAction.toggleWeapon(infoSectionKey(record, section)),
+                false,
+                "Show or hide " + label.toLowerCase(java.util.Locale.US) + " rows.");
+    }
+
+    private static boolean isInfoSectionExpanded(StockReviewState state, WeaponStockRecord record, String section) {
+        return state == null || !state.isWeaponExpanded(infoSectionKey(record, section));
+    }
+
+    private static String infoSectionKey(WeaponStockRecord record, String section) {
+        return record.getWeaponId() + "::info::" + section;
+    }
+
+    private static void addRequiredDataRow(List<WimGuiListRow<StockReviewAction>> rows,
+                                           String label,
+                                           String value,
+                                           float rightReserveWidth,
+                                           float listWidth) {
+        rows.add(dataRow(label, value, rightReserveWidth, listWidth));
+    }
+
+    private static void addDataRow(List<WimGuiListRow<StockReviewAction>> rows,
+                                   String label,
+                                   String value,
+                                   float rightReserveWidth,
+                                   float listWidth) {
+        if (isMeaningful(value)) {
+            rows.add(dataRow(label, value, rightReserveWidth, listWidth));
+        }
     }
 
     private static WimGuiListRow<StockReviewAction> dataRow(String label,
                                                             String value,
-                                                            float indent,
-                                                            float componentWidth,
-                                                            float rightReserveWidth) {
-        return StockReviewListRow.labelTextIndentedFixedWidth(
+                                                            float rightReserveWidth,
+                                                            float listWidth) {
+        return StockReviewListRow.labelTextIndented(
                 label,
                 value,
-                indent,
+                StockReviewStyle.DETAIL_INDENT,
                 false,
-                componentWidth,
-                rightReserveWidth);
+                rightReserveWidth + StockReviewStyle.TEXT_LEFT_PAD,
+                listWidth);
+    }
+
+    private static boolean isMeaningful(String value) {
+        return value != null && value.trim().length() > 0 && !"?".equals(value.trim());
     }
 
     private static String cappedCount(int value) {

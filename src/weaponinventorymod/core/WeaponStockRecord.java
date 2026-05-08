@@ -3,6 +3,8 @@ package weaponinventorymod.core;
 import com.fs.starfarer.api.combat.DamageType;
 import com.fs.starfarer.api.combat.WeaponAPI;
 import com.fs.starfarer.api.loading.FighterWingSpecAPI;
+import com.fs.starfarer.api.loading.MissileSpecAPI;
+import com.fs.starfarer.api.loading.ProjectileWeaponSpecAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
 
 import java.util.Collections;
@@ -196,6 +198,14 @@ public final class WeaponStockRecord {
         return valueOrUnknown(spec == null ? null : spec.getType());
     }
 
+    public String getPrimaryRoleLabel() {
+        return valueOrUnknown(spec == null ? null : spec.getPrimaryRoleStr());
+    }
+
+    public String getOpCostLabel() {
+        return spec == null ? "?" : String.valueOf(Math.round(spec.getOrdnancePointCost(null)));
+    }
+
     public String getDamageTypeLabel() {
         return valueOrUnknown(spec == null ? null : spec.getDamageType());
     }
@@ -235,6 +245,135 @@ public final class WeaponStockRecord {
         return spec == null || spec.getDerivedStats() == null ? "?" : formatOneDecimal(spec.getDerivedStats().getFluxPerDam());
     }
 
+    public String getRefireSecondsLabel() {
+        ProjectileWeaponSpecAPI projectile = projectileWeaponSpec();
+        return projectile == null ? "?" : formatTwoDecimals(projectile.getRefireDelay());
+    }
+
+    public String getSustainedDamagePerSecondLabel() {
+        if (spec == null || spec.getDerivedStats() == null) {
+            return "?";
+        }
+        int sustained = Math.round(spec.getDerivedStats().getSustainedDps());
+        int burst = Math.round(spec.getDerivedStats().getDps());
+        return sustained == burst ? String.valueOf(sustained) : sustained + " (" + burst + ")";
+    }
+
+    public String getSustainedFluxPerSecondLabel() {
+        if (spec == null || spec.getDerivedStats() == null) {
+            return "?";
+        }
+        int sustained = Math.round(spec.getDerivedStats().getSustainedFluxPerSecond());
+        int burst = Math.round(spec.getDerivedStats().getFluxPerSecond());
+        return sustained == burst ? String.valueOf(sustained) : sustained + " (" + burst + ")";
+    }
+
+    public String getSustainedEmpPerSecondLabel() {
+        return spec == null || spec.getDerivedStats() == null ? "?" : String.valueOf(Math.round(spec.getDerivedStats().getEmpPerSecond()));
+    }
+
+    public String getFluxPerEmpLabel() {
+        if (spec == null || spec.getDerivedStats() == null || spec.getDerivedStats().getEmpPerSecond() <= 0f) {
+            return "?";
+        }
+        return String.valueOf(Math.round(spec.getDerivedStats().getSustainedFluxPerSecond() / spec.getDerivedStats().getEmpPerSecond()));
+    }
+
+    public String getBeamDpsLabel() {
+        return spec == null || !spec.isBeam() || spec.getDerivedStats() == null ? "?" : String.valueOf(Math.round(spec.getDerivedStats().getDps()));
+    }
+
+    public String getBeamChargeUpLabel() {
+        return spec == null || spec.getBeamChargeupTime() <= 0f ? "?" : formatTwoDecimals(spec.getBeamChargeupTime());
+    }
+
+    public String getBeamChargeDownLabel() {
+        return spec == null || spec.getBeamChargedownTime() <= 0f ? "?" : formatTwoDecimals(spec.getBeamChargedownTime());
+    }
+
+    public String getBurstDelayLabel() {
+        ProjectileWeaponSpecAPI projectile = projectileWeaponSpec();
+        return projectile == null || projectile.getBurstDelay() <= 0f ? "?" : formatTwoDecimals(projectile.getBurstDelay());
+    }
+
+    public String getTurnRateLabel() {
+        if (spec == null || spec.getTurnRate() <= 0f) {
+            return "?";
+        }
+        return Math.round(spec.getTurnRate()) + "\u00b0/s";
+    }
+
+    public String getMinSpreadLabel() {
+        return spec == null || spec.getMinSpread() <= 0f ? "?" : formatOneDecimal(spec.getMinSpread());
+    }
+
+    public String getMaxSpreadLabel() {
+        return spec == null || spec.getMaxSpread() <= 0f ? "?" : formatOneDecimal(spec.getMaxSpread());
+    }
+
+    public String getSpreadPerShotLabel() {
+        return spec == null || spec.getSpreadBuildup() <= 0f ? "?" : formatOneDecimal(spec.getSpreadBuildup());
+    }
+
+    public String getSpreadDecayLabel() {
+        return spec == null || spec.getSpreadDecayRate() <= 0f ? "?" : formatOneDecimal(spec.getSpreadDecayRate());
+    }
+
+    public String getProjectileSpeedLabel() {
+        ProjectileWeaponSpecAPI projectile = projectileWeaponSpec();
+        if (projectile == null) {
+            return "?";
+        }
+        float speed;
+        try {
+            speed = projectile.getProjectileSpeed(null, null);
+        } catch (RuntimeException ex) {
+            return "?";
+        }
+        return speed <= 0f || Float.isNaN(speed) || Float.isInfinite(speed)
+                ? "?"
+                : String.valueOf(Math.round(speed));
+    }
+
+    public String getLaunchSpeedLabel() {
+        MissileSpecAPI missile = missileSpec();
+        return missile == null || missile.getLaunchSpeed() <= 0f ? "?" : String.valueOf(Math.round(missile.getLaunchSpeed()));
+    }
+
+    public String getFlightTimeLabel() {
+        MissileSpecAPI missile = missileSpec();
+        return missile == null || missile.getMaxFlightTime() <= 0f ? "?" : formatTwoDecimals(missile.getMaxFlightTime());
+    }
+
+    public String getGuidedLabel() {
+        MissileSpecAPI missile = missileSpec();
+        if (missile == null) {
+            return "?";
+        }
+        String tracking = spec == null ? null : spec.getTrackingStr();
+        boolean guided = tracking != null && tracking.trim().length() > 0 && !"None".equalsIgnoreCase(tracking.trim());
+        return guided ? "TRUE" : "FALSE";
+    }
+
+    public String getMaxAmmoLabel() {
+        return spec == null || !spec.usesAmmo() || spec.getMaxAmmo() <= 0 ? "?" : String.valueOf(spec.getMaxAmmo());
+    }
+
+    public String getSecPerReloadLabel() {
+        if (spec == null || !spec.usesAmmo() || spec.getAmmoPerSecond() <= 0f || spec.getReloadSize() <= 0f) {
+            return "?";
+        }
+        return formatTwoDecimals(spec.getReloadSize() / spec.getAmmoPerSecond());
+    }
+
+    public String getAmmoGainLabel() {
+        return spec == null || !spec.usesAmmo() || spec.getAmmoPerSecond() <= 0f ? "?" : formatOneDecimal(spec.getAmmoPerSecond());
+    }
+
+    public String getAccuracyLabel() {
+        return valueOrUnknown(spec == null ? null : spec.getAccuracyStr());
+    }
+
     public String getWingFighterCountLabel() {
         return wingSpec == null ? "?" : String.valueOf(wingSpec.getNumFighters());
     }
@@ -252,6 +391,22 @@ public final class WeaponStockRecord {
             return "?";
         }
         return String.valueOf(Math.round(value * 10f) / 10f);
+    }
+
+    private static String formatTwoDecimals(float value) {
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            return "?";
+        }
+        return String.format(java.util.Locale.US, "%.2f", value);
+    }
+
+    private ProjectileWeaponSpecAPI projectileWeaponSpec() {
+        return spec instanceof ProjectileWeaponSpecAPI ? (ProjectileWeaponSpecAPI) spec : null;
+    }
+
+    private MissileSpecAPI missileSpec() {
+        Object projectile = spec == null ? null : spec.getProjectileSpec();
+        return projectile instanceof MissileSpecAPI ? (MissileSpecAPI) projectile : null;
     }
 
     private static String valueOrUnknown(Object value) {

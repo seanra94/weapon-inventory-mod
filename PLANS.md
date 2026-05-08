@@ -168,7 +168,8 @@
   - extracted trade-warning policy to `StockReviewTradeWarnings`, keeping warning text, initial credit/cargo baselines, low-balance thresholds, and purchase-all partial-fill warning detection out of `StockReviewPanelPlugin`.
 - Corrected nested weapon-row sizing:
   - removed the intermediate `Weapon Data` toggle heading;
-  - expanded weapon data rows use one child indent and lose one indent-width from the parent weapon heading width;
+  - expanded weapon data rows use the shared indent-minus-width layout rule so each deeper level starts one indent farther right and shrinks by that same indent width, keeping the right edge aligned with the parent row;
+  - added nested `Basic Info` and `Advanced Info` toggle headings under expanded weapon rows;
   - visible `Sellers` sections were removed from trade/review rows.
 - Adjusted the stock row layout after runtime width testing:
   - shrank `Storage` to fit its capped worst-case label more tightly;
@@ -189,7 +190,8 @@
   - local, Sector Market, and Fixer's Market stock scans include visible fighter LPC stacks as well as weapons;
   - player cargo and accessible storage counts include fighter LPC stacks;
   - the Buy GUI renders top-level `Weapons` and `Wings` toggle headings, each with the usual stock categories beneath;
-  - wing rows share the same queue/review/confirm trade flow as weapons and use wing-specific detail rows.
+  - wing rows share the same queue/review/confirm trade flow as weapons and use wing-specific detail rows;
+  - wing sufficiency defaults to 4 and is configurable through LunaLib.
 
 ## Active Manual Validation
 
