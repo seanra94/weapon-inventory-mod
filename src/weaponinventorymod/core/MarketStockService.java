@@ -78,6 +78,10 @@ public final class MarketStockService {
         return Submarkets.SUBMARKET_STORAGE.equals(submarketId) || Submarkets.LOCAL_RESOURCES.equals(submarketId);
     }
 
+    public static boolean isBlackMarketSubmarket(String submarketId) {
+        return Submarkets.SUBMARKET_BLACK.equals(submarketId);
+    }
+
     public static boolean isVisibleWeaponStack(CargoStackAPI stack) {
         return stack != null && stack.isWeaponStack() && stack.getWeaponSpecIfWeapon() != null && stack.getSize() > 0f;
     }

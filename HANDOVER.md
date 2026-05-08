@@ -44,6 +44,8 @@
   - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo and must refresh after Sector Market purchases drain actual market stacks.
   - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_secret_market_price_multiplier` (default `6.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
   - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
+  - Generic buy allocation is intentionally non-black-first, then price. If open-market stock and black-market stock both exist, a generic `+1` should consume the legal stock before cheaper black-market stock; only explicit source-specific future UI should override that order. Keep `StockReviewQuoteBook` and `StockPurchaseService` source ordering in sync.
+  - Fixer's Market reference pricing also prefers non-black live sources before black-market live sources. Do not let a weapon that appears in both markets inherit the black-market rate for every virtual unit just because that source is cheaper.
   - Optional tag/faction inference is Luna-gated by `wim_enable_global_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
 - Popup sorting:
   - `Need`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
@@ -67,7 +69,8 @@
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
-  - expanded review weapon rows show stock cells, trade quantity, cost/profit, and `Weapon Data`;
+  - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and `Weapon Data`;
+  - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants.
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
@@ -83,7 +86,7 @@
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders.
-  - Nested weapon-row sizing must be treated as a simple indent stack. If a weapon heading has width `X` and one indent unit is `Y`, the `Weapon Data` heading starts at `Y` and has width `X - Y`; its data rows start at `2Y` and have width `X - 2Y`. The same shrinking rule applies to any future child/grandchild row: increasing indentation must also reduce row width by the same amount, not just shift the row right.
+  - Nested weapon-row sizing must be treated as a simple indent stack. If a parent weapon heading has visible width `X` and one indent unit is `Y`, the `Weapon Data` heading starts one extra indent deeper and has width `X - Y`; its data rows start two extra indents deeper and have width `X - 2Y`. The same shrinking rule applies to any future child/grandchild row: increasing indentation must also reduce row width by the same amount, not just shift the row right.
   - Weapon entries should keep this order: weapon label, `Storage`, `Price`, `Buying`/`Selling`, dynamic sell step, `-1`, `+1`, dynamic buy step, `Sufficient`, `Reset`.
   - Width increases for right-side row cells such as `Storage`, `Price`, or `Buying`/`Selling` should come out of the weapon toggle-heading width. The weapon label area has slack; do not compensate by widening the popup or squeezing other fixed cells unless explicitly requested.
   - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.
@@ -166,6 +169,7 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
   - `WimGuiButtonSpec` owns semantic button-row descriptors so callers supply width/label/action/enabled/color rather than hand-written x-position chains.
   - `WimGuiButtonSpecs` owns reusable button-spec list construction so renderers do not hand-roll mutable button-list setup.
   - `WimGuiSemanticButtonFactory` owns reusable semantic button-spec creation when a popup wants one shared border/default disabled behavior across action, footer, and bulk buttons.
+  - `WimGuiTooltip` and the tooltip fields on shared button/row-cell specs own popup button tooltips. Add tooltips through the shared spec path so row buttons, footer buttons, and future screens get consistent behavior.
   - `WimGuiButtonBinding` / `WimGuiButtonPoller` own event-gated Starsector button fallback polling.
   - `WimGuiModalActionRow` owns reusable top action-row placement below a modal header.
   - `WimGuiModalHeader` owns reusable title/status header panel rendering.

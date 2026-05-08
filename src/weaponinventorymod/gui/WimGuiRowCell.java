@@ -16,6 +16,7 @@ final class WimGuiRowCell<A> {
     private final Alignment alignment;
     private final Color borderOverride;
     private final boolean hasBorderOverride;
+    private final String tooltip;
 
     private WimGuiRowCell(String label,
                           float width,
@@ -25,7 +26,8 @@ final class WimGuiRowCell<A> {
                           boolean enabled,
                           Alignment alignment,
                           Color borderOverride,
-                          boolean hasBorderOverride) {
+                          boolean hasBorderOverride,
+                          String tooltip) {
         this.label = label;
         this.width = width;
         this.fillColor = fillColor;
@@ -35,6 +37,7 @@ final class WimGuiRowCell<A> {
         this.alignment = alignment == null ? Alignment.MID : alignment;
         this.borderOverride = borderOverride;
         this.hasBorderOverride = hasBorderOverride;
+        this.tooltip = tooltip;
     }
 
     static <A> WimGuiRowCell<A> info(String label, float width, Color fillColor, Color textColor) {
@@ -42,7 +45,7 @@ final class WimGuiRowCell<A> {
     }
 
     static <A> WimGuiRowCell<A> info(String label, float width, Color fillColor, Color textColor, Alignment alignment) {
-        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, null, false);
+        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, null, false, null);
     }
 
     static <A> WimGuiRowCell<A> infoWithBorder(String label,
@@ -51,7 +54,7 @@ final class WimGuiRowCell<A> {
                                                Color textColor,
                                                Alignment alignment,
                                                Color borderColor) {
-        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, borderColor, true);
+        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, borderColor, true, null);
     }
 
     static <A> WimGuiRowCell<A> action(String label,
@@ -61,7 +64,18 @@ final class WimGuiRowCell<A> {
                                        Color disabledTextColor,
                                        A action,
                                        boolean enabled) {
-        return new WimGuiRowCell<A>(label, width, fillColor, enabled ? enabledTextColor : disabledTextColor, action, enabled, Alignment.MID, null, false);
+        return action(label, width, fillColor, enabledTextColor, disabledTextColor, action, enabled, null);
+    }
+
+    static <A> WimGuiRowCell<A> action(String label,
+                                       float width,
+                                       Color fillColor,
+                                       Color enabledTextColor,
+                                       Color disabledTextColor,
+                                       A action,
+                                       boolean enabled,
+                                       String tooltip) {
+        return new WimGuiRowCell<A>(label, width, fillColor, enabled ? enabledTextColor : disabledTextColor, action, enabled, Alignment.MID, null, false, tooltip);
     }
 
     static <A> WimGuiRowCell<A> standardAction(String label,
@@ -69,6 +83,15 @@ final class WimGuiRowCell<A> {
                                                Color fillColor,
                                                A action,
                                                boolean enabled) {
+        return standardAction(label, width, fillColor, action, enabled, null);
+    }
+
+    static <A> WimGuiRowCell<A> standardAction(String label,
+                                               float width,
+                                               Color fillColor,
+                                               A action,
+                                               boolean enabled,
+                                               String tooltip) {
         return action(
                 label,
                 width,
@@ -76,7 +99,8 @@ final class WimGuiRowCell<A> {
                 WimGuiStyle.WHITE_TEXT,
                 WimGuiStyle.DISABLED_TEXT,
                 action,
-                enabled);
+                enabled,
+                tooltip);
     }
 
     @SafeVarargs
@@ -127,6 +151,10 @@ final class WimGuiRowCell<A> {
 
     Color borderColor(Color defaultBorder) {
         return hasBorderOverride ? borderOverride : defaultBorder;
+    }
+
+    String getTooltip() {
+        return tooltip;
     }
 
     static float totalWidth(List<? extends WimGuiRowCell<?>> cells, float gap) {

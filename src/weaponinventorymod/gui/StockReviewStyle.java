@@ -4,6 +4,7 @@ import java.awt.Color;
 
 final class StockReviewStyle {
     static final float WIDTH = 1180f;
+    static final float REVIEW_WIDTH = WIDTH * 0.5f;
     static final float HEIGHT = 640f;
     static final float PAD = 10f;
     static final float SMALL_PAD = 4f;
@@ -43,8 +44,8 @@ final class StockReviewStyle {
     static final float TEXT_TOP_PAD = WimGuiStyle.TEXT_TOP_PAD;
     static final float TEXT_LEFT_PAD = WimGuiStyle.TEXT_LEFT_PAD;
     static final float WEAPON_INDENT = 18f;
-    static final float SECTION_INDENT = WEAPON_INDENT;
-    static final float DETAIL_INDENT = 2f * WEAPON_INDENT;
+    static final float SECTION_INDENT = 2f * WEAPON_INDENT;
+    static final float DETAIL_INDENT = 3f * WEAPON_INDENT;
     static final float FOOTER_BUTTON_WIDTH = 180f;
     static final float BULK_BUTTON_WIDTH = 210f;
     static final float RESET_ALL_BUTTON_WIDTH = 150f;
@@ -60,6 +61,16 @@ final class StockReviewStyle {
             ROW_HEIGHT,
             ROW_GAP,
             SMALL_PAD);
+    static final WimGuiModalLayout REVIEW_MODAL = new WimGuiModalLayout(
+            REVIEW_WIDTH,
+            HEIGHT,
+            PAD,
+            PAD,
+            0f,
+            FOOTER_HEIGHT,
+            ROW_HEIGHT,
+            ROW_GAP,
+            SMALL_PAD);
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
     static final float TRADE_ACTION_ROW_TOP = PAD;
@@ -69,7 +80,7 @@ final class StockReviewStyle {
     static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - REVIEW_LIST_TOP - SMALL_PAD);
     static final float LIST_WIDTH = MODAL.contentWidth();
     static final float FILTER_LIST_WIDTH = LIST_WIDTH / 4f;
-    static final float REVIEW_LIST_WIDTH = LIST_WIDTH - TRADE_CONTROL_BLOCK_WIDTH;
+    static final float REVIEW_LIST_WIDTH = REVIEW_MODAL.contentWidth();
     // Ported from the accepted ACG GUI palette. Hover colors intentionally
     // equal idle colors because Starsector darkens idle buttons differently.
     static Color DEFAULT_TEXT = WimGuiStyle.DEFAULT_TEXT;
@@ -163,7 +174,7 @@ final class StockReviewStyle {
             PANEL_BORDER,
             ROW_BORDER);
     static WimGuiModalListSpec REVIEW_LIST = new WimGuiModalListSpec(
-            MODAL,
+            REVIEW_MODAL,
             PAD,
             REVIEW_LIST_TOP,
             REVIEW_LIST_WIDTH,
@@ -273,8 +284,8 @@ final class StockReviewStyle {
                 PANEL_BORDER,
                 ROW_BORDER);
         REVIEW_LIST = new WimGuiModalListSpec(
-                MODAL,
-                PAD,
+            REVIEW_MODAL,
+            PAD,
                 REVIEW_LIST_TOP,
                 REVIEW_LIST_WIDTH,
                 REVIEW_LIST_HEIGHT,
@@ -292,5 +303,15 @@ final class StockReviewStyle {
 
     static WimGuiListBounds initialListBounds() {
         return new WimGuiListBounds(0, PAD, TRADE_LIST_TOP, LIST_WIDTH, TRADE_LIST_HEIGHT);
+    }
+
+    static WimGuiListBounds initialListBounds(boolean reviewMode) {
+        return reviewMode
+                ? new WimGuiListBounds(0, PAD, REVIEW_LIST_TOP, REVIEW_LIST_WIDTH, REVIEW_LIST_HEIGHT)
+                : initialListBounds();
+    }
+
+    static float widthFor(boolean reviewMode) {
+        return reviewMode ? REVIEW_WIDTH : WIDTH;
     }
 }

@@ -104,7 +104,7 @@ public final class GlobalWeaponMarketService {
                         continue;
                     }
                     SubmarketWeaponStock current = cheapestByWeapon.get(weaponId);
-                    if (current == null || source.getUnitPrice() < current.getUnitPrice()) {
+                    if (current == null || compareReferenceSource(source, current) < 0) {
                         cheapestByWeapon.put(weaponId, source);
                     }
                 }
@@ -189,6 +189,22 @@ public final class GlobalWeaponMarketService {
 
     private static int markedUpPrice(int unitPrice, float priceMultiplier) {
         return Math.max(0, Math.round(Math.max(0, unitPrice) * Math.max(1f, priceMultiplier)));
+    }
+
+    private static int compareReferenceSource(SubmarketWeaponStock left, SubmarketWeaponStock right) {
+        int result = Boolean.compare(isBlackMarket(left), isBlackMarket(right));
+        if (result != 0) {
+            return result;
+        }
+        result = Integer.compare(left.getBaseUnitPrice(), right.getBaseUnitPrice());
+        if (result != 0) {
+            return result;
+        }
+        return left.getDisplaySourceName().compareToIgnoreCase(right.getDisplaySourceName());
+    }
+
+    private static boolean isBlackMarket(SubmarketWeaponStock stock) {
+        return stock != null && MarketStockService.isBlackMarketSubmarket(stock.getSubmarketId());
     }
 
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {

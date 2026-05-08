@@ -15,8 +15,8 @@ import weaponinventorymod.core.GlobalWeaponMarketService;
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
     private static final int HOTKEY = Keyboard.KEY_F8;
-    private static final WimGuiDialogTracker<MarketAPI, StockReviewState> DIALOG_TRACKER =
-            new WimGuiDialogTracker<MarketAPI, StockReviewState>();
+    private static final WimGuiDialogTracker<MarketAPI, StockReviewLaunchState> DIALOG_TRACKER =
+            new WimGuiDialogTracker<MarketAPI, StockReviewLaunchState>();
 
     private final WimGuiHotkeyLatch hotkey = new WimGuiHotkeyLatch(HOTKEY);
 
@@ -33,7 +33,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
     @Override
     public void advance(float amount) {
         if (DIALOG_TRACKER.hasPending()) {
-            WimGuiPendingDialog<MarketAPI, StockReviewState> pending = DIALOG_TRACKER.consumePending();
+            WimGuiPendingDialog<MarketAPI, StockReviewLaunchState> pending = DIALOG_TRACKER.consumePending();
             openDialog(pending.getContext(), pending.getState());
             return;
         }
@@ -47,7 +47,11 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
     }
 
     static void requestReopen(MarketAPI market, StockReviewState state) {
-        DIALOG_TRACKER.requestReopen(market, new StockReviewState(state));
+        requestReopen(market, new StockReviewLaunchState(state, null, false));
+    }
+
+    static void requestReopen(MarketAPI market, StockReviewLaunchState launchState) {
+        DIALOG_TRACKER.requestReopen(market, launchState);
     }
 
     private void openDialog() {
@@ -115,15 +119,15 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
         return false;
     }
 
-    private void openDialog(MarketAPI market, StockReviewState initialState) {
+    private void openDialog(MarketAPI market, StockReviewLaunchState launchState) {
         WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
         if (!host.hasDialog()) {
             DIALOG_TRACKER.markClosed();
             return;
         }
         try {
-            StockReviewPanelPlugin panelPlugin = new StockReviewPanelPlugin(market, initialState);
-            WimGuiDialogOpener.show(host.getDialog(), StockReviewStyle.WIDTH, StockReviewStyle.HEIGHT, panelPlugin);
+            StockReviewPanelPlugin panelPlugin = new StockReviewPanelPlugin(market, launchState);
+            WimGuiDialogOpener.show(host.getDialog(), StockReviewStyle.widthFor(panelPlugin.isReviewMode()), StockReviewStyle.HEIGHT, panelPlugin);
             DIALOG_TRACKER.markOpen();
             LOG.info("WIM_STOCK_REVIEW opened hotkey=F8 market=" + (market == null ? "null" : market.getId()));
         } catch (Throwable t) {

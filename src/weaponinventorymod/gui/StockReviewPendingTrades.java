@@ -19,6 +19,19 @@ final class StockReviewPendingTrades {
         trades.clear();
     }
 
+    void replaceWith(List<StockReviewPendingPurchase> source) {
+        trades.clear();
+        if (source == null) {
+            return;
+        }
+        for (int i = 0; i < source.size(); i++) {
+            StockReviewPendingPurchase purchase = source.get(i);
+            if (purchase != null && !purchase.isZero()) {
+                trades.add(purchase.copy());
+            }
+        }
+    }
+
     void add(String weaponId, String submarketId, int quantity) {
         StockReviewPendingPurchase existing = find(weaponId, submarketId);
         if (existing == null) {

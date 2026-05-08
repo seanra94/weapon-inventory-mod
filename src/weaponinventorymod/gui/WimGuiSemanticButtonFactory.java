@@ -14,7 +14,16 @@ final class WimGuiSemanticButtonFactory<A> {
                                A action,
                                boolean enabled,
                                Color fillColor) {
-        return WimGuiButtonSpec.semantic(width, label, action, enabled, fillColor, borderColor);
+        return button(width, label, action, enabled, fillColor, null);
+    }
+
+    WimGuiButtonSpec<A> button(float width,
+                               String label,
+                               A action,
+                               boolean enabled,
+                               Color fillColor,
+                               String tooltip) {
+        return WimGuiButtonSpec.semantic(width, label, action, enabled, fillColor, borderColor, tooltip);
     }
 
     WimGuiButtonSpec<A> enabledButton(float width,
@@ -22,5 +31,13 @@ final class WimGuiSemanticButtonFactory<A> {
                                       A action,
                                       Color fillColor) {
         return button(width, label, action, true, fillColor);
+    }
+
+    WimGuiButtonSpec<A> enabledButton(float width,
+                                      String label,
+                                      A action,
+                                      Color fillColor,
+                                      String tooltip) {
+        return button(width, label, action, true, fillColor, tooltip);
     }
 }

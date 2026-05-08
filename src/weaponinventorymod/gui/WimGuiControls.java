@@ -25,7 +25,8 @@ final class WimGuiControls {
                                        boolean enabled,
                                        Alignment alignment,
                                        WimGuiButtonColors colors,
-                                       Color borderColor) {
+                                       Color borderColor,
+                                       String tooltip) {
         Color idle = colors == null ? WimGuiStyle.UNCOLOURED_BUTTON : colors.idle;
         Color hover = colors == null ? idle : colors.hover;
         Color shellFill = enabled ? idle : WimGuiStyle.DISABLED_BACKGROUND;
@@ -56,6 +57,9 @@ final class WimGuiControls {
                 0f);
         button.setEnabled(enabled);
         button.setQuickMode(true);
+        if (WimGuiTooltip.hasText(tooltip)) {
+            element.addTooltipTo(new WimGuiTooltip(tooltip), shell, TooltipMakerAPI.TooltipLocation.BELOW);
+        }
         shell.addUIElement(element).inTL(0f, 0f);
         addLabel(shell, label, resolvedText, 0f, 0f, width, height, alignment);
         return new WimGuiButtonShell(shell, button);
@@ -79,7 +83,8 @@ final class WimGuiControls {
                 spec.enabled,
                 spec.alignment,
                 spec.colors,
-                spec.borderColor);
+                spec.borderColor,
+                spec.tooltip);
         if (spec.enabled && bindings != null) {
             bindings.add(new WimGuiButtonBinding<A>(shell.panel, shell.button, spec.action));
         }
@@ -174,7 +179,8 @@ final class WimGuiControls {
                             cell.isEnabled(),
                             Alignment.MID,
                             fill,
-                            borderColor),
+                            borderColor,
+                            cell.getTooltip()),
                     bindings);
             return;
         }

@@ -18,6 +18,10 @@ import java.util.List;
 public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockReviewAction> {
     private static final Logger LOG = Logger.getLogger(StockReviewPanelPlugin.class);
 
+    private static boolean reviewMode(StockReviewLaunchState launchState) {
+        return launchState != null && launchState.isReviewMode();
+    }
+
     private final StockReviewConfig config = StockReviewConfig.load();
     private final StockReviewState state;
     private final StockReviewRenderer renderer = new StockReviewRenderer();
@@ -36,15 +40,25 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
     private int colorDebugTargetIndex = 0;
     private Color colorDebugDraft = null;
 
-    public StockReviewPanelPlugin(MarketAPI initialMarket, StockReviewState initialState) {
+    public StockReviewPanelPlugin(MarketAPI initialMarket, StockReviewLaunchState launchState) {
         super(
                 StockReviewAction.class,
-                StockReviewStyle.WIDTH,
+                StockReviewStyle.widthFor(reviewMode(launchState)),
                 StockReviewStyle.HEIGHT,
                 StockReviewStyle.BUTTON_POLL_FRAMES_AFTER_MOUSE_EVENT,
-                StockReviewStyle.initialListBounds());
+                StockReviewStyle.initialListBounds(reviewMode(launchState)));
         this.initialMarket = initialMarket;
-        this.state = initialState == null ? new StockReviewState(config) : new StockReviewState(initialState);
+        this.state = launchState == null || launchState.getState() == null
+                ? new StockReviewState(config)
+                : new StockReviewState(launchState.getState());
+        if (launchState != null) {
+            this.pendingTrades.replaceWith(launchState.getPendingTrades());
+            this.reviewMode = launchState.isReviewMode();
+        }
+    }
+
+    boolean isReviewMode() {
+        return reviewMode;
     }
 
     @Override
@@ -68,9 +82,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             return;
         }
         if (reviewMode) {
-            reviewMode = false;
             state.setListScrollOffset(0);
-            rebuildContent();
+            reopen(false);
             return;
         }
         close();
@@ -276,9 +289,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
         }
         if (StockReviewAction.Type.REVIEW_PURCHASE.equals(type)) {
             if (!pendingTrades.isEmpty()) {
-                reviewMode = true;
                 state.setListScrollOffset(0);
-                rebuildContent();
+                reopen(true);
             }
             return;
         }
@@ -294,9 +306,8 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                 rebuildContent();
                 return;
             }
-            reviewMode = false;
             state.setListScrollOffset(0);
-            rebuildContent();
+            reopen(false);
             return;
         }
         if (StockReviewAction.Type.CONFIRM_PURCHASE.equals(type)) {
@@ -442,8 +453,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
 
     private void confirmPendingPurchases() {
         if (pendingTrades.isEmpty()) {
-            reviewMode = false;
-            rebuildContent();
+            reopen(false);
             return;
         }
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
@@ -497,7 +507,7 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             close();
             return;
         }
-        rebuildContent();
+        reopen(false);
     }
 
     private StockPurchaseService.PurchaseResult executePendingPurchase(SectorAPI sector,
@@ -614,5 +624,11 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
                 LOG,
                 "WIM_STOCK_REVIEW refreshed vanilla cargo screen",
                 initialMarket);
+    }
+
+    private void reopen(boolean review) {
+        StockReviewHotkeyScript.requestReopen(initialMarket,
+                new StockReviewLaunchState(state, pendingTrades.asList(), review));
+        close();
     }
 }

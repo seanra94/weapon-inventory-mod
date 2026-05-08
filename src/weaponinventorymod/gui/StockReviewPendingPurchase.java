@@ -45,4 +45,8 @@ final class StockReviewPendingPurchase {
         }
         return submarketId == null ? otherSubmarketId == null : submarketId.equals(otherSubmarketId);
     }
+
+    StockReviewPendingPurchase copy() {
+        return new StockReviewPendingPurchase(weaponId, submarketId, quantity);
+    }
 }

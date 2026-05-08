@@ -88,8 +88,17 @@ final class StockReviewListRow {
                                                               float indent,
                                                               boolean topGap,
                                                               float rightReserveWidth) {
+        return labelTextIndented(label, value, indent, topGap, rightReserveWidth, StockReviewStyle.LIST_WIDTH);
+    }
+
+    static WimGuiListRow<StockReviewAction> labelTextIndented(String label,
+                                                              String value,
+                                                              float indent,
+                                                              boolean topGap,
+                                                              float rightReserveWidth,
+                                                              float listWidth) {
         float componentWidth = Math.max(40f,
-                StockReviewStyle.LIST_WIDTH - indent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
+                listWidth - indent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD);
         return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth, StockReviewStyle.TEXT);
     }
 

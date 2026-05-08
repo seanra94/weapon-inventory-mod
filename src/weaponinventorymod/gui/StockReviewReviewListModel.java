@@ -59,36 +59,19 @@ final class StockReviewReviewListModel {
             return;
         }
         boolean expanded = state.isWeaponExpanded(record.getWeaponId());
-        int quantity = Math.abs(purchase.getQuantity());
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getStorageCount(), purchase.getQuantity()),
                         StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
-                reviewCostCell(cost, purchase.isSell()),
-                WimGuiRowCell.info((purchase.isSell() ? "Selling: " : "Buying: ") + quantity,
-                        StockReviewStyle.PLAN_CELL_WIDTH,
-                        purchase.isSell() ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.PLAN_POSITIVE,
-                        StockReviewStyle.TEXT,
-                        Alignment.LMID));
+                StockReviewListModel.planCell(purchase.getQuantity(), cost));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
                 cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
         if (!expanded) {
             return;
         }
-        StockReviewListModel.addWeaponData(rows, record, state, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH);
-    }
-
-    private static WimGuiRowCell<StockReviewAction> reviewCostCell(int cost, boolean sell) {
-        if (cost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            return WimGuiRowCell.info("Price: ?", StockReviewStyle.PRICE_CELL_WIDTH,
-                    StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
-        }
-        if (sell) {
-            return WimGuiRowCell.info("Profit: " + StockReviewFormat.credits(cost), StockReviewStyle.PRICE_CELL_WIDTH,
-                    StockReviewStyle.PROFIT_BUTTON, StockReviewStyle.TEXT);
-        }
-        return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(cost), StockReviewStyle.PRICE_CELL_WIDTH,
-                StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT);
+        StockReviewListModel.addWeaponData(rows, record, state,
+                StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH,
+                StockReviewStyle.REVIEW_LIST_WIDTH);
     }
 
     private static List<StockReviewPendingPurchase> reviewPurchasesForGroup(List<StockReviewPendingPurchase> pendingPurchases,
