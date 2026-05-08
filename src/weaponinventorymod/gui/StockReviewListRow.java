@@ -13,32 +13,62 @@ final class StockReviewListRow {
                                                      Color textColor,
                                                      StockReviewAction action,
                                                      boolean topGap) {
+        return category(label, textColor, action, topGap, null);
+    }
+
+    static WimGuiListRow<StockReviewAction> category(String label,
+                                                     Color textColor,
+                                                     StockReviewAction action,
+                                                     boolean topGap,
+                                                     String tooltip) {
         return row(label, StockReviewStyle.TEXT, textColor, textColor, null,
-                0f, action, Alignment.LMID, null, topGap);
+                0f, action, Alignment.LMID, null, topGap, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> filterHeading(String label,
                                                           StockReviewAction action,
                                                           boolean topGap) {
+        return filterHeading(label, action, topGap, null);
+    }
+
+    static WimGuiListRow<StockReviewAction> filterHeading(String label,
+                                                          StockReviewAction action,
+                                                          boolean topGap,
+                                                          String tooltip) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.HEADING_BACKGROUND,
-                StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.LMID, null, topGap);
+                StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.LMID, null, topGap, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> filter(String label,
                                                    boolean active,
                                                    StockReviewAction action,
                                                    boolean topGap) {
+        return filter(label, active, action, topGap, null);
+    }
+
+    static WimGuiListRow<StockReviewAction> filter(String label,
+                                                   boolean active,
+                                                   StockReviewAction action,
+                                                   boolean topGap,
+                                                   String tooltip) {
         Color fill = active ? StockReviewStyle.FILTER_ACTIVE : StockReviewStyle.ROW_BACKGROUND;
         return row(label, StockReviewStyle.TEXT, fill, fill, StockReviewStyle.ROW_BORDER,
-                active ? 0f : StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, null, topGap);
+                active ? 0f : StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, null, topGap, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> weapon(String label,
                                                    List<WimGuiRowCell<StockReviewAction>> cells,
                                                    StockReviewAction action) {
+        return weapon(label, cells, action, null);
+    }
+
+    static WimGuiListRow<StockReviewAction> weapon(String label,
+                                                   List<WimGuiRowCell<StockReviewAction>> cells,
+                                                   StockReviewAction action,
+                                                   String tooltip) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, cells, false);
+                StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, cells, false, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action) {
@@ -50,9 +80,16 @@ final class StockReviewListRow {
     }
 
     static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action, float rightReserveWidth) {
+        return section(label, action, rightReserveWidth, null);
+    }
+
+    static WimGuiListRow<StockReviewAction> section(String label,
+                                                    StockReviewAction action,
+                                                    float rightReserveWidth,
+                                                    String tooltip) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.HEADING_BACKGROUND, null, StockReviewStyle.SECTION_INDENT,
-                action, Alignment.LMID, null, false, null, rightReserveWidth);
+                action, Alignment.LMID, null, false, null, rightReserveWidth, tooltip);
     }
 
     static WimGuiListRow<StockReviewAction> detail(String label) {
@@ -134,7 +171,8 @@ final class StockReviewListRow {
 
     static WimGuiListRow<StockReviewAction> scroll(String label, StockReviewAction action) {
         return row(label, StockReviewStyle.SCROLL, StockReviewStyle.HEADING_BACKGROUND,
-                StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.MID, null, false);
+                StockReviewStyle.HEADING_BACKGROUND, null, 0f, action, Alignment.MID, null, false,
+                "Move the list by one visible page.");
     }
 
     static WimGuiListRow<StockReviewAction> review(String label, Color fillColor) {
@@ -169,7 +207,35 @@ final class StockReviewListRow {
                 cells,
                 topGap,
                 null,
-                0f);
+                0f,
+                null);
+    }
+
+    private static WimGuiListRow<StockReviewAction> row(String label,
+                                                        Color textColor,
+                                                        Color fillColor,
+                                                        Color buttonFillColor,
+                                                        Color borderColor,
+                                                        float indent,
+                                                        StockReviewAction action,
+                                                        Alignment alignment,
+                                                        List<WimGuiRowCell<StockReviewAction>> cells,
+                                                        boolean topGap,
+                                                        String tooltip) {
+        return new WimGuiListRow<StockReviewAction>(
+                label,
+                textColor,
+                fillColor,
+                buttonFillColor,
+                borderColor,
+                indent,
+                action,
+                alignment,
+                cells,
+                topGap,
+                null,
+                0f,
+                tooltip);
     }
 
     private static WimGuiListRow<StockReviewAction> row(String label,
@@ -184,6 +250,23 @@ final class StockReviewListRow {
                                                         boolean topGap,
                                                         Float cellGapOverride,
                                                         float rightReserveWidth) {
+        return row(label, textColor, fillColor, buttonFillColor, borderColor, indent, action,
+                alignment, cells, topGap, cellGapOverride, rightReserveWidth, null);
+    }
+
+    private static WimGuiListRow<StockReviewAction> row(String label,
+                                                        Color textColor,
+                                                        Color fillColor,
+                                                        Color buttonFillColor,
+                                                        Color borderColor,
+                                                        float indent,
+                                                        StockReviewAction action,
+                                                        Alignment alignment,
+                                                        List<WimGuiRowCell<StockReviewAction>> cells,
+                                                        boolean topGap,
+                                                        Float cellGapOverride,
+                                                        float rightReserveWidth,
+                                                        String tooltip) {
         return new WimGuiListRow<StockReviewAction>(
                 label,
                 textColor,
@@ -196,6 +279,7 @@ final class StockReviewListRow {
                 cells,
                 topGap,
                 cellGapOverride,
-                rightReserveWidth);
+                rightReserveWidth,
+                tooltip);
     }
 }

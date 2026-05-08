@@ -40,7 +40,8 @@ final class StockReviewListModel {
                 state.getActiveFilters());
         boolean expanded = state.isExpanded(category);
         String label = WimGuiToggleHeading.countedLabel(category.getLabel(), records.size(), expanded);
-        rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap));
+        rows.add(StockReviewListRow.category(label, color, StockReviewAction.toggle(category), topGap,
+                StockReviewTooltips.category(category)));
         if (!expanded) {
             return records.size();
         }
@@ -64,7 +65,8 @@ final class StockReviewListModel {
         int sufficientDelta = tradeContext.deltaToSufficient(record);
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info(storageLabel(record.getStorageCount(), planQuantity),
-                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
+                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
+                        Alignment.LMID, StockReviewTooltips.STORAGE),
                 unitPriceCell(tradeContext.unitPriceForWeapon(record)),
                 planCell(planQuantity, transactionCost),
                 stepCell("-", sellStepQuantity, StockReviewStyle.SELL_BUTTON,
@@ -87,7 +89,8 @@ final class StockReviewListModel {
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getWeaponId()), planQuantity != 0,
                         "Clear the planned trade for this weapon."));
-        rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
+        rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleWeapon(record.getWeaponId()),
+                StockReviewTooltips.weapon(record)));
         if (!expanded) {
             return;
         }
@@ -118,7 +121,8 @@ final class StockReviewListModel {
         Color fill = planQuantity > 0
                 ? StockReviewStyle.PLAN_POSITIVE
                 : planQuantity < 0 ? StockReviewStyle.PLAN_NEGATIVE : StockReviewStyle.CELL_BACKGROUND;
-        return WimGuiRowCell.info(label, StockReviewStyle.PLAN_CELL_WIDTH, fill, StockReviewStyle.TEXT, Alignment.LMID);
+        return WimGuiRowCell.info(label, StockReviewStyle.PLAN_CELL_WIDTH, fill, StockReviewStyle.TEXT,
+                Alignment.LMID, StockReviewTooltips.PLAN);
     }
 
     static String storageLabel(int ownedCount, int planQuantity) {
@@ -130,10 +134,11 @@ final class StockReviewListModel {
 
     private static WimGuiRowCell<StockReviewAction> unitPriceCell(int unitPrice) {
         if (unitPrice == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            return WimGuiRowCell.info("Price: ?", StockReviewStyle.PRICE_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID);
+            return WimGuiRowCell.info("Price: ?", StockReviewStyle.PRICE_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND,
+                    StockReviewStyle.TEXT, Alignment.LMID, StockReviewTooltips.PRICE);
         }
         return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(unitPrice), StockReviewStyle.PRICE_CELL_WIDTH,
-                StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID);
+                StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID, StockReviewTooltips.PRICE);
     }
 
     private static WimGuiRowCell<StockReviewAction> stepCell(String sign,
@@ -167,7 +172,8 @@ final class StockReviewListModel {
         rows.add(sectionRow(
                 WimGuiToggleHeading.label("Weapon Data", expanded),
                 StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA),
-                nestedRightReserveWidth));
+                nestedRightReserveWidth,
+                StockReviewTooltips.WEAPON_DATA));
         if (!expanded) {
             return;
         }
@@ -185,6 +191,13 @@ final class StockReviewListModel {
                                                                StockReviewAction action,
                                                                float rightReserveWidth) {
         return StockReviewListRow.section(label, action, rightReserveWidth);
+    }
+
+    private static WimGuiListRow<StockReviewAction> sectionRow(String label,
+                                                               StockReviewAction action,
+                                                               float rightReserveWidth,
+                                                               String tooltip) {
+        return StockReviewListRow.section(label, action, rightReserveWidth, tooltip);
     }
 
     private static float nestedRightReserveWidth(float rightReserveWidth) {

@@ -169,7 +169,7 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
   - `WimGuiButtonSpec` owns semantic button-row descriptors so callers supply width/label/action/enabled/color rather than hand-written x-position chains.
   - `WimGuiButtonSpecs` owns reusable button-spec list construction so renderers do not hand-roll mutable button-list setup.
   - `WimGuiSemanticButtonFactory` owns reusable semantic button-spec creation when a popup wants one shared border/default disabled behavior across action, footer, and bulk buttons.
-  - `WimGuiTooltip` and the tooltip fields on shared button/row-cell specs own popup button tooltips. Add tooltips through the shared spec path so row buttons, footer buttons, and future screens get consistent behavior.
+  - `WimGuiTooltip`, `StockReviewTooltips`, and the tooltip fields on shared button/list-row/row-cell specs own popup tooltips. Add tooltips through the shared spec path so toggle headings, disabled buttons, info cells, row buttons, footer buttons, and future screens get consistent behavior.
   - `WimGuiButtonBinding` / `WimGuiButtonPoller` own event-gated Starsector button fallback polling.
   - `WimGuiModalActionRow` owns reusable top action-row placement below a modal header.
   - `WimGuiModalHeader` owns reusable title/status header panel rendering.

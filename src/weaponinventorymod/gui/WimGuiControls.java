@@ -40,6 +40,7 @@ final class WimGuiControls {
         parent.addComponent(shell).inTL(x, y);
         if (!enabled) {
             addLabel(shell, label, resolvedText, 0f, 0f, width, height, alignment);
+            addTooltipHost(shell, width, height, tooltip);
             return new WimGuiButtonShell(shell, null);
         }
 
@@ -132,9 +133,24 @@ final class WimGuiControls {
                             Color textColor,
                             Color borderColor,
                             Alignment alignment) {
+        addInfoCell(parent, x, y, width, height, label, background, textColor, borderColor, alignment, null);
+    }
+
+    static void addInfoCell(CustomPanelAPI parent,
+                            float x,
+                            float y,
+                            float width,
+                            float height,
+                            String label,
+                            Color background,
+                            Color textColor,
+                            Color borderColor,
+                            Alignment alignment,
+                            String tooltip) {
         CustomPanelAPI cell = parent.createCustomPanel(width, height,
                 new WimGuiPanelPlugin(background, borderColor));
         parent.addComponent(cell).inTL(x, y);
+        addTooltipHost(cell, width, height, tooltip);
         addLabel(cell, label, textColor, 0f, 0f, width, height, alignment);
     }
 
@@ -148,10 +164,24 @@ final class WimGuiControls {
                                 Color valueFillColor,
                                 Color borderColor,
                                 Color textColor) {
+        addLabelTextRow(parent, x, y, width, height, label, value, valueFillColor, borderColor, textColor, null);
+    }
+
+    static void addLabelTextRow(CustomPanelAPI parent,
+                                float x,
+                                float y,
+                                float width,
+                                float height,
+                                String label,
+                                String value,
+                                Color valueFillColor,
+                                Color borderColor,
+                                Color textColor,
+                                String tooltip) {
         float labelWidth = width / 2f;
         float valueWidth = width - labelWidth;
-        addInfoCell(parent, x, y, labelWidth, height, label, null, textColor, borderColor, Alignment.LMID);
-        addInfoCell(parent, x + labelWidth, y, valueWidth, height, value, valueFillColor, textColor, borderColor, Alignment.MID);
+        addInfoCell(parent, x, y, labelWidth, height, label, null, textColor, borderColor, Alignment.LMID, tooltip);
+        addInfoCell(parent, x + labelWidth, y, valueWidth, height, value, valueFillColor, textColor, borderColor, Alignment.MID, tooltip);
     }
 
     static <A> void addRowCell(CustomPanelAPI parent,
@@ -184,7 +214,7 @@ final class WimGuiControls {
                     bindings);
             return;
         }
-        addInfoCell(parent, x, y, cell.getWidth(), height, cell.getLabel(), cell.getFillColor(), cell.getTextColor(), cell.borderColor(borderColor), cell.getAlignment());
+        addInfoCell(parent, x, y, cell.getWidth(), height, cell.getLabel(), cell.getFillColor(), cell.getTextColor(), cell.borderColor(borderColor), cell.getAlignment(), cell.getTooltip());
     }
 
     static void addLabel(CustomPanelAPI parent,
@@ -208,6 +238,18 @@ final class WimGuiControls {
         LabelAPI line = label.addPara(WimGuiText.fit(text, maxChars), 0f, color);
         line.setAlignment(alignment);
         parent.addUIElement(label).inTL(labelX, y + WimGuiStyle.TEXT_TOP_PAD);
+    }
+
+    private static void addTooltipHost(CustomPanelAPI parent,
+                                       float width,
+                                       float height,
+                                       String tooltip) {
+        if (!WimGuiTooltip.hasText(tooltip)) {
+            return;
+        }
+        TooltipMakerAPI element = parent.createUIElement(width, height, false);
+        element.addTooltipTo(new WimGuiTooltip(tooltip), parent, TooltipMakerAPI.TooltipLocation.BELOW);
+        parent.addUIElement(element).inTL(0f, 0f);
     }
 
     static WimGuiTextLayout addWrappedLabel(CustomPanelAPI parent,

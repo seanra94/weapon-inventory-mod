@@ -45,7 +45,16 @@ final class WimGuiRowCell<A> {
     }
 
     static <A> WimGuiRowCell<A> info(String label, float width, Color fillColor, Color textColor, Alignment alignment) {
-        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, null, false, null);
+        return info(label, width, fillColor, textColor, alignment, null);
+    }
+
+    static <A> WimGuiRowCell<A> info(String label,
+                                     float width,
+                                     Color fillColor,
+                                     Color textColor,
+                                     Alignment alignment,
+                                     String tooltip) {
+        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, null, false, tooltip);
     }
 
     static <A> WimGuiRowCell<A> infoWithBorder(String label,
@@ -54,7 +63,17 @@ final class WimGuiRowCell<A> {
                                                Color textColor,
                                                Alignment alignment,
                                                Color borderColor) {
-        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, borderColor, true, null);
+        return infoWithBorder(label, width, fillColor, textColor, alignment, borderColor, null);
+    }
+
+    static <A> WimGuiRowCell<A> infoWithBorder(String label,
+                                               float width,
+                                               Color fillColor,
+                                               Color textColor,
+                                               Alignment alignment,
+                                               Color borderColor,
+                                               String tooltip) {
+        return new WimGuiRowCell<A>(label, width, fillColor, textColor, null, true, alignment, borderColor, true, tooltip);
     }
 
     static <A> WimGuiRowCell<A> action(String label,

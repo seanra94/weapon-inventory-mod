@@ -130,7 +130,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 rowY,
                 "Warning",
                 warning,
-                "None".equals(warning) ? StockReviewStyle.CELL_BACKGROUND : StockReviewStyle.PRESET_SCOPE_BUTTON);
+                "None".equals(warning) ? StockReviewStyle.CELL_BACKGROUND : StockReviewStyle.PRESET_SCOPE_BUTTON,
+                "Most recent trade warning for credits or cargo capacity.");
         rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
@@ -138,7 +139,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 rowY,
                 "Tariffs Paid",
                 tariffsPaidLabel(tradeContext),
-                tradeContext.totalMarkupPaid() > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND);
+                tradeContext.totalMarkupPaid() > 0 ? StockReviewStyle.CANCEL_BUTTON : StockReviewStyle.CELL_BACKGROUND,
+                "Extra credits paid above base weapon value because of source markup.");
         rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
@@ -146,7 +148,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 rowY,
                 "Credits Available",
                 creditsAvailableLabel(tradeContext.credits(), netCost),
-                creditDeltaFill(netCost));
+                creditDeltaFill(netCost),
+                "Current credits plus the signed change from queued trades.");
         rowY += StockReviewStyle.ROW_HEIGHT + StockReviewStyle.SUMMARY_ROW_GAP;
         addSummaryRow(
                 root,
@@ -154,7 +157,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 rowY,
                 "Cargo Space Available",
                 cargoAvailableLabel(tradeContext.cargoSpaceLeft(), cargoDelta),
-                cargoDeltaFill(cargoDelta));
+                cargoDeltaFill(cargoDelta),
+                "Current cargo space plus the signed cargo change from queued trades.");
     }
 
     private void addSummaryRow(CustomPanelAPI root,
@@ -162,7 +166,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                                float y,
                                String label,
                                String value,
-                               Color valueFill) {
+                               Color valueFill,
+                               String tooltip) {
         WimGuiControls.addLabelTextRow(
                 root,
                 StockReviewStyle.PAD,
@@ -173,7 +178,8 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 value,
                 valueFill,
                 StockReviewStyle.ROW_BORDER,
-                StockReviewStyle.TEXT);
+                StockReviewStyle.TEXT,
+                tooltip);
     }
 
     private static String formatCargo(float value) {

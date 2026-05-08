@@ -39,7 +39,8 @@ final class StockReviewReviewListModel {
                 ? StockReviewStyle.CONFIRM_BUTTON
                 : StockReviewStyle.CANCEL_BUTTON;
         rows.add(StockReviewListRow.category(label, headingColor, StockReviewAction.toggle(tradeGroup),
-                StockReviewTradeGroup.SELLING.equals(tradeGroup)));
+                StockReviewTradeGroup.SELLING.equals(tradeGroup),
+                "Show or hide queued " + tradeGroup.getLabel().toLowerCase(java.util.Locale.US) + " trades."));
         if (!expanded) {
             return;
         }
@@ -62,10 +63,11 @@ final class StockReviewReviewListModel {
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getStorageCount(), purchase.getQuantity()),
-                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID),
+                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
+                        Alignment.LMID, StockReviewTooltips.STORAGE),
                 StockReviewListModel.planCell(purchase.getQuantity(), cost));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
-                cells, StockReviewAction.toggleWeapon(record.getWeaponId())));
+                cells, StockReviewAction.toggleWeapon(record.getWeaponId()), StockReviewTooltips.weapon(record)));
         if (!expanded) {
             return;
         }

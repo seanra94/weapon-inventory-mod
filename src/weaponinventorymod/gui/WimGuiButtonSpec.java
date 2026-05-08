@@ -97,7 +97,18 @@ final class WimGuiButtonSpec<A> {
                                           Alignment alignment,
                                           Color color,
                                           Color borderColor) {
-        return dimmedInner(width, label, textColor, action, true, alignment, color, borderColor);
+        return toggle(width, label, textColor, action, alignment, color, borderColor, null);
+    }
+
+    static <A> WimGuiButtonSpec<A> toggle(float width,
+                                          String label,
+                                          Color textColor,
+                                          A action,
+                                          Alignment alignment,
+                                          Color color,
+                                          Color borderColor,
+                                          String tooltip) {
+        return dimmedInner(width, label, textColor, action, true, alignment, color, borderColor, tooltip);
     }
 
     static <A> WimGuiButtonSpec<A> semantic(float width,

@@ -38,6 +38,9 @@
 - Refactored updater counting to scan cargo into maps once per tick instead of repeating storage scans for every id.
 - Removed old three-square diagnostic assets/settings and the legacy no-op `CargoWeaponMarkerHook`.
 - Rewrote handover/plans docs to describe the current architecture instead of old investigation states.
+- Extended the shared WIM GUI templates so tooltips attach through common button, list-row, row-cell, labelText, and scroll-indicator paths instead of screen-specific rendering code.
+  - `StockReviewTooltips` owns the stock-review tooltip copy.
+  - Tooltip coverage now includes stock category headings, weapon rows, storage/price/plan cells, `Weapon Data`, review rows, filters, trade-summary rows, color-debug controls, and disabled buttons.
 - Added first clean read-only stock review popup:
   - shared stock snapshot builder;
   - current-market sale counts;

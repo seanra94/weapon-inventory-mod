@@ -39,6 +39,7 @@ $requiredClasses = @(
     "weaponinventorymod/gui/WimGuiScrollableListState.class",
     "weaponinventorymod/gui/WimGuiSemanticButtonFactory.class",
     "weaponinventorymod/gui/WimGuiTooltip.class",
+    "weaponinventorymod/gui/StockReviewTooltips.class",
     "weaponinventorymod/gui/WimGuiColorDebug.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$Target.class",
     "weaponinventorymod/gui/StockReviewFormat.class",

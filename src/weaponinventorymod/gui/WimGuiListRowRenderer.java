@@ -69,7 +69,8 @@ final class WimGuiListRowRenderer {
                         row.getMainAction(),
                         row.getMainAlignment(),
                         row.getButtonFillColor(),
-                        defaultBorder),
+                        defaultBorder,
+                        row.getTooltip()),
                 buttons);
     }
 

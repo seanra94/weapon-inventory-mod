@@ -20,6 +20,7 @@ final class WimGuiListRow<A> {
     private final boolean topGap;
     private final Float cellGapOverride;
     private final float rightReserveWidth;
+    private final String tooltip;
 
     WimGuiListRow(String label,
                   Color textColor,
@@ -32,7 +33,8 @@ final class WimGuiListRow<A> {
                   List<WimGuiRowCell<A>> cells,
                   boolean topGap,
                   Float cellGapOverride,
-                  float rightReserveWidth) {
+                  float rightReserveWidth,
+                  String tooltip) {
         this.label = label;
         this.textColor = textColor;
         this.fillColor = fillColor;
@@ -47,6 +49,7 @@ final class WimGuiListRow<A> {
         this.topGap = topGap;
         this.cellGapOverride = cellGapOverride;
         this.rightReserveWidth = Math.max(0f, rightReserveWidth);
+        this.tooltip = tooltip;
     }
 
     String getLabel() {
@@ -95,5 +98,9 @@ final class WimGuiListRow<A> {
 
     float rightReserveWidth() {
         return rightReserveWidth;
+    }
+
+    String getTooltip() {
+        return tooltip;
     }
 }

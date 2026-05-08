@@ -15,7 +15,8 @@ final class StockReviewFilterListModel {
             for (StockReviewFilter filter : StockReviewFilter.values()) {
                 if (active.contains(filter)) {
                     rows.add(StockReviewListRow.filter(filter.getLabel(), true,
-                            StockReviewAction.toggleFilter(filter), false));
+                            StockReviewAction.toggleFilter(filter), false,
+                            StockReviewTooltips.filter(filter, true)));
                 }
             }
         }
@@ -32,7 +33,8 @@ final class StockReviewFilterListModel {
         boolean expanded = state.isExpanded(group);
         Set<StockReviewFilter> activeInGroup = StockReviewFilters.activeInGroup(state.getActiveFilters(), group);
         String label = WimGuiToggleHeading.countedLabel(group.getLabel(), activeInGroup.size(), expanded);
-        rows.add(StockReviewListRow.filterHeading(label, StockReviewAction.toggle(group), topGap));
+        rows.add(StockReviewListRow.filterHeading(label, StockReviewAction.toggle(group), topGap,
+                StockReviewTooltips.filterHeading(group)));
         if (!expanded) {
             return;
         }
@@ -45,7 +47,8 @@ final class StockReviewFilterListModel {
                 continue;
             }
             rows.add(StockReviewListRow.filter(filter.getLabel(), false,
-                    StockReviewAction.toggleFilter(filter), false));
+                    StockReviewAction.toggleFilter(filter), false,
+                    StockReviewTooltips.filter(filter, false)));
         }
     }
 }
