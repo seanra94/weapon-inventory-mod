@@ -1,4 +1,4 @@
-# Weapon Inventory Mod Plans
+# Weapons Procurement Plans
 
 ## Current Status
 
@@ -39,7 +39,7 @@
 - Refactored updater counting to scan cargo into maps once per tick instead of repeating storage scans for every id.
 - Removed old three-square diagnostic assets/settings and the legacy no-op `CargoWeaponMarkerHook`.
 - Rewrote handover/plans docs to describe the current architecture instead of old investigation states.
-- Extended the shared WIM GUI templates so tooltips attach through common button, list-row, row-cell, labelText, and scroll-indicator paths instead of screen-specific rendering code.
+- Extended the shared WP GUI templates so tooltips attach through common button, list-row, row-cell, labelText, and scroll-indicator paths instead of screen-specific rendering code.
   - `StockReviewTooltips` owns the stock-review tooltip copy.
   - Tooltip coverage now includes stock category headings, weapon rows, storage/price/plan cells, review rows, filters, trade-summary rows, color-debug controls, and disabled buttons.
 - Added first clean read-only stock review popup:
@@ -66,8 +66,8 @@
   - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
 - Migrated nested-button fallback polling to reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
 - Migrated popup action/footer button placement to reusable `WimGuiButtonSpec` plus `WimGuiControls.addButtonRow(...)`, removing hand-written x-position chains from `StockReviewRenderer`.
-- Migrated modal footer placement to `WimGuiModalFooter`, so stock review's `Confirm/Review` left buttons and `Go Back/Cancel` right buttons use the same bottom-button helper future WIM modals should use.
-- Ported the ACG-style wrapped text layout helper into `WimGuiTextLayout` / `WimGuiText.fitLayout(...)`, so future WIM rows and popups can share line-count and growable-height calculations instead of inventing local text math.
+- Migrated modal footer placement to `WimGuiModalFooter`, so stock review's `Confirm/Review` left buttons and `Go Back/Cancel` right buttons use the same bottom-button helper future WP modals should use.
+- Ported the ACG-style wrapped text layout helper into `WimGuiTextLayout` / `WimGuiText.fitLayout(...)`, so future WP rows and popups can share line-count and growable-height calculations instead of inventing local text math.
 - Started the ACG modal-template migration with `WimGuiModalLayout`; the stock-review list body now uses shared heading/body/footer spacing and tight black-panel height math, and the renderer reports the actual list hitbox for mouse-wheel routing.
 - Migrated stock review title/status header rendering and header/action-row spacing to `WimGuiModalHeader` / `WimGuiModalLayout`, reducing local modal positioning in `StockReviewRenderer`.
 - Migrated stock review heading labels and scroll indicator labels to `WimGuiToggleHeading` / `WimGuiScrollIndicator`, so `(+)/(-)`, counted headings, and ASCII scroll rows no longer live as local string fragments in stock-review models/renderers.
@@ -79,17 +79,17 @@
 - Migrated modal input and visual-dialog delegate wiring to `WimGuiModalInput`, `WimGuiInputResult`, `WimGuiDialogPanel`, and `WimGuiDialogDelegate`; stock review now provides stock actions/lifecycle hooks while shared helpers own Escape handling, list wheel scrolling, gated button polling, and `CustomVisualDialogDelegate` boilerplate.
 - Migrated stock review onto `WimGuiModalPanelPlugin`, a reusable modal panel base that owns init, close callbacks, content rebuilds, input routing, button dispatch, scroll-bound state, and render-failure close behavior.
 - Migrated host/opening boilerplate to `WimGuiHotkeyLatch`, `WimGuiDialogOpener`, `WimGuiDialogTracker`, and `WimGuiPendingDialog`; stock review now keeps market availability rules locally while shared helpers own hotkey latching, visual-dialog opening, open-state tracking, and pending reopen payloads.
-- Added `WimGuiCampaignDialogHost`, so future WIM campaign dialogs can reuse current sector/UI/dialog/market lookup and message reporting instead of copying the stock-review hotkey script plumbing.
+- Added `WimGuiCampaignDialogHost`, so future WP campaign dialogs can reuse current sector/UI/dialog/market lookup and message reporting instead of copying the stock-review hotkey script plumbing.
 - Routed stock-review campaign messages, snapshot rebuilds, confirmation market lookup, and vanilla-core refresh dialog lookup through `WimGuiCampaignDialogHost`, and cached sector/current-market once per confirmation execution path.
-- Moved the forced vanilla cargo-core refresh fallback into `WimGuiCampaignDialogHost.refreshCargoCore(...)`, so future WIM campaign modals can reuse the same guarded close/reopen behavior.
+- Moved the forced vanilla cargo-core refresh fallback into `WimGuiCampaignDialogHost.refreshCargoCore(...)`, so future WP campaign modals can reuse the same guarded close/reopen behavior.
 - Added shared player-cargo lookup to `WimGuiCampaignDialogHost` and routed stock-review credit/cargo/sell-price probes through it, leaving direct campaign access centralized.
 - Migrated central modal-list rendering to `WimGuiModalListSpec`, `WimGuiModalListRenderer`, and `WimGuiModalListRenderResult`; stock review now supplies only its scroll-row action factory and category top-gap rule while shared helpers own black-panel creation, scroll rows, row rendering, useful offsets, and returned list bounds.
 - Added `WimGuiScrollableListState` and `WimGuiModalListRenderer.renderAndStoreOffset(...)`, removing the stock-review-only row-renderer adapter and putting list-offset preservation in the shared modal-list path.
 - Migrated top modal action-row placement to `WimGuiModalActionRow` and added `WimGuiButtonSpec.semantic(...)` for the common enabled/disabled text and fill pattern.
 - Added `WimGuiButtonSpecs` and `WimGuiModalFooter.addLeftRowAndRightButton(...)` so renderers can compose button rows declaratively instead of hand-rolling mutable button-list and paired footer placement boilerplate.
-- Removed the stock-review-only row-cell adapter; `WimGuiRowCell` now directly owns standard action-cell disabled text behavior and row-cell list construction for future WIM screens.
-- Added `WimGuiSemanticButtonFactory`, giving future WIM modals one reusable way to create enabled/disabled semantic button specs with a shared border instead of local `actionButton`/`footerButton` wrapper methods.
-- Converted the main stock and review row-cell blocks to `WimGuiRowCell.of(...)`, making the intended shared row-cell composition pattern visible in current WIM screens instead of leaving manual mutable cell setup as the example.
+- Removed the stock-review-only row-cell adapter; `WimGuiRowCell` now directly owns standard action-cell disabled text behavior and row-cell list construction for future WP screens.
+- Added `WimGuiSemanticButtonFactory`, giving future WP modals one reusable way to create enabled/disabled semantic button specs with a shared border instead of local `actionButton`/`footerButton` wrapper methods.
+- Converted the main stock and review row-cell blocks to `WimGuiRowCell.of(...)`, making the intended shared row-cell composition pattern visible in current WP screens instead of leaving manual mutable cell setup as the example.
 - Replaced remaining anonymous GUI-side callback helpers with explicit classes such as `WimGuiModalListGapAdapter` and `WimGuiNoopCoreInteractionListener`, reducing Starsector classloader risk from generated companion classes.
 - Added `tools\validate-live-gui-classes.ps1` after a runtime `NoClassDefFoundError` exposed stale live-jar/classloader risk. It verifies required extracted GUI helper classes exist in both repo and live jars and that repo/live SHA-256 hashes match.
 - Expanded `tools\validate-live-gui-classes.ps1` to reject stale removed GUI helper classes as well as missing required helpers, so future migrations catch old adapter classes reappearing in jars.
@@ -116,9 +116,9 @@
   - `Sell All Until Sufficient` queues inventory sales that keep post-trade stock sufficient.
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo.
 - Added first transaction-side-effect hardening:
-  - local-market WIM buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
+  - local-market WP buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
   - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
-  - Fixer's Market buys remain virtual WIM-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
+  - Fixer's Market buys remain virtual WP-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
 - Cleaned up the `Cost` to `Price` terminology migration:
   - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
   - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
@@ -226,9 +226,9 @@
 - Expanded stock source feature:
   - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Fixer's Market` source modes;
   - [x] keep `Local` as current-market stock review with the normal Black Market toggle;
-  - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wim_sector_market_price_multiplier` Luna setting, defaulting to 3x;
+  - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wp_sector_market_price_multiplier` Luna setting, defaulting to 3x;
   - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
-  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
+  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wp_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
   - [x] add independent Luna toggles for Sector and Fixer's Market availability plus a JSON blacklist for banning weapons from either remote source;
   - [x] use commit `a02e507` as the confirmed-good reference for stock-review nested indentation and button right-edge sizing.
   - [x] disable and gray out the Black Market button for non-local source modes;
@@ -252,15 +252,15 @@
   - [x] remove stale Global-source and Sellers-section helper paths after the source split;
   - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
   - [x] title-case toggle heading labels;
-  - [x] fix stock-review toggle headings not opening by routing enabled WIM controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;
+  - [x] fix stock-review toggle headings not opening by routing enabled WP controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;
   - [x] add reusable labelText containers for review summary rows such as `Total Cost` and `Credits Available`;
   - [x] replace `-S` / `+S` with one `Sufficient` row button that buys deficits or sells excess to reach barely sufficient stock;
-  - [x] replace buggy disabled-button hover/highlight behavior by rendering disabled action cells as inert WIM shells instead of disabled Starsector buttons;
+  - [x] replace buggy disabled-button hover/highlight behavior by rendering disabled action cells as inert WP shells instead of disabled Starsector buttons;
   - [x] port the ACG-style color debug menu behind a top-row `Colors` button, with temporary and permanent RGB overrides;
   - [x] use the repo's dimmed-toggle button path for toggle headings instead of normal toggle visuals.
 - ACG GUI migration is now largely in drawdown:
   - modal composition, modal list panels, scroll math, button semantics, toggle-heading labels, text helpers, host adapters, and live-jar helper validation have reusable `WimGui*` ownership;
-  - future WIM screens should start from those helpers rather than copying stock-review renderer code;
+  - future WP screens should start from those helpers rather than copying stock-review renderer code;
   - only continue extracting GUI helpers when a second screen needs the same behavior or when runtime testing exposes a concrete inconsistency.
 - Keep this validation loop for future migration slices:
   - run `build.ps1`;
@@ -285,5 +285,5 @@
 
 - Do not retry late over-icon rendering casually; it caused invisibility/blur regressions.
 - Do not use layered background plus text badge rendering.
-- Do not put campaign-state or LunaLib calls into `WeaponInventoryBadgeHelper`.
+- Do not put campaign-state or LunaLib calls into `WeaponsProcurementBadgeHelper`.
 - Do not reintroduce runtime reflection or raw GL rendering for the badge path.

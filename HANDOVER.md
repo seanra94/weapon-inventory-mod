@@ -1,4 +1,4 @@
-# Weapon Inventory Mod Handover
+# Weapons Procurement Handover
 
 ## Current State
 
@@ -13,15 +13,15 @@
   - `stock item` means either a weapon or fighter LPC/wing in the clean popup. Runtime trade state uses type-prefixed item keys internally (`W:` / `F:`) so a weapon id and wing id cannot collide.
   - `main headings` / `top level headings` means `No Stock`, `Insufficient Stock`, and `Sufficient Stock`.
   - `weapon entries` means rows under those main headings, such as `Light Needler (-)` plus stock, plan, cost/profit, and buy/sell controls.
-- Popup configuration lives in `data/config/weapon_inventory_stock.json`:
+- Popup configuration lives in `data/config/weapons_procurement_stock.json`:
   - include/exclude accessible storage in current stock calculations;
   - include/exclude black market stock;
   - desired stock defaults by weapon size;
   - per-weapon desired/ignored overrides.
 - LunaLib now owns the user-facing default sufficient-stock thresholds by weapon mount size:
-  - `wim_desired_small_weapon_count`, default 16;
-  - `wim_desired_medium_weapon_count`, default 8;
-  - `wim_desired_large_weapon_count`, default 4.
+  - `wp_desired_small_weapon_count`, default 16;
+  - `wp_desired_medium_weapon_count`, default 8;
+  - `wp_desired_large_weapon_count`, default 4.
   These override the JSON defaults, while per-weapon JSON `desired` overrides still take precedence for specific weapons.
 - Popup redraw rule:
   - The clean popup now renders through an explicit custom-panel shell, not one long tooltip row pile.
@@ -33,24 +33,24 @@
   - Buttons use real Starsector buttons with blank built-in labels plus a reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` registry as a polling fallback. In runtime, nested custom-panel controls did not reliably arrive through `buttonPressed(...)` alone.
   - The fallback is deliberately event-gated: only poll for a few frames after mouse down/up events. Do not return to scanning every button every frame unless runtime testing proves the gated fallback misses clicks.
   - Keep row/button actions as explicit `StockReviewAction` ids; do not return to inferred checkbox state as the source of truth.
-  - Clickable rows/buttons now use blank Starsector button text with WIM-rendered labels layered separately, so hover/base colors stay ACG-like while visible text remains white/gray under WIM control.
+  - Clickable rows/buttons now use blank Starsector button text with WP-rendered labels layered separately, so hover/base colors stay ACG-like while visible text remains white/gray under WP control.
 - Popup scope:
   - The old display-mode button and config mode were removed. The Buy GUI should show only weapons that are buyable from the active stock source or present in player inventory and therefore sellable through the GUI.
   - The Buy GUI now has top-level `Weapons` and `Wings` toggle headings. Each section then renders the usual `No Stock`, `Insufficient Stock`, and `Sufficient Stock` headings. Weapon filters apply only to weapons; wings remain visible while weapon filters are active until wing-specific filters are deliberately added.
-  - Wing sufficiency defaults to 4 and is configurable through LunaLib as `wim_desired_fighter_wing_count`.
+  - Wing sufficiency defaults to 4 and is configurable through LunaLib as `wp_desired_fighter_wing_count`.
   - Stored-only weapons should not create rows. The `Storage` cell may still show full owned stock, including accessible storage, for a weapon that appears because it is buyable or in player inventory.
   - Local stock collection, local buys, local sells, and sell-price quoting should all use `MarketStockService.isTradeSubmarket(...)` for storage/local-resource/black-market filtering. Do not copy that submarket filter into each caller.
 - Stock source modes:
   - The Buy GUI now cycles `Source: Local`, `Source: Sector Market`, and `Source: Fixer's Market`.
   - `Local` behaves like the normal current-market review and honors the Black Market toggle.
-  - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wim_sector_market_price_multiplier` (default `3.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
+  - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wp_sector_market_price_multiplier` (default `3.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
   - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo and must refresh after Sector Market purchases drain actual market stacks.
-  - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_fixers_market_price_multiplier` (default `5.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
+  - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wp_fixers_market_price_multiplier` (default `5.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
   - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
   - Generic buy allocation is intentionally cheapest-first among all currently eligible sources. If the Black Market toggle/source rules include black-market stock and it is cheaper than legal stock, generic `+1` should consume the black-market stock first. Keep `StockReviewQuoteBook` preview ordering and `StockPurchaseService` execution ordering in sync.
   - Fixer's Market reference pricing also uses the cheapest live source as its base reference, regardless of whether that source is legal or black-market stock.
-  - Optional tag/faction inference is Luna-gated by `wim_enable_fixers_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
-  - Sector and Fixer's Market can be independently disabled in LunaLib. `data/config/weapon_inventory_market_blacklist.json` blocks weapon ids/display names from `BANNED_FROM_SECTOR_MARKET` and `BANNED_FROM_FIXERS_MARKET` before those remote source rows are created.
+  - Optional tag/faction inference is Luna-gated by `wp_enable_fixers_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
+  - Sector and Fixer's Market can be independently disabled in LunaLib. `data/config/weapons_procurement_market_blacklist.json` blocks weapon ids/display names from `BANNED_FROM_SECTOR_MARKET` and `BANNED_FROM_FIXERS_MARKET` before those remote source rows are created.
 - Popup sorting:
   - `Stock`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
   - `Name`: weapon name first, then need, then price;
@@ -80,18 +80,18 @@
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
   - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run;
-  - local sells should deposit into the black market when the Black Market toggle is enabled, otherwise into the best eligible non-black trade submarket. After the transaction callback, WIM reconciles the touched submarket cargo to the exact pre-sale count plus sold quantity because vanilla/modded submarket callbacks can normalize stock after WIM mutates it.
-  - Fixer's Market buys remain virtual WIM transactions and intentionally do not report to a real submarket plugin. Sector Market buys remove stock from real remote market cargo and report a best-effort transaction to the touched remote submarket. Remote-mode sells use the current local market buyer with black market disabled.
+  - local sells should deposit into the black market when the Black Market toggle is enabled, otherwise into the best eligible non-black trade submarket. After the transaction callback, WP reconciles the touched submarket cargo to the exact pre-sale count plus sold quantity because vanilla/modded submarket callbacks can normalize stock after WP mutates it.
+  - Fixer's Market buys remain virtual WP transactions and intentionally do not report to a real submarket plugin. Sector Market buys remove stock from real remote market cargo and report a best-effort transaction to the touched remote submarket. Remote-mode sells use the current local market buyer with black market disabled.
 - Popup category layout:
   - stock categories start collapsed;
   - headings are flat full-width peer rows, not nested checkboxes;
   - weapon rows, nested section rows, and scroll indicators are all explicit row descriptors rather than ad hoc tooltip paragraphs.
 - Popup visual rules:
-  - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No Stock and sell/decrement controls, yellow/load for Insufficient Stock rows, green/confirm for Sufficient Stock and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
+  - WP intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No Stock and sell/decrement controls, yellow/load for Insufficient Stock rows, green/confirm for Sufficient Stock and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
   - Commit `a02e507` was user-confirmed as the reference point where stock-review indentation and button right-edge sizing finally worked. If future changes break nested row alignment, compare against that commit before trying a new layout theory.
   - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
   - The three top stock category headings use their red/yellow/green fills. Nested toggle headings use the ACG dark-gray collapsible heading fill.
-  - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
+  - WP-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders.
   - Nested stock-review sizing must be treated as a simple indent stack. The Buy GUI hierarchy is `Weapons/Wings -> No/Insufficient/Sufficient Stock -> weapon/wing row -> Basic/Advanced Info -> data row`, with one equal indent step added at each level. If a parent row has visible width `X` and one indent unit is `Y`, a child row starts one indent deeper and has width `X - Y`; a grandchild row starts two indents deeper and has width `X - 2Y`. The right edge must align with the parent row. Do this by adding an invisible borderless indent spacer and reducing the child component width by the same indent, not by shifting a full-width component right.
   - Expanded weapon rows now contain `Basic Info` and `Advanced Info` nested toggle headings. Their data rows are LabelTextComponents one level deeper than the heading and use the shared indent-minus-width layout path.
@@ -101,7 +101,7 @@
   - Right-side reserve constants must equal the actual rendered cell block width, including only the gaps between sibling cells that are not already counted inside a grouped control block. If this reserve is too large, nested toggle headings such as `Basic Info` will appear center-aligned or too short instead of sharing the parent weapon row's right edge.
   - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.
   - The No Stock dummy row is a deliberate worst-case row-width test. It uses `Suzuki-Clapteryon Thermal Prokector... (+)`, `Storage: 99+`, `Price: 99,999+\u00a2`, and `Selling: 99+ [999,999+\u00a2]`. Real rows should cap displayed storage and plan counts at `99+`, price at `99,999+\u00a2`, and plan totals at `999,999+\u00a2`; fixed cells should be just large enough for those caps, with only the weapon-name cell absorbing spare width.
-  - The `Storage` cell is intentionally wider than the other compact stock cells and left-aligned with normal WIM internal text padding for readability.
+  - The `Storage` cell is intentionally wider than the other compact stock cells and left-aligned with normal WP internal text padding for readability.
   - Top-level stock headings summarize the visible category as `No Stock [Weapon Types: N][Selling: N][Buying: N]` and equivalent labels for insufficient/sufficient stock. `Weapon Types` is the count of visible weapon rows in that category; `Selling` and `Buying` are queued unit totals and must be counted separately, not netted against each other.
   - `Price` is intentionally wider than the original compact cell; long comma-grouped prices should fit before reclaiming space from other action cells.
   - `Price` in the Buy GUI is the cheapest currently purchasable unit buy price after current queued buys have consumed cheaper stock. If no buy price remains because the row is sell-only or stock has been fully queued, fall back to the best legal player-cargo sell value for the active market/black-market setting. Format prices with comma-grouped credits and cap compact row prices at `99,999+\u00a2`.
@@ -112,8 +112,8 @@
   - `Price` and neutral `Buying: 0` cells use the normal gray cell background. Profit cells use green/confirm. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
   - `Sufficient` adjusts the weapon to barely sufficient status, buying if there is a deficit and selling if there is an excess.
   - `Sufficient` uses the current queued plan as part of its calculation and uses sell/red styling when the sufficient adjustment would reduce the plan or sell excess.
-  - Disabled controls should render as inert WIM-owned shells with gray text and disabled fill, not as disabled Starsector buttons. Starsector's disabled-button hover can darken/highlight inconsistently and should not be used for WIM action cells.
-  - The `Colors` top-row button opens the in-popup Debug Colors screen. Temporary changes mutate the runtime WIM palette until restart; Permanent mode also writes the selected RGB values to Starsector common storage as `WIM_debugGuiColors.json`. Debug samples, RGB incrementors, Confirm/Apply/Restore/Cancel, and the variable selector must stay on the shared WIM row/button path.
+  - Disabled controls should render as inert WP-owned shells with gray text and disabled fill, not as disabled Starsector buttons. Starsector's disabled-button hover can darken/highlight inconsistently and should not be used for WP action cells.
+  - The `Colors` top-row button opens the in-popup Debug Colors screen. Temporary changes mutate the runtime WP palette until restart; Permanent mode also writes the selected RGB values to Starsector common storage as `WP_debugGuiColors.json`. Debug samples, RGB incrementors, Confirm/Apply/Restore/Cancel, and the variable selector must stay on the shared WP row/button path.
   - The old visible `Refresh` and `Mode` buttons were removed. Sort/source changes and trade actions already rebuild the snapshot/content shell through explicit actions.
   - The Make Trades and Review Trades screens intentionally omit the old title/status text box. That vertical space belongs to the main weapon list. Filter and color-debug screens still keep a title/status header because those screens need orientation text.
   - Credit labels should use the Starsector-supported cent-sign glyph (`\u00a2`, font char id 162) instead of the plain `cr` suffix. Longer campaign messages may still say `credits` when that reads better.
@@ -134,28 +134,28 @@
   - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently buyable under the current black-market setting. It should not open from looting, non-trade planet contexts, or markets with only locked/unbuyable weapon stock.
 - Purchase refresh:
   - The current preferred buy path does not force-close/reopen the vanilla cargo core after purchase; it mutates cargo, then rebuilds the popup snapshot in place. The old forced core refresh remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE` in case vanilla trade-grid stale-slot corruption still reproduces.
-  - Local-market transactions are still not guaranteed to be perfectly vanilla-identical. WIM now reports `PlayerMarketTransaction` to the touched submarket plugin, but runtime testing should still confirm tariff, suspicion, reputation, economy-impact, and modded-listener behavior.
+  - Local-market transactions are still not guaranteed to be perfectly vanilla-identical. WP now reports `PlayerMarketTransaction` to the touched submarket plugin, but runtime testing should still confirm tariff, suspicion, reputation, economy-impact, and modded-listener behavior.
 - Normal mod-side code owns all campaign state:
-  - `WeaponInventoryModPlugin` registers `WeaponInventoryCountUpdater` as a transient script on game load.
-  - `WeaponInventoryCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
-  - `WeaponInventoryBadgeHelper` is embedded in patched core and only reads `System` properties to select a precomposed badge sprite path.
+  - `WeaponsProcurementModPlugin` registers `WeaponsProcurementCountUpdater` as a transient script on game load.
+  - `WeaponsProcurementCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
+  - `WeaponsProcurementBadgeHelper` is embedded in patched core and only reads `System` properties to select a precomposed badge sprite path.
 - Active visual path:
-  - one precomposed `graphics/ui/wim_total_*.png` badge sprite;
+  - one precomposed `graphics/ui/wp_total_*.png` badge sprite;
   - bottom-right cell placement from the stable pre-scale coordinate frame;
   - no layered background/text sprites;
   - no runtime badge scaling;
   - no late over-icon render anchor.
 - LunaLib is used only by normal mod-side config code for update interval:
-  - setting id: `wim_update_interval_seconds`;
-  - setting id: `wim_enable_patched_badges`;
-  - published property: `wim.config.updateIntervalSeconds`;
-  - published property: `wim.config.patchedBadgesEnabled`;
+  - setting id: `wp_update_interval_seconds`;
+  - setting id: `wp_enable_patched_badges`;
+  - published property: `wp.config.updateIntervalSeconds`;
+  - published property: `wp.config.patchedBadgesEnabled`;
   - default: `0.20`, clamped to `0.05..2.00`.
-- `wim_enable_patched_badges=false` makes the embedded helper return `null`, so a patched core jar will skip badge rendering while the normal popup continues to work.
+- `wp_enable_patched_badges=false` makes the embedded helper return `null`, so a patched core jar will skip badge rendering while the normal popup continues to work.
 
-## ACG-Derived GUI Rules For WIM
+## ACG-Derived GUI Rules For WP
 
-These are the ACG Starsector UI lessons that matter for the Weapon Stock Review popup. Keep them in mind when extending WIM; they are runtime-tested Starsector GUI behavior, not just style preference.
+These are the ACG Starsector UI lessons that matter for the Weapon Stock Review popup. Keep them in mind when extending WP; they are runtime-tested Starsector GUI behavior, not just style preference.
 
 - Keep the clean popup architecture explicit:
   - services build immutable-ish stock snapshots;
@@ -167,7 +167,7 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
 - Buttons and toggle rows should be centralized through shared helpers/templates. A row caller should choose a semantic action/color/enabled state; the helper should own label color, disabled behavior, guarded callbacks, hover behavior, sounds, tooltip suppression, and action registration.
 - Current shared GUI-helper ownership:
   - `WimGuiStyle` owns ACG-derived button dimming, shared text metrics, disabled colors, uncoloured-button defaults, semantic confirm/cancel/load/save colors, modal panel colors, heading colors, and generic row border defaults.
-  - `WimGuiDialogPanel` / `WimGuiDialogDelegate` own reusable `CustomVisualDialogDelegate` wiring for WIM modal panels.
+  - `WimGuiDialogPanel` / `WimGuiDialogDelegate` own reusable `CustomVisualDialogDelegate` wiring for WP modal panels.
   - `WimGuiDialogOpener` owns reusable `showCustomVisualDialog(...)` calls.
   - `WimGuiCampaignDialogHost` owns reusable current campaign sector/UI/dialog/market/player-cargo lookup, safe campaign message reporting, and guarded vanilla cargo-core refresh for modal launchers.
   - `WimGuiDialogTracker` / `WimGuiPendingDialog` own reusable modal open-state and pending-reopen state.
@@ -204,9 +204,9 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
 - Starsector area-checkbox colors are counterintuitive:
   - `base` behaves like hover/glow;
   - `bg` behaves like checked fill/border;
-  - built-in label coloring is limited, so WIM should keep using controlled row text instead of relying on checkbox labels for complex rows.
-- Starsector dims idle button interiors heavily. Raw RGB values can look much darker in game, while hover/glow is closer to raw RGB. For WIM, keep hover/glow equal to the idle/base color unless a runtime-tested exception is deliberately accepted.
-- Avoid bare `addAreaCheckbox(...)` visuals for action rows. If WIM uses area checkboxes for a future row type, give the row an owned background/fill so idle colors do not degrade into only a border or ring.
+  - built-in label coloring is limited, so WP should keep using controlled row text instead of relying on checkbox labels for complex rows.
+- Starsector dims idle button interiors heavily. Raw RGB values can look much darker in game, while hover/glow is closer to raw RGB. For WP, keep hover/glow equal to the idle/base color unless a runtime-tested exception is deliberately accepted.
+- Avoid bare `addAreaCheckbox(...)` visuals for action rows. If WP uses area checkboxes for a future row type, give the row an owned background/fill so idle colors do not degrade into only a border or ring.
 - Use the imported ACG palette consistently:
   - No Stock category rows: cancel red;
   - Insufficient rows: load yellow;
@@ -217,7 +217,7 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
   - nested toggle headings: dark gray;
   - neutral available rows: black/dark action background;
   - disabled/locked rows: gray text with disabled/dark shell and no meaningful hover.
-- Ordinary WIM popup text should stay white/default-font. Use gray text only for disabled, locked, or unavailable states unless the user explicitly asks for another convention.
+- Ordinary WP popup text should stay white/default-font. Use gray text only for disabled, locked, or unavailable states unless the user explicitly asks for another convention.
 - Scrollable lists need one shared math path:
   - preserve scroll offsets and expanded headings across rebuilds;
   - consume wheel/input events when the custom list handles them;
@@ -227,13 +227,13 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
   - ASCII indicators are safer than arrow glyphs in this UI.
   - keep this behavior in `WimGuiScroll` / `WimGuiModalListLayout`, not local per-screen copies.
 - State-changing filters, source toggles, and sort changes should refresh the existing content shell and preserve expansion state. Replacing the full root popup should be reserved for real host/lifecycle changes.
-- If WIM adds modal popups, use the ACG three-section template: heading, body, bottom buttons. Width, padding, heading height, button height, section gaps, and the 80%-of-screen max-height cap should be shared constants; only body content and computed body height should vary.
+- If WP adds modal popups, use the ACG three-section template: heading, body, bottom buttons. Width, padding, heading height, button height, section gaps, and the 80%-of-screen max-height cap should be shared constants; only body content and computed body height should vary.
 - Do not rely on click-out-to-close for modals. Escape and explicit Close/Cancel are sufficient. If outside-click behavior is added later, use raw-coordinate inside/outside checks rather than binding a full-screen backdrop directly to Cancel.
-- Modal/background input shielding matters in Starsector. Input consumption alone can be too late to stop hover sounds/tooltips behind a modal, so future WIM modals should disable or mute non-modal controls while open and restore their previous enabled state afterward.
+- Modal/background input shielding matters in Starsector. Input consumption alone can be too late to stop hover sounds/tooltips behind a modal, so future WP modals should disable or mute non-modal controls while open and restore their previous enabled state afterward.
 - Avoid `addParaWithMarkup()` and highlighted `addPara(...)` overloads for row labels and weapon text. `%` can be treated as formatter syntax, and markup paths caused literal markup/clipping problems in ACG. Prefer shared plain-text fitting/wrapping helpers.
 - Text wrapping should avoid weak line endings such as `as`, `as the`, `and`, `of`, and `to`. Long body copy should use one shared wrapping helper rather than local fixes in each popup.
 - Prefer Starsector-owned/default font selectors over raw font asset paths. A raw font path can compile and still crash in a specific custom UI entry point.
-- Keep button order consistent if WIM adds confirmation modals: `Confirm` green, `Apply`/secondary purple where applicable, `Delete`/destructive-yellow where applicable, `Cancel` red, left to right.
+- Keep button order consistent if WP adds confirmation modals: `Confirm` green, `Apply`/secondary purple where applicable, `Delete`/destructive-yellow where applicable, `Cancel` red, left to right.
 - Left click should cycle forward and right click should cycle backward for future cycling option buttons, with both directions routed through the same button/action abstraction and sound handling.
 - For performance, build render-ready data during snapshot creation. Do not repeatedly call settings/spec lookups, classify stock, or scan cargo inside row rendering loops.
 - Clean code should still respect Starsector classloading reality. Compile/jar success is not enough after GUI helper extraction. Prefer stable explicit classes over anonymous/local/lambda-generated classes in runtime-sensitive UI or patched-helper paths, and inspect/test affected entry points after helper placement changes.
@@ -247,12 +247,12 @@ These are the ACG Starsector UI lessons that matter for the Weapon Stock Review 
 
 Published properties:
 
-- `wim.weapon.<weaponId>.player`
-- `wim.weapon.<weaponId>.storage`
-- `wim.fighter.<wingId>.player`
-- `wim.fighter.<wingId>.storage`
-- `wim.counts.ready`
-- `wim.counts.updatedAt`
+- `wp.weapon.<weaponId>.player`
+- `wp.weapon.<weaponId>.storage`
+- `wp.fighter.<wingId>.player`
+- `wp.fighter.<wingId>.storage`
+- `wp.counts.ready`
+- `wp.counts.updatedAt`
 
 Counting rules:
 
@@ -273,7 +273,7 @@ Counting rules:
   - `1..9`: yellow exact number;
   - `10..98`: green exact number;
   - `>=99`: green `99+`;
-  - missing/invalid bridge state: `wim_total_err.png`.
+  - missing/invalid bridge state: `wp_total_err.png`.
 - Badge assets are generated by `tools/generate-total-badges.ps1`.
 - Asset and JSON validation is handled by `tools/validate-total-badges.ps1`.
 - Patched `CargoStackView` validation is handled by `tools/validate-cargo-stack-view-patch.ps1`.
@@ -316,10 +316,10 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\cargo-stack-view-patcher.ps1 -Mode Restore
 powershell -ExecutionPolicy Bypass -File .\tools\cargo-stack-view-patcher.ps1 -Mode Patch
 powershell -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
-robocopy data "C:\Games\Starsector\mods\Weapon Inventory Mod\data" /MIR
-robocopy graphics "C:\Games\Starsector\mods\Weapon Inventory Mod\graphics" /MIR
-robocopy jars "C:\Games\Starsector\mods\Weapon Inventory Mod\jars" /MIR
-Copy-Item mod_info.json "C:\Games\Starsector\mods\Weapon Inventory Mod\mod_info.json" -Force
+robocopy data "C:\Games\Starsector\mods\Weapons Procurement\data" /MIR
+robocopy graphics "C:\Games\Starsector\mods\Weapons Procurement\graphics" /MIR
+robocopy jars "C:\Games\Starsector\mods\Weapons Procurement\jars" /MIR
+Copy-Item mod_info.json "C:\Games\Starsector\mods\Weapons Procurement\mod_info.json" -Force
 powershell -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
 ```

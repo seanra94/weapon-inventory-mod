@@ -9,7 +9,7 @@ if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
 }
 
 $obfJar = Join-Path $StarsectorDir "starsector-core\starfarer_obf.jar"
-$backupJar = "$obfJar.wim_backup"
+$backupJar = "$obfJar.wp_backup"
 
 if (-not (Test-Path -LiteralPath $obfJar)) {
     throw "Could not find starfarer_obf.jar at '$obfJar'. Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
@@ -17,16 +17,16 @@ if (-not (Test-Path -LiteralPath $obfJar)) {
 
 $patcherSrcDir = Join-Path $PSScriptRoot "patcher\src"
 $patcherBuildDir = Join-Path $PSScriptRoot "patcher\build\classes"
-$modJarPath = Join-Path (Split-Path -Parent $PSScriptRoot) "jars\weapon-inventory-mod.jar"
+$modJarPath = Join-Path (Split-Path -Parent $PSScriptRoot) "jars\weapons-procurement.jar"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $requiredTotalSprites = @(
-    "graphics\\ui\\wim_total_red_0.png",
-    "graphics\\ui\\wim_total_yellow_1.png",
-    "graphics\\ui\\wim_total_yellow_9.png",
-    "graphics\\ui\\wim_total_green_10.png",
-    "graphics\\ui\\wim_total_green_98.png",
-    "graphics\\ui\\wim_total_green_99plus.png",
-    "graphics\\ui\\wim_total_err.png"
+    "graphics\\ui\\wp_total_red_0.png",
+    "graphics\\ui\\wp_total_yellow_1.png",
+    "graphics\\ui\\wp_total_yellow_9.png",
+    "graphics\\ui\\wp_total_green_10.png",
+    "graphics\\ui\\wp_total_green_98.png",
+    "graphics\\ui\\wp_total_green_99plus.png",
+    "graphics\\ui\\wp_total_err.png"
 )
 
 New-Item -ItemType Directory -Force -Path $patcherBuildDir | Out-Null
@@ -60,11 +60,11 @@ if ($modeArg -eq "patch") {
             throw "Patch mode requires total-badge sprite '$fullPath'."
         }
     }
-    & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar $modJarPath
+    & java @exports -cp $patcherBuildDir weaponsprocurement.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar $modJarPath
 } elseif ($modeArg -eq "restore") {
-    & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
+    & java @exports -cp $patcherBuildDir weaponsprocurement.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
 } else {
-    & java @exports -cp $patcherBuildDir weaponinventorymod.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
+    & java @exports -cp $patcherBuildDir weaponsprocurement.patcher.CargoStackViewPatcher $modeArg $obfJar $backupJar
 }
 if ($LASTEXITCODE -ne 0) {
     throw "Patcher execution failed with exit code $LASTEXITCODE."

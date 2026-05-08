@@ -1,17 +1,17 @@
 param(
     [string]$RepoRoot = (Split-Path -Parent $PSScriptRoot),
-    [string]$DeployRoot = "C:\Games\Starsector\mods\Weapon Inventory Mod"
+    [string]$DeployRoot = "C:\Games\Starsector\mods\Weapons Procurement"
 )
 
 Add-Type -AssemblyName System.Drawing
 
 $required = @(
-    "wim_total_red_0.png",
-    "wim_total_yellow_1.png",
-    "wim_total_yellow_6.png",
-    "wim_total_green_10.png",
-    "wim_total_green_99plus.png",
-    "wim_total_err.png"
+    "wp_total_red_0.png",
+    "wp_total_yellow_1.png",
+    "wp_total_yellow_6.png",
+    "wp_total_green_10.png",
+    "wp_total_green_99plus.png",
+    "wp_total_err.png"
 )
 
 function Test-BadgeSet {
@@ -67,7 +67,7 @@ function Test-StockReviewConfig {
         [string]$Label
     )
 
-    $configPath = Join-Path $BasePath "data\\config\\weapon_inventory_stock.json"
+    $configPath = Join-Path $BasePath "data\\config\\weapons_procurement_stock.json"
     if (-not (Test-Path -LiteralPath $configPath)) {
         throw "$Label missing stock review config '$configPath'"
     }

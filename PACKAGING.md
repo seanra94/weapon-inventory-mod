@@ -1,4 +1,4 @@
-# Weapon Inventory Mod Packaging Notes
+# Weapons Procurement Packaging Notes
 
 ## Two Distributions
 
@@ -23,10 +23,10 @@ Include:
 
 - `data/`
 - `graphics/`
-- `jars/weapon-inventory-mod.jar`
+- `jars/weapons-procurement.jar`
 - `mod_info.json`
 
-Do not require users to run the patcher for the clean package. The Luna setting `wim_enable_patched_badges` can stay present, but it has no visible effect without a patched core jar.
+Do not require users to run the patcher for the clean package. The Luna setting `wp_enable_patched_badges` can stay present, but it has no visible effect without a patched core jar.
 
 ## Patched Badge Package
 

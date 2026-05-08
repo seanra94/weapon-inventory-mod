@@ -1,5 +1,5 @@
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$guiDir = Join-Path $repoRoot "src\weaponinventorymod\gui"
+$guiDir = Join-Path $repoRoot "src\weaponsprocurement\gui"
 $controlsPath = Join-Path $guiDir "WimGuiControls.java"
 
 if (-not (Test-Path -LiteralPath $controlsPath)) {
@@ -9,14 +9,14 @@ if (-not (Test-Path -LiteralPath $controlsPath)) {
 $javaFiles = @(Get-ChildItem -Path $guiDir -Recurse -Filter *.java)
 $checkboxHits = @($javaFiles | Select-String -Pattern "addAreaCheckbox|addCheckbox" -SimpleMatch)
 if ($checkboxHits.Count -gt 0) {
-    throw "WIM GUI must not use checkbox-backed buttons/toggles. Hits:`n$($checkboxHits -join "`n")"
+    throw "WP GUI must not use checkbox-backed buttons/toggles. Hits:`n$($checkboxHits -join "`n")"
 }
 
 $directButtonHits = @($javaFiles |
     Where-Object { $_.FullName -ne $controlsPath } |
     Select-String -Pattern ".addButton(" -SimpleMatch)
 if ($directButtonHits.Count -gt 0) {
-    throw "WIM GUI buttons must route through WimGuiControls.addButton. Hits:`n$($directButtonHits -join "`n")"
+    throw "WP GUI buttons must route through WimGuiControls.addButton. Hits:`n$($directButtonHits -join "`n")"
 }
 
 $controlsText = Get-Content -LiteralPath $controlsPath -Raw
@@ -27,4 +27,4 @@ if ($controlsText -notmatch "Color hover = .*colors\.hover") {
     throw "WimGuiControls.addButton must keep hover color separate from the dimmed inner idle fill."
 }
 
-Write-Host "WIM GUI button style validation passed."
+Write-Host "WP GUI button style validation passed."

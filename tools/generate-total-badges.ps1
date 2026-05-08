@@ -51,17 +51,17 @@ $green = [System.Drawing.ColorTranslator]::FromHtml("#4BCB63")
 $white = [System.Drawing.Color]::White
 $black = [System.Drawing.Color]::Black
 
-New-BadgePng -Path (Join-Path $outDir "wim_total_red_0.png") -Text "0" -Background $red -Foreground $black
+New-BadgePng -Path (Join-Path $outDir "wp_total_red_0.png") -Text "0" -Background $red -Foreground $black
 
 for ($i = 1; $i -le 9; $i++) {
-    New-BadgePng -Path (Join-Path $outDir ("wim_total_yellow_{0}.png" -f $i)) -Text ([string]$i) -Background $yellow -Foreground $black
+    New-BadgePng -Path (Join-Path $outDir ("wp_total_yellow_{0}.png" -f $i)) -Text ([string]$i) -Background $yellow -Foreground $black
 }
 
 for ($i = 10; $i -le 98; $i++) {
-    New-BadgePng -Path (Join-Path $outDir ("wim_total_green_{0}.png" -f $i)) -Text ([string]$i) -Background $green -Foreground $black
+    New-BadgePng -Path (Join-Path $outDir ("wp_total_green_{0}.png" -f $i)) -Text ([string]$i) -Background $green -Foreground $black
 }
 
-New-BadgePng -Path (Join-Path $outDir "wim_total_green_99plus.png") -Text "99+" -Background $green -Foreground $black
-New-BadgePng -Path (Join-Path $outDir "wim_total_err.png") -Text "E" -Background $red -Foreground $black
+New-BadgePng -Path (Join-Path $outDir "wp_total_green_99plus.png") -Text "99+" -Background $green -Foreground $black
+New-BadgePng -Path (Join-Path $outDir "wp_total_err.png") -Text "E" -Background $red -Foreground $black
 
 Write-Host "Generated total badge sprites in $outDir"

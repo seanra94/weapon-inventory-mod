@@ -46,7 +46,7 @@ if (-not $lunaJar) {
 $srcDir = Join-Path $PSScriptRoot "src"
 $classesDir = Join-Path $PSScriptRoot "build\classes"
 $jarDir = Join-Path $PSScriptRoot "jars"
-$jarPath = Join-Path $jarDir "weapon-inventory-mod.jar"
+$jarPath = Join-Path $jarDir "weapons-procurement.jar"
 
 New-Item -ItemType Directory -Force -Path $classesDir | Out-Null
 New-Item -ItemType Directory -Force -Path $jarDir | Out-Null
@@ -66,7 +66,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "javac failed with exit code $LASTEXITCODE."
 }
 
-$tempJarPath = Join-Path (Join-Path $PSScriptRoot "build") ("weapon-inventory-mod." + [guid]::NewGuid().ToString("N") + ".tmp.jar")
+$tempJarPath = Join-Path (Join-Path $PSScriptRoot "build") ("weapons-procurement." + [guid]::NewGuid().ToString("N") + ".tmp.jar")
 & jar cf $tempJarPath -C $classesDir .
 if ($LASTEXITCODE -ne 0) {
     throw "jar failed with exit code $LASTEXITCODE."
