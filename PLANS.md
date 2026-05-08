@@ -272,7 +272,7 @@
   - verify the richer row still fits long modded weapon names at common UI scales;
   - tune cell widths if labels such as `Storage`, `Price`, or `Buying` / `Selling` clip in game;
   - adjust compact `+1`, `-1`, dynamic buy/sell step, `Sufficient`, or `Reset` widths only if runtime UI scale testing shows crowding.
-- Remove or reduce capped runtime diagnostic logs once the latest cleanup is manually validated.
+- [x] Removed routine capped diagnostic logs from the count updater and embedded badge helper; only real failure logs remain on those hot paths.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
   - verify the new transaction reporting actually triggers vanilla/modded suspicion/economy listeners as expected;

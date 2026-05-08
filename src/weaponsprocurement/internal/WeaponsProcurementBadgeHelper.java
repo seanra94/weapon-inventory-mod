@@ -4,8 +4,6 @@ import org.apache.log4j.Logger;
 
 public class WeaponsProcurementBadgeHelper {
     private static final Logger LOG = Logger.getLogger(WeaponsProcurementBadgeHelper.class);
-    private static final int MAX_CALL_LOGS = 20;
-    private static final int MAX_FIGHTER_CALL_LOGS = 40;
 
     private static final String TOTAL_ERR = "graphics/ui/wp_total_err.png";
     private static final String TOTAL_99PLUS = "graphics/ui/wp_total_green_99plus.png";
@@ -21,10 +19,7 @@ public class WeaponsProcurementBadgeHelper {
     private static final String KEY_PLAYER_SUFFIX = ".player";
     private static final String KEY_STORAGE_SUFFIX = ".storage";
 
-    private static boolean helperReachedLogged = false;
     private static boolean parseErrorLogged = false;
-    private static int loggedCalls = 0;
-    private static int fighterLoggedCalls = 0;
 
     private WeaponsProcurementBadgeHelper() {
     }
@@ -34,8 +29,6 @@ public class WeaponsProcurementBadgeHelper {
     }
 
     public static String getTotalStatusSpritePath(String kind, String id) {
-        logHelperReachedOnce();
-
         if (!isPatchedBadgesEnabled()) {
             return null;
         }
@@ -49,8 +42,6 @@ public class WeaponsProcurementBadgeHelper {
         String totalSprite = TOTAL_ERR;
 
         if (!ready || id == null || id.isEmpty()) {
-            logCallCapped(kind, id, playerCount, storageCount, totalCount, totalSprite, ready, true, true);
-            logFighterCallCapped(kind, id, ready, playerCount, storageCount, totalCount, totalSprite, true, true);
             return TOTAL_ERR;
         }
 
@@ -76,8 +67,6 @@ public class WeaponsProcurementBadgeHelper {
             }
         }
 
-        logCallCapped(kind, id, playerCount, storageCount, totalCount, totalSprite, true, playerError, storageError);
-        logFighterCallCapped(kind, id, ready, playerCount, storageCount, totalCount, totalSprite, playerError, storageError);
         return totalSprite;
     }
 
@@ -128,54 +117,11 @@ public class WeaponsProcurementBadgeHelper {
         return TOTAL_GREEN_PREFIX + total + TOTAL_SUFFIX;
     }
 
-    private static void logHelperReachedOnce() {
-        if (helperReachedLogged) {
-            return;
-        }
-        helperReachedLogged = true;
-        LOG.info("WP_DIAG_BADGE helper reached");
-    }
-
-    private static void logCallCapped(String kind, String id, Integer playerCount, Integer storageCount, Integer totalCount,
-                                      String totalSprite, boolean ready, boolean playerError, boolean storageError) {
-        if (loggedCalls >= MAX_CALL_LOGS) {
-            return;
-        }
-        loggedCalls++;
-        LOG.info("WP_DIAG_BADGE call kind=" + kind
-                + " id=" + id
-                + " ready=" + ready
-                + " playerCount=" + playerCount
-                + " storageCount=" + storageCount
-                + " totalCount=" + totalCount
-                + " totalSprite=" + totalSprite
-                + " playerError=" + playerError
-                + " storageError=" + storageError
-        );
-    }
-
-    private static void logFighterCallCapped(String kind, String id, boolean ready, Integer playerCount, Integer storageCount,
-                                             Integer totalCount, String totalSprite, boolean playerError, boolean storageError) {
-        if (!"fighter".equals(kind) || fighterLoggedCalls >= MAX_FIGHTER_CALL_LOGS) {
-            return;
-        }
-        fighterLoggedCalls++;
-        LOG.info("WP_BADGE_HELPER kind=fighter"
-                + " id=" + id
-                + " ready=" + ready
-                + " player=" + playerCount
-                + " storage=" + storageCount
-                + " total=" + totalCount
-                + " sprite=" + totalSprite
-                + " playerError=" + playerError
-                + " storageError=" + storageError);
-    }
-
     private static void logParseErrorOnce(String key, String value, Throwable t) {
         if (parseErrorLogged) {
             return;
         }
         parseErrorLogged = true;
-        LOG.error("WP_DIAG_BADGE parse error key=" + key + " value=" + value, t);
+        LOG.error("WP_BADGE_HELPER parse error key=" + key + " value=" + value, t);
     }
 }
