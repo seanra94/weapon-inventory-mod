@@ -4,6 +4,7 @@ import com.fs.starfarer.api.ui.Alignment;
 import weaponsprocurement.core.CreditFormat;
 import weaponsprocurement.core.StockCategory;
 import weaponsprocurement.core.StockItemType;
+import weaponsprocurement.core.StockSourceMode;
 import weaponsprocurement.core.WeaponStockRecord;
 import weaponsprocurement.core.WeaponStockSnapshot;
 
@@ -24,9 +25,26 @@ final class StockReviewListModel {
         displayed += addItemType(rows, snapshot, state, tradeContext, StockItemType.WEAPON, false);
         displayed += addItemType(rows, snapshot, state, tradeContext, StockItemType.WING, true);
         if (displayed == 0) {
-            rows.add(StockReviewListRow.empty("No tradeable weapons or wings were found at this market."));
+            rows.add(StockReviewListRow.empty(emptyStateMessage(snapshot, state)));
         }
         return rows;
+    }
+
+    private static String emptyStateMessage(WeaponStockSnapshot snapshot, StockReviewState state) {
+        if (snapshot != null
+                && snapshot.getTotalRecords() > 0
+                && state != null
+                && state.getActiveFilterCount() > 0) {
+            return "All rows are hidden by the active filters.";
+        }
+        StockSourceMode sourceMode = snapshot == null ? StockSourceMode.LOCAL : snapshot.getSourceMode();
+        if (StockSourceMode.SECTOR.equals(sourceMode)) {
+            return "No Sector Market weapon or wing stock is currently available.";
+        }
+        if (StockSourceMode.FIXERS.equals(sourceMode)) {
+            return "Fixer's Market has not observed any eligible stock yet, or all eligible stock is blacklisted.";
+        }
+        return "No local weapon or wing stock is buyable here, and no player-cargo weapons or wings are available to sell.";
     }
 
     private static int addItemType(List<WimGuiListRow<StockReviewAction>> rows,
