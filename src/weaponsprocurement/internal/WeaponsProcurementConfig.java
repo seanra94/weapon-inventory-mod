@@ -9,6 +9,7 @@ public final class WeaponsProcurementConfig {
     private static final String MOD_ID = "weapons_procurement";
     private static final String SETTING_UPDATE_INTERVAL = "wp_update_interval_seconds";
     private static final String SETTING_ENABLE_PATCHED_BADGES = "wp_enable_patched_badges";
+    private static final String SETTING_ENABLE_DIALOG_OPTION = "wp_enable_dialog_option";
     private static final String SETTING_ENABLE_SECTOR_MARKET = "wp_enable_sector_market";
     private static final String SETTING_ENABLE_FIXERS_MARKET = "wp_enable_fixers_market";
     private static final String SETTING_ENABLE_FIXERS_MARKET_TAG_INFERENCE = "wp_enable_fixers_market_tag_inference";
@@ -20,6 +21,7 @@ public final class WeaponsProcurementConfig {
     private static final String SETTING_DESIRED_FIGHTER_WING_COUNT = "wp_desired_fighter_wing_count";
     private static final String KEY_UPDATE_INTERVAL = "wp.config.updateIntervalSeconds";
     private static final String KEY_PATCHED_BADGES_ENABLED = "wp.config.patchedBadgesEnabled";
+    private static final String KEY_DIALOG_OPTION_ENABLED = "wp.config.dialogOptionEnabled";
     private static final String KEY_SECTOR_MARKET_ENABLED = "wp.config.sectorMarketEnabled";
     private static final String KEY_FIXERS_MARKET_ENABLED = "wp.config.fixersMarketEnabled";
     private static final String KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED = "wp.config.fixersMarketTagInferenceEnabled";
@@ -58,9 +60,10 @@ public final class WeaponsProcurementConfig {
     public static float refreshAndPublishSettings() {
         float effective = DEFAULT_UPDATE_INTERVAL_SEC;
         boolean badgesEnabled = true;
+        boolean dialogOptionEnabled = false;
         boolean sectorMarketEnabled = true;
         boolean fixersMarketEnabled = true;
-        boolean fixersMarketTagInferenceEnabled = true;
+        boolean fixersMarketTagInferenceEnabled = false;
         float sectorMarketPriceMultiplier = DEFAULT_SECTOR_MARKET_PRICE_MULTIPLIER;
         float fixersMarketPriceMultiplier = DEFAULT_FIXERS_MARKET_PRICE_MULTIPLIER;
         int desiredSmallWeaponCount = DEFAULT_DESIRED_SMALL_WEAPON_COUNT;
@@ -75,6 +78,10 @@ public final class WeaponsProcurementConfig {
             Boolean enabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_PATCHED_BADGES);
             if (enabled != null) {
                 badgesEnabled = enabled.booleanValue();
+            }
+            Boolean dialogOption = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_DIALOG_OPTION);
+            if (dialogOption != null) {
+                dialogOptionEnabled = dialogOption.booleanValue();
             }
             Boolean sectorEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_SECTOR_MARKET);
             if (sectorEnabled != null) {
@@ -112,6 +119,7 @@ public final class WeaponsProcurementConfig {
         fixersMarketPriceMultiplier = clamp(fixersMarketPriceMultiplier, MIN_REMOTE_MARKET_PRICE_MULTIPLIER, MAX_REMOTE_MARKET_PRICE_MULTIPLIER);
         System.setProperty(KEY_UPDATE_INTERVAL, Float.toString(effective));
         System.setProperty(KEY_PATCHED_BADGES_ENABLED, Boolean.toString(badgesEnabled));
+        System.setProperty(KEY_DIALOG_OPTION_ENABLED, Boolean.toString(dialogOptionEnabled));
         System.setProperty(KEY_SECTOR_MARKET_ENABLED, Boolean.toString(sectorMarketEnabled));
         System.setProperty(KEY_FIXERS_MARKET_ENABLED, Boolean.toString(fixersMarketEnabled));
         System.setProperty(KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED, Boolean.toString(fixersMarketTagInferenceEnabled));
@@ -125,6 +133,7 @@ public final class WeaponsProcurementConfig {
             configLogs++;
             LOG.info("WP_CONFIG updateIntervalSeconds=" + effective
                     + " patchedBadgesEnabled=" + badgesEnabled
+                    + " dialogOptionEnabled=" + dialogOptionEnabled
                     + " sectorMarketEnabled=" + sectorMarketEnabled
                     + " fixersMarketEnabled=" + fixersMarketEnabled
                     + " fixersMarketTagInferenceEnabled=" + fixersMarketTagInferenceEnabled
@@ -142,12 +151,16 @@ public final class WeaponsProcurementConfig {
         return Boolean.parseBoolean(System.getProperty(KEY_SECTOR_MARKET_ENABLED, "true"));
     }
 
+    public static boolean isDialogueOptionEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KEY_DIALOG_OPTION_ENABLED, "false"));
+    }
+
     public static boolean isFixersMarketEnabled() {
         return Boolean.parseBoolean(System.getProperty(KEY_FIXERS_MARKET_ENABLED, "true"));
     }
 
     public static boolean isFixersMarketTagInferenceEnabled() {
-        return Boolean.parseBoolean(System.getProperty(KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED, "true"));
+        return Boolean.parseBoolean(System.getProperty(KEY_FIXERS_MARKET_TAG_INFERENCE_ENABLED, "false"));
     }
 
     public static float sectorMarketPriceMultiplier() {

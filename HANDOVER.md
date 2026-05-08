@@ -6,6 +6,7 @@
 - Exact in-cell rendering is implemented by deterministically patching `com/fs/starfarer/campaign/ui/trade/CargoStackView.renderAtCenter(FFF)V` in `starfarer_obf.jar`.
 - A clean normal-mod frontend is now being added as the primary product: `F8` opens a Weapon Stock Review popup from an active market/storage interaction dialog.
 - The popup is independent of the `CargoStackView` patcher. The clean UI should keep working if the patcher is removed.
+- If `wp_enable_dialog_option` is enabled in LunaLib, normal market dialogs also add `Open "Weapon Procurement"` below the vanilla trade option. This is an optional convenience; keep `F8` working regardless.
 - `PACKAGING.md` separates the forum-safe clean popup package from the optional patched badge package. Do not ship a prepatched `starfarer_obf.jar`; the patcher should operate on the user's installed game copy.
 - Terminology:
   - `Buy GUI` means the main `F8` stock-review screen.
@@ -49,7 +50,7 @@
   - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
   - Generic buy allocation is intentionally cheapest-first among all currently eligible sources. If the Black Market toggle/source rules include black-market stock and it is cheaper than legal stock, generic `+1` should consume the black-market stock first. Keep `StockReviewQuoteBook` preview ordering and `StockPurchaseService` execution ordering in sync.
   - Fixer's Market reference pricing also uses the cheapest live source as its base reference, regardless of whether that source is legal or black-market stock.
-  - Optional tag/faction inference is Luna-gated by `wp_enable_fixers_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
+  - Optional tag/faction inference is Luna-gated by `wp_enable_fixers_market_tag_inference`, default off. Keep it separate from the live-scan path so it can stay opt-in if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
   - Sector and Fixer's Market can be independently disabled in LunaLib. `data/config/weapons_procurement_market_blacklist.json` blocks weapon ids/display names from `BANNED_FROM_SECTOR_MARKET` and `BANNED_FROM_FIXERS_MARKET` before those remote source rows are created.
 - Popup sorting:
   - `Stock`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
@@ -75,11 +76,11 @@
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
   - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon data rows;
-  - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants.
+  - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants. The review `Storage` cell must stay tied to the trade-screen storage width through `StockReviewStyle.REVIEW_STOCK_CELL_WIDTH = STOCK_CELL_WIDTH`.
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
   - forced vanilla cargo core close/reopen is kept only as a fallback because direct cargo mutation while the trade grid is open can leave stale slot views behind;
-  - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run;
+  - direct local-market cargo mutations are followed by a best-effort `SubmarketPlugin.reportPlayerMarketTransaction(...)` callback with bought/sold cargo and line-item data, so vanilla/modded submarket listeners and black-market trade-mode side effects have a chance to run. Runtime testing currently suggests expected black-market penalties fire, so do not add extra suspicion/reputation simulation unless testing proves the callback path is insufficient;
   - local sells should deposit into the black market when the Black Market toggle is enabled, otherwise into the best eligible non-black trade submarket. After the transaction callback, WP reconciles the touched submarket cargo to the exact pre-sale count plus sold quantity because vanilla/modded submarket callbacks can normalize stock after WP mutates it.
   - Fixer's Market buys remain virtual WP transactions and intentionally do not report to a real submarket plugin. Sector Market buys remove stock from real remote market cargo and report a best-effort transaction to the touched remote submarket. Remote-mode sells use the current local market buyer with black market disabled.
 - Popup category layout:
@@ -145,12 +146,16 @@
   - no layered background/text sprites;
   - no runtime badge scaling;
   - no late over-icon render anchor.
-- LunaLib is used only by normal mod-side config code for update interval:
+- LunaLib is used only by normal mod-side config code, never by the embedded patched-core badge helper:
   - setting id: `wp_update_interval_seconds`;
   - setting id: `wp_enable_patched_badges`;
+  - setting id: `wp_enable_dialog_option`;
+  - setting id: `wp_enable_fixers_market_tag_inference`, default off;
   - published property: `wp.config.updateIntervalSeconds`;
   - published property: `wp.config.patchedBadgesEnabled`;
-  - default: `0.20`, clamped to `0.05..2.00`.
+  - published property: `wp.config.dialogOptionEnabled`;
+  - published property: `wp.config.fixersMarketTagInferenceEnabled`;
+  - update interval default: `0.20`, clamped to `0.05..2.00`.
 - `wp_enable_patched_badges=false` makes the embedded helper return `null`, so a patched core jar will skip badge rendering while the normal popup continues to work.
 
 ## ACG-Derived GUI Rules For WP

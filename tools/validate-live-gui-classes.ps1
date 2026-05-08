@@ -54,7 +54,8 @@ $requiredClasses = @(
     "weaponsprocurement/gui/StockReviewTradeGroup.class",
     "weaponsprocurement/gui/StockReviewTradeWarnings.class",
     "weaponsprocurement/core/WeaponStockSnapshotBuilder`$CostComparator.class",
-    "weaponsprocurement/core/StockPurchaseService`$PurchaseSourcePriceComparator.class"
+    "weaponsprocurement/core/StockPurchaseService`$PurchaseSourcePriceComparator.class",
+    "com/fs/starfarer/api/impl/campaign/rulecmd/WP_OpenDialog.class"
 )
 $forbiddenClasses = @(
     "weaponsprocurement/gui/StockReviewButtonBinding.class",

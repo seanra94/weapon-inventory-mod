@@ -25,6 +25,7 @@
   - LunaLib dependency is present;
   - Luna settings control updater interval and whether optional patched cargo-cell badges are enabled.
   - Luna settings now include sufficient-stock thresholds for small/medium/large weapons and fighter LPCs.
+  - Luna settings can expose an optional market-dialog entry point; it defaults off and the `F8` hotkey remains the primary always-available opener.
 
 ## Completed Meaningful Work
 
@@ -52,6 +53,7 @@
 - Added optional patched-badge feature flag:
   - clean popup is unaffected;
   - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
+- Kept patched cargo-cell badges optional and isolated. The clean stock-review popup is the real/public mod path; the patcher should remain a personal or advanced feature unless the clean UI cannot solve a specific problem.
 - Earlier popup redraw layering was mitigated by dismissing/reopening the tooltip dialog; the current cleaner foundation supersedes that with in-place custom-panel content replacement.
 - Fixed row action routing around explicit `StockReviewAction` button ids; current custom-panel buttons use a narrow polling fallback because `buttonPressed(...)` alone was not reliable for nested row controls.
 - Optimized that polling fallback so it only scans buttons for a few frames after mouse events instead of every frame.
@@ -230,6 +232,7 @@
   - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
   - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wp_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
   - [x] add independent Luna toggles for Sector and Fixer's Market availability plus a JSON blacklist for banning weapons from either remote source;
+  - [x] keep Fixer's Market live-scanned eligible weapons on by default, but make tag/faction inference opt-in because that path is more likely to admit secret or restricted weapons;
   - [x] use commit `a02e507` as the confirmed-good reference for stock-review nested indentation and button right-edge sizing.
   - [x] disable and gray out the Black Market button for non-local source modes;
   - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
@@ -272,12 +275,15 @@
   - verify the richer row still fits long modded weapon names at common UI scales;
   - tune cell widths if labels such as `Storage`, `Price`, or `Buying` / `Selling` clip in game;
   - adjust compact `+1`, `-1`, dynamic buy/sell step, `Sufficient`, or `Reset` widths only if runtime UI scale testing shows crowding.
+- Deferred feature/polish items:
+  - add wing-specific filters only if runtime testing shows the wing list is noisy enough to need them;
+  - improve failure messages for real observed cases such as no valid buyer, illegal markets, access restrictions, commission/faction restrictions, and other edge cases after collecting concrete runtime failures.
 - [x] Removed routine capped diagnostic logs from the count updater and embedded badge helper; only real failure logs remain on those hot paths.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
   - verify the new transaction reporting actually triggers vanilla/modded suspicion/economy listeners as expected;
   - tariff parity with vanilla;
-  - black-market sale side effects beyond the current best-effort `SNEAK` transaction callback;
+  - black-market sale side effects beyond the current best-effort `SNEAK` transaction callback only if runtime testing proves the existing callback is not enough;
   - clearer failure text for commission/illegal-market cases.
 - [x] Added `PACKAGING.md` with forum-safe clean-popup packaging notes and separate optional patched-badge patch/restore guidance.
 - [x] Completed post-rebrand operational cleanup: removed the stale old live `Weapon Inventory Mod` folder, rebuilt/deployed the renamed mod jar, refreshed the patched core helper from a clean backup, and hardened the patcher against pre-rebrand helper calls.

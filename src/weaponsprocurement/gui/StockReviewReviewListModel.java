@@ -71,7 +71,7 @@ final class StockReviewReviewListModel {
         int cost = tradeContext.transactionCostForLine(purchase.getWeaponId(), purchase.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info(StockReviewListModel.storageLabel(record.getStorageCount(), purchase.getQuantity()),
-                        StockReviewStyle.STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
+                        StockReviewStyle.REVIEW_STOCK_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
                         Alignment.LMID, StockReviewTooltips.STORAGE),
                 StockReviewListModel.planCell(purchase.getQuantity(), cost));
         rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
@@ -90,7 +90,7 @@ final class StockReviewReviewListModel {
     private static void addWorstCaseReviewRow(List<WimGuiListRow<StockReviewAction>> rows) {
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 WimGuiRowCell.info("Storage: 99+ [-99+]",
-                        StockReviewStyle.STOCK_CELL_WIDTH,
+                        StockReviewStyle.REVIEW_STOCK_CELL_WIDTH,
                         StockReviewStyle.CELL_BACKGROUND,
                         StockReviewStyle.TEXT,
                         Alignment.LMID,

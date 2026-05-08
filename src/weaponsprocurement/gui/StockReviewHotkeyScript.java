@@ -7,10 +7,10 @@ import com.fs.starfarer.api.campaign.CargoStackAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
-import weaponsprocurement.core.MarketStockService;
 import weaponsprocurement.core.StockReviewConfig;
 import weaponsprocurement.core.SubmarketWeaponStock;
 import weaponsprocurement.core.GlobalWeaponMarketService;
+import weaponsprocurement.core.MarketStockService;
 
 public final class StockReviewHotkeyScript implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(StockReviewHotkeyScript.class);
@@ -34,11 +34,11 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
     public void advance(float amount) {
         if (DIALOG_TRACKER.hasPending()) {
             WimGuiPendingDialog<MarketAPI, StockReviewLaunchState> pending = DIALOG_TRACKER.consumePending();
-            openDialog(pending.getContext(), pending.getState());
+            openDialog(pending.getContext(), pending.getState(), "pending-reopen");
             return;
         }
         if (hotkey.consumePress()) {
-            openDialog();
+            openFromCurrentDialog("hotkey=F8");
         }
     }
 
@@ -54,7 +54,12 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
         DIALOG_TRACKER.requestReopen(market, launchState);
     }
 
-    private void openDialog() {
+    public static boolean canOpenFromCurrentDialog() {
+        WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
+        return host.hasDialog() && canOpenAtCurrentMarket(host.getCurrentMarket());
+    }
+
+    public static void openFromCurrentDialog(String source) {
         if (DIALOG_TRACKER.isOpen()) {
             return;
         }
@@ -70,7 +75,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             return;
         }
         try {
-            openDialog(market, null);
+            openDialog(market, null, source);
         } catch (Throwable t) {
             DIALOG_TRACKER.markClosed();
             LOG.error("WP_STOCK_REVIEW open failed", t);
@@ -78,7 +83,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
         }
     }
 
-    private static boolean canOpenAtCurrentMarket(MarketAPI market) {
+    public static boolean canOpenAtCurrentMarket(MarketAPI market) {
         if (market == null) {
             return false;
         }
@@ -119,7 +124,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
         return false;
     }
 
-    private void openDialog(MarketAPI market, StockReviewLaunchState launchState) {
+    private static void openDialog(MarketAPI market, StockReviewLaunchState launchState, String source) {
         WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
         if (!host.hasDialog()) {
             DIALOG_TRACKER.markClosed();
@@ -129,7 +134,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             StockReviewPanelPlugin panelPlugin = new StockReviewPanelPlugin(market, launchState);
             WimGuiDialogOpener.show(host.getDialog(), StockReviewStyle.widthFor(panelPlugin.isReviewMode()), StockReviewStyle.HEIGHT, panelPlugin);
             DIALOG_TRACKER.markOpen();
-            LOG.info("WP_STOCK_REVIEW opened hotkey=F8 market=" + (market == null ? "null" : market.getId()));
+            LOG.info("WP_STOCK_REVIEW opened source=" + source + " market=" + (market == null ? "null" : market.getId()));
         } catch (Throwable t) {
             DIALOG_TRACKER.markClosed();
             LOG.error("WP_STOCK_REVIEW open failed", t);
