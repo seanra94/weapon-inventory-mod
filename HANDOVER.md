@@ -295,6 +295,7 @@ Counting rules:
   - direct `Global`, sector, fleet, cargo, or storage calls in patched bytecode.
 - `CargoStackViewPatcher` still keeps legacy signatures for refusal checks even though the old source/assets are removed.
 - Restore before patching when the helper call is already present.
+- The patcher must also reject pre-rebrand `weaponinventorymod/internal/WeaponInventoryBadgeHelper` calls. During the Weapons Procurement rebrand, a backup was briefly created from an already-patched core jar because the old package helper was not recognized as stale; keep that guard in place.
 - If restore/patch fails with a file-lock error, check for a lingering Starsector JVM using `C:\Games\Starsector\jre\bin\java.exe`.
 
 ## Durable Lessons

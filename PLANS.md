@@ -280,6 +280,7 @@
   - black-market sale side effects beyond the current best-effort `SNEAK` transaction callback;
   - clearer failure text for commission/illegal-market cases.
 - [x] Added `PACKAGING.md` with forum-safe clean-popup packaging notes and separate optional patched-badge patch/restore guidance.
+- [x] Completed post-rebrand operational cleanup: removed the stale old live `Weapon Inventory Mod` folder, rebuilt/deployed the renamed mod jar, refreshed the patched core helper from a clean backup, and hardened the patcher against pre-rebrand helper calls.
 
 ## Avoid Unless Reopened Deliberately
 

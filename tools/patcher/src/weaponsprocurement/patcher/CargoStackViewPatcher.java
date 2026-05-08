@@ -72,11 +72,13 @@ public class CargoStackViewPatcher {
     private static final String FLEET_GET_CARGO_METHOD = "getCargo";
 
     private static final String OLD_HOOK_OWNER = "weaponsprocurement/internal/CargoWeaponMarkerHook";
+    private static final String PRE_REBRAND_HOOK_OWNER = "weaponinventorymod/internal/CargoWeaponMarkerHook";
     private static final String OLD_HOOK_METHOD = "render";
     private static final String OLD_HOOK_DESC_1 = "(F)V";
     private static final String OLD_HOOK_DESC_3 = "(FFF)V";
 
     private static final String HELPER_CLASS = "weaponsprocurement/internal/WeaponsProcurementBadgeHelper";
+    private static final String PRE_REBRAND_HELPER_CLASS = "weaponinventorymod/internal/WeaponInventoryBadgeHelper";
     private static final String HELPER_CLASS_PREFIX = HELPER_CLASS;
     private static final String HELPER_CLASS_ENTRY = HELPER_CLASS + ".class";
     private static final String HELPER_OLD_METHOD = "getBadgeSpritePath";
@@ -148,6 +150,7 @@ public class CargoStackViewPatcher {
         boolean postProbeOffset;
         boolean countCallsInWeapons;
         boolean splitBadgeHelperCalls;
+        boolean preRebrandHelperCall;
         boolean helperCallInWeapons;
         boolean helperCallOutsideWeapons;
         int totalHelperCallsInWeapons;
@@ -171,6 +174,7 @@ public class CargoStackViewPatcher {
             System.out.println("Post-draw probe offset present: " + yesNo(postProbeOffset));
             System.out.println("Count path calls in WEAPONS present: " + yesNo(countCallsInWeapons));
             System.out.println("Old split-badge helper calls present: " + yesNo(splitBadgeHelperCalls));
+            System.out.println("Pre-rebrand helper call present: " + yesNo(preRebrandHelperCall));
         }
 
         private static String ok(boolean value) {
@@ -256,7 +260,8 @@ public class CargoStackViewPatcher {
         boolean markerOutsideWeapons = hasMarkerDrawOutsideWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
         boolean postProbeOffset = hasPostProbeOffsetInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
         boolean countCallsInWeapons = hasCountCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
-        if (oldHookCall || duplicateDraw || helperCall || markerDraw || markerOutsideWeapons || postProbeOffset || countCallsInWeapons) {
+        boolean preRebrandHelperCall = hasPreRebrandHelperCall(method);
+        if (oldHookCall || duplicateDraw || helperCall || markerDraw || markerOutsideWeapons || postProbeOffset || countCallsInWeapons || preRebrandHelperCall) {
             String reason = oldHookCall
                     ? "legacy hook call already present"
                     : duplicateDraw
@@ -269,6 +274,8 @@ public class CargoStackViewPatcher {
                     ? "stale marker patch outside WEAPONS branch already present"
                     : postProbeOffset
                     ? "post-draw probe marker pattern still present"
+                    : preRebrandHelperCall
+                    ? "pre-rebrand badge helper call already present"
                     : "count injection calls present in WEAPONS branch";
             throw new IllegalStateException("Patch refused: " + reason + ".");
         }
@@ -607,7 +614,13 @@ public class CargoStackViewPatcher {
 
     private static boolean hasLegacyHookCall(MethodNode method) {
         return containsMethodCall(method, OLD_HOOK_OWNER, OLD_HOOK_METHOD, OLD_HOOK_DESC_1)
-                || containsMethodCall(method, OLD_HOOK_OWNER, OLD_HOOK_METHOD, OLD_HOOK_DESC_3);
+                || containsMethodCall(method, OLD_HOOK_OWNER, OLD_HOOK_METHOD, OLD_HOOK_DESC_3)
+                || containsMethodCall(method, PRE_REBRAND_HOOK_OWNER, OLD_HOOK_METHOD, OLD_HOOK_DESC_1)
+                || containsMethodCall(method, PRE_REBRAND_HOOK_OWNER, OLD_HOOK_METHOD, OLD_HOOK_DESC_3);
+    }
+
+    private static boolean hasPreRebrandHelperCall(MethodNode method) {
+        return containsMethodOwner(method, PRE_REBRAND_HELPER_CLASS);
     }
 
     private static boolean containsMethodCall(MethodNode method, String owner, String name, String desc) {
@@ -617,6 +630,19 @@ public class CargoStackViewPatcher {
             }
             MethodInsnNode methodInsn = (MethodInsnNode) insn;
             if (owner.equals(methodInsn.owner) && name.equals(methodInsn.name) && desc.equals(methodInsn.desc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsMethodOwner(MethodNode method, String owner) {
+        for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+            if (!(insn instanceof MethodInsnNode)) {
+                continue;
+            }
+            MethodInsnNode methodInsn = (MethodInsnNode) insn;
+            if (owner.equals(methodInsn.owner)) {
                 return true;
             }
         }
@@ -984,6 +1010,7 @@ public class CargoStackViewPatcher {
         report.markerOutsideWeapons = hasMarkerDrawOutsideWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
         report.postProbeOffset = hasPostProbeOffsetInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
         report.countCallsInWeapons = hasCountCallsInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel);
+        report.preRebrandHelperCall = hasPreRebrandHelperCall(method);
         report.splitBadgeHelperCalls = hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_ANCHOR_METHOD, HELPER_ANCHOR_DESC)
                 || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_PLAYER_METHOD, HELPER_PLAYER_DESC)
                 || hasSpecificHelperCallInWeaponsBranch(method, weaponTypeGuard, nonWeaponLabel, HELPER_STORAGE_METHOD, HELPER_STORAGE_DESC);
@@ -1034,6 +1061,9 @@ public class CargoStackViewPatcher {
         }
         if (report.splitBadgeHelperCalls) {
             throw new IllegalStateException("Patch verification failed: old split-badge helper calls still present.");
+        }
+        if (report.preRebrandHelperCall) {
+            throw new IllegalStateException("Patch verification failed: pre-rebrand badge helper call still present.");
         }
     }
 
