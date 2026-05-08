@@ -127,6 +127,7 @@
   - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
   - Fixer's Market buys remain virtual WP-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
   - Review-confirm execution now catches unexpected queued-line crashes in `StockReviewExecutionController`, and `StockPurchaseService` catches mutation-phase failures after validation with operation/item/quantity logging before returning a controlled failure message.
+  - `StockItemCargo` now owns shared item stack/count/add/remove/reconcile/tidy/display-name helpers, `StockMarketTransactionReporter` owns best-effort transaction callback construction, and `StockPurchaseService.PurchasePlan` owns the shared cheapest-source buy plan math used by local and sector-market buys.
 - Cleaned up the `Cost` to `Price` terminology migration:
   - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
   - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
