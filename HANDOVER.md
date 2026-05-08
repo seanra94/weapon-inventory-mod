@@ -59,7 +59,7 @@
 - Popup purchase flow:
   - weapon entries in the Buy GUI use a signed `Plan`: positive values mean weapons queued to buy, negative values mean weapons queued to sell, and zero is neutral;
   - top-level buy buttons queue pending buys from cheapest eligible current-market seller stock;
-  - expanded Seller rows may still queue a pending buy from that specific submarket;
+  - visible Seller rows were removed from the Buy and Review GUIs. Generic buy allocation still tracks source stock internally through the quote/purchase services, but the user-facing row model should not reintroduce seller-detail sections unless that feature is explicitly reopened.
   - sell buttons queue pending sells from player cargo only, not broader owned stock that may include market storage;
   - row-level buy/sell adjustment buttons first unwind the opposite queued plan before adding a real buy/sell. Example: if 5 weapons are queued to buy, row `-1` / dynamic `-5` remove those queued buys rather than requiring existing player cargo.
   - queued buys/sells are held in the popup until the user opens `Review Trades`;

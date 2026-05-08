@@ -181,7 +181,7 @@
 - Open market trade and verify:
   - no crash;
   - `F8` opens the Weapon Stock Review popup;
-  - `Esc` and `Close` dismiss the popup;
+  - `Esc` and `Cancel` dismiss the popup;
   - category headings expand/collapse and preserve current state across refresh;
   - Sort cycles through `Need`, `Name`, and `Price`;
   - Black Market toggle updates counts/categories;
@@ -249,8 +249,8 @@
   - restart Starsector before testing when new helper classes were introduced.
 - Continue polishing the new stock-control row system after runtime testing:
   - verify the richer row still fits long modded weapon names at common UI scales;
-  - tune cell widths if labels such as `Storage`, `Buying`, or `Profit` clip in game;
-  - adjust seller-row cell widths if compact `+1` / dynamic buy-step labels look cramped in game.
+  - tune cell widths if labels such as `Storage`, `Price`, or `Buying` / `Selling` clip in game;
+  - adjust compact `+1`, `-1`, dynamic buy/sell step, `Sufficient`, or `Reset` widths only if runtime UI scale testing shows crowding.
 - Remove or reduce capped runtime diagnostic logs once the latest cleanup is manually validated.
 - Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
