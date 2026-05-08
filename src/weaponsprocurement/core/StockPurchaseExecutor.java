@@ -18,6 +18,9 @@ final class StockPurchaseExecutor {
         int credits = target.unitPrice * quantity;
         int expectedMarketCount = StockItemCargo.itemCount(target.cargo, itemType, itemId) + quantity;
         try {
+            if (StockItemCargo.itemCount(playerCargo, itemType, itemId) < quantity) {
+                return StockPurchaseService.PurchaseResult.failure("No player-cargo stock is available to sell.");
+            }
             StockItemCargo.removeItem(playerCargo, itemType, itemId, quantity);
             playerCargo.getCredits().add(credits);
             StockItemCargo.tidyCargo(playerCargo);
@@ -64,6 +67,10 @@ final class StockPurchaseExecutor {
                                                        String sourceLabel,
                                                        String operation) {
         try {
+            StockPurchaseService.PurchaseResult validation = buyPlanStillAvailable(plan, itemType, itemId);
+            if (validation != null) {
+                return validation;
+            }
             for (StockPurchaseLine line : plan.lines) {
                 StockItemCargo.removeItem(line.source.cargo, itemType, itemId, line.quantity);
                 StockItemCargo.tidyCargo(line.source.cargo);
@@ -81,6 +88,24 @@ final class StockPurchaseExecutor {
         } catch (Throwable t) {
             return executionFailure(log, operation, itemType, itemId, plan.totalQuantity, t);
         }
+    }
+
+    private static StockPurchaseService.PurchaseResult buyPlanStillAvailable(StockPurchasePlan plan,
+                                                                             StockItemType itemType,
+                                                                             String itemId) {
+        if (plan == null || plan.lines == null || plan.lines.isEmpty()) {
+            return StockPurchaseService.PurchaseResult.failure("No purchasable stock is available.");
+        }
+        for (StockPurchaseLine line : plan.lines) {
+            if (line == null || line.source == null || line.source.cargo == null || line.quantity <= 0) {
+                return StockPurchaseService.PurchaseResult.failure("Trade source is no longer available.");
+            }
+            int available = StockItemCargo.itemCount(line.source.cargo, itemType, itemId);
+            if (available < line.quantity) {
+                return StockPurchaseService.PurchaseResult.failure("Market stock changed before confirmation. Reopen the review and try again.");
+            }
+        }
+        return null;
     }
 
     private static StockPurchaseService.PurchaseResult executionFailure(Logger log,

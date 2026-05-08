@@ -164,6 +164,7 @@
   - positive row adjustments first remove queued sells before creating real buy plans;
   - `Sufficient` now compares the desired target against current queued plan state and uses red styling when it will reduce the plan or sell excess.
 - Hardened pending-trade data integrity with `StockReviewPendingTrade.create(...)`, so empty item keys and zero-quantity rows cannot be constructed by planner or pending-trade merge paths.
+- Hardened trade execution with a final source-stock preflight in `StockPurchaseExecutor.buyPlan(...)`, so stale local/sector market stock fails before partial cargo mutation begins.
 - Aligned `Sort: Stock` with the current visible `Storage` semantics. It now sorts by total owned stock, including player inventory, rather than the old outside-inventory-only count.
 - Centralized local trade submarket eligibility in `MarketStockService.isTradeSubmarket(...)`, so stock collection, buying, selling, and sell-price quoting share the same storage/local-resource/black-market filtering.
 - Replaced the remaining runtime-side anonymous purchase-source comparator with an explicit nested comparator and added live-jar validation to reject the stale generated `$PurchaseSource$1` class.

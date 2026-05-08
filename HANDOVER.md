@@ -87,6 +87,7 @@
   - UI-only action routing belongs in `StockReviewUiController`. Keep source changes, filters, color debug, scroll, review/back, and reset-all there so the panel does not become the dispatcher again.
   - trade-planning button handling belongs in `StockReviewTradeController`, which talks back to the panel through a narrow host interface for messages, warning refreshes, and content rebuilds.
   - `StockReviewPendingTrades.removeExecuted(...)` removes by queued trade value, not list object identity. Preserve that behavior so future execution-order copies do not leave already-executed trades queued.
+  - `StockPurchaseExecutor.buyPlan(...)` performs a final all-line source-stock preflight immediately before mutating source cargo. Preserve that guard so stale local/sector market stock fails before partial cargo mutation begins.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
   - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon data rows;
   - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants. The review `Storage` cell must stay tied to the trade-screen storage width through `StockReviewStyle.REVIEW_STOCK_CELL_WIDTH = STOCK_CELL_WIDTH`.
