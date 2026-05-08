@@ -110,7 +110,7 @@ final class StockReviewTradeContext {
         if (record == null) {
             return StockReviewQuoteBook.PRICE_UNAVAILABLE;
         }
-        int unitCost = quoteBook.cheapestUnitPrice(record);
+        int unitCost = quoteBook.nextBuyUnitPriceAfterPlannedBuys(record, pendingBuyQuantityForWeapon(record.getWeaponId()));
         return unitCost == Integer.MAX_VALUE ? quoteBook.sellUnitPrice(record.getWeaponId()) : unitCost;
     }
 

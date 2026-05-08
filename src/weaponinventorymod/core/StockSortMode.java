@@ -1,7 +1,7 @@
 package weaponinventorymod.core;
 
 public enum StockSortMode {
-    NEED("Need"),
+    NEED("Stock"),
     NAME("Name"),
     PRICE("Price");
 

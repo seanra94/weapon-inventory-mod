@@ -53,6 +53,20 @@ final class StockReviewQuoteBook {
         return stocks.get(0).getUnitPrice();
     }
 
+    int nextBuyUnitPriceAfterPlannedBuys(WeaponStockRecord record, int plannedBuyQuantity) {
+        int planned = Math.max(0, plannedBuyQuantity);
+        List<SubmarketWeaponStock> stocks = sortedBuyStocks(record);
+        for (int i = 0; i < stocks.size(); i++) {
+            SubmarketWeaponStock stock = stocks.get(i);
+            if (planned >= stock.getCount()) {
+                planned -= stock.getCount();
+                continue;
+            }
+            return stock.getUnitPrice();
+        }
+        return Integer.MAX_VALUE;
+    }
+
     private StockReviewQuote quote(StockReviewPendingPurchase purchase) {
         if (purchase == null || purchase.isZero()) {
             return StockReviewQuote.ZERO;

@@ -71,47 +71,6 @@ final class StockReviewListRow {
                 StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, cells, false, tooltip);
     }
 
-    static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action) {
-        return section(label, action, StockReviewStyle.TRADE_ROW_RIGHT_BLOCK_WIDTH);
-    }
-
-    static WimGuiListRow<StockReviewAction> reviewSection(String label, StockReviewAction action) {
-        return section(label, action, StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH);
-    }
-
-    static WimGuiListRow<StockReviewAction> section(String label, StockReviewAction action, float rightReserveWidth) {
-        return section(label, action, rightReserveWidth, null);
-    }
-
-    static WimGuiListRow<StockReviewAction> section(String label,
-                                                    StockReviewAction action,
-                                                    float rightReserveWidth,
-                                                    String tooltip) {
-        return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
-                StockReviewStyle.HEADING_BACKGROUND, null, StockReviewStyle.SECTION_INDENT,
-                action, Alignment.LMID, null, false, null, rightReserveWidth, tooltip);
-    }
-
-    static WimGuiListRow<StockReviewAction> detail(String label) {
-        return row(label, StockReviewStyle.MUTED, null, null, null,
-                StockReviewStyle.DETAIL_INDENT, null, Alignment.LMID, null, false);
-    }
-
-    static WimGuiListRow<StockReviewAction> labelText(String label, String value) {
-        return labelText(label, value, false);
-    }
-
-    static WimGuiListRow<StockReviewAction> labelText(String label, String value, boolean topGap) {
-        return labelText(label, value, topGap, StockReviewStyle.TEXT);
-    }
-
-    static WimGuiListRow<StockReviewAction> labelText(String label, String value, boolean topGap, Color valueColor) {
-        return labelTextRow(label, value, 0f, topGap,
-                StockReviewStyle.REVIEW_LIST_WIDTH - 2f * StockReviewStyle.SMALL_PAD,
-                0f,
-                valueColor);
-    }
-
     static WimGuiListRow<StockReviewAction> labelTextIndented(String label, String value, float indent) {
         return labelTextIndented(label, value, indent, false);
     }

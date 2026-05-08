@@ -30,8 +30,8 @@ public final class WeaponInventoryConfig {
     private static final float MIN_UPDATE_INTERVAL_SEC = 0.05f;
     private static final float MAX_UPDATE_INTERVAL_SEC = 2.00f;
     private static final float DEFAULT_GLOBAL_MARKET_PRICE_MULTIPLIER = 4.00f;
-    private static final float DEFAULT_SECTOR_MARKET_PRICE_MULTIPLIER = 4.00f;
-    private static final float DEFAULT_SECRET_MARKET_PRICE_MULTIPLIER = 6.00f;
+    private static final float DEFAULT_SECTOR_MARKET_PRICE_MULTIPLIER = 3.00f;
+    private static final float DEFAULT_SECRET_MARKET_PRICE_MULTIPLIER = 5.00f;
     private static final float MIN_GLOBAL_MARKET_PRICE_MULTIPLIER = 1.00f;
     private static final float MAX_GLOBAL_MARKET_PRICE_MULTIPLIER = 20.00f;
     private static final int DEFAULT_DESIRED_SMALL_WEAPON_COUNT = 16;

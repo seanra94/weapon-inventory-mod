@@ -1,7 +1,7 @@
 package weaponinventorymod.core;
 
 public final class CreditFormat {
-    private static final String CREDIT_SYMBOL = "\u00a2";
+    public static final String CREDIT_SYMBOL = "\u00a2";
 
     private CreditFormat() {
     }

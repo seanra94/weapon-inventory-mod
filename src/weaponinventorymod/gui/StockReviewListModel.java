@@ -1,6 +1,7 @@
 package weaponinventorymod.gui;
 
 import com.fs.starfarer.api.ui.Alignment;
+import weaponinventorymod.core.CreditFormat;
 import weaponinventorymod.core.StockCategory;
 import weaponinventorymod.core.WeaponStockRecord;
 import weaponinventorymod.core.WeaponStockSnapshot;
@@ -44,6 +45,9 @@ final class StockReviewListModel {
                 StockReviewTooltips.category(category)));
         if (!expanded) {
             return records.size();
+        }
+        if (StockCategory.NO_STOCK.equals(category)) {
+            addWorstCaseTestRow(rows);
         }
         for (int i = 0; i < records.size(); i++) {
             addWeapon(rows, records.get(i), state, tradeContext);
@@ -97,6 +101,41 @@ final class StockReviewListModel {
         addWeaponData(rows, record, state);
     }
 
+    private static void addWorstCaseTestRow(List<WimGuiListRow<StockReviewAction>> rows) {
+        List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
+                WimGuiRowCell.info("Storage: 99+", StockReviewStyle.STOCK_CELL_WIDTH,
+                        StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT,
+                        Alignment.LMID, StockReviewTooltips.STORAGE),
+                WimGuiRowCell.info("Price: 99,999+" + CreditFormat.CREDIT_SYMBOL,
+                        StockReviewStyle.PRICE_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND,
+                        StockReviewStyle.TEXT, Alignment.LMID, StockReviewTooltips.PRICE),
+                WimGuiRowCell.info("Selling: 99+ [999,999+" + CreditFormat.CREDIT_SYMBOL + "]",
+                        StockReviewStyle.PLAN_CELL_WIDTH, StockReviewStyle.PLAN_NEGATIVE,
+                        StockReviewStyle.TEXT, Alignment.LMID, StockReviewTooltips.PLAN),
+                WimGuiRowCell.standardAction("-10", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH,
+                        StockReviewStyle.SELL_BUTTON, StockReviewAction.debugNoop(), true,
+                        "Worst-case sell-step width sample."),
+                WimGuiRowCell.standardAction("-1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH,
+                        StockReviewStyle.SELL_BUTTON, StockReviewAction.debugNoop(), true,
+                        "Worst-case single-sell width sample."),
+                WimGuiRowCell.standardAction("+1", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH,
+                        StockReviewStyle.BUY_BUTTON, StockReviewAction.debugNoop(), true,
+                        "Worst-case single-buy width sample."),
+                WimGuiRowCell.standardAction("+10", StockReviewStyle.TRADE_STEP_BUTTON_WIDTH,
+                        StockReviewStyle.BUY_BUTTON, StockReviewAction.debugNoop(), true,
+                        "Worst-case buy-step width sample."),
+                WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH,
+                        StockReviewStyle.SELL_BUTTON, StockReviewAction.debugNoop(), true,
+                        "Worst-case sufficient button width sample."),
+                WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH,
+                        StockReviewStyle.ACTION_BACKGROUND, StockReviewAction.debugNoop(), true,
+                        "Worst-case reset button width sample."));
+        rows.add(StockReviewListRow.weapon("Suzuki-Clapteryon Thermal Prokector... (+)",
+                cells,
+                StockReviewAction.debugNoop(),
+                "Worst-case row-width test sample. It does not affect trades."));
+    }
+
     private static List<WeaponStockRecord> filteredRecords(List<WeaponStockRecord> records,
                                                            Set<StockReviewFilter> activeFilters) {
         if (records == null || records.isEmpty() || StockReviewFilters.count(activeFilters) <= 0) {
@@ -113,8 +152,8 @@ final class StockReviewListModel {
     }
 
     static WimGuiRowCell<StockReviewAction> planCell(int planQuantity, int transactionCost) {
-        String quantity = String.valueOf(Math.abs(planQuantity));
-        String total = StockReviewFormat.credits(transactionCost);
+        String quantity = cappedCount(Math.abs(planQuantity));
+        String total = cappedCredits(transactionCost, 999999);
         String label = planQuantity > 0
                 ? "Buying: " + quantity + " [" + total + "]"
                 : planQuantity < 0 ? "Selling: " + quantity + " [" + total + "]" : "Buying: 0 [" + StockReviewFormat.credits(0) + "]";
@@ -127,9 +166,9 @@ final class StockReviewListModel {
 
     static String storageLabel(int ownedCount, int planQuantity) {
         if (planQuantity == 0) {
-            return "Storage: " + ownedCount;
+            return "Storage: " + cappedCount(ownedCount);
         }
-        return "Storage: " + ownedCount + " [" + (planQuantity > 0 ? "+" : "") + planQuantity + "]";
+        return "Storage: " + cappedCount(ownedCount) + " [" + signedCappedCount(planQuantity) + "]";
     }
 
     private static WimGuiRowCell<StockReviewAction> unitPriceCell(int unitPrice) {
@@ -137,7 +176,7 @@ final class StockReviewListModel {
             return WimGuiRowCell.info("Price: ?", StockReviewStyle.PRICE_CELL_WIDTH, StockReviewStyle.CELL_BACKGROUND,
                     StockReviewStyle.TEXT, Alignment.LMID, StockReviewTooltips.PRICE);
         }
-        return WimGuiRowCell.info("Price: " + StockReviewFormat.credits(unitPrice), StockReviewStyle.PRICE_CELL_WIDTH,
+        return WimGuiRowCell.info("Price: " + cappedCredits(unitPrice, 99999), StockReviewStyle.PRICE_CELL_WIDTH,
                 StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.TEXT, Alignment.LMID, StockReviewTooltips.PRICE);
     }
 
@@ -167,40 +206,35 @@ final class StockReviewListModel {
                               StockReviewState state,
                               float rightReserveWidth,
                               float listWidth) {
-        boolean expanded = state.isWeaponDataExpanded(record.getWeaponId());
-        float nestedRightReserveWidth = nestedRightReserveWidth(rightReserveWidth);
-        rows.add(sectionRow(
-                WimGuiToggleHeading.label("Weapon Data", expanded),
-                StockReviewAction.toggleWeaponSection(record.getWeaponId(), StockReviewSection.WEAPON_DATA),
-                nestedRightReserveWidth,
-                StockReviewTooltips.WEAPON_DATA));
-        if (!expanded) {
-            return;
+        float dataIndent = StockReviewStyle.SECTION_INDENT;
+        rows.add(StockReviewListRow.labelTextIndented("Desired", String.valueOf(record.getDesiredCount()), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Size", record.getSizeLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Type", record.getTypeLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Damage", record.getDamageLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("EMP", record.getEmpLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Range", record.getRangeLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Flux/Second", record.getFluxPerSecondLabel(), dataIndent, false, rightReserveWidth, listWidth));
+        rows.add(StockReviewListRow.labelTextIndented("Flux/Damage", record.getFluxPerDamageLabel(), dataIndent, false, rightReserveWidth, listWidth));
+    }
+
+    private static String cappedCount(int value) {
+        return value >= 99 ? "99+" : String.valueOf(Math.max(0, value));
+    }
+
+    private static String signedCappedCount(int value) {
+        String sign = value > 0 ? "+" : value < 0 ? "-" : "";
+        int absolute = Math.abs(value);
+        return sign + (absolute >= 99 ? "99+" : String.valueOf(absolute));
+    }
+
+    private static String cappedCredits(int credits, int cap) {
+        if (credits == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
+            return "?";
         }
-        rows.add(StockReviewListRow.labelTextIndented("Desired", String.valueOf(record.getDesiredCount()), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Size", record.getSizeLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Type", record.getTypeLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Damage", record.getDamageLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("EMP", record.getEmpLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Range", record.getRangeLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Flux/Second", record.getFluxPerSecondLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-        rows.add(StockReviewListRow.labelTextIndented("Flux/Damage", record.getFluxPerDamageLabel(), StockReviewStyle.DETAIL_INDENT, false, nestedRightReserveWidth, listWidth));
-    }
-
-    private static WimGuiListRow<StockReviewAction> sectionRow(String label,
-                                                               StockReviewAction action,
-                                                               float rightReserveWidth) {
-        return StockReviewListRow.section(label, action, rightReserveWidth);
-    }
-
-    private static WimGuiListRow<StockReviewAction> sectionRow(String label,
-                                                               StockReviewAction action,
-                                                               float rightReserveWidth,
-                                                               String tooltip) {
-        return StockReviewListRow.section(label, action, rightReserveWidth, tooltip);
-    }
-
-    private static float nestedRightReserveWidth(float rightReserveWidth) {
-        return rightReserveWidth;
+        int absolute = Math.abs(credits);
+        if (absolute >= cap) {
+            return CreditFormat.grouped(cap) + "+" + CreditFormat.CREDIT_SYMBOL;
+        }
+        return StockReviewFormat.credits(absolute);
     }
 }

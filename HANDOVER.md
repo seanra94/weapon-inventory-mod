@@ -40,15 +40,15 @@
 - Stock source modes:
   - The Buy GUI now cycles `Source: Local`, `Source: Sector Market`, and `Source: Fixer's Market`.
   - `Local` behaves like the normal current-market review and honors the Black Market toggle.
-  - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wim_sector_market_price_multiplier` (default `4.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
+  - `Sector Market` scans live in-sector market weapon cargo, keeps real market/submarket identity on each stock source, applies the Luna multiplier `wim_sector_market_price_multiplier` (default `3.0`) to buy prices, and drains the actual remote market cargo stacks on confirmation. Selling while in Sector Market mode still sells to the current local market.
   - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo and must refresh after Sector Market purchases drain actual market stacks.
-  - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_secret_market_price_multiplier` (default `6.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
+  - `Fixer's Market` is the virtual 999-stock source. It includes live-scanned eligible weapons plus optional inferred faction-known weapons, applies the Luna multiplier `wim_secret_market_price_multiplier` (default `5.0`) to buy prices, and does not drain real market cargo. Selling while in Fixer's Market mode still sells to the current local market.
   - The Black Market button is disabled and displayed Off for both non-local source modes; remote source eligibility is controlled by the source mode itself, not by the local Black Market toggle.
   - Generic buy allocation is intentionally cheapest-first among all currently eligible sources. If the Black Market toggle/source rules include black-market stock and it is cheaper than legal stock, generic `+1` should consume the black-market stock first. Keep `StockReviewQuoteBook` preview ordering and `StockPurchaseService` execution ordering in sync.
   - Fixer's Market reference pricing also uses the cheapest live source as its base reference, regardless of whether that source is legal or black-market stock.
   - Optional tag/faction inference is Luna-gated by `wim_enable_global_market_tag_inference`. Keep it separate from the live-scan path so it can be disabled if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
 - Popup sorting:
-  - `Need`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
+  - `Stock`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
   - `Name`: weapon name first, then need, then price;
   - `Price`: cheapest current buy price first, then most needed, then weapon name.
 - Popup filters:
@@ -69,7 +69,7 @@
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo;
   - pending-trade mutation belongs in `StockReviewPendingTrades`. Keep merge/reset/clear/executed-removal behavior centralized there rather than rebuilding ad hoc list surgery in the panel.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
-  - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and `Weapon Data`;
+  - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon data rows;
   - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants.
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - this avoids the awkward immediate recategorization where buying one `No Stock` weapon moves it out of that category before the user finishes shopping;
@@ -83,16 +83,17 @@
 - Popup visual rules:
   - WIM intentionally mirrors the accepted ACG palette in `StockReviewStyle`: red/cancel for No Stock and sell/decrement controls, yellow/load for Insufficient Stock rows, green/confirm for Sufficient Stock and buy/increment controls, purple for bulk trade controls, dark gray collapsible headings/cells, black neutral action rows, and gray text only for disabled controls.
   - Use white/default-font text for ordinary popup text and buttons unless a specific disabled/locked convention applies.
-  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings such as `Weapon Data` use the ACG dark-gray collapsible heading fill.
+  - The three top stock category headings use their red/yellow/green fills. Nested toggle headings use the ACG dark-gray collapsible heading fill.
   - WIM-owned row fills sit behind Starsector buttons while button backgrounds are dimmed, intentionally recreating ACG's inner dimmed rectangle with brighter outer row fill.
   - Weapon rows, review rows, and button hitboxes use white grid borders. Indented spacer regions must not draw borders.
-  - Nested weapon-row sizing must be treated as a simple indent stack. If a parent weapon heading has visible width `X` and one indent unit is `Y`, the `Weapon Data` heading starts one extra indent deeper and has width `X - Y`; its data rows start two extra indents deeper and have width `X - 2Y`. The same shrinking rule applies to any future child/grandchild row: increasing indentation must also reduce row width by the same amount, not just shift the row right.
+  - Nested weapon-row sizing must be treated as a simple indent stack. If a parent weapon heading has visible width `X` and one indent unit is `Y`, expanded weapon data rows start one extra indent deeper and have width `X - Y`, so their right edge aligns with the parent heading. The same shrinking rule applies to any future child/grandchild row: increasing indentation must also reduce row width by the same amount, not just shift the row right.
   - Weapon entries should keep this order: weapon label, `Storage`, `Price`, `Buying`/`Selling`, dynamic sell step, `-1`, `+1`, dynamic buy step, `Sufficient`, `Reset`.
   - Width increases for right-side row cells such as `Storage`, `Price`, or `Buying`/`Selling` should come out of the weapon toggle-heading width. The weapon label area has slack; do not compensate by widening the popup or squeezing other fixed cells unless explicitly requested.
   - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.
+  - The No Stock dummy row is a deliberate worst-case row-width test. It uses `Suzuki-Clapteryon Thermal Prokector... (+)`, `Storage: 99+`, `Price: 99,999+\u00a2`, and `Selling: 99+ [999,999+\u00a2]`. Real rows should cap displayed storage and plan counts at `99+`, price at `99,999+\u00a2`, and plan totals at `999,999+\u00a2`; fixed cells should be just large enough for those caps, with only the weapon-name cell absorbing spare width.
   - The `Storage` cell is intentionally wider than the other compact stock cells and left-aligned with normal WIM internal text padding for readability.
   - `Price` is intentionally wider than the original compact cell; long comma-grouped prices should fit before reclaiming space from other action cells.
-  - `Price` in the Buy GUI is the cheapest currently purchasable unit buy price; if no buy price exists because the row is sell-only, fall back to the best legal player-cargo sell value for the active market/black-market setting. Format prices with comma-grouped credits.
+  - `Price` in the Buy GUI is the cheapest currently purchasable unit buy price after current queued buys have consumed cheaper stock. If no buy price remains because the row is sell-only or stock has been fully queued, fall back to the best legal player-cargo sell value for the active market/black-market setting. Format prices with comma-grouped credits and cap compact row prices at `99,999+\u00a2`.
   - Keep `Price` as the user-facing and code-facing name for unit weapon price. `StockSortMode.fromConfig(...)` still accepts the old `COST` value as a compatibility alias, but new code/config should use `PRICE`.
   - `Buying` / `Selling` is the signed planned trade for that weapon and includes the full planned trade value in brackets, e.g. `Buying: 5 [50,000\u00a2]`. Positive planned quantities use yellow, negative planned quantities use purple, and zero uses gray.
   - Current trade-side color rule: buy-side cells/actions use yellow, sell-side cells/actions use purple, and general controls such as Sort, Source, Black Market, Filters, Colors, and Reset All Trades use the dark-gray weapon-heading color.
@@ -112,7 +113,7 @@
   - Performance-sensitive trade math should go through `StockReviewTradeContext`, which caches pending buy/sell quantities, per-weapon costs, total cost, cargo-space delta, current credits, cargo space, and affordability probes for the current render/controller action.
   - Market quote/pricing work should go through `StockReviewQuoteBook`. It caches sorted buyable seller lists, line quotes, seller allocations, sell prices, and fallback cargo-space values so render/controller paths do not repeatedly copy/sort submarkets or scan player cargo.
   - Whole-plan pricing should use `StockReviewPortfolioQuote`, not independent line quotes. Generic and seller-specific buys can overlap the same market stock, so quote the full planned portfolio with per-seller remaining stock consumed once.
-  - Seller row `+1` / dynamic buy-step enabled states should also go through `StockReviewTradeContext`; they must account for existing planned trades, seller stock, credits, and cargo space just like the main weapon row buttons.
+  - Source-specific and generic buy enabled states should go through `StockReviewTradeContext`; they must account for existing planned trades, seller stock, credits, and cargo space.
   - Quote result data uses explicit top-level GUI classes (`StockReviewQuote`, `StockReviewSellerAllocation`) rather than anonymous/local/lambda helpers or stale purchase-preview naming.
   - `WeaponStockSnapshot` keeps cached all-record and weapon-id maps. Do not reintroduce repeated `getAllRecords()` reconstruction or linear id scans in render loops.
 - Popup list filtering:
@@ -320,8 +321,8 @@ Manual validation:
 - Confirm the popup groups weapons under No Stock, Insufficient Stock, and Sufficient Stock.
 - Confirm weapon entries show stable `Storage`, unit `Price`, and planned `Buying`/`Selling` cells while queued changes are adjusted.
 - Confirm `Source` and `Black Market` buttons rebuild the snapshot without layered stale text and without closing/reopening the popup.
-- Confirm `Sort` cycles through `Need`, `Name`, and `Price` without collapsing headings.
-- Confirm weapon rows expand into the Weapon Data section.
+- Confirm `Sort` cycles through `Stock`, `Name`, and `Price` without collapsing headings.
+- Confirm weapon rows expand directly into weapon data rows.
 - Confirm mouse-wheel scrolling and clickable `^     ^     ^     ^     ^` / `v     v     v     v     v` indicators preserve state and do not appear when all rows fit.
 - Confirm `+1`/dynamic buy-step works from top-level rows, with credits/space failures blocked.
 - Confirm no crash.

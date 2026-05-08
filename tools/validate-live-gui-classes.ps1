@@ -62,6 +62,7 @@ $forbiddenClasses = @(
     "weaponinventorymod/gui/StockReviewRowCells.class",
     "weaponinventorymod/gui/StockReviewRowRenderer.class",
     "weaponinventorymod/gui/StockReviewText.class",
+    "weaponinventorymod/gui/StockReviewSection.class",
     "weaponinventorymod/gui/WimGuiModalListLayout`$ExtraGapProvider.class",
     "weaponinventorymod/gui/WimGuiModalListGapAdapter.class",
     "weaponinventorymod/gui/WimGuiColorDebug`$ColorSetter.class",

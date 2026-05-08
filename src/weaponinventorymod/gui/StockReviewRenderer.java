@@ -80,10 +80,10 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
                 WimGuiButtonSpecs.of(
                         buttonFactory.enabledButton(StockReviewStyle.SORT_BUTTON_WIDTH, "Sort: " + snapshot.getSortMode().getLabel(),
                                 StockReviewAction.cycleSortMode(), StockReviewStyle.ACTION_BACKGROUND,
-                                "Cycle weapon sorting. Need sorts by lowest storage first, then price, then name."),
+                                StockReviewTooltips.sort(snapshot.getSortMode())),
                         buttonFactory.enabledButton(StockReviewStyle.GLOBAL_MARKET_BUTTON_WIDTH, "Source: " + snapshot.getSourceMode().getLabel(),
                                 StockReviewAction.cycleSourceMode(), StockReviewStyle.ACTION_BACKGROUND,
-                                "Cycle Local, Sector Market, and Fixer's Market stock sources."),
+                                StockReviewTooltips.source(snapshot.getSourceMode())),
                         buttonFactory.button(StockReviewStyle.BLACK_MARKET_BUTTON_WIDTH, "Black Market: " + onOff(snapshot.isIncludeBlackMarket()),
                                 StockReviewAction.toggleBlackMarket(), !snapshot.getSourceMode().isRemote(), StockReviewStyle.ACTION_BACKGROUND,
                                 "Include black-market stock for Local source mode. Remote source modes control their own stock."),

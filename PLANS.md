@@ -15,7 +15,7 @@
   - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
   - popup rows are intentionally limited to weapons that are buyable from the active stock source or present in player inventory.
   - popup has sort modes for need, name, and price.
-  - popup row actions now support weapon expansion, nested Weapon Data sections, and cheapest-first `+1`/dynamic buy steps.
+  - popup row actions now support weapon expansion, nested weapon data rows, and cheapest-first `+1`/dynamic buy steps.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -40,7 +40,7 @@
 - Rewrote handover/plans docs to describe the current architecture instead of old investigation states.
 - Extended the shared WIM GUI templates so tooltips attach through common button, list-row, row-cell, labelText, and scroll-indicator paths instead of screen-specific rendering code.
   - `StockReviewTooltips` owns the stock-review tooltip copy.
-  - Tooltip coverage now includes stock category headings, weapon rows, storage/price/plan cells, `Weapon Data`, review rows, filters, trade-summary rows, color-debug controls, and disabled buttons.
+  - Tooltip coverage now includes stock category headings, weapon rows, storage/price/plan cells, review rows, filters, trade-summary rows, color-debug controls, and disabled buttons.
 - Added first clean read-only stock review popup:
   - shared stock snapshot builder;
   - current-market sale counts;
@@ -147,7 +147,7 @@
   - negative row adjustments first remove queued buys for that weapon before creating real sell plans;
   - positive row adjustments first remove queued sells before creating real buy plans;
   - `Sufficient` now compares the desired target against current queued plan state and uses red styling when it will reduce the plan or sell excess.
-- Aligned `Sort: Need` with the current visible `Storage` semantics. It now sorts by total owned stock, including player inventory, rather than the old outside-inventory-only count.
+- Aligned `Sort: Stock` with the current visible `Storage` semantics. It now sorts by total owned stock, including player inventory, rather than the old outside-inventory-only count.
 - Centralized local trade submarket eligibility in `MarketStockService.isTradeSubmarket(...)`, so stock collection, buying, selling, and sell-price quoting share the same storage/local-resource/black-market filtering.
 - Replaced the remaining runtime-side anonymous purchase-source comparator with an explicit nested comparator and added live-jar validation to reject the stale generated `$PurchaseSource$1` class.
 - Added LunaLib settings for sufficient-stock thresholds by weapon mount size:
@@ -166,8 +166,8 @@
   - added a fixed bottom `Warning` row above the credit/cargo summary rows, with persistent most-recent trade warnings for insufficient cargo capacity, insufficient credits, low post-trade credit balance, and low post-trade cargo capacity.
   - extracted trade-warning policy to `StockReviewTradeWarnings`, keeping warning text, initial credit/cargo baselines, low-balance thresholds, and purchase-all partial-fill warning detection out of `StockReviewPanelPlugin`.
 - Corrected nested weapon-row sizing:
-  - `Weapon Data` uses one indent and loses one indent-width from its parent weapon heading width;
-  - Weapon Data rows use two indents and lose two indent-widths from the parent weapon heading width;
+  - removed the intermediate `Weapon Data` toggle heading;
+  - expanded weapon data rows use one child indent and lose one indent-width from the parent weapon heading width;
   - visible `Sellers` sections were removed from trade/review rows.
 - Updated trade/filter presentation:
   - active filters now render directly above the first filter-group heading instead of under an `Active Filters` heading;
@@ -183,11 +183,11 @@
   - `F8` opens the Weapon Stock Review popup;
   - `Esc` and `Cancel` dismiss the popup;
   - category headings expand/collapse and preserve current state across refresh;
-  - Sort cycles through `Need`, `Name`, and `Price`;
+  - Sort cycles through `Stock`, `Name`, and `Price`;
   - Black Market toggle updates counts/categories;
   - Sort/source/toggle actions no longer leave old text layered under new text;
   - weapon rows expand/collapse;
-  - expanded rows show the Weapon Data section;
+  - expanded rows show weapon data rows directly below the parent weapon row;
   - compact buy-step controls plan buys from cheapest eligible seller stock and shrink below `+10` when fewer than ten are available;
   - compact sell-step controls plan sells from player inventory stock and shrink below `-10` when fewer than ten are available;
   - compact sell-step controls also shrink to queued buy quantity when they are only reversing the shopping cart, e.g. `-5` after queuing 5 buys from zero inventory;
@@ -207,9 +207,9 @@
 - Expanded stock source feature:
   - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Fixer's Market` source modes;
   - [x] keep `Local` as current-market stock review with the normal Black Market toggle;
-  - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wim_sector_market_price_multiplier` Luna setting, defaulting to 4x;
+  - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wim_sector_market_price_multiplier` Luna setting, defaulting to 3x;
   - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
-  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_secret_market_price_multiplier` Luna setting, defaulting to 6x;
+  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wim_secret_market_price_multiplier` Luna setting, defaulting to 5x;
   - [x] disable and gray out the Black Market button for non-local source modes;
   - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
 - Current requested stock-review review/buy page work queue:
@@ -220,17 +220,17 @@
   - [x] use `Review Trades` as the review page title and `Make Trades` as the buy/sell page title;
   - [x] keep the buy/sell page inner panel static-height while scrolling instead of changing size at the bottom;
   - [x] remove the old display modes; the list now shows only active-source buyable weapons or player-inventory weapons;
-  - [x] revise sorting: default Need means lowest stored quantity first, then cheapest price, then name; Name then uses need and price tie-breakers; removed low-value For Sale and Owned sorts; added Price sorting;
+  - [x] revise sorting: default Stock means lowest stored quantity first, then cheapest price, then name; Name then uses stock and price tie-breakers; removed low-value For Sale and Owned sorts; added Price sorting;
   - [x] remove the top-row Storage toggle because storage counts are already shown in weapon rows;
   - [x] keep `Storage` as total owned stock, including inventory, while preventing storage-only weapons from creating rows;
-  - [x] keep nested `Weapon Data` rows inside their parent heading width, ending before the `Storage` cell column;
-  - [x] render Weapon Data fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
+  - [x] keep nested weapon data rows inside their parent heading width, ending before the `Storage` cell column;
+  - [x] render weapon data fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
 - Current requested stock-review polish/work queue:
   - [x] keep Sector Market stock uncached across snapshot rebuilds so confirmed remote purchases are reflected immediately;
   - [x] calculate `Tariffs Paid` / average markup from true base weapon value rather than tariff-included source prices;
   - [x] remove stale Global-source and Sellers-section helper paths after the source split;
   - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
-  - [x] title-case toggle heading labels, including `Weapon Data`;
+  - [x] title-case toggle heading labels;
   - [x] fix stock-review toggle headings not opening by routing enabled WIM controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;
   - [x] add reusable labelText containers for review summary rows such as `Total Cost` and `Credits Available`;
   - [x] replace `-S` / `+S` with one `Sufficient` row button that buys deficits or sells excess to reach barely sufficient stock;
