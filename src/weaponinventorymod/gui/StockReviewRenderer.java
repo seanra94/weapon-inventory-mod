@@ -205,9 +205,9 @@ final class StockReviewRenderer implements WimGuiModalListRenderer.ScrollRowFact
         int markup = tradeContext.totalMarkupPaid();
         float multiplier = tradeContext.averageBuyMultiplier();
         if (markup <= 0) {
-            return StockReviewFormat.credits(0) + " [1.0x]";
+            return StockReviewFormat.credits(0) + " [avg 1.0x]";
         }
-        return StockReviewFormat.credits(markup) + " [" + String.format(java.util.Locale.US, "%.1fx", multiplier) + "]";
+        return StockReviewFormat.credits(markup) + " [avg " + String.format(java.util.Locale.US, "%.1fx", multiplier) + "]";
     }
 
     private static String signedCredits(int delta) {

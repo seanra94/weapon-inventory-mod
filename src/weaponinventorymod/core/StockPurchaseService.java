@@ -89,16 +89,14 @@ public final class StockPurchaseService {
         }
 
         int credits = target.unitPrice * quantity;
+        int expectedMarketCount = playerItemCount(target.cargo, itemType, itemId) + quantity;
         removeItem(playerCargo, itemType, itemId, quantity);
         playerCargo.getCredits().add(credits);
-        playerCargo.removeEmptyStacks();
-        playerCargo.sort();
-        playerCargo.updateSpaceUsed();
+        tidyCargo(playerCargo);
         addItem(target.cargo, itemType, itemId, quantity);
-        target.cargo.removeEmptyStacks();
-        target.cargo.sort();
-        target.cargo.updateSpaceUsed();
+        tidyCargo(target.cargo);
         reportItemTransaction(market, target.submarket, itemType, itemId, quantity, target.unitPrice, false);
+        reconcileItemCount(target.cargo, itemType, itemId, expectedMarketCount);
 
         String message = "Sold " + quantity + " " + itemDisplayName(itemType, itemId) + " for " + CreditFormat.creditsLong(credits) + ".";
         if (Global.getSector() != null && Global.getSector().getCampaignUI() != null) {
@@ -400,7 +398,8 @@ public final class StockPurchaseService {
         if (market == null || market.getSubmarketsCopy() == null || playerStack == null) {
             return null;
         }
-        SellTarget best = null;
+        SellTarget bestBlackMarket = null;
+        SellTarget bestLegalMarket = null;
         for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
             if (submarket == null) {
                 continue;
@@ -417,11 +416,20 @@ public final class StockPurchaseService {
                 continue;
             }
             SellTarget candidate = new SellTarget(submarket, cargo, MarketStockService.sellUnitPrice(submarket, playerStack));
-            if (best == null || candidate.unitPrice > best.unitPrice) {
-                best = candidate;
+            if (plugin != null && plugin.isBlackMarket()) {
+                bestBlackMarket = betterSellTarget(bestBlackMarket, candidate);
+            } else {
+                bestLegalMarket = betterSellTarget(bestLegalMarket, candidate);
             }
         }
-        return best;
+        return includeBlackMarket && bestBlackMarket != null ? bestBlackMarket : bestLegalMarket;
+    }
+
+    private static SellTarget betterSellTarget(SellTarget current, SellTarget candidate) {
+        if (current == null || candidate.unitPrice > current.unitPrice) {
+            return candidate;
+        }
+        return current;
     }
 
     private static CargoStackAPI playerItemStack(CargoAPI playerCargo, StockItemType itemType, String itemId) {
@@ -564,6 +572,28 @@ public final class StockPurchaseService {
         } else {
             cargo.removeWeapons(itemId, quantity);
         }
+    }
+
+    private static void reconcileItemCount(CargoAPI cargo, StockItemType itemType, String itemId, int expectedCount) {
+        if (cargo == null || expectedCount < 0) {
+            return;
+        }
+        int currentCount = playerItemCount(cargo, itemType, itemId);
+        if (currentCount < expectedCount) {
+            addItem(cargo, itemType, itemId, expectedCount - currentCount);
+        } else if (currentCount > expectedCount) {
+            removeItem(cargo, itemType, itemId, currentCount - expectedCount);
+        }
+        tidyCargo(cargo);
+    }
+
+    private static void tidyCargo(CargoAPI cargo) {
+        if (cargo == null) {
+            return;
+        }
+        cargo.removeEmptyStacks();
+        cargo.sort();
+        cargo.updateSpaceUsed();
     }
 
     private static CampaignUIAPI.CoreUITradeMode tradeMode(SubmarketAPI submarket) {

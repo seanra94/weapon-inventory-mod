@@ -48,7 +48,7 @@ final class StockReviewPlayerCargo {
                 continue;
             }
             String weaponId = itemType.key(MarketStockService.itemId(stack, itemType));
-            int unitPrice = bestLocalSellUnitPrice(market, stack, includeBlackMarket);
+            int unitPrice = localSellUnitPrice(market, stack, includeBlackMarket);
             if (unitPrice < 0) {
                 continue;
             }
@@ -60,13 +60,14 @@ final class StockReviewPlayerCargo {
         return result;
     }
 
-    private static int bestLocalSellUnitPrice(MarketAPI market,
-                                              CargoStackAPI stack,
-                                              boolean includeBlackMarket) {
+    private static int localSellUnitPrice(MarketAPI market,
+                                          CargoStackAPI stack,
+                                          boolean includeBlackMarket) {
         if (market == null || market.getSubmarketsCopy() == null || stack == null) {
             return -1;
         }
-        int best = -1;
+        int bestBlackMarket = -1;
+        int bestLegalMarket = -1;
         for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
             if (submarket == null) {
                 continue;
@@ -78,8 +79,13 @@ final class StockReviewPlayerCargo {
             if (plugin != null && plugin.isIllegalOnSubmarket(stack, SubmarketPlugin.TransferAction.PLAYER_SELL)) {
                 continue;
             }
-            best = Math.max(best, MarketStockService.sellUnitPrice(submarket, stack));
+            int unitPrice = MarketStockService.sellUnitPrice(submarket, stack);
+            if (plugin != null && plugin.isBlackMarket()) {
+                bestBlackMarket = Math.max(bestBlackMarket, unitPrice);
+            } else {
+                bestLegalMarket = Math.max(bestLegalMarket, unitPrice);
+            }
         }
-        return best;
+        return includeBlackMarket && bestBlackMarket >= 0 ? bestBlackMarket : bestLegalMarket;
     }
 }
