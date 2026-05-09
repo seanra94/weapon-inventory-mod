@@ -79,7 +79,7 @@ function Test-StockReviewConfig {
         throw "$Label invalid stock review JSON '$configPath': $($_.Exception.Message)"
     }
 
-    foreach ($section in @("display", "sources", "desiredDefaults", "perWeapon")) {
+    foreach ($section in @("display", "sources", "desiredDefaults", "perItem", "perWeapon")) {
         if (-not $json.PSObject.Properties.Name.Contains($section)) {
             throw "$Label stock review config missing '$section'"
         }
@@ -95,7 +95,7 @@ function Test-StockReviewConfig {
             throw "$Label stock review config missing sources.$field"
         }
     }
-    foreach ($field in @("smallWeapon", "mediumWeapon", "largeWeapon")) {
+    foreach ($field in @("smallWeapon", "mediumWeapon", "largeWeapon", "fighterWing")) {
         if (-not $json.desiredDefaults.PSObject.Properties.Name.Contains($field)) {
             throw "$Label stock review config missing desiredDefaults.$field"
         }
