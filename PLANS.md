@@ -254,8 +254,8 @@
   - [x] Keep the forced trade-failure hook developer-only or release-validated. Public builds must keep the default at `none`, and validation should fail if it drifts.
   - [x] Add user-facing config documentation for `perItem`, `W:` / `F:` item-key prefixes, legacy `perWeapon`, stock ignore/desired overrides, Sector/Fixer blacklists, remote-source multipliers, and rollback debug hooks.
   - [x] Update Luna setting descriptions that still imply remote sources are weapon-only; source modes support weapons and fighter LPCs.
-  - [ ] Trigger and verify a passing GitHub `Sanity` workflow run before public release.
-  - [ ] Bump `mod_info.json` version and add a short changelog as a release-prep task, not during ordinary development churn.
+  - [x] Trigger and verify a passing GitHub `Sanity` workflow run before public release.
+  - [x] Bump `mod_info.json` version and add a short changelog as a release-prep task, not during ordinary development churn.
 - Review-agent remediation backlog from the post-`7d299e8` review:
   - [x] No-op `WeaponsProcurementCountUpdater` unless optional patched cargo-cell badges are enabled. Keep the script registered so Luna changes can take effect mid-save, but refresh settings on a bounded cadence, skip weapon/fighter/storage count scans and property writes while disabled, and publish `wp.counts.ready=false` when the badge path is inactive.
   - [x] Fix `.github/workflows/sanity.yml` so CI checks committed whitespace rather than running `git diff --check` against a clean checkout. Use `git show --check` for push events and a PR commit/range check for pull requests; keep local `git diff --check` in release docs because it remains useful before commits.

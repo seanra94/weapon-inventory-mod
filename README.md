@@ -47,6 +47,8 @@ Availability of source modes is controlled by Luna settings.
 
 Advanced JSON overrides and market blacklists are documented in [CONFIG.md](CONFIG.md).
 
+Release notes are tracked in [CHANGELOG.md](CHANGELOG.md).
+
 ## Troubleshooting
 
 - Popup does not open:

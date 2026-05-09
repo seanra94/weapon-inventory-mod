@@ -22,6 +22,8 @@ $items = @(
     "jars",
     "mod_info.json",
     "README.md",
+    "CONFIG.md",
+    "CHANGELOG.md",
     "PACKAGING.md"
 )
 

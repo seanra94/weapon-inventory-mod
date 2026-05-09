@@ -25,8 +25,13 @@ Include:
 - `graphics/`
 - `jars/weapons-procurement.jar`
 - `mod_info.json`
+- `README.md`
+- `CONFIG.md`
+- `CHANGELOG.md`
+- `PACKAGING.md`
 
 Do not require users to run the patcher for the clean package. In clean builds, keep `wp_enable_patched_badges=false` by default.
+Before public release, bump `mod_info.json` and update `CHANGELOG.md`.
 
 ## Patched Badge Package
 

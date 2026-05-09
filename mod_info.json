@@ -2,7 +2,7 @@
     "id": "weapons_procurement",
     "name": "Weapons Procurement",
     "author": "seanra94",
-    "version": { "major": "0", "minor": "1", "patch": "0" },
+    "version": { "major": "0", "minor": "2", "patch": "0" },
     "description": "Adds a market stock review and trade-planning popup for buying, selling, and tracking weapon and fighter LPC stock.",
     "gameVersion": "0.98a",
     "jars": ["jars/weapons-procurement.jar"],
