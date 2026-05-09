@@ -10,13 +10,13 @@
 - Clean frontend work has started:
   - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
   - popup data comes from shared stock snapshot services, not the bytecode badge path;
-  - weapon entries now show `Storage`, unit `Price`, planned `Buying`/`Selling` value, and compact buy/sell/reset controls.
+  - stock item entries now show `Storage`, unit `Price`, planned `Buying`/`Selling` value, and compact buy/sell/reset controls.
   - popup has a scrollable `Filters` screen with active filters, expandable filter groups, and immediate row/category filtering.
-  - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-weapon override scaffolding.
-  - popup rows are intentionally limited to weapons that are buyable from the active stock source or present in player inventory.
+  - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-item override scaffolding.
+  - popup rows are intentionally limited to stock items that are buyable from the active stock source or present in player inventory.
   - Fixer's Market eligibility now uses a save-persistent observed catalog seeded from real market stock over time, so its virtual stock can include items that have previously appeared in legitimate market cargo without relying on spoiler-prone tag/faction inference.
   - popup has sort modes for need, name, and price.
-  - popup row actions now support weapon expansion, nested weapon data rows, and cheapest-first `+1`/dynamic buy steps.
+  - popup row actions now support item expansion, nested weapon/wing data rows, and cheapest-first `+1`/dynamic buy steps.
 - Current visual baseline:
   - bottom-right placement;
   - stable pre-scale render frame;
@@ -132,7 +132,7 @@
   - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo.
 - Added first transaction-side-effect hardening:
   - local-market WP buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
-  - the report includes bought/sold cargo, line-item type, weapon id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
+  - the report includes bought/sold cargo, line-item type, item id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
   - Fixer's Market buys remain virtual WP-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
   - Review-confirm execution now catches unexpected queued-line crashes in `StockReviewExecutionController`, and `StockPurchaseService` catches mutation-phase failures after validation with operation/item/quantity logging before returning a controlled failure message.
   - `StockPurchaseChecks` now owns shared purchase validation, player-cargo lookup, and safe campaign messages; `StockItemCargo` owns shared item stack/count/add/remove/reconcile/tidy/display-name helpers; `StockItemStacks` owns stack visibility, item id, price, legality, and cargo-space policy; `StockMarketTransactionReporter` owns best-effort transaction callback construction; `StockPurchaseMarketSources` owns local/sector source discovery and sell-target choice; `StockPurchasePlan` owns the shared cheapest-source buy plan math used by local and sector-market buys; and `StockPurchaseExecutor` owns mutation-phase sell/fixer-buy/planned-buy execution.
@@ -145,14 +145,14 @@
 - Implemented the Buy/Review GUI performance and layout pass:
   - weapon-name toggle headings plus `Storage`, unit `Price`, and planned trade cells use gray/semantic backgrounds;
   - stock/trade/price cells were widened, with the weapon-name area shrinking to accommodate the richer table;
-  - a cached `StockReviewTradeContext` now owns pending totals, per-weapon cost, cargo-space delta, credits, and affordability checks for render and controller paths;
+  - a cached `StockReviewTradeContext` now owns pending totals, per-item price/cost data, cargo-space delta, credits, and affordability checks for render and controller paths;
   - `StockReviewQuoteBook` caches sorted seller lists, line quotes, seller allocations, sell prices, and cargo-space estimates so the Buy/Review GUI does not repeatedly copy/sort market stocks or scan player cargo while rendering;
   - seller-row `+1` / dynamic buy-step enabled states now share the same affordability logic as top-level weapon-row buttons;
   - planned trades now quote and confirm through one execution order: sells first, explicit seller-specific buys second, generic cheapest buys last;
   - whole-plan quote calculations now consume seller stock once across the full portfolio, avoiding independent line quotes that could overcommit the same cheapest seller stock;
   - the stale purchase-preview helper was removed in favor of explicit quote/allocation classes;
   - pending trade mutation now lives in `StockReviewPendingTrades`, keeping merge/reset/clear/executed-removal behavior out of `StockReviewPanelPlugin`;
-  - `WeaponStockSnapshot` now caches all-record and weapon-id indexes so pricing/review paths avoid repeated list allocation and linear scans;
+  - `WeaponStockSnapshot` now caches all-record and item-key indexes so pricing/review paths avoid repeated list allocation and linear scans;
   - the visible `Refresh` button was removed because all meaningful state changes already refresh through explicit actions;
   - buy/increment controls use green, sell/decrement controls use red, and bulk trade controls use purple;
   - the Review GUI is now an expandable table grouped by `Buying` and `Selling`, with expandable weapon rows, weapon data, and seller allocation rows for buys.
