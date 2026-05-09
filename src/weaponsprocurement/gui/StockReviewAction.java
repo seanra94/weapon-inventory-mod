@@ -36,8 +36,7 @@ final class StockReviewAction {
         DEBUG_NOOP,
         REVIEW_PURCHASE,
         CONFIRM_PURCHASE,
-        GO_BACK,
-        CLOSE
+        GO_BACK
     }
 
     private final Type type;
@@ -204,10 +203,6 @@ final class StockReviewAction {
 
     static StockReviewAction goBack() {
         return new StockReviewAction(Type.GO_BACK, null, null, null, null, null, null, null, 0);
-    }
-
-    static StockReviewAction close() {
-        return new StockReviewAction(Type.CLOSE, null, null, null, null, null, null, null, 0);
     }
 
     Type getType() {

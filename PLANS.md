@@ -222,7 +222,7 @@
 - Open market trade and verify:
   - no crash;
   - `F8` opens the Weapon Stock Review popup;
-  - `Esc` and `Cancel` dismiss the popup;
+  - `Esc` dismisses the popup, while nested filter/color/review screens return to the trade screen through their footer controls;
   - category headings expand/collapse and preserve current state across refresh;
   - Sort cycles through `Stock`, `Name`, and `Price`;
   - Black Market toggle updates counts/categories;

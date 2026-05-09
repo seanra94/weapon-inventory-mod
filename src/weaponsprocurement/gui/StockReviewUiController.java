@@ -151,10 +151,6 @@ final class StockReviewUiController {
             handleGoBack();
             return true;
         }
-        if (StockReviewAction.Type.CLOSE.equals(type)) {
-            host.requestClose();
-            return true;
-        }
         return false;
     }
 
