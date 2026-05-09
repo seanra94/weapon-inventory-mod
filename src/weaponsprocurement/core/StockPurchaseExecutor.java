@@ -3,6 +3,7 @@ package weaponsprocurement.core;
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
+import weaponsprocurement.internal.WeaponsProcurementConfig;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 final class StockPurchaseExecutor {
-    private static final String KEY_FAIL_TRADE_STEP = "wp.debug.failTradeStep";
     private static final String FAIL_AFTER_SOURCE_REMOVAL = "after-source-removal";
     private static final String FAIL_AFTER_PLAYER_CARGO_REMOVE = "after-player-cargo-remove";
     private static final String FAIL_AFTER_PLAYER_CARGO_ADD = "after-player-cargo-add";
@@ -140,7 +140,7 @@ final class StockPurchaseExecutor {
     }
 
     private static void maybeFail(String step) {
-        String requested = System.getProperty(KEY_FAIL_TRADE_STEP, "");
+        String requested = System.getProperty(WeaponsProcurementConfig.KEY_DEBUG_TRADE_FAILURE_STEP, "");
         if (step.equalsIgnoreCase(requested) || "*".equals(requested)) {
             throw new RuntimeException("WP debug forced trade failure at " + step);
         }

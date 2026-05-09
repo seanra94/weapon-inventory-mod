@@ -19,6 +19,7 @@ public final class WeaponsProcurementConfig {
     private static final String SETTING_DESIRED_MEDIUM_WEAPON_COUNT = "wp_desired_medium_weapon_count";
     private static final String SETTING_DESIRED_LARGE_WEAPON_COUNT = "wp_desired_large_weapon_count";
     private static final String SETTING_DESIRED_FIGHTER_WING_COUNT = "wp_desired_fighter_wing_count";
+    private static final String SETTING_DEBUG_TRADE_FAILURE_STEP = "wp_debug_trade_failure_step";
     private static final String KEY_UPDATE_INTERVAL = "wp.config.updateIntervalSeconds";
     private static final String KEY_PATCHED_BADGES_ENABLED = "wp.config.patchedBadgesEnabled";
     private static final String KEY_DIALOG_OPTION_ENABLED = "wp.config.dialogOptionEnabled";
@@ -31,6 +32,7 @@ public final class WeaponsProcurementConfig {
     private static final String KEY_DESIRED_MEDIUM_WEAPON_COUNT = "wp.config.desiredMediumWeaponCount";
     private static final String KEY_DESIRED_LARGE_WEAPON_COUNT = "wp.config.desiredLargeWeaponCount";
     private static final String KEY_DESIRED_FIGHTER_WING_COUNT = "wp.config.desiredFighterWingCount";
+    public static final String KEY_DEBUG_TRADE_FAILURE_STEP = "wp.debug.failTradeStep";
 
     private static final float DEFAULT_UPDATE_INTERVAL_SEC = 0.20f;
     private static final float MIN_UPDATE_INTERVAL_SEC = 0.05f;
@@ -70,6 +72,7 @@ public final class WeaponsProcurementConfig {
         int desiredMediumWeaponCount = DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT;
         int desiredLargeWeaponCount = DEFAULT_DESIRED_LARGE_WEAPON_COUNT;
         int desiredFighterWingCount = DEFAULT_DESIRED_FIGHTER_WING_COUNT;
+        String debugTradeFailureStep = "";
         try {
             Double value = LunaSettings.getDouble(MOD_ID, SETTING_UPDATE_INTERVAL);
             if (value != null) {
@@ -107,6 +110,7 @@ public final class WeaponsProcurementConfig {
             desiredMediumWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_MEDIUM_WEAPON_COUNT, DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT);
             desiredLargeWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_LARGE_WEAPON_COUNT, DEFAULT_DESIRED_LARGE_WEAPON_COUNT);
             desiredFighterWingCount = readDesiredWeaponCount(SETTING_DESIRED_FIGHTER_WING_COUNT, DEFAULT_DESIRED_FIGHTER_WING_COUNT);
+            debugTradeFailureStep = readDebugTradeFailureStep();
         } catch (Throwable t) {
             if (!configErrorLogged) {
                 configErrorLogged = true;
@@ -129,6 +133,7 @@ public final class WeaponsProcurementConfig {
         System.setProperty(KEY_DESIRED_MEDIUM_WEAPON_COUNT, Integer.toString(desiredMediumWeaponCount));
         System.setProperty(KEY_DESIRED_LARGE_WEAPON_COUNT, Integer.toString(desiredLargeWeaponCount));
         System.setProperty(KEY_DESIRED_FIGHTER_WING_COUNT, Integer.toString(desiredFighterWingCount));
+        System.setProperty(KEY_DEBUG_TRADE_FAILURE_STEP, debugTradeFailureStep);
         if (configLogs < MAX_CONFIG_LOGS) {
             configLogs++;
             LOG.info("WP_CONFIG updateIntervalSeconds=" + effective
@@ -142,7 +147,8 @@ public final class WeaponsProcurementConfig {
                     + " desiredSmallWeaponCount=" + desiredSmallWeaponCount
                     + " desiredMediumWeaponCount=" + desiredMediumWeaponCount
                     + " desiredLargeWeaponCount=" + desiredLargeWeaponCount
-                    + " desiredFighterWingCount=" + desiredFighterWingCount);
+                    + " desiredFighterWingCount=" + desiredFighterWingCount
+                    + " debugTradeFailureStep=" + debugTradeFailureStep);
         }
         return effective;
     }
@@ -208,6 +214,26 @@ public final class WeaponsProcurementConfig {
             return defaultValue;
         }
         return clamp(Math.round(value.floatValue()), MIN_DESIRED_WEAPON_COUNT, MAX_DESIRED_WEAPON_COUNT);
+    }
+
+    private static String readDebugTradeFailureStep() {
+        String value = LunaSettings.getString(MOD_ID, SETTING_DEBUG_TRADE_FAILURE_STEP);
+        if (value == null) {
+            return "";
+        }
+        value = value.trim();
+        if (value.length() == 0 || "none".equalsIgnoreCase(value)) {
+            return "";
+        }
+        if ("after-source-removal".equalsIgnoreCase(value)
+                || "after-player-cargo-remove".equalsIgnoreCase(value)
+                || "after-player-cargo-add".equalsIgnoreCase(value)
+                || "after-target-cargo-add".equalsIgnoreCase(value)
+                || "after-credit-mutation".equalsIgnoreCase(value)) {
+            return value.toLowerCase(java.util.Locale.US);
+        }
+        LOG.warn("WP_CONFIG ignored unknown debug trade failure step: " + value);
+        return "";
     }
 
     private static int readPublishedDesiredWeaponCount(String propertyKey, int fallback) {
