@@ -292,6 +292,7 @@
   - [x] replace buggy disabled-button hover/highlight behavior by rendering disabled action cells as inert WP shells instead of disabled Starsector buttons;
   - [x] port the ACG-style color debug menu behind a top-row `Colors` button, with temporary and permanent RGB overrides;
   - [x] use the repo's dimmed-toggle button path for toggle headings instead of normal toggle visuals.
+  - [x] remove the redundant trade-screen close/cancel footer button; ESC still closes the popup, while footer controls stay focused on trade actions.
 - ACG GUI migration is now largely in drawdown:
   - modal composition, modal list panels, scroll math, button semantics, toggle-heading labels, text helpers, host adapters, and live-jar helper validation have reusable `WimGui*` ownership;
   - future WP screens should start from those helpers rather than copying stock-review renderer code;
@@ -310,7 +311,6 @@
   - add wing-specific filters only if runtime testing shows the wing list is noisy enough to need them;
   - improve failure messages for real observed cases such as no valid buyer, illegal markets, access restrictions, commission/faction restrictions, and other edge cases after collecting concrete runtime failures.
 - [x] Removed routine capped diagnostic logs from the count updater and embedded badge helper; only real failure logs remain on those hot paths.
-- Consider Luna settings for thresholds only if the implementation can stay precomposed and asset-backed without runtime tint/layering.
 - Harden purchase side effects after runtime validation:
   - verify the new transaction reporting actually triggers vanilla/modded suspicion/economy listeners as expected;
   - tariff parity with vanilla;

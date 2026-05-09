@@ -91,7 +91,7 @@ final class StockReviewFooterRenderer {
     private static void renderTradeFooter(CustomPanelAPI root,
                                           List<StockReviewPendingTrade> pendingTrades,
                                           List<WimGuiButtonBinding<StockReviewAction>> buttons) {
-        WimGuiModalFooter.addLeftRowAndRightButton(
+        WimGuiModalFooter.addLeftButtonRow(
                 root,
                 StockReviewStyle.MODAL,
                 StockReviewStyle.ACTION_BUTTON_HEIGHT,
@@ -111,8 +111,6 @@ final class StockReviewFooterRenderer {
                                 pendingTrades != null && !pendingTrades.isEmpty(),
                                 StockReviewStyle.ACTION_BACKGROUND,
                                 "Clear every queued buy and sell.")),
-                footerButton("Cancel", StockReviewAction.close(), true, StockReviewStyle.CANCEL_BUTTON,
-                        "Close Weapon Stock Review."),
                 buttons);
     }
 
