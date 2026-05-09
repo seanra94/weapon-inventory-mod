@@ -1,6 +1,7 @@
 package weaponsprocurement.gui;
 
 import weaponsprocurement.core.SubmarketWeaponStock;
+import weaponsprocurement.core.TradeMoney;
 import weaponsprocurement.core.WeaponStockRecord;
 import weaponsprocurement.core.WeaponStockSnapshot;
 
@@ -88,7 +89,7 @@ final class StockReviewQuoteBook {
             return StockReviewQuote.priceUnavailable();
         }
         float cargo = trade.getQuantity() * fallbackUnitCargoSpace(trade.getItemKey());
-        return new StockReviewQuote(trade.getQuantity() * unitPrice, cargo,
+        return new StockReviewQuote(TradeMoney.lineTotal(unitPrice, trade.getQuantity()), cargo,
                 Collections.<StockReviewSellerAllocation>emptyList());
     }
 
@@ -99,8 +100,8 @@ final class StockReviewQuoteBook {
     private StockReviewQuote quoteBuyWithRemaining(StockReviewPendingTrade trade,
                                                    Map<String, Integer> remainingBySource) {
         int remaining = trade.getQuantity();
-        int totalCost = 0;
-        int totalBaseCost = 0;
+        long totalCost = 0L;
+        long totalBaseCost = 0L;
         int totalQuantity = 0;
         float totalCargo = 0f;
         List<StockReviewSellerAllocation> allocations =
@@ -116,9 +117,9 @@ final class StockReviewQuoteBook {
             if (quantity <= 0) {
                 continue;
             }
-            int cost = quantity * stock.getUnitPrice();
-            totalCost += cost;
-            totalBaseCost += quantity * stock.getBaseUnitPrice();
+            long cost = TradeMoney.lineTotal(stock.getUnitPrice(), quantity);
+            totalCost = TradeMoney.safeAdd(totalCost, cost);
+            totalBaseCost = TradeMoney.safeAdd(totalBaseCost, TradeMoney.lineTotal(stock.getBaseUnitPrice(), quantity));
             totalQuantity += quantity;
             totalCargo += quantity * stock.getUnitCargoSpace();
             allocations.add(new StockReviewSellerAllocation(stock.getDisplaySourceName(),

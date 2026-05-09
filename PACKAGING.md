@@ -55,11 +55,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.p
 git diff --check
 ```
 
+`tools\deploy-live-mod.ps1` performs a clean sync of repo-managed clean-package files by default. Use `-NoClean` only for local debugging when intentionally preserving extra live files.
+
 For clean-only documentation changes, run `tools\validate-doc-links.ps1` and `git diff --check`.
 
 ## Trade Rollback Fault Validation
 
-`StockPurchaseExecutor` has an internal, disabled-by-default fault hook for validating rollback of WP-touched cargo counts and player credits. Temporarily set the LunaLib debug setting `Debug trade failure step` to one of these values during a local test run:
+`StockPurchaseExecutor` has an internal, disabled-by-default fault hook for validating rollback of WP-touched cargo counts and player credits. Temporarily set the LunaLib debug setting `DEV ONLY: force trade rollback failure` to one of these values during a local test run:
 
 - `after-source-removal`
 - `after-player-cargo-remove`
@@ -67,4 +69,4 @@ For clean-only documentation changes, run `tools\validate-doc-links.ps1` and `gi
 - `after-target-cargo-add`
 - `after-credit-mutation`
 
-Use it only for manual validation, then set it back to `none` before normal play or packaging. The setting publishes the JVM system property `wp.debug.failTradeStep`, so a manual `-Dwp.debug.failTradeStep=...` launch argument can still be used if needed. Test local buy, local sell, Sector Market buy, Fixer's Market buy, and mixed sell-then-buy plans, and confirm player cargo, touched market cargo, and credits return to their pre-confirm values after the forced failure.
+Use it only for manual validation, then set it back to `none` before normal play or packaging. `tools\validate-total-badges.ps1` fails release validation if the setting default is anything other than `none`. The setting publishes the JVM system property `wp.debug.failTradeStep`, so a manual `-Dwp.debug.failTradeStep=...` launch argument can still be used if needed. Test local buy, local sell, Sector Market buy, Fixer's Market buy, and mixed sell-then-buy plans, and confirm player cargo, touched market cargo, and credits return to their pre-confirm values after the forced failure.

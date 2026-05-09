@@ -12,7 +12,7 @@ final class StockReviewTradeSummaryRenderer {
                        StockReviewTradeContext tradeContext,
                        StockReviewState state,
                        boolean reviewMode) {
-        int netCost = tradeContext.totalCost();
+        long netCost = tradeContext.totalCost();
         float cargoDelta = tradeContext.totalCargoSpaceDelta();
         float width = reviewMode ? StockReviewStyle.REVIEW_LIST_WIDTH : StockReviewStyle.LIST_WIDTH;
         float rowY = StockReviewStyle.SUMMARY_TOP;
@@ -83,7 +83,7 @@ final class StockReviewTradeSummaryRenderer {
         return String.format(java.util.Locale.US, "%.1f", value);
     }
 
-    private static String creditsAvailableLabel(float creditsAvailable, int netCost) {
+    private static String creditsAvailableLabel(float creditsAvailable, long netCost) {
         if (netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return StockReviewFormat.credits(Math.round(creditsAvailable)) + " [?]";
         }
@@ -95,7 +95,7 @@ final class StockReviewTradeSummaryRenderer {
     }
 
     private static String tariffsPaidLabel(StockReviewTradeContext tradeContext) {
-        int markup = tradeContext.totalMarkupPaid();
+        long markup = tradeContext.totalMarkupPaid();
         float multiplier = tradeContext.averageBuyMultiplier();
         if (markup <= 0) {
             return StockReviewFormat.credits(0) + " [avg 1.0x]";
@@ -103,7 +103,7 @@ final class StockReviewTradeSummaryRenderer {
         return StockReviewFormat.credits(markup) + " [avg " + String.format(java.util.Locale.US, "%.1fx", multiplier) + "]";
     }
 
-    private static String signedCredits(int delta) {
+    private static String signedCredits(long delta) {
         return (delta >= 0 ? "+" : "-") + StockReviewFormat.credits(delta);
     }
 
@@ -111,7 +111,7 @@ final class StockReviewTradeSummaryRenderer {
         return (delta >= 0f ? "+" : "-") + formatCargo(Math.abs(delta));
     }
 
-    private static Color creditDeltaFill(int netCost) {
+    private static Color creditDeltaFill(long netCost) {
         if (netCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return StockReviewStyle.CANCEL_BUTTON;
         }

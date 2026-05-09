@@ -3,13 +3,14 @@ package weaponsprocurement.gui;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import weaponsprocurement.core.TradeMoney;
 
 final class StockReviewPortfolioQuote {
     private final Map<String, StockReviewQuote> quotesByLine = new HashMap<String, StockReviewQuote>();
-    private final Map<String, Integer> costByItem = new HashMap<String, Integer>();
-    private int totalCost = 0;
-    private int totalBuyCost = 0;
-    private int totalBaseBuyCost = 0;
+    private final Map<String, Long> costByItem = new HashMap<String, Long>();
+    private long totalCost = 0L;
+    private long totalBuyCost = 0L;
+    private long totalBaseBuyCost = 0L;
     private int totalBuyQuantity = 0;
     private float totalCargoSpaceDelta = 0f;
     private boolean priceUnavailable = false;
@@ -19,20 +20,20 @@ final class StockReviewPortfolioQuote {
         quotesByLine.put(lineKey, quote);
         if (quote.getCost() == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             priceUnavailable = true;
-            costByItem.put(trade.getItemKey(), Integer.valueOf(StockReviewQuoteBook.PRICE_UNAVAILABLE));
+            costByItem.put(trade.getItemKey(), Long.valueOf(StockReviewQuoteBook.PRICE_UNAVAILABLE));
         } else {
             add(costByItem, trade.getItemKey(), quote.getCost());
-            totalCost += quote.getCost();
+            totalCost = TradeMoney.safeAdd(totalCost, quote.getCost());
             if (trade.isBuy()) {
-                totalBuyCost += quote.getCost();
-                totalBaseBuyCost += quote.getBaseCost();
+                totalBuyCost = TradeMoney.safeAdd(totalBuyCost, quote.getCost());
+                totalBaseBuyCost = TradeMoney.safeAdd(totalBaseBuyCost, quote.getBaseCost());
                 totalBuyQuantity += quote.getBuyQuantity();
             }
         }
         totalCargoSpaceDelta += quote.getCargoSpaceDelta();
     }
 
-    int totalCost() {
+    long totalCost() {
         return priceUnavailable ? StockReviewQuoteBook.PRICE_UNAVAILABLE : totalCost;
     }
 
@@ -40,15 +41,15 @@ final class StockReviewPortfolioQuote {
         return totalCargoSpaceDelta;
     }
 
-    int costForItem(String itemKey) {
+    long costForItem(String itemKey) {
         return get(costByItem, itemKey);
     }
 
-    int totalMarkupPaid() {
+    long totalMarkupPaid() {
         if (priceUnavailable) {
-            return 0;
+            return 0L;
         }
-        return Math.max(0, totalBuyCost - totalBaseBuyCost);
+        return Math.max(0L, totalBuyCost - totalBaseBuyCost);
     }
 
     float averageBuyMultiplier() {
@@ -62,7 +63,7 @@ final class StockReviewPortfolioQuote {
         return totalBuyQuantity;
     }
 
-    int costForLine(String itemKey, String submarketId) {
+    long costForLine(String itemKey, String submarketId) {
         return quoteForLine(itemKey, submarketId).getCost();
     }
 
@@ -83,15 +84,15 @@ final class StockReviewPortfolioQuote {
         return (itemKey == null ? "" : itemKey) + "|" + (submarketId == null ? "" : submarketId);
     }
 
-    private static void add(Map<String, Integer> counts, String itemKey, int quantity) {
-        if (itemKey == null || quantity == 0) {
+    private static void add(Map<String, Long> counts, String itemKey, long quantity) {
+        if (itemKey == null || quantity == 0L) {
             return;
         }
-        counts.put(itemKey, Integer.valueOf(get(counts, itemKey) + quantity));
+        counts.put(itemKey, Long.valueOf(TradeMoney.safeAdd(get(counts, itemKey), quantity)));
     }
 
-    private static int get(Map<String, Integer> counts, String itemKey) {
-        Integer value = counts.get(itemKey);
-        return value == null ? 0 : value.intValue();
+    private static long get(Map<String, Long> counts, String itemKey) {
+        Long value = counts.get(itemKey);
+        return value == null ? 0L : value.longValue();
     }
 }

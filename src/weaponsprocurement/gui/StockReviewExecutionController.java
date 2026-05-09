@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import weaponsprocurement.core.StockPurchaseService;
 import weaponsprocurement.core.StockSourceMode;
 import weaponsprocurement.core.SubmarketWeaponStock;
+import weaponsprocurement.core.TradeMoney;
 import weaponsprocurement.core.WeaponStockRecord;
 import weaponsprocurement.core.WeaponStockSnapshot;
 
@@ -64,9 +65,14 @@ final class StockReviewExecutionController {
         }
         WeaponStockSnapshot snapshot = host.snapshot();
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
-        int estimatedCost = tradeContext.totalCost();
+        long estimatedCost = tradeContext.totalCost();
         if (estimatedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             host.postMessage("Could not price every queued item. Adjust the plan and try again.");
+            host.requestContentRebuild();
+            return;
+        }
+        if (estimatedCost > TradeMoney.MAX_EXECUTABLE_CREDITS) {
+            host.postMessage("Order value is too large.");
             host.requestContentRebuild();
             return;
         }

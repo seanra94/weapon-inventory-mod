@@ -16,7 +16,7 @@ final class StockReviewTradeContext {
     private final Map<String, Integer> sellByItem = new HashMap<String, Integer>();
     private final Map<String, Integer> affordableCache = new HashMap<String, Integer>();
     private final StockReviewPortfolioQuote portfolioQuote;
-    private final int totalCost;
+    private final long totalCost;
     private final float totalCargoSpaceDelta;
     private final float credits;
     private final float cargoSpaceLeft;
@@ -98,11 +98,11 @@ final class StockReviewTradeContext {
         return Math.min(excess, sellableRemaining(record));
     }
 
-    int transactionCostForItem(String itemKey) {
+    long transactionCostForItem(String itemKey) {
         return portfolioQuote.costForItem(itemKey);
     }
 
-    int transactionCostForLine(String itemKey, String submarketId) {
+    long transactionCostForLine(String itemKey, String submarketId) {
         return portfolioQuote.costForLine(itemKey, submarketId);
     }
 
@@ -133,7 +133,7 @@ final class StockReviewTradeContext {
         return portfolioQuote.sellerAllocations(trade.getItemKey(), trade.getSubmarketId());
     }
 
-    int totalCost() {
+    long totalCost() {
         return totalCost;
     }
 
@@ -141,7 +141,7 @@ final class StockReviewTradeContext {
         return totalCargoSpaceDelta;
     }
 
-    int totalMarkupPaid() {
+    long totalMarkupPaid() {
         return portfolioQuote.totalMarkupPaid();
     }
 
@@ -193,7 +193,7 @@ final class StockReviewTradeContext {
     private boolean canAffordAdjustment(WeaponStockRecord record, String submarketId, int quantity) {
         StockReviewPortfolioQuote adjusted = quoteBook.quotePortfolio(StockReviewTradePlanner.withAdjustment(
                 pendingTrades, record.getItemKey(), submarketId, quantity));
-        int adjustedCost = adjusted.totalCost();
+        long adjustedCost = adjusted.totalCost();
         if (adjustedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return false;
         }

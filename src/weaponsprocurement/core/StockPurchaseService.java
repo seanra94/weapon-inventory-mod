@@ -86,7 +86,7 @@ public final class StockPurchaseService {
         if (validation != null) {
             return validation;
         }
-        int totalCost = unitPrice * requestedQuantity;
+        long totalCost = TradeMoney.lineTotal(unitPrice, requestedQuantity);
         float totalSpace = Math.max(1f, unitCargoSpace) * requestedQuantity;
         validation = StockPurchaseChecks.canCompletePurchase(playerCargo, totalCost, totalSpace);
         if (validation != null) {
@@ -191,16 +191,16 @@ public final class StockPurchaseService {
         private final boolean success;
         private final String message;
         private final int quantity;
-        private final int credits;
+        private final long credits;
 
-        private PurchaseResult(boolean success, String message, int quantity, int credits) {
+        private PurchaseResult(boolean success, String message, int quantity, long credits) {
             this.success = success;
             this.message = message;
             this.quantity = quantity;
             this.credits = credits;
         }
 
-        public static PurchaseResult success(String message, int quantity, int credits) {
+        public static PurchaseResult success(String message, int quantity, long credits) {
             return new PurchaseResult(true, message, quantity, credits);
         }
 
@@ -220,7 +220,7 @@ public final class StockPurchaseService {
             return quantity;
         }
 
-        public int getCredits() {
+        public long getCredits() {
             return credits;
         }
     }

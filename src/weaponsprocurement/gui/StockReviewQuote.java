@@ -7,19 +7,19 @@ final class StockReviewQuote {
     static final StockReviewQuote ZERO = new StockReviewQuote(0, 0f,
             0, 0, Collections.<StockReviewSellerAllocation>emptyList());
 
-    private final int cost;
+    private final long cost;
     private final float cargoSpaceDelta;
-    private final int baseCost;
+    private final long baseCost;
     private final int buyQuantity;
     private final List<StockReviewSellerAllocation> sellerAllocations;
 
-    StockReviewQuote(int cost, float cargoSpaceDelta, List<StockReviewSellerAllocation> sellerAllocations) {
+    StockReviewQuote(long cost, float cargoSpaceDelta, List<StockReviewSellerAllocation> sellerAllocations) {
         this(cost, cargoSpaceDelta, cost, 0, sellerAllocations);
     }
 
-    StockReviewQuote(int cost,
+    StockReviewQuote(long cost,
                      float cargoSpaceDelta,
-                     int baseCost,
+                     long baseCost,
                      int buyQuantity,
                      List<StockReviewSellerAllocation> sellerAllocations) {
         this.cost = cost;
@@ -39,11 +39,11 @@ final class StockReviewQuote {
         return new StockReviewQuote(StockReviewQuoteBook.PRICE_UNAVAILABLE, cargoSpaceDelta, sellerAllocations);
     }
 
-    int getCost() {
+    long getCost() {
         return cost;
     }
 
-    int getBaseCost() {
+    long getBaseCost() {
         return baseCost;
     }
 
@@ -51,11 +51,11 @@ final class StockReviewQuote {
         return buyQuantity;
     }
 
-    int getMarkupPaid() {
+    long getMarkupPaid() {
         if (cost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            return 0;
+            return 0L;
         }
-        return Math.max(0, cost - baseCost);
+        return Math.max(0L, cost - baseCost);
     }
 
     float getCargoSpaceDelta() {

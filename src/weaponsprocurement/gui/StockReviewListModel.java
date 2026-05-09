@@ -103,7 +103,7 @@ final class StockReviewListModel {
         String label = WimGuiToggleHeading.label(record.getDisplayName(), expanded);
         int planQuantity = tradeContext.netQuantityForItem(record.getItemKey());
         int sellRemaining = tradeContext.negativeAdjustmentRemaining(record, Integer.MAX_VALUE);
-        int transactionCost = tradeContext.transactionCostForItem(record.getItemKey());
+        long transactionCost = tradeContext.transactionCostForItem(record.getItemKey());
         int buyStepQuantity = tradeContext.positiveAdjustmentRemaining(record, 10);
         int sellStepQuantity = Math.min(10, sellRemaining);
         int sufficientDelta = tradeContext.deltaToSufficient(record);

@@ -45,6 +45,8 @@ Availability of source modes is controlled by Luna settings.
 - `Fixer's Market price multiplier`
 - desired stock thresholds for small/medium/large weapons and wings
 
+Advanced JSON overrides and market blacklists are documented in [CONFIG.md](CONFIG.md).
+
 ## Troubleshooting
 
 - Popup does not open:

@@ -45,10 +45,16 @@ final class StockPurchaseChecks {
                 : null;
     }
 
-    static StockPurchaseService.PurchaseResult canAfford(CargoAPI playerCargo, int totalCost) {
+    static StockPurchaseService.PurchaseResult canAfford(CargoAPI playerCargo, long totalCost) {
         return playerCargo.getCredits().get() + 0.01f < totalCost
                 ? StockPurchaseService.PurchaseResult.failure("Need " + CreditFormat.creditsLong(totalCost) + " for this order.")
                 : null;
+    }
+
+    static StockPurchaseService.PurchaseResult canMutateCredits(long credits) {
+        return TradeMoney.canExecuteCreditMutation(credits)
+                ? null
+                : StockPurchaseService.PurchaseResult.failure("Order value is too large.");
     }
 
     static StockPurchaseService.PurchaseResult hasCargoSpace(CargoAPI playerCargo, float totalSpace) {
@@ -57,8 +63,12 @@ final class StockPurchaseChecks {
                 : null;
     }
 
-    static StockPurchaseService.PurchaseResult canCompletePurchase(CargoAPI playerCargo, int totalCost, float totalSpace) {
-        StockPurchaseService.PurchaseResult validation = canAfford(playerCargo, totalCost);
+    static StockPurchaseService.PurchaseResult canCompletePurchase(CargoAPI playerCargo, long totalCost, float totalSpace) {
+        StockPurchaseService.PurchaseResult validation = canMutateCredits(totalCost);
+        if (validation != null) {
+            return validation;
+        }
+        validation = canAfford(playerCargo, totalCost);
         return validation != null ? validation : hasCargoSpace(playerCargo, totalSpace);
     }
 

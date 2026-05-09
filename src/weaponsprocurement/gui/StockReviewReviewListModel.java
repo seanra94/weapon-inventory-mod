@@ -68,7 +68,7 @@ final class StockReviewReviewListModel {
             return;
         }
         boolean expanded = state.isItemExpanded(record.getItemKey());
-        int cost = tradeContext.transactionCostForLine(trade.getItemKey(), trade.getSubmarketId());
+        long cost = tradeContext.transactionCostForLine(trade.getItemKey(), trade.getSubmarketId());
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 StockReviewTradeRowCells.storage(record.getStorageCount(), trade.getQuantity(), StockReviewStyle.REVIEW_STOCK_CELL_WIDTH),
                 StockReviewTradeRowCells.plan(trade.getQuantity(), cost));

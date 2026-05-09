@@ -1,5 +1,6 @@
 param(
-    [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY
+    [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY,
+    [switch]$NoClean
 )
 
 if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
@@ -24,6 +25,19 @@ $items = @(
     "PACKAGING.md"
 )
 
+if (-not $NoClean) {
+    if ((Split-Path -Leaf $deployRoot) -ne "Weapons Procurement") {
+        throw "Refusing to clean unexpected deploy root: $deployRoot"
+    }
+
+    foreach ($item in $items) {
+        $target = Join-Path $deployRoot $item
+        if (Test-Path -LiteralPath $target) {
+            Remove-Item -LiteralPath $target -Recurse -Force
+        }
+    }
+}
+
 foreach ($item in $items) {
     $source = Join-Path $repoRoot $item
     $target = Join-Path $deployRoot $item
@@ -40,4 +54,5 @@ foreach ($item in $items) {
     }
 }
 
-Write-Host "Deployed Weapons Procurement clean package files to $deployRoot"
+$mode = if ($NoClean) { "copy-over" } else { "clean-sync" }
+Write-Host "Deployed Weapons Procurement clean package files to $deployRoot ($mode)"

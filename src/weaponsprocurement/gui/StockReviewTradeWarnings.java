@@ -46,7 +46,7 @@ final class StockReviewTradeWarnings {
             state.setTradeWarning(NO_CARGO_CAPACITY);
             return;
         }
-        int netCost = tradeContext.totalCost();
+        long netCost = tradeContext.totalCost();
         if (netCost != StockReviewQuoteBook.PRICE_UNAVAILABLE
                 && netCost > 0
                 && remainingCreditsAfterTrade(tradeContext) < state.getInitialCredits() * 0.05f) {
@@ -78,7 +78,7 @@ final class StockReviewTradeWarnings {
                 record.getItemKey(),
                 null,
                 target));
-        int fullCost = fullQuote.totalCost();
+        long fullCost = fullQuote.totalCost();
         if (fullCost != StockReviewQuoteBook.PRICE_UNAVAILABLE && fullCost > tradeContext.credits()) {
             return NOT_ENOUGH_CREDITS;
         }
@@ -89,7 +89,7 @@ final class StockReviewTradeWarnings {
     }
 
     private static float remainingCreditsAfterTrade(StockReviewTradeContext tradeContext) {
-        int netCost = tradeContext.totalCost();
+        long netCost = tradeContext.totalCost();
         return tradeContext.credits() - Math.max(0, netCost);
     }
 

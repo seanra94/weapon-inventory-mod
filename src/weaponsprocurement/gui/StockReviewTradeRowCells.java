@@ -16,7 +16,7 @@ final class StockReviewTradeRowCells {
                 Alignment.LMID, StockReviewTooltips.STORAGE);
     }
 
-    static WimGuiRowCell<StockReviewAction> plan(int planQuantity, int transactionCost) {
+    static WimGuiRowCell<StockReviewAction> plan(int planQuantity, long transactionCost) {
         String quantity = cappedCount(Math.abs(planQuantity));
         String total = cappedCredits(transactionCost, 999999);
         String label = planQuantity > 0
@@ -101,11 +101,11 @@ final class StockReviewTradeRowCells {
         return sign + (absolute >= 99 ? "99+" : String.valueOf(absolute));
     }
 
-    private static String cappedCredits(int credits, int cap) {
+    private static String cappedCredits(long credits, int cap) {
         if (credits == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return "?";
         }
-        int absolute = Math.abs(credits);
+        long absolute = Math.abs(credits);
         if (absolute >= cap) {
             return CreditFormat.grouped(cap) + "+" + CreditFormat.CREDIT_SYMBOL;
         }

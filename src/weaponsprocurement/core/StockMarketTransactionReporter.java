@@ -30,6 +30,12 @@ final class StockMarketTransactionReporter {
         if (plugin == null) {
             return;
         }
+        long creditValue = TradeMoney.lineTotal(unitPrice, quantity);
+        if (!TradeMoney.canExecuteCreditMutation(creditValue)) {
+            log.warn("WP_STOCK_REVIEW skipped transaction report with oversized credit value item="
+                    + itemId + " quantity=" + quantity + " unitPrice=" + unitPrice);
+            return;
+        }
         try {
             PlayerMarketTransaction transaction = new PlayerMarketTransaction(market, submarket, tradeMode(submarket));
             CargoAPI cargo = Global.getFactory() == null ? null : Global.getFactory().createCargo(false);
@@ -52,7 +58,7 @@ final class StockMarketTransactionReporter {
                     unitPrice,
                     unitPrice,
                     timestamp()));
-            transaction.setCreditValue(bought ? unitPrice * quantity : -unitPrice * quantity);
+            transaction.setCreditValue((int) (bought ? creditValue : -creditValue));
             plugin.reportPlayerMarketTransaction(transaction);
         } catch (Throwable t) {
             // Transaction callbacks are best-effort; cargo mutation has already succeeded.

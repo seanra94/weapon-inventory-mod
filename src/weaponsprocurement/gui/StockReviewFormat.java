@@ -6,7 +6,7 @@ final class StockReviewFormat {
     private StockReviewFormat() {
     }
 
-    static String credits(int credits) {
+    static String credits(long credits) {
         if (credits == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
             return "?";
         }

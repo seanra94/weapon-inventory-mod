@@ -2,6 +2,7 @@ package weaponsprocurement.core;
 
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
+import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import org.apache.log4j.Logger;
 import weaponsprocurement.internal.WeaponsProcurementConfig;
 
@@ -27,25 +28,30 @@ final class StockPurchaseExecutor {
                                                             StockItemType itemType,
                                                             String itemId,
                                                             int quantity) {
-        int credits = target.unitPrice * quantity;
+        long credits = TradeMoney.lineTotal(target.unitPrice, quantity);
         int expectedMarketCount = StockItemCargo.itemCount(target.cargo, itemType, itemId) + quantity;
         MutationJournal journal = new MutationJournal(playerCargo, itemType, itemId);
         journal.recordCargo(playerCargo, "player cargo");
         journal.recordCargo(target.cargo, "sell target " + marketLabel(market, target.submarket));
         try {
+            StockPurchaseService.PurchaseResult validation = StockPurchaseChecks.canMutateCredits(credits);
+            if (validation != null) {
+                return validation;
+            }
             if (StockItemCargo.itemCount(playerCargo, itemType, itemId) < quantity) {
                 return StockPurchaseService.PurchaseResult.failure("No player-cargo stock is available to sell.");
             }
             StockItemCargo.removeItem(playerCargo, itemType, itemId, quantity);
             maybeFail(FAIL_AFTER_PLAYER_CARGO_REMOVE);
-            playerCargo.getCredits().add(credits);
+            playerCargo.getCredits().add((float) credits);
             maybeFail(FAIL_AFTER_CREDIT_MUTATION);
             StockItemCargo.tidyCargo(playerCargo);
             StockItemCargo.addItem(target.cargo, itemType, itemId, quantity);
             maybeFail(FAIL_AFTER_TARGET_CARGO_ADD);
             StockItemCargo.tidyCargo(target.cargo);
             StockMarketTransactionReporter.reportItemTransaction(log, market, target.submarket, itemType, itemId, quantity, target.unitPrice, false);
-            StockItemCargo.reconcileItemCount(target.cargo, itemType, itemId, expectedMarketCount);
+            reconcileAfterTransactionReport(log, target.cargo, itemType, itemId, expectedMarketCount,
+                    "sell target " + marketLabel(market, target.submarket));
 
             String message = "Sold " + quantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
                     + " for " + CreditFormat.creditsLong(credits) + ".";
@@ -61,13 +67,13 @@ final class StockPurchaseExecutor {
                                                                    StockItemType itemType,
                                                                    String itemId,
                                                                    int quantity,
-                                                                   int totalCost) {
+                                                                   long totalCost) {
         MutationJournal journal = new MutationJournal(playerCargo, itemType, itemId);
         journal.recordCargo(playerCargo, "player cargo");
         try {
             StockItemCargo.addItem(playerCargo, itemType, itemId, quantity);
             maybeFail(FAIL_AFTER_PLAYER_CARGO_ADD);
-            playerCargo.getCredits().subtract(totalCost);
+            playerCargo.getCredits().subtract((float) totalCost);
             maybeFail(FAIL_AFTER_CREDIT_MUTATION);
             StockItemCargo.tidyCargo(playerCargo);
 
@@ -89,6 +95,7 @@ final class StockPurchaseExecutor {
                                                        String sourceLabel,
                                                        String operation) {
         MutationJournal journal = new MutationJournal(playerCargo, itemType, itemId);
+        List<TransactionReportLine> reportLines = new ArrayList<TransactionReportLine>();
         try {
             StockPurchaseService.PurchaseResult validation = buyPlanStillAvailable(plan, itemType, itemId);
             if (validation != null) {
@@ -103,13 +110,15 @@ final class StockPurchaseExecutor {
                 maybeFail(FAIL_AFTER_SOURCE_REMOVAL);
                 StockItemCargo.tidyCargo(line.source.cargo);
                 MarketAPI reportMarket = line.source.market == null ? fallbackMarket : line.source.market;
-                StockMarketTransactionReporter.reportItemTransaction(log, reportMarket, line.source.submarket, itemType, itemId, line.quantity, line.source.unitPrice, true);
+                reportLines.add(new TransactionReportLine(reportMarket, line.source.submarket, itemType, itemId,
+                        line.quantity, line.source.unitPrice, true));
             }
             StockItemCargo.addItem(playerCargo, itemType, itemId, plan.totalQuantity);
             maybeFail(FAIL_AFTER_PLAYER_CARGO_ADD);
-            playerCargo.getCredits().subtract(plan.totalCost);
+            playerCargo.getCredits().subtract((float) plan.totalCost);
             maybeFail(FAIL_AFTER_CREDIT_MUTATION);
             StockItemCargo.tidyCargo(playerCargo);
+            flushTransactionReports(log, reportLines);
 
             String message = "Bought " + plan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId)
                     + sourceLabel + " for " + CreditFormat.creditsLong(plan.totalCost) + ".";
@@ -137,6 +146,28 @@ final class StockPurchaseExecutor {
             }
         }
         return null;
+    }
+
+    private static void flushTransactionReports(Logger log, List<TransactionReportLine> reportLines) {
+        for (int i = 0; i < reportLines.size(); i++) {
+            reportLines.get(i).report(log);
+        }
+    }
+
+    private static void reconcileAfterTransactionReport(Logger log,
+                                                        CargoAPI cargo,
+                                                        StockItemType itemType,
+                                                        String itemId,
+                                                        int expectedCount,
+                                                        String label) {
+        try {
+            StockItemCargo.reconcileItemCount(cargo, itemType, itemId, expectedCount);
+        } catch (Throwable t) {
+            log.warn("WP_STOCK_REVIEW post-report cargo reconciliation failed item="
+                    + itemType.key(itemId)
+                    + " target=" + label
+                    + " expectedCount=" + expectedCount, t);
+        }
     }
 
     private static void maybeFail(String step) {
@@ -251,6 +282,36 @@ final class StockPurchaseExecutor {
         }
     }
 
+    private static final class TransactionReportLine {
+        private final MarketAPI market;
+        private final SubmarketAPI submarket;
+        private final StockItemType itemType;
+        private final String itemId;
+        private final int quantity;
+        private final int unitPrice;
+        private final boolean buy;
+
+        TransactionReportLine(MarketAPI market,
+                              SubmarketAPI submarket,
+                              StockItemType itemType,
+                              String itemId,
+                              int quantity,
+                              int unitPrice,
+                              boolean buy) {
+            this.market = market;
+            this.submarket = submarket;
+            this.itemType = itemType;
+            this.itemId = itemId;
+            this.quantity = quantity;
+            this.unitPrice = unitPrice;
+            this.buy = buy;
+        }
+
+        void report(Logger log) {
+            StockMarketTransactionReporter.reportItemTransaction(log, market, submarket, itemType, itemId, quantity, unitPrice, buy);
+        }
+    }
+
     private static String sourceLabel(StockPurchaseSource source, MarketAPI fallbackMarket) {
         if (source == null) {
             return "unknown source";
@@ -259,7 +320,7 @@ final class StockPurchaseExecutor {
         return marketLabel(market, source.submarket);
     }
 
-    private static String marketLabel(MarketAPI market, com.fs.starfarer.api.campaign.econ.SubmarketAPI submarket) {
+    private static String marketLabel(MarketAPI market, SubmarketAPI submarket) {
         StringBuilder result = new StringBuilder();
         if (market == null) {
             result.append("unknown market");

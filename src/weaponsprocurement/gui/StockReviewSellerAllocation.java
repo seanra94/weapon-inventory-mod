@@ -4,9 +4,9 @@ final class StockReviewSellerAllocation {
     private final String submarketName;
     private final String submarketId;
     private final int quantity;
-    private final int cost;
+    private final long cost;
 
-    StockReviewSellerAllocation(String submarketName, String submarketId, int quantity, int cost) {
+    StockReviewSellerAllocation(String submarketName, String submarketId, int quantity, long cost) {
         this.submarketName = submarketName;
         this.submarketId = submarketId;
         this.quantity = quantity;
@@ -21,7 +21,7 @@ final class StockReviewSellerAllocation {
         return quantity;
     }
 
-    int getCost() {
+    long getCost() {
         return cost;
     }
 

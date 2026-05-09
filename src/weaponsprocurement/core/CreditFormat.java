@@ -7,14 +7,26 @@ public final class CreditFormat {
     }
 
     public static String credits(int credits) {
+        return credits((long) credits);
+    }
+
+    public static String credits(long credits) {
         return grouped(credits) + CREDIT_SYMBOL;
     }
 
     public static String creditsLong(int credits) {
+        return creditsLong((long) credits);
+    }
+
+    public static String creditsLong(long credits) {
         return grouped(credits) + " credits";
     }
 
     public static String grouped(int value) {
+        return grouped((long) value);
+    }
+
+    public static String grouped(long value) {
         String digits = String.valueOf(Math.abs(value));
         StringBuilder result = new StringBuilder();
         int firstGroup = digits.length() % 3;

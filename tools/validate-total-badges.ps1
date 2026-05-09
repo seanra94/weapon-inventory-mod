@@ -106,11 +106,34 @@ function Test-StockReviewConfig {
     }
 }
 
+function Test-LunaReleaseDefaults {
+    param(
+        [string]$BasePath,
+        [string]$Label
+    )
+
+    $settingsPath = Join-Path $BasePath "data\\config\\LunaSettings.csv"
+    if (-not (Test-Path -LiteralPath $settingsPath)) {
+        throw "$Label missing Luna settings '$settingsPath'"
+    }
+
+    $rows = Import-Csv -LiteralPath $settingsPath
+    $debugRow = $rows | Where-Object { $_.fieldID -eq "wp_debug_trade_failure_step" } | Select-Object -First 1
+    if ($null -eq $debugRow) {
+        throw "$Label Luna settings missing wp_debug_trade_failure_step"
+    }
+    if ($debugRow.defaultValue -ne "none") {
+        throw "$Label wp_debug_trade_failure_step default must be 'none' for release packages, found '$($debugRow.defaultValue)'"
+    }
+}
+
 Test-BadgeSet -BasePath $RepoRoot -Label "SOURCE"
 Test-BadgeSet -BasePath $DeployRoot -Label "DEPLOY"
 Test-JsonFilesNoBom -BasePath $RepoRoot -Label "SOURCE"
 Test-JsonFilesNoBom -BasePath $DeployRoot -Label "DEPLOY"
 Test-StockReviewConfig -BasePath $RepoRoot -Label "SOURCE"
 Test-StockReviewConfig -BasePath $DeployRoot -Label "DEPLOY"
+Test-LunaReleaseDefaults -BasePath $RepoRoot -Label "SOURCE"
+Test-LunaReleaseDefaults -BasePath $DeployRoot -Label "DEPLOY"
 
-Write-Host "Total badge, stock config, and JSON BOM validation passed for source and deploy paths."
+Write-Host "Total badge, stock config, Luna default, and JSON BOM validation passed for source and deploy paths."
