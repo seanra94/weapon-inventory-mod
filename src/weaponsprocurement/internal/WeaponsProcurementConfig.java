@@ -155,6 +155,10 @@ public final class WeaponsProcurementConfig {
         return Boolean.parseBoolean(System.getProperty(KEY_DIALOG_OPTION_ENABLED, "false"));
     }
 
+    public static boolean isPatchedBadgesEnabled() {
+        return Boolean.parseBoolean(System.getProperty(KEY_PATCHED_BADGES_ENABLED, "false"));
+    }
+
     public static boolean isFixersMarketEnabled() {
         return Boolean.parseBoolean(System.getProperty(KEY_FIXERS_MARKET_ENABLED, "true"));
     }

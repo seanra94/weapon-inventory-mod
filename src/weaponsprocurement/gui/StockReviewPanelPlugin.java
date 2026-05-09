@@ -117,10 +117,6 @@ public final class StockReviewPanelPlugin extends WimGuiModalPanelPlugin<StockRe
             trades.adjustPendingTrade(action);
             return;
         }
-        if (StockReviewAction.Type.BUY_FROM_SUBMARKET.equals(type)) {
-            trades.addPendingTrade(action);
-            return;
-        }
         if (StockReviewAction.Type.RESET_PLAN.equals(type)) {
             trades.resetPlan(action.getItemKey());
             return;

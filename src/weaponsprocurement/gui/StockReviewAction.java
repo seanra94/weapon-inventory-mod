@@ -10,7 +10,6 @@ final class StockReviewAction {
         TOGGLE_TRADE_GROUP,
         TOGGLE_ITEM,
         ADJUST_PLAN,
-        BUY_FROM_SUBMARKET,
         ADJUST_TO_SUFFICIENT,
         RESET_PLAN,
         CYCLE_SORT_MODE,
@@ -103,10 +102,6 @@ final class StockReviewAction {
 
     static StockReviewAction resetPlan(String itemKey) {
         return new StockReviewAction(Type.RESET_PLAN, null, null, null, null, null, itemKey, null, 0);
-    }
-
-    static StockReviewAction buyFromSubmarket(String itemKey, String submarketId, int quantity) {
-        return new StockReviewAction(Type.BUY_FROM_SUBMARKET, null, null, null, null, null, itemKey, submarketId, quantity);
     }
 
     static StockReviewAction adjustToSufficient(String itemKey, int delta) {

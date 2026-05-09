@@ -18,6 +18,7 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
     private static final Logger LOG = Logger.getLogger(WeaponsProcurementCountUpdater.class);
 
     private static final float UPDATE_INTERVAL_SEC = 0.20f;
+    private static final float SETTINGS_REFRESH_INTERVAL_SEC = 1.00f;
 
     private static final String KEY_READY = "wp.counts.ready";
     private static final String KEY_UPDATED_AT = "wp.counts.updatedAt";
@@ -27,6 +28,7 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
     private static final String KEY_STORAGE_SUFFIX = ".storage";
 
     private float elapsedSinceUpdate = 0f;
+    private float elapsedSinceSettingsRefresh = SETTINGS_REFRESH_INTERVAL_SEC;
     private float updateIntervalSec = UPDATE_INTERVAL_SEC;
     private boolean updaterErrorLogged = false;
 
@@ -46,7 +48,16 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
 
     @Override
     public void advance(float amount) {
-        updateIntervalSec = WeaponsProcurementConfig.refreshAndPublishSettings();
+        elapsedSinceSettingsRefresh += amount;
+        if (elapsedSinceSettingsRefresh >= SETTINGS_REFRESH_INTERVAL_SEC) {
+            elapsedSinceSettingsRefresh = 0f;
+            updateIntervalSec = WeaponsProcurementConfig.refreshAndPublishSettings();
+        }
+        if (!WeaponsProcurementConfig.isPatchedBadgesEnabled()) {
+            System.setProperty(KEY_READY, "false");
+            elapsedSinceUpdate = 0f;
+            return;
+        }
         elapsedSinceUpdate += amount;
         if (elapsedSinceUpdate < updateIntervalSec) {
             return;

@@ -27,7 +27,7 @@ public final class StockReviewConfig {
     private final boolean includeBlackMarket;
     private final StockSortMode sortMode;
     private final Map<String, Integer> desiredOverrides;
-    private final Map<String, Boolean> ignoredWeapons;
+    private final Map<String, Boolean> ignoredItems;
 
     private StockReviewConfig(int smallWeaponDesired,
                               int mediumWeaponDesired,
@@ -37,7 +37,7 @@ public final class StockReviewConfig {
                               boolean includeBlackMarket,
                               StockSortMode sortMode,
                               Map<String, Integer> desiredOverrides,
-                              Map<String, Boolean> ignoredWeapons) {
+                              Map<String, Boolean> ignoredItems) {
         this.smallWeaponDesired = smallWeaponDesired;
         this.mediumWeaponDesired = mediumWeaponDesired;
         this.largeWeaponDesired = largeWeaponDesired;
@@ -46,7 +46,7 @@ public final class StockReviewConfig {
         this.includeBlackMarket = includeBlackMarket;
         this.sortMode = sortMode;
         this.desiredOverrides = Collections.unmodifiableMap(new HashMap<String, Integer>(desiredOverrides));
-        this.ignoredWeapons = Collections.unmodifiableMap(new HashMap<String, Boolean>(ignoredWeapons));
+        this.ignoredItems = Collections.unmodifiableMap(new HashMap<String, Boolean>(ignoredItems));
     }
 
     public static StockReviewConfig load() {
@@ -92,29 +92,17 @@ public final class StockReviewConfig {
 
         Map<String, Integer> overrides = new HashMap<String, Integer>();
         Map<String, Boolean> ignored = new HashMap<String, Boolean>();
-        JSONObject perWeapon = json.optJSONObject("perWeapon");
-        if (perWeapon != null) {
-            String[] names = JSONObject.getNames(perWeapon);
-            if (names != null) {
-                for (int i = 0; i < names.length; i++) {
-                    String weaponId = names[i];
-                    JSONObject weaponConfig = perWeapon.optJSONObject(weaponId);
-                    if (weaponConfig == null) {
-                        continue;
-                    }
-                    if (weaponConfig.has("desired")) {
-                        overrides.put(weaponId, Integer.valueOf(clampDesired(weaponConfig.optInt("desired", medium))));
-                    }
-                    ignored.put(weaponId, Boolean.valueOf(weaponConfig.optBoolean("ignored", false)));
-                }
-            }
-        }
+        readPerItemOverrides(json.optJSONObject("perWeapon"), overrides, ignored, medium);
+        readPerItemOverrides(json.optJSONObject("perItem"), overrides, ignored, medium);
 
         return new StockReviewConfig(small, medium, large, fighterWing, includeStorage, includeBlackMarket, sortMode, overrides, ignored);
     }
 
     public int desiredCount(String weaponId, WeaponAPI.WeaponSize size) {
-        Integer override = desiredOverrides.get(weaponId);
+        Integer override = desiredOverrides.get(StockItemType.WEAPON.key(weaponId));
+        if (override == null) {
+            override = desiredOverrides.get(weaponId);
+        }
         if (override != null) {
             return override.intValue();
         }
@@ -130,8 +118,8 @@ public final class StockReviewConfig {
         return mediumWeaponDesired;
     }
 
-    public boolean isIgnored(String weaponId) {
-        Boolean ignored = ignoredWeapons.get(weaponId);
+    public boolean isIgnored(String itemKeyOrId) {
+        Boolean ignored = ignoredItems.get(itemKeyOrId);
         return ignored != null && ignored.booleanValue();
     }
 
@@ -169,6 +157,32 @@ public final class StockReviewConfig {
 
     private static String optString(JSONObject json, String key, String defaultValue) {
         return json == null ? defaultValue : json.optString(key, defaultValue);
+    }
+
+    private static void readPerItemOverrides(JSONObject json,
+                                             Map<String, Integer> desired,
+                                             Map<String, Boolean> ignored,
+                                             int defaultDesired) {
+        if (json == null) {
+            return;
+        }
+        String[] names = JSONObject.getNames(json);
+        if (names == null) {
+            return;
+        }
+        for (int i = 0; i < names.length; i++) {
+            String itemKey = names[i];
+            JSONObject itemConfig = json.optJSONObject(itemKey);
+            if (itemConfig == null) {
+                continue;
+            }
+            if (itemConfig.has("desired")) {
+                desired.put(itemKey, Integer.valueOf(clampDesired(itemConfig.optInt("desired", defaultDesired))));
+            }
+            if (itemConfig.has("ignored")) {
+                ignored.put(itemKey, Boolean.valueOf(itemConfig.optBoolean("ignored", false)));
+            }
+        }
     }
 
     private static int clampDesired(int value) {

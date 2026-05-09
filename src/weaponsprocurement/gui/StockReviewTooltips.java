@@ -27,12 +27,12 @@ final class StockReviewTooltips {
     static String source(StockSourceMode mode) {
         StockSourceMode resolved = mode == null ? StockSourceMode.LOCAL : mode;
         if (StockSourceMode.SECTOR.equals(resolved)) {
-            return "Buy from the Sector Market. Includes weapons and fighter LPCs currently being sold by any market in the sector. Purchased items are removed from the appropriate market inventory. Sold items are deposited into either the local open market or black market, depending on whether black-market transactions are enabled. Prices are "
+            return "Buy from the Sector Market. Includes weapons and fighter LPCs currently being sold by any market in the sector. Purchased items are removed from the appropriate market inventory. Selling while this source is active uses the current local legal buyer; black-market selling is disabled in remote source modes. Prices are "
                     + oneDecimal(WeaponsProcurementConfig.sectorMarketPriceMultiplier())
                     + "x normal due to the difficulty of procuring items from across the sector.";
         }
         if (StockSourceMode.FIXERS.equals(resolved)) {
-            return "Buy from the Fixer's Market. Includes every weapon or fighter LPC that could normally appear for sale in the sector, excluding REDACTED items and similar special cases. Sold items are deposited into either the local open market or black market, depending on whether black-market transactions are enabled. Prices are "
+            return "Buy from the Fixer's Market. Includes every weapon or fighter LPC that could normally appear for sale in the sector, excluding REDACTED items and similar special cases. Selling while this source is active uses the current local legal buyer; black-market selling is disabled in remote source modes. Prices are "
                     + oneDecimal(WeaponsProcurementConfig.fixersMarketPriceMultiplier())
                     + "x normal due to the difficulty of procuring items that may not be in stock anywhere.";
         }

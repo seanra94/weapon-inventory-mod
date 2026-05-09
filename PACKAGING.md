@@ -55,3 +55,15 @@ git diff --check
 ```
 
 For clean-only documentation changes, run `tools\validate-doc-links.ps1` and `git diff --check`.
+
+## Trade Rollback Fault Validation
+
+`StockPurchaseExecutor` has an internal, disabled-by-default fault hook for validating rollback of WP-touched cargo counts and player credits. Temporarily set the JVM system property `wp.debug.failTradeStep` to one of these values during a local test run:
+
+- `after-source-removal`
+- `after-player-cargo-remove`
+- `after-player-cargo-add`
+- `after-target-cargo-add`
+- `after-credit-mutation`
+
+Use it only for manual validation, then clear the property before normal play or packaging. Test local buy, local sell, Sector Market buy, Fixer's Market buy, and mixed sell-then-buy plans, and confirm player cargo, touched market cargo, and credits return to their pre-confirm values after the forced failure.

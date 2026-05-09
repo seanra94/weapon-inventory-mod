@@ -28,26 +28,6 @@ final class StockReviewTradeController {
         this.host = host;
     }
 
-    void addPendingTrade(StockReviewAction action) {
-        int available = availableFor(action);
-        if (available <= 0) {
-            host.postMessage(action.getQuantity() < 0
-                    ? "No more player-cargo stock is available to sell."
-                    : "No more buyable stock is available for that plan.");
-            host.updateTradeWarning(null);
-            host.requestContentRebuild();
-            return;
-        }
-        int requested = action.getQuantity();
-        int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
-        pendingTrades.add(action.getItemKey(), action.getSubmarketId(), quantity);
-        if (Math.abs(quantity) < Math.abs(requested)) {
-            host.postMessage("Only " + Math.abs(quantity) + " more can be planned for that item.");
-        }
-        host.updateTradeWarning(null);
-        host.requestContentRebuild();
-    }
-
     void adjustPendingTrade(StockReviewAction action) {
         int available = availableFor(action);
         if (available <= 0) {

@@ -12,6 +12,8 @@
     "largeWeapon": 4,
     "fighterWing": 4
   },
+  "perItem": {
+  },
   "perWeapon": {
   }
 }
