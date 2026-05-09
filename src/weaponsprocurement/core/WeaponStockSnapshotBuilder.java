@@ -20,7 +20,6 @@ public final class WeaponStockSnapshotBuilder {
     private final InventoryCountService inventoryCountService = new InventoryCountService();
     private final MarketStockService marketStockService = new MarketStockService();
     private final GlobalWeaponMarketService globalWeaponMarketService = new GlobalWeaponMarketService();
-    private final StockStatusClassifier classifier = new StockStatusClassifier();
 
     public WeaponStockSnapshot build(SectorAPI sector,
                                      MarketAPI market,
@@ -66,7 +65,7 @@ public final class WeaponStockSnapshotBuilder {
             int desiredCount = StockItemType.WING.equals(itemType)
                     ? desiredStockService.desiredWingCount(itemId, wingSpec)
                     : desiredStockService.desiredCount(itemId, spec);
-            StockCategory category = classifier.classify(ownedCount, desiredCount);
+            StockCategory category = classifyStock(ownedCount, desiredCount);
             grouped.get(category).add(new WeaponStockRecord(
                     itemType,
                     itemId,
@@ -102,6 +101,16 @@ public final class WeaponStockSnapshotBuilder {
             return globalWeaponMarketService.collectSectorWeaponStock(sector);
         }
         return marketStockService.collectCurrentMarketItemStock(market, includeBlackMarket);
+    }
+
+    private static StockCategory classifyStock(int ownedCount, int desiredCount) {
+        if (desiredCount <= 0 || ownedCount >= desiredCount) {
+            return StockCategory.SUFFICIENT;
+        }
+        if (ownedCount <= 0) {
+            return StockCategory.NO_STOCK;
+        }
+        return StockCategory.INSUFFICIENT;
     }
 
     private static void addTradeableIds(Set<String> ids,

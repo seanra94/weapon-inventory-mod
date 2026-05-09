@@ -102,6 +102,7 @@ $forbiddenClasses = @(
     "weaponsprocurement/gui/WimGuiColorDebug`$ColorSetter.class",
     "weaponsprocurement/gui/WimGuiColorDebug`$1.class",
     "weaponsprocurement/core/StockDisplayMode.class",
+    "weaponsprocurement/core/StockStatusClassifier.class",
     "weaponsprocurement/core/StockPurchaseService`$PurchaseLine.class",
     "weaponsprocurement/core/StockPurchaseService`$PurchasePlan.class",
     "weaponsprocurement/core/StockPurchaseService`$PurchaseSource.class",
