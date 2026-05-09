@@ -12,14 +12,6 @@ import java.util.List;
 public final class StockPurchaseService {
     private static final Logger LOG = Logger.getLogger(StockPurchaseService.class);
 
-    public PurchaseResult buyCheapest(SectorAPI sector,
-                                      MarketAPI market,
-                                      String weaponId,
-                                      int requestedQuantity,
-                                      boolean includeBlackMarket) {
-        return buyItem(sector, market, StockItemType.WEAPON, weaponId, null, requestedQuantity, includeBlackMarket);
-    }
-
     public PurchaseResult buyCheapestItem(SectorAPI sector,
                                           MarketAPI market,
                                           StockItemType itemType,
@@ -27,23 +19,6 @@ public final class StockPurchaseService {
                                           int requestedQuantity,
                                           boolean includeBlackMarket) {
         return buyItem(sector, market, itemType, itemId, null, requestedQuantity, includeBlackMarket);
-    }
-
-    public PurchaseResult buyFromSubmarket(SectorAPI sector,
-                                           MarketAPI market,
-                                           String weaponId,
-                                           String submarketId,
-                                           int requestedQuantity,
-                                           boolean includeBlackMarket) {
-        return buyItem(sector, market, StockItemType.WEAPON, weaponId, submarketId, requestedQuantity, includeBlackMarket);
-    }
-
-    public PurchaseResult sellToMarket(SectorAPI sector,
-                                       MarketAPI market,
-                                       String weaponId,
-                                       int requestedQuantity,
-                                       boolean includeBlackMarket) {
-        return sellItemToMarket(sector, market, StockItemType.WEAPON, weaponId, requestedQuantity, includeBlackMarket);
     }
 
     public PurchaseResult sellItemToMarket(SectorAPI sector,
@@ -84,14 +59,6 @@ public final class StockPurchaseService {
         return StockPurchaseExecutor.sellToMarket(LOG, market, playerCargo, target, itemType, itemId, quantity);
     }
 
-    public PurchaseResult buyFromFixersMarket(SectorAPI sector,
-                                              String weaponId,
-                                              int requestedQuantity,
-                                              int unitPrice,
-                                              float unitCargoSpace) {
-        return buyItemFromFixersMarket(sector, StockItemType.WEAPON, weaponId, requestedQuantity, unitPrice, unitCargoSpace);
-    }
-
     public PurchaseResult buyItemFromFixersMarket(SectorAPI sector,
                                                   StockItemType itemType,
                                                   String itemId,
@@ -127,13 +94,6 @@ public final class StockPurchaseService {
         }
 
         return StockPurchaseExecutor.buyFromFixersMarket(LOG, playerCargo, itemType, itemId, requestedQuantity, totalCost);
-    }
-
-    public PurchaseResult buyFromSectorSources(SectorAPI sector,
-                                               String weaponId,
-                                               int requestedQuantity,
-                                               List<SubmarketWeaponStock> stockSources) {
-        return buyItemFromSectorSources(sector, StockItemType.WEAPON, weaponId, requestedQuantity, stockSources);
     }
 
     public PurchaseResult buyItemFromSectorSources(SectorAPI sector,

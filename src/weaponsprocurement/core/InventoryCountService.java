@@ -12,14 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class InventoryCountService {
-    public Map<String, Integer> collectOwnedWeaponCounts(SectorAPI sector, MarketAPI market, OwnedSourcePolicy policy) {
-        return collectOwnedCounts(sector, market, policy, StockItemType.WEAPON);
-    }
-
-    public Map<String, Integer> collectOwnedFighterCounts(SectorAPI sector, MarketAPI market, OwnedSourcePolicy policy) {
-        return collectOwnedCounts(sector, market, policy, StockItemType.WING);
-    }
-
     public Map<String, Integer> collectOwnedItemCounts(SectorAPI sector, MarketAPI market, OwnedSourcePolicy policy) {
         Map<String, Integer> counts = collectOwnedCounts(sector, market, policy, StockItemType.WEAPON);
         merge(counts, collectOwnedCounts(sector, market, policy, StockItemType.WING));

@@ -13,14 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class MarketStockService {
-    public MarketStock collectCurrentMarketWeaponStock(MarketAPI market, boolean includeBlackMarket) {
-        return collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WEAPON);
-    }
-
-    public MarketStock collectCurrentMarketWingStock(MarketAPI market, boolean includeBlackMarket) {
-        return collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WING);
-    }
-
     public MarketStock collectCurrentMarketItemStock(MarketAPI market, boolean includeBlackMarket) {
         MarketStockBuilder builder = new MarketStockBuilder();
         builder.addAll(collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WEAPON));
