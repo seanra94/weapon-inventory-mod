@@ -1,7 +1,5 @@
 package weaponsprocurement.core;
 
-import com.fs.starfarer.api.combat.DamageType;
-import com.fs.starfarer.api.combat.WeaponAPI;
 import com.fs.starfarer.api.loading.FighterWingSpecAPI;
 import com.fs.starfarer.api.loading.MissileSpecAPI;
 import com.fs.starfarer.api.loading.ProjectileWeaponSpecAPI;
@@ -75,14 +73,6 @@ public final class WeaponStockRecord {
         return itemKey;
     }
 
-    /**
-     * @deprecated Stock rows now also represent fighter LPCs. Use {@link #getItemKey()}.
-     */
-    @Deprecated
-    public String getWeaponId() {
-        return getItemKey();
-    }
-
     public String getItemId() {
         return itemId;
     }
@@ -133,10 +123,6 @@ public final class WeaponStockRecord {
         return count;
     }
 
-    public int getStoredOutsideInventoryCount() {
-        return Math.max(0, ownedCount - playerCargoCount);
-    }
-
     public int getNeededCount() {
         return Math.max(0, desiredCount - ownedCount);
     }
@@ -163,33 +149,6 @@ public final class WeaponStockRecord {
 
     public List<SubmarketWeaponStock> getSubmarketStocks() {
         return submarketStocks;
-    }
-
-    public String getCountLabel() {
-        return ownedCount + "/" + purchasableCount;
-    }
-
-    public String getDetailLine() {
-        if (isWing()) {
-            int op = wingSpec == null ? 0 : Math.round(wingSpec.getOpCost(null));
-            int range = wingSpec == null ? 0 : Math.round(wingSpec.getRange());
-            return "Desired: " + desiredCount
-                    + " | Size: Wing"
-                    + " | Role: " + valueOrUnknown(wingSpec == null ? null : wingSpec.getRole())
-                    + " | OP: " + op
-                    + " | Range: " + range;
-        }
-        WeaponAPI.WeaponSize size = spec == null ? null : spec.getSize();
-        String role = spec == null ? null : spec.getPrimaryRoleStr();
-        DamageType damageType = spec == null ? null : spec.getDamageType();
-        int op = spec == null ? 0 : Math.round(spec.getOrdnancePointCost(null));
-        int range = spec == null ? 0 : Math.round(spec.getMaxRange());
-        return "Desired: " + desiredCount
-                + " | Size: " + valueOrUnknown(size)
-                + " | Role: " + valueOrUnknown(role)
-                + " | OP: " + op
-                + " | Range: " + range
-                + " | Damage: " + valueOrUnknown(damageType);
     }
 
     public String getSizeLabel() {
