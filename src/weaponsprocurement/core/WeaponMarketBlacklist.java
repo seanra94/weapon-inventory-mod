@@ -1,6 +1,7 @@
 package weaponsprocurement.core;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.loading.FighterWingSpecAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
@@ -80,13 +81,31 @@ public final class WeaponMarketBlacklist {
         if (set.contains(normalize(itemKey)) || set.contains(normalize(rawId))) {
             return true;
         }
+        String displayName = displayName(itemKey, rawId);
+        return displayName != null && set.contains(normalize(displayName));
+    }
+
+    private static String displayName(String itemKey, String rawId) {
+        StockItemType itemType = StockItemType.fromKey(itemKey);
+        if (StockItemType.WING.equals(itemType)) {
+            FighterWingSpecAPI spec = safeWingSpec(rawId);
+            return spec == null ? null : spec.getWingName();
+        }
         WeaponSpecAPI spec = safeWeaponSpec(rawId);
-        return spec != null && set.contains(normalize(spec.getWeaponName()));
+        return spec == null ? null : spec.getWeaponName();
     }
 
     private static WeaponSpecAPI safeWeaponSpec(String weaponId) {
         try {
             return Global.getSettings().getWeaponSpec(weaponId);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static FighterWingSpecAPI safeWingSpec(String wingId) {
+        try {
+            return Global.getSettings().getFighterWingSpec(wingId);
         } catch (Throwable ignored) {
             return null;
         }

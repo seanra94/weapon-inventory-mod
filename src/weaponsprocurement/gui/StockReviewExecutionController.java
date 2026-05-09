@@ -66,7 +66,7 @@ final class StockReviewExecutionController {
         StockReviewTradeContext tradeContext = new StockReviewTradeContext(snapshot, pendingTrades.asList());
         int estimatedCost = tradeContext.totalCost();
         if (estimatedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE) {
-            host.postMessage("Could not price every queued weapon. Adjust the plan and try again.");
+            host.postMessage("Could not price every queued item. Adjust the plan and try again.");
             host.requestContentRebuild();
             return;
         }

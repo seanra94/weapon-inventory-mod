@@ -7,6 +7,7 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.combat.WeaponAPI;
 import com.fs.starfarer.api.loading.FighterWingSpecAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
+import org.apache.log4j.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 public final class FixerMarketObservedCatalog {
+    private static final Logger LOG = Logger.getLogger(FixerMarketObservedCatalog.class);
     private static final String PERSISTENT_KEY = "weaponsProcurement.fixerObservedCatalog.v1";
     private static final String VALUE_SEPARATOR = "|";
 
@@ -34,6 +36,7 @@ public final class FixerMarketObservedCatalog {
             "codex_unlockable");
 
     private final MarketStockService marketStockService = new MarketStockService();
+    private static boolean migrationLogged;
 
     public int observeSectorStock(SectorAPI sector, WeaponMarketBlacklist blacklist) {
         Map<String, String> catalog = rawCatalog(sector);
@@ -148,16 +151,35 @@ public final class FixerMarketObservedCatalog {
         return best;
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, String> rawCatalog(SectorAPI sector) {
         if (sector == null || sector.getPersistentData() == null) {
             return null;
         }
         Object existing = sector.getPersistentData().get(PERSISTENT_KEY);
         if (existing instanceof Map) {
-            return (Map<String, String>) existing;
+            return sanitizedCatalog(sector, (Map<?, ?>) existing);
         }
         Map<String, String> catalog = new HashMap<String, String>();
+        sector.getPersistentData().put(PERSISTENT_KEY, catalog);
+        return catalog;
+    }
+
+    private static Map<String, String> sanitizedCatalog(SectorAPI sector, Map<?, ?> existing) {
+        Map<String, String> catalog = new HashMap<String, String>();
+        int discarded = 0;
+        for (Map.Entry<?, ?> entry : existing.entrySet()) {
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            if (key instanceof String && value instanceof String) {
+                catalog.put((String) key, (String) value);
+            } else {
+                discarded++;
+            }
+        }
+        if (discarded > 0 && !migrationLogged) {
+            migrationLogged = true;
+            LOG.warn("WP_FIXER_CATALOG discarded " + discarded + " malformed persistent entries.");
+        }
         sector.getPersistentData().put(PERSISTENT_KEY, catalog);
         return catalog;
     }

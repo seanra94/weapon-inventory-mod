@@ -18,13 +18,13 @@ final class StockReviewReviewListModel {
                                           StockReviewTradeContext tradeContext) {
         List<WimGuiListRow<StockReviewAction>> rows = new ArrayList<WimGuiListRow<StockReviewAction>>();
         if (pendingTrades == null || pendingTrades.isEmpty()) {
-            rows.add(StockReviewListRow.empty("No weapon trades are planned."));
+            rows.add(StockReviewListRow.empty("No trades are planned."));
             return rows;
         }
         List<StockReviewPendingTrade> buying = reviewTradesForGroup(pendingTrades, StockReviewTradeGroup.BUYING);
         List<StockReviewPendingTrade> selling = reviewTradesForGroup(pendingTrades, StockReviewTradeGroup.SELLING);
         if (buying.isEmpty() && selling.isEmpty()) {
-            rows.add(StockReviewListRow.empty("No weapon trades are planned."));
+            rows.add(StockReviewListRow.empty("No trades are planned."));
             return rows;
         }
         addReviewGroup(rows, snapshot, buying, state, tradeContext, StockReviewTradeGroup.BUYING);

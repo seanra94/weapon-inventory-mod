@@ -59,7 +59,7 @@ public final class WeaponsProcurementConfig {
 
     public static float refreshAndPublishSettings() {
         float effective = DEFAULT_UPDATE_INTERVAL_SEC;
-        boolean badgesEnabled = true;
+        boolean badgesEnabled = false;
         boolean dialogOptionEnabled = false;
         boolean sectorMarketEnabled = true;
         boolean fixersMarketEnabled = true;

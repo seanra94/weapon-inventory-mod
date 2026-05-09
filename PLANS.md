@@ -160,7 +160,7 @@
   - `Size`, `Type`, and `Damage` headings expand into filter rows;
   - active filters use OR within a group and AND across groups.
 - Fixed row-level planned-trade reversibility:
-  - negative row adjustments first remove queued buys for that weapon before creating real sell plans;
+  - negative row adjustments first remove queued buys for that item before creating real sell plans;
   - positive row adjustments first remove queued sells before creating real buy plans;
   - `Sufficient` now compares the desired target against current queued plan state and uses red styling when it will reduce the plan or sell excess.
 - Hardened pending-trade data integrity with `StockReviewPendingTrade.create(...)`, so empty item keys and zero-quantity rows cannot be constructed by planner or pending-trade merge paths.
@@ -195,7 +195,7 @@
   - shrank `Storage` to fit its capped worst-case label more tightly;
   - widened the `Buying` / `Selling` plan cell so capped planned-trade values have more room;
   - moved expanded weapon data rows onto a fixed-width doubled-indent path after the earlier shrink-only indentation still looked wrong in game.
-- Changed top stock category headings to summarize visible weapon types, queued selling units, and queued buying units separately, e.g. `No Stock [Weapon Types: N][Selling: N][Buying: N]`.
+- Changed top stock category headings to summarize visible item types, queued selling units, and queued buying units separately, e.g. `No Stock [Weapon Types: N][Selling: N][Buying: N]` under Weapons and `No Stock [Wing Types: N][Selling: N][Buying: N]` under Wings.
 - Hardened Review Trades entry after bulk buy/sell sufficient testing:
   - entering Review Trades now opens Buying and Selling groups expanded;
   - the review list shows a no-trades fallback if a pending list contains no real buy/sell rows after netting or filtering.
@@ -246,15 +246,15 @@
 ## High-Value Future Work
 
 - Review-agent remediation backlog from the post-`7f57528` review:
-  - [ ] Add rollback/journaled safety to `StockPurchaseExecutor` mutation paths. Keep the existing final source-stock preflight, but record WP-touched player cargo counts, source/target cargo counts, and player credits before mutation; on failure, best-effort reconcile those values and log enough before/after detail to diagnose partial execution. Do not try to simulate extra black-market side effects here.
-  - [ ] Align the Java fallback for optional patched cargo-cell badges with the clean-package default by making `WeaponsProcurementConfig.refreshAndPublishSettings()` fall back to `wp_enable_patched_badges=false` when Luna settings are missing or unreadable.
-  - [ ] Fix remaining wing-capable UI copy that still says weapon-only text. Use item-neutral text in mixed contexts and `StockItemType` labels in section-specific contexts, especially category heading summaries, review empty states, and trade-planning messages.
-  - [ ] Add fighter LPC / wing display-name matching to `WeaponMarketBlacklist` while preserving existing item-key, raw-id, and weapon display-name matching.
-  - [ ] Fix the user-facing README `PACKAGING.md` link so it is repository-relative rather than a local `D:/...` path; consider adding a tiny docs sanity check for local drive-path links if it stays low-noise.
-  - [ ] Decouple Luna settings refresh from `StockReviewConfig.load()`. Add an explicit JSON-only load path and refresh settings at user-entry points such as game load, popup open, and dialog-option checks, while preserving immediate Luna setting application when opening the popup.
-  - [ ] Sanitize/migrate Fixer's Market observed-catalog persistent data by replacing any existing map with a fresh `HashMap<String, String>` containing only string key/value entries, discarding malformed entries safely and logging once.
-  - [ ] Add non-proprietary CI or local sanity checks that do not require Starsector/Luna jars: whitespace, PowerShell parser checks, stale class/source name checks, and docs links. Keep full compile/live-jar validation as a local release check.
-  - [ ] Leave narrower reopen payloads deferred unless state-preservation bugs appear. The current full `StockReviewState` reopen copy is acceptable for in-session modal reopen, and changing it is more regression-prone than valuable without a concrete bug.
+  - [x] Add rollback/journaled safety to `StockPurchaseExecutor` mutation paths. Keep the existing final source-stock preflight, but record WP-touched player cargo counts, source/target cargo counts, and player credits before mutation; on failure, best-effort reconcile those values and log enough before/after detail to diagnose partial execution. Do not try to simulate extra black-market side effects here.
+  - [x] Align the Java fallback for optional patched cargo-cell badges with the clean-package default by making `WeaponsProcurementConfig.refreshAndPublishSettings()` fall back to `wp_enable_patched_badges=false` when Luna settings are missing or unreadable.
+  - [x] Fix remaining wing-capable UI copy that still says weapon-only text. Use item-neutral text in mixed contexts and `StockItemType` labels in section-specific contexts, especially category heading summaries, review empty states, and trade-planning messages.
+  - [x] Add fighter LPC / wing display-name matching to `WeaponMarketBlacklist` while preserving existing item-key, raw-id, and weapon display-name matching.
+  - [x] Fix the user-facing README `PACKAGING.md` link so it is repository-relative rather than a local `D:/...` path; added a low-noise docs sanity check for local drive-path links in README/PACKAGING.
+  - [x] Decouple Luna settings refresh from `StockReviewConfig.load()`. The config load is JSON-only; settings refresh happens explicitly at user-entry points such as popup/dialog open checks and count-updater refreshes.
+  - [x] Sanitize/migrate Fixer's Market observed-catalog persistent data by replacing any existing map with a fresh `HashMap<String, String>` containing only string key/value entries, discarding malformed entries safely and logging once.
+  - [x] Add non-proprietary CI or local sanity checks that do not require Starsector/Luna jars: PowerShell parser checks, stale source name checks, and docs links. Keep full compile/live-jar validation as a local release check.
+  - [x] Leave narrower reopen payloads deferred unless state-preservation bugs appear. The current full `StockReviewState` reopen copy is acceptable for in-session modal reopen, and changing it is more regression-prone than valuable without a concrete bug.
 - Expanded stock source feature:
   - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Fixer's Market` source modes;
   - [x] keep `Local` as current-market stock review with the normal Black Market toggle;

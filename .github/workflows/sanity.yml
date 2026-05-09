@@ -1,0 +1,40 @@
+name: Sanity
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  non-proprietary-checks:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check whitespace
+        shell: pwsh
+        run: git diff --check
+
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $scripts = Get-ChildItem -Path . -Recurse -Filter *.ps1
+          foreach ($script in $scripts) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors -and $errors.Count -gt 0) {
+              throw "PowerShell parse failed for $($script.FullName): $($errors[0].Message)"
+            }
+          }
+
+      - name: Validate documentation links
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
+
+      - name: Reject stale stock-review pending purchase class
+        shell: pwsh
+        run: |
+          if (Test-Path .\src\weaponsprocurement\gui\StockReviewPendingPurchase.java) {
+            throw "Stale StockReviewPendingPurchase.java exists; use StockReviewPendingTrade."
+          }

@@ -80,7 +80,7 @@ final class StockReviewListModel {
                 StockReviewTradePlanner.visibleTradeableRecords(snapshot, itemType, category),
                 state.getActiveFilters());
         boolean expanded = state.isExpanded(itemType, category);
-        String label = WimGuiToggleHeading.label(categoryHeading(category, records, tradeContext), expanded);
+        String label = WimGuiToggleHeading.label(categoryHeading(itemType, category, records, tradeContext), expanded);
         rows.add(StockReviewListRow.categoryIndented(label, color, StockReviewAction.toggle(itemType, category), topGap,
                 StockReviewTooltips.category(category), StockReviewStyle.WEAPON_INDENT));
         if (!expanded) {
@@ -159,10 +159,11 @@ final class StockReviewListModel {
         return result;
     }
 
-    private static String categoryHeading(StockCategory category,
+    private static String categoryHeading(StockItemType itemType,
+                                          StockCategory category,
                                           List<WeaponStockRecord> records,
                                           StockReviewTradeContext tradeContext) {
-        int weaponTypes = records == null ? 0 : records.size();
+        int itemTypes = records == null ? 0 : records.size();
         int selling = 0;
         int buying = 0;
         if (records != null && tradeContext != null) {
@@ -172,8 +173,9 @@ final class StockReviewListModel {
                 buying += tradeContext.pendingBuyQuantityForItem(record.getItemKey());
             }
         }
+        String typeLabel = StockItemType.WING.equals(itemType) ? "Wing Types" : "Weapon Types";
         return category.getLabel()
-                + " [Weapon Types: " + weaponTypes + "]"
+                + " [" + typeLabel + ": " + itemTypes + "]"
                 + "[Selling: " + Math.max(0, selling) + "]"
                 + "[Buying: " + Math.max(0, buying) + "]";
     }

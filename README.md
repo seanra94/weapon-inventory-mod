@@ -25,7 +25,7 @@ An optional advanced path can render ownership badges directly in vanilla cargo 
 - The clean/default setting leaves patched badges disabled (`wp_enable_patched_badges=false`).
 - If you patch your core jar, you can enable badges in Luna settings.
 
-Use [PACKAGING.md](/D:/Sean%20Mods/Weapons%20Procurement/PACKAGING.md) for patch/restore and validation steps.
+Use [PACKAGING.md](PACKAGING.md) for patch/restore and validation steps.
 
 ## Source Modes
 
@@ -65,5 +65,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
 git diff --check
 ```

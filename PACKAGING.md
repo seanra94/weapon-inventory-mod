@@ -50,7 +50,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
 git diff --check
 ```
 
-For clean-only documentation changes, `git diff --check` is usually enough.
+For clean-only documentation changes, run `tools\validate-doc-links.ps1` and `git diff --check`.

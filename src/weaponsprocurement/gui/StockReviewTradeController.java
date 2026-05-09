@@ -42,7 +42,7 @@ final class StockReviewTradeController {
         int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
         pendingTrades.add(action.getItemKey(), action.getSubmarketId(), quantity);
         if (Math.abs(quantity) < Math.abs(requested)) {
-            host.postMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
+            host.postMessage("Only " + Math.abs(quantity) + " more can be planned for that item.");
         }
         host.updateTradeWarning(null);
         host.requestContentRebuild();
@@ -62,7 +62,7 @@ final class StockReviewTradeController {
         int quantity = requested > 0 ? Math.min(requested, available) : -Math.min(-requested, available);
         pendingTrades.adjustItemNet(action.getItemKey(), quantity);
         if (Math.abs(quantity) < Math.abs(requested)) {
-            host.postMessage("Only " + Math.abs(quantity) + " more can be planned for that weapon.");
+            host.postMessage("Only " + Math.abs(quantity) + " more can be planned for that item.");
         }
         host.updateTradeWarning(null);
         host.requestContentRebuild();

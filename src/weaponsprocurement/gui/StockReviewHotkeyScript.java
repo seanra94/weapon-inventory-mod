@@ -56,6 +56,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
     }
 
     public static boolean canOpenFromCurrentDialog() {
+        WeaponsProcurementConfig.refreshAndPublishSettings();
         WimGuiCampaignDialogHost host = WimGuiCampaignDialogHost.current();
         return host.hasDialog() && canOpenAtCurrentMarket(host.getCurrentMarket());
     }
@@ -70,6 +71,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             return;
         }
 
+        WeaponsProcurementConfig.refreshAndPublishSettings();
         MarketAPI market = host.getCurrentMarket();
         if (!canOpenAtCurrentMarket(market)) {
             host.addMessage("Weapon Stock Review requires an active market or storage dialog.");
@@ -134,6 +136,7 @@ public final class StockReviewHotkeyScript implements EveryFrameScript {
             return;
         }
         try {
+            WeaponsProcurementConfig.refreshAndPublishSettings();
             StockReviewPanelPlugin panelPlugin = new StockReviewPanelPlugin(market, launchState);
             WimGuiDialogOpener.show(host.getDialog(), StockReviewStyle.widthFor(panelPlugin.isReviewMode()), StockReviewStyle.HEIGHT, panelPlugin);
             DIALOG_TRACKER.markOpen();

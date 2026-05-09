@@ -4,6 +4,11 @@ import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+
 final class StockPurchaseExecutor {
     private StockPurchaseExecutor() {
     }
@@ -17,6 +22,9 @@ final class StockPurchaseExecutor {
                                                             int quantity) {
         int credits = target.unitPrice * quantity;
         int expectedMarketCount = StockItemCargo.itemCount(target.cargo, itemType, itemId) + quantity;
+        MutationJournal journal = new MutationJournal(playerCargo, itemType, itemId);
+        journal.recordCargo(playerCargo);
+        journal.recordCargo(target.cargo);
         try {
             if (StockItemCargo.itemCount(playerCargo, itemType, itemId) < quantity) {
                 return StockPurchaseService.PurchaseResult.failure("No player-cargo stock is available to sell.");
@@ -34,7 +42,7 @@ final class StockPurchaseExecutor {
             StockPurchaseChecks.addCampaignMessage(message);
             return StockPurchaseService.PurchaseResult.success(message, quantity, -credits);
         } catch (Throwable t) {
-            return executionFailure(log, "sell to market", itemType, itemId, quantity, t);
+            return executionFailure(log, "sell to market", itemType, itemId, quantity, t, journal);
         }
     }
 
@@ -44,6 +52,8 @@ final class StockPurchaseExecutor {
                                                                    String itemId,
                                                                    int quantity,
                                                                    int totalCost) {
+        MutationJournal journal = new MutationJournal(playerCargo, itemType, itemId);
+        journal.recordCargo(playerCargo);
         try {
             StockItemCargo.addItem(playerCargo, itemType, itemId, quantity);
             playerCargo.getCredits().subtract(totalCost);
@@ -54,7 +64,7 @@ final class StockPurchaseExecutor {
             StockPurchaseChecks.addCampaignMessage(message);
             return StockPurchaseService.PurchaseResult.success(message, quantity, totalCost);
         } catch (Throwable t) {
-            return executionFailure(log, "buy from fixer's market", itemType, itemId, quantity, t);
+            return executionFailure(log, "buy from fixer's market", itemType, itemId, quantity, t, journal);
         }
     }
 
@@ -66,10 +76,15 @@ final class StockPurchaseExecutor {
                                                        StockPurchasePlan plan,
                                                        String sourceLabel,
                                                        String operation) {
+        MutationJournal journal = new MutationJournal(playerCargo, itemType, itemId);
         try {
             StockPurchaseService.PurchaseResult validation = buyPlanStillAvailable(plan, itemType, itemId);
             if (validation != null) {
                 return validation;
+            }
+            journal.recordCargo(playerCargo);
+            for (StockPurchaseLine line : plan.lines) {
+                journal.recordCargo(line.source.cargo);
             }
             for (StockPurchaseLine line : plan.lines) {
                 StockItemCargo.removeItem(line.source.cargo, itemType, itemId, line.quantity);
@@ -86,7 +101,8 @@ final class StockPurchaseExecutor {
             StockPurchaseChecks.addCampaignMessage(message);
             return StockPurchaseService.PurchaseResult.success(message, plan.totalQuantity, plan.totalCost);
         } catch (Throwable t) {
-            return executionFailure(log, operation, itemType, itemId, plan.totalQuantity, t);
+            int totalQuantity = plan == null ? 0 : plan.totalQuantity;
+            return executionFailure(log, operation, itemType, itemId, totalQuantity, t, journal);
         }
     }
 
@@ -113,10 +129,98 @@ final class StockPurchaseExecutor {
                                                                         StockItemType itemType,
                                                                         String itemId,
                                                                         int quantity,
-                                                                        Throwable t) {
+                                                                        Throwable t,
+                                                                        MutationJournal journal) {
+        String rollback = journal == null ? "rollback=none" : journal.rollback(itemType, itemId);
         log.error("WP_STOCK_REVIEW trade execution failed operation=" + operation
                 + " item=" + itemType.key(itemId)
-                + " quantity=" + quantity, t);
+                + " quantity=" + quantity
+                + " " + rollback, t);
         return StockPurchaseService.PurchaseResult.failure("Trade failed during execution. Check starsector.log.");
+    }
+
+    private static final class MutationJournal {
+        private final CargoAPI playerCargo;
+        private final StockItemType itemType;
+        private final String itemId;
+        private final float creditsBefore;
+        private final List<CargoSnapshot> snapshots = new ArrayList<CargoSnapshot>();
+        private final Map<CargoAPI, CargoSnapshot> snapshotsByCargo = new IdentityHashMap<CargoAPI, CargoSnapshot>();
+
+        MutationJournal(CargoAPI playerCargo, StockItemType itemType, String itemId) {
+            this.playerCargo = playerCargo;
+            this.itemType = itemType;
+            this.itemId = itemId;
+            this.creditsBefore = playerCargo == null ? 0f : playerCargo.getCredits().get();
+        }
+
+        void recordCargo(CargoAPI cargo) {
+            if (cargo == null || snapshotsByCargo.containsKey(cargo)) {
+                return;
+            }
+            CargoSnapshot snapshot = new CargoSnapshot(cargo, itemType, itemId);
+            snapshotsByCargo.put(cargo, snapshot);
+            snapshots.add(snapshot);
+        }
+
+        String rollback(StockItemType itemType, String itemId) {
+            int restored = 0;
+            int failed = 0;
+            for (int i = 0; i < snapshots.size(); i++) {
+                CargoSnapshot snapshot = snapshots.get(i);
+                try {
+                    snapshot.itemCountAtFailure = StockItemCargo.itemCount(snapshot.cargo, itemType, itemId);
+                    StockItemCargo.reconcileItemCount(snapshot.cargo, itemType, itemId, snapshot.itemCountBefore);
+                    snapshot.itemCountAfterRollback = StockItemCargo.itemCount(snapshot.cargo, itemType, itemId);
+                    restored++;
+                } catch (Throwable ignored) {
+                    failed++;
+                }
+            }
+            boolean creditsRestored = false;
+            try {
+                if (playerCargo != null) {
+                    playerCargo.getCredits().set(creditsBefore);
+                    creditsRestored = true;
+                }
+            } catch (Throwable ignored) {
+            }
+            return "rollback=attempted restoredCargos=" + restored
+                    + " failedCargos=" + failed
+                    + " creditsRestored=" + creditsRestored
+                    + " touched=" + describe();
+        }
+
+        private String describe() {
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < snapshots.size(); i++) {
+                if (i > 0) {
+                    result.append(",");
+                }
+                CargoSnapshot snapshot = snapshots.get(i);
+                result.append(snapshot.itemCountBefore)
+                        .append("->")
+                        .append(snapshot.itemCountAtFailure < 0 ? "?" : Integer.toString(snapshot.itemCountAtFailure))
+                        .append("->")
+                        .append(snapshot.itemCountAfterRollback < 0 ? "?" : Integer.toString(snapshot.itemCountAfterRollback));
+            }
+            return result.toString();
+        }
+    }
+
+    private static final class CargoSnapshot {
+        private final CargoAPI cargo;
+        private final StockItemType itemType;
+        private final String itemId;
+        private final int itemCountBefore;
+        private int itemCountAtFailure = -1;
+        private int itemCountAfterRollback = -1;
+
+        CargoSnapshot(CargoAPI cargo, StockItemType itemType, String itemId) {
+            this.cargo = cargo;
+            this.itemType = itemType;
+            this.itemId = itemId;
+            this.itemCountBefore = StockItemCargo.itemCount(cargo, itemType, itemId);
+        }
     }
 }

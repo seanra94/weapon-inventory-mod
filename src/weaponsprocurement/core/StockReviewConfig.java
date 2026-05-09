@@ -51,7 +51,6 @@ public final class StockReviewConfig {
 
     public static StockReviewConfig load() {
         try {
-            WeaponsProcurementConfig.refreshAndPublishSettings();
             JSONObject json = Global.getSettings().loadJSON(CONFIG_PATH);
             return fromJson(json);
         } catch (Throwable t) {

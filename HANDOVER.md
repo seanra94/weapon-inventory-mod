@@ -60,7 +60,7 @@
   - Fixer's Market reference pricing also uses the cheapest live source as its base reference, regardless of whether that source is legal or black-market stock.
   - Optional tag/faction inference is Luna-gated by `wp_enable_fixers_market_tag_inference`, default off. Keep it separate from the live-scan path so it can stay opt-in if it admits secret/restricted weapons. The inference path uses active market factions' explicit `FactionAPI.getWeaponSellFrequency()` entries first, falls back to `getKnownWeapons()` only when a faction has no sell-frequency data, and excludes obvious special tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
   - The observed Fixer catalog is the preferred public-build path over tag/faction inference: it may be incomplete early in a save, but it only learns from real generated market stock and therefore has much lower spoiler-leak risk.
-  - Sector and Fixer's Market can be independently disabled in LunaLib. `data/config/weapons_procurement_market_blacklist.json` blocks weapon ids/display names from `BANNED_FROM_SECTOR_MARKET` and `BANNED_FROM_FIXERS_MARKET` before those remote source rows are created.
+  - Sector and Fixer's Market can be independently disabled in LunaLib. `data/config/weapons_procurement_market_blacklist.json` blocks item keys, raw ids, weapon display names, and wing display names from `BANNED_FROM_SECTOR_MARKET` and `BANNED_FROM_FIXERS_MARKET` before those remote source rows are created.
 - Popup sorting:
   - `Stock`: lowest visible `Storage` count first, then cheapest current buy price, then weapon name;
   - `Name`: weapon name first, then need, then price;
@@ -88,8 +88,9 @@
   - trade-planning button handling belongs in `StockReviewTradeController`, which talks back to the panel through a narrow host interface for messages, warning refreshes, and content rebuilds.
   - `StockReviewPendingTrades.removeExecuted(...)` removes by queued trade value, not list object identity. Preserve that behavior so future execution-order copies do not leave already-executed trades queued.
   - `StockPurchaseExecutor.buyPlan(...)` performs a final all-line source-stock preflight immediately before mutating source cargo. Preserve that guard so stale local/sector market stock fails before partial cargo mutation begins.
+  - `StockPurchaseExecutor` also keeps a narrow mutation journal around WP-touched item counts and player credits. If execution throws after mutation begins, it best-effort reconciles those counts/credits and logs before/failure/rollback counts for diagnosis. Do not broaden this into black-market side-effect simulation.
   - the Review GUI groups planned trades under expandable `Buying` and `Selling` table headings, then uses `Confirm Trades` / `Go Back`;
-  - expanded review weapon rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon data rows;
+  - expanded review item rows show stock cells, the same combined `Buying` / `Selling` plan cell used by the Buy GUI, and weapon/wing data rows;
   - Review GUI opens in a narrower parent dialog than the Buy GUI. Width-sensitive review changes should use `StockReviewStyle.REVIEW_MODAL` / `REVIEW_LIST`, not the full trade modal constants. The review `Storage` cell must stay tied to the trade-screen storage width through `StockReviewStyle.REVIEW_STOCK_CELL_WIDTH = STOCK_CELL_WIDTH`.
   - only `Confirm Trades` mutates cargo, checks player credits/cargo space/sell availability, and rebuilds the popup snapshot afterward;
   - confirmation/execution button handling belongs in `StockReviewExecutionController`, which talks back to the panel through a narrow host interface for current context, warning refreshes, snapshot/content rebuilds, reopen/close, and campaign messages.
@@ -120,11 +121,11 @@
   - `Storage` is the full snapshot owned count under the active owned-source policy, including player inventory. When a plan exists, append the signed pending delta, e.g. `Storage: 6 [-2]` or `Storage: 6 [+2]`.
   - The No Stock dummy row is a deliberate worst-case row-width test. It uses `Suzuki-Clapteryon Thermal Prokector... (+)`, `Storage: 99+`, `Price: 99,999+\u00a2`, and `Selling: 99+ [999,999+\u00a2]`. Real rows should cap displayed storage and plan counts at `99+`, price at `99,999+\u00a2`, and plan totals at `999,999+\u00a2`; fixed cells should be just large enough for those caps, with only the weapon-name cell absorbing spare width.
   - The `Storage` cell is intentionally wider than the other compact stock cells and left-aligned with normal WP internal text padding for readability.
-  - Top-level stock headings summarize the visible category as `No Stock [Weapon Types: N][Selling: N][Buying: N]` and equivalent labels for insufficient/sufficient stock. `Weapon Types` is the count of visible weapon rows in that category; `Selling` and `Buying` are queued unit totals and must be counted separately, not netted against each other.
+  - Top-level stock headings summarize the visible category as `No Stock [Weapon Types: N][Selling: N][Buying: N]` under Weapons and `No Stock [Wing Types: N][Selling: N][Buying: N]` under Wings, with equivalent labels for insufficient/sufficient stock. Type counts are visible rows in that category; `Selling` and `Buying` are queued unit totals and must be counted separately, not netted against each other.
   - `Price` is intentionally wider than the original compact cell; long comma-grouped prices should fit before reclaiming space from other action cells.
   - `Price` in the Buy GUI is the cheapest currently purchasable unit buy price after current queued buys have consumed cheaper stock. If no buy price remains because the row is sell-only or stock has been fully queued, fall back to the best legal player-cargo sell value for the active market/black-market setting. Format prices with comma-grouped credits and cap compact row prices at `99,999+\u00a2`.
   - Keep `Price` as the user-facing and code-facing name for unit weapon price. `StockSortMode.fromConfig(...)` still accepts the old `COST` value as a compatibility alias, but new code/config should use `PRICE`.
-  - `Buying` / `Selling` is the signed planned trade for that weapon and includes the full planned trade value in brackets, e.g. `Buying: 5 [50,000\u00a2]`. Positive planned quantities use yellow, negative planned quantities use purple, and zero uses gray.
+  - `Buying` / `Selling` is the signed planned trade for that item and includes the full planned trade value in brackets, e.g. `Buying: 5 [50,000\u00a2]`. Positive planned quantities use yellow, negative planned quantities use purple, and zero uses gray.
   - Current trade-side color rule: buy-side cells/actions use yellow, sell-side cells/actions use purple, and general controls such as Sort, Source, Black Market, Filters, Colors, and Reset All Trades use the dark-gray weapon-heading color.
   - The dynamic sell/buy step buttons replace the old fixed `-10` / `+10` when fewer than ten additional weapons can be sold/bought. If one or fewer remain, the dynamic step stays visually as disabled `-10` / `+10` because the separate `-1` / `+1` button handles the one-item case.
   - `Price` and neutral `Buying: 0` cells use the normal gray cell background. Profit cells use green/confirm. Buy/increment buttons are green, sell/decrement buttons are red, bulk trade buttons are purple, and disabled buttons use gray text.
@@ -149,14 +150,14 @@
   - Category counts and weapon rows are filtered to records with at least one currently buyable unit from the active stock source or at least one player-inventory unit that can be sold. The popup is for shopping/selling, not for showing unavailable desired weapons or storage-only weapons.
   - Weapon stock summary text uses `Storage` for total owned stock under the active owned-source policy, including player inventory. Starsector APIs often expose combined cargo/storage counts, so keep row inclusion tied to player inventory plus buyable source stock rather than broad storage ownership.
 - Popup availability:
-  - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one weapon currently buyable under the current black-market setting. It should not open from looting, non-trade planet contexts, or markets with only locked/unbuyable weapon stock.
+  - `F8` is now gated to `SectorAPI.getCurrentlyOpenMarket()` plus at least one item currently buyable under the current black-market setting, player cargo that can be sold, or an enabled remote source. It should not open from looting or non-trade planet contexts.
 - Purchase refresh:
   - The current preferred buy path does not force-close/reopen the vanilla cargo core after purchase; it mutates cargo, then rebuilds the popup snapshot in place. The old forced core refresh remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE` in case vanilla trade-grid stale-slot corruption still reproduces.
   - Local-market transactions are still not guaranteed to be perfectly vanilla-identical. WP now reports `PlayerMarketTransaction` to the touched submarket plugin, but runtime testing should still confirm tariff, suspicion, reputation, economy-impact, and modded-listener behavior.
 - Normal mod-side code owns all campaign state:
   - `WeaponsProcurementModPlugin` registers `WeaponsProcurementCountUpdater` as a transient script on game load.
   - `WeaponsProcurementCountUpdater` runs while paused, computes player-cargo plus accessible-storage totals, and publishes JVM `System` properties.
-  - `WeaponsProcurementFixerCatalogUpdater` runs while paused, but uses campaign-clock elapsed days for its scan interval. It scans immediately after load, then roughly once per in-game day, and stores only simple Java collections in sector persistent data to avoid custom save-object compatibility problems.
+  - `WeaponsProcurementFixerCatalogUpdater` runs while paused, but uses campaign-clock elapsed days for its scan interval. It scans immediately after load, then roughly once per in-game day, and stores only simple Java collections in sector persistent data to avoid custom save-object compatibility problems. `FixerMarketObservedCatalog` sanitizes any existing persistent map into string key/value entries before use.
   - `WeaponsProcurementBadgeHelper` is embedded in patched core and only reads `System` properties to select a precomposed badge sprite path.
 - Active visual path:
   - one precomposed `graphics/ui/wp_total_*.png` badge sprite;
@@ -175,6 +176,8 @@
   - published property: `wp.config.fixersMarketTagInferenceEnabled`;
   - update interval default: `0.20`, clamped to `0.05..2.00`.
 - `wp_enable_patched_badges=false` makes the embedded helper return `null`, so a patched core jar will skip badge rendering while the normal popup continues to work.
+- Java-side config fallback also defaults patched badges to disabled if the Luna setting is missing or unreadable, matching the clean-package boundary.
+- `StockReviewConfig.load()` is intentionally JSON-only; call `WeaponsProcurementConfig.refreshAndPublishSettings()` explicitly at user-entry points before loading it when current Luna values are needed.
 
 ## ACG-Derived GUI Rules For WP
 

@@ -73,7 +73,7 @@ final class StockReviewTradeRowCells {
                         StockReviewTooltips.increasePlan(10)),
                 WimGuiRowCell.standardAction("Sufficient", StockReviewStyle.SUFFICIENT_BUTTON_WIDTH,
                         StockReviewStyle.SELL_BUTTON, StockReviewAction.debugNoop(), true,
-                        "Adjust the queued trade quantity so that your stock of this weapon just meets the sufficiency threshold for this weapon mount size (99)."),
+                        "Adjust the queued trade quantity so that your stock of this item just meets the sufficiency threshold (99)."),
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH,
                         StockReviewStyle.ACTION_BACKGROUND, StockReviewAction.debugNoop(), true,
                         StockReviewTooltips.resetPlan()));
