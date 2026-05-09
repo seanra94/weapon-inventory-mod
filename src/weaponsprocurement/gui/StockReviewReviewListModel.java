@@ -72,8 +72,8 @@ final class StockReviewReviewListModel {
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 StockReviewTradeRowCells.storage(record.getStorageCount(), trade.getQuantity(), StockReviewStyle.REVIEW_STOCK_CELL_WIDTH),
                 StockReviewTradeRowCells.plan(trade.getQuantity(), cost));
-        rows.add(StockReviewListRow.weapon(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
-                cells, StockReviewAction.toggleItem(record.getItemKey()), StockReviewTooltips.weapon(record),
+        rows.add(StockReviewListRow.item(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
+                cells, StockReviewAction.toggleItem(record.getItemKey()), StockReviewTooltips.itemDataToggle(record),
                 StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
@@ -99,7 +99,7 @@ final class StockReviewReviewListModel {
                         StockReviewStyle.TEXT,
                         Alignment.LMID,
                         StockReviewTooltips.PLAN));
-        rows.add(StockReviewListRow.weapon("Suzuki-Clapteryon Thermal Prokector... (+)",
+        rows.add(StockReviewListRow.item("Suzuki-Clapteryon Thermal Prokector... (+)",
                 cells,
                 StockReviewAction.debugNoop(),
                 "Worst-case review-row width test sample. It does not affect trades.",

@@ -53,7 +53,7 @@ final class StockReviewTooltips {
         return "Show or hide items in this stock category." + summary;
     }
 
-    static String weapon(WeaponStockRecord record) {
+    static String itemDataToggle(WeaponStockRecord record) {
         if (record != null && record.isWing()) {
             return "Toggle the wing data display.";
         }

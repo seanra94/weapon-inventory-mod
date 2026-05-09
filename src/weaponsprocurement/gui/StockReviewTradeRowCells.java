@@ -77,7 +77,7 @@ final class StockReviewTradeRowCells {
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH,
                         StockReviewStyle.ACTION_BACKGROUND, StockReviewAction.debugNoop(), true,
                         StockReviewTooltips.resetPlan()));
-        rows.add(StockReviewListRow.weapon("Suzuki-Clapteryon Thermal Prokector... (+)",
+        rows.add(StockReviewListRow.item("Suzuki-Clapteryon Thermal Prokector... (+)",
                 cells,
                 StockReviewAction.debugNoop(),
                 "Worst-case row-width test sample. It does not affect trades.",

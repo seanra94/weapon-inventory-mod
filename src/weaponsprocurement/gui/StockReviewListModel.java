@@ -131,8 +131,8 @@ final class StockReviewListModel {
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getItemKey()), planQuantity != 0,
                         StockReviewTooltips.resetPlan()));
-        rows.add(StockReviewListRow.weapon(label, cells, StockReviewAction.toggleItem(record.getItemKey()),
-                StockReviewTooltips.weapon(record), StockReviewStyle.SECTION_INDENT));
+        rows.add(StockReviewListRow.item(label, cells, StockReviewAction.toggleItem(record.getItemKey()),
+                StockReviewTooltips.itemDataToggle(record), StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
         }

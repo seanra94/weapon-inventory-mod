@@ -85,24 +85,24 @@ final class StockReviewListRow {
                 active ? 0f : StockReviewStyle.WEAPON_INDENT, action, Alignment.LMID, null, topGap, tooltip);
     }
 
-    static WimGuiListRow<StockReviewAction> weapon(String label,
-                                                   List<WimGuiRowCell<StockReviewAction>> cells,
-                                                   StockReviewAction action) {
-        return weapon(label, cells, action, null);
+    static WimGuiListRow<StockReviewAction> item(String label,
+                                                 List<WimGuiRowCell<StockReviewAction>> cells,
+                                                 StockReviewAction action) {
+        return item(label, cells, action, null);
     }
 
-    static WimGuiListRow<StockReviewAction> weapon(String label,
-                                                   List<WimGuiRowCell<StockReviewAction>> cells,
-                                                   StockReviewAction action,
-                                                   String tooltip) {
-        return weapon(label, cells, action, tooltip, StockReviewStyle.WEAPON_INDENT);
+    static WimGuiListRow<StockReviewAction> item(String label,
+                                                 List<WimGuiRowCell<StockReviewAction>> cells,
+                                                 StockReviewAction action,
+                                                 String tooltip) {
+        return item(label, cells, action, tooltip, StockReviewStyle.WEAPON_INDENT);
     }
 
-    static WimGuiListRow<StockReviewAction> weapon(String label,
-                                                   List<WimGuiRowCell<StockReviewAction>> cells,
-                                                   StockReviewAction action,
-                                                   String tooltip,
-                                                   float indent) {
+    static WimGuiListRow<StockReviewAction> item(String label,
+                                                 List<WimGuiRowCell<StockReviewAction>> cells,
+                                                 StockReviewAction action,
+                                                 String tooltip,
+                                                 float indent) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.ROW_BORDER,
                 indent, action, Alignment.LMID, cells, false, tooltip);
