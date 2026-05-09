@@ -32,7 +32,7 @@ final class StockReviewTooltips {
                     + "x normal due to the difficulty of procuring items from across the sector.";
         }
         if (StockSourceMode.FIXERS.equals(resolved)) {
-            return "Buy from the Fixer Market. Includes every weapon or fighter LPC that could normally appear for sale in the sector, excluding REDACTED items and similar special cases. Sold items are deposited into either the local open market or black market, depending on whether black-market transactions are enabled. Prices are "
+            return "Buy from the Fixer's Market. Includes every weapon or fighter LPC that could normally appear for sale in the sector, excluding REDACTED items and similar special cases. Sold items are deposited into either the local open market or black market, depending on whether black-market transactions are enabled. Prices are "
                     + oneDecimal(WeaponsProcurementConfig.fixersMarketPriceMultiplier())
                     + "x normal due to the difficulty of procuring items that may not be in stock anywhere.";
         }
@@ -82,7 +82,7 @@ final class StockReviewTooltips {
     static String tariffs() {
         return "Extra credits paid above base item value due to source markup. Tariffs are much higher on the Sector Market ("
                 + oneDecimal(WeaponsProcurementConfig.sectorMarketPriceMultiplier())
-                + "x) and Fixer Market ("
+                + "x) and Fixer's Market ("
                 + oneDecimal(WeaponsProcurementConfig.fixersMarketPriceMultiplier())
                 + "x).";
     }
