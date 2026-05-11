@@ -1,5 +1,5 @@
 param(
-    [string[]]$Paths = @("README.md", "PACKAGING.md", "CONFIG.md", "CHANGELOG.md")
+    [string[]]$Paths = @("README.md", "PACKAGING.md", "CONFIG.md", "CHANGELOG.md", "HANDOVER.md", "PLANS.md")
 )
 
 $repoRoot = Split-Path -Parent $PSScriptRoot

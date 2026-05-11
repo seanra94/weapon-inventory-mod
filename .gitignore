@@ -1,5 +1,6 @@
 build/
 tools/patcher/build/
+.pytest_cache/
 *.class
 *.wim_tmp
 jars/*.tmp.jar

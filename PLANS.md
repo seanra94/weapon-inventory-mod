@@ -2,347 +2,85 @@
 
 ## Current Status
 
-- Working architecture:
-  - deterministic `CargoStackView.renderAtCenter(FFF)V` bytecode patch for in-cell badge rendering;
-  - normal mod-side paused updater for counts;
-  - JVM `System` property bridge between updater and embedded helper;
-  - one precomposed badge sprite per weapon or fighter LPC stack.
-- Clean frontend work has started:
-  - `F8` opens a normal Weapon Stock Review popup from active market/storage interaction dialogs;
-  - popup data comes from shared stock snapshot services, not the bytecode badge path;
-  - stock item entries now show `Storage`, unit `Price`, planned `Buying`/`Selling` value, and compact buy/sell/reset controls.
-  - popup has a scrollable `Filters` screen with active filters, expandable filter groups, and immediate row/category filtering.
-  - popup has config-backed desired stock defaults, storage inclusion, black-market inclusion, and per-item override scaffolding.
-  - popup rows are intentionally limited to stock items that are buyable from the active stock source or present in player inventory.
-  - Fixer's Market eligibility now uses a save-persistent observed catalog seeded from real market stock over time, so its virtual stock can include items that have previously appeared in legitimate market cargo without relying on spoiler-prone tag/faction inference.
-  - popup has sort modes for need, name, and price.
-  - popup row actions now support item expansion, nested weapon/wing data rows, and cheapest-first `+1`/dynamic buy steps.
-- Current visual baseline:
-  - bottom-right placement;
-  - stable pre-scale render frame;
-  - no late over-icon rendering;
-  - no layered text/background rendering.
-- Current config baseline:
-  - LunaLib dependency is present;
-  - Luna settings control updater interval and whether optional patched cargo-cell badges are enabled.
-  - Luna settings now include sufficient-stock thresholds for small/medium/large weapons and fighter LPCs.
-  - Luna settings can expose an optional market-dialog entry point; it defaults off and the `F8` hotkey remains the primary always-available opener.
+The repo is in release-prep shape for the clean popup path:
 
-## Completed Meaningful Work
+- `F8` stock-review popup works from market/storage dialogs.
+- Optional dialog entry exists and defaults off.
+- Weapons and fighter LPCs share the same stock/review/trade flow.
+- Local, Sector Market, and Fixer's Market source modes exist.
+- Sector Market drains real remote cargo; Fixer's Market is virtual.
+- Fixer's Market learns safe observed stock over time.
+- Optional patched cargo-cell badges are disabled by default and isolated from the clean popup.
+- Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
-- Proved exact in-cell badges require a patch to vanilla cargo-cell rendering; a pure normal-mod version would need a different UI surface.
-- Replaced raw GL/external hook attempts with direct `com.fs.graphics.Sprite` rendering in patched `CargoStackView`.
-- Moved count computation out of patched core and into normal mod-side campaign code.
-- Added paused dynamic updates for player cargo and accessible storage.
-- Added fighter/LPC support using cargo fighter counts.
-- Collapsed diagnostics to one precomposed total badge.
-- Reverted away from late over-icon/layered rendering after visual regressions.
-- Reintroduced LunaLib only through normal mod-side update interval config.
-- Refactored updater counting to scan cargo into maps once per tick instead of repeating storage scans for every id.
-- Removed old three-square diagnostic assets/settings and the legacy no-op `CargoWeaponMarkerHook`.
-- Rewrote handover/plans docs to describe the current architecture instead of old investigation states.
-- Extended the shared WP GUI templates so tooltips attach through common button, list-row, row-cell, labelText, and scroll-indicator paths instead of screen-specific rendering code.
-  - `StockReviewTooltips` owns the stock-review tooltip copy.
-  - Tooltip coverage now includes stock category headings, weapon rows, storage/price/plan cells, review rows, filters, trade-summary rows, color-debug controls, and disabled buttons.
-- Added first clean read-only stock review popup:
-  - shared stock snapshot builder;
-  - current-market sale counts;
-  - fleet + current-market-storage owned counts;
-  - desired-count classifier;
-  - three toggle headings;
-  - runtime buttons for sorting and black-market inclusion.
-- Added optional patched-badge feature flag:
-  - clean popup is unaffected;
-  - patched helper returns `null` when disabled, so no badge renders even if the core jar is patched.
-- Kept patched cargo-cell badges optional and isolated. The clean stock-review popup is the real/public mod path; the patcher should remain a personal or advanced feature unless the clean UI cannot solve a specific problem.
-- Earlier popup redraw layering was mitigated by dismissing/reopening the tooltip dialog; the current cleaner foundation supersedes that with in-place custom-panel content replacement.
-- Fixed row action routing around explicit `StockReviewAction` button ids; current custom-panel buttons use a narrow polling fallback because `buttonPressed(...)` alone was not reliable for nested row controls.
-- Optimized that polling fallback so it only scans buttons for a few frames after mouse events instead of every frame.
-- Changed stock categories to start collapsed and render as flat full-width heading rows, so `No Stock`, `Insufficient Stock`, and `Sufficient Stock` are visually peer sections.
-- Replaced the tooltip-row popup renderer with an explicit custom-panel/list foundation:
-  - `StockReviewListModel` builds render-ready section/category row descriptors from the snapshot and state;
-  - `StockReviewReviewListModel` builds Review GUI row descriptors so the renderer does not own review-table business logic;
-  - `StockReviewItemInfoRows` owns shared Basic/Advanced Info row construction for trade and review screens, while `StockReviewTradeRowCells` owns shared storage/price/plan/dynamic-step row cells and the deliberate worst-case row-width sample;
-  - `StockReviewRenderer` owns shell/header/footer composition and stock-specific scroll row/top-gap rules while shared list helpers render fixed-height custom row panels for category headings, weapon rows, nested sections, sellers, buttons, and scroll indicators;
-  - `StockReviewExpansionState` owns category, item-type, item, and review-trade-group expansion maps, keeping expansion details out of the broader `StockReviewState`;
-  - `StockReviewFilterState` owns active filters and filter-group expansion, keeping filter bookkeeping out of the broader `StockReviewState`;
-  - `StockReviewSourceState` owns sort/source/black-market/storage-source settings, keeping procurement-source bookkeeping out of the broader `StockReviewState`;
-  - `WimGuiScroll` and `WimGuiModalListLayout` own shared visible-row/window math for scrollable modal lists;
-  - `WimGuiPanelPlugin` owns reusable row/container fill and border drawing;
-  - `StockReviewPanelPlugin` now rebuilds one custom content panel in place for non-purchase actions instead of dismissing/reopening the dialog;
-  - `StockReviewModeController` now owns review/filter/color-debug mode booleans plus color-debug draft/persistence state, keeping `StockReviewPanelPlugin` focused on lifecycle, snapshot rebuilds, and action orchestration;
-  - `StockReviewUiController` now owns UI-only action dispatch: row/category expansion, source/sort/black-market state changes, list scrolling, reset-all, filters, color debug, review/back routing, and close/Escape behavior;
-  - `StockReviewTradeController` now owns trade-planning actions such as row adjustment, reset, purchase-all-until-sufficient, and sell-all-until-sufficient, leaving review confirmation and live cargo execution in the panel.
-  - `StockReviewFooterRenderer` owns mode-specific modal footer composition for trade, review, filter, and color-debug screens.
-  - `StockReviewTradeSummaryRenderer` owns the fixed bottom warning/tariff/credit/cargo rows shared by trade and review screens.
-  - `StockReviewExecutionController` now owns `Confirm Trades` checks, execution ordering, per-line failure handling, and post-confirm reopen/refresh routing, leaving `StockReviewPanelPlugin` as the lifecycle/context host.
-  - list scroll offset is stored in `StockReviewState` and can be changed by mouse wheel or clickable scroll indicators.
-- Migrated nested-button fallback polling to reusable `WimGuiButtonBinding` / `WimGuiButtonPoller` after runtime showed nested custom-panel buttons did not reliably trigger from `buttonPressed(...)` alone. Buttons still carry explicit `StockReviewAction` ids.
-- Migrated popup action/footer button placement to reusable `WimGuiButtonSpec` plus `WimGuiControls.addButtonRow(...)`, removing hand-written x-position chains from `StockReviewRenderer`.
-- Migrated modal footer placement to `WimGuiModalFooter`, so stock review's `Confirm/Review` left buttons and `Go Back/Cancel` right buttons use the same bottom-button helper future WP modals should use.
-- Ported the ACG-style wrapped text layout helper into `WimGuiTextLayout` / `WimGuiText.fitLayout(...)`, so future WP rows and popups can share line-count and growable-height calculations instead of inventing local text math.
-- Started the ACG modal-template migration with `WimGuiModalLayout`; the stock-review list body now uses shared heading/body/footer spacing and tight black-panel height math, and the renderer reports the actual list hitbox for mouse-wheel routing.
-- Migrated stock review title/status header rendering and header/action-row spacing to `WimGuiModalHeader` / `WimGuiModalLayout`, reducing local modal positioning in `StockReviewRenderer`.
-- Migrated stock review heading labels and scroll indicator labels to `WimGuiToggleHeading` / `WimGuiScrollIndicator`, so `(+)/(-)`, counted headings, and ASCII scroll rows no longer live as local string fragments in stock-review models/renderers.
-- Removed the stale stock-review text wrapper and moved wheel-scroll step ownership to `WimGuiScroll.DEFAULT_WHEEL_STEP`.
-- Migrated row cells to `WimGuiRowCell` plus `WimGuiControls.addRowCell(...)`; stock review now supplies stock-specific row-cell content while shared helpers own fixed-width cell data, disabled text behavior, cell-block width calculation, and info/action cell rendering.
-- Migrated list rows to `WimGuiListRow` plus `WimGuiListRowRenderer`; stock review now keeps stock-specific row factories in `StockReviewListRow` while shared helpers own generic row descriptors, row-panel creation, main-action button rendering, labels, right-side cells, and alignment.
-- Moved ACG-derived semantic palette ownership into `WimGuiStyle`; `StockReviewStyle` now aliases shared confirm/cancel/load/save colors, modal panel colors, heading colors, disabled colors, and row borders instead of owning them locally.
-- Migrated popup rebuild and scroll-hitbox helpers to `WimGuiContentPanel` and `WimGuiListBounds`; stock review no longer owns the remove/create/attach content-panel lifecycle or manual Starsector list-coordinate checks.
-- Migrated modal input and visual-dialog delegate wiring to `WimGuiModalInput`, `WimGuiInputResult`, `WimGuiDialogPanel`, and `WimGuiDialogDelegate`; stock review now provides stock actions/lifecycle hooks while shared helpers own Escape handling, list wheel scrolling, gated button polling, and `CustomVisualDialogDelegate` boilerplate.
-- Migrated stock review onto `WimGuiModalPanelPlugin`, a reusable modal panel base that owns init, close callbacks, content rebuilds, input routing, button dispatch, scroll-bound state, and render-failure close behavior.
-- Migrated host/opening boilerplate to `WimGuiHotkeyLatch`, `WimGuiDialogOpener`, `WimGuiDialogTracker`, and `WimGuiPendingDialog`; stock review now keeps market availability rules locally while shared helpers own hotkey latching, visual-dialog opening, open-state tracking, and pending reopen payloads.
-- Added `WimGuiCampaignDialogHost`, so future WP campaign dialogs can reuse current sector/UI/dialog/market lookup and message reporting instead of copying the stock-review hotkey script plumbing.
-- Routed stock-review campaign messages, snapshot rebuilds, confirmation market lookup, and vanilla-core refresh dialog lookup through `WimGuiCampaignDialogHost`, and cached sector/current-market once per confirmation execution path.
-- Moved the forced vanilla cargo-core refresh fallback into `WimGuiCampaignDialogHost.refreshCargoCore(...)`, so future WP campaign modals can reuse the same guarded close/reopen behavior.
-- Added shared player-cargo lookup to `WimGuiCampaignDialogHost` and routed stock-review credit/cargo/sell-price probes through it, leaving direct campaign access centralized.
-- Migrated central modal-list rendering to `WimGuiModalListSpec`, `WimGuiModalListRenderer`, and `WimGuiModalListRenderResult`; stock review now supplies only its scroll-row action factory and category top-gap rule while shared helpers own black-panel creation, scroll rows, row rendering, useful offsets, and returned list bounds.
-- Added `WimGuiScrollableListState` and `WimGuiModalListRenderer.renderAndStoreOffset(...)`, removing the stock-review-only row-renderer adapter and putting list-offset preservation in the shared modal-list path.
-- Migrated top modal action-row placement to `WimGuiModalActionRow` and added `WimGuiButtonSpec.semantic(...)` for the common enabled/disabled text and fill pattern.
-- Added `WimGuiButtonSpecs` and `WimGuiModalFooter.addLeftRowAndRightButton(...)` so renderers can compose button rows declaratively instead of hand-rolling mutable button-list and paired footer placement boilerplate.
-- Removed the stock-review-only row-cell adapter; `WimGuiRowCell` now directly owns standard action-cell disabled text behavior and row-cell list construction for future WP screens.
-- Added `WimGuiSemanticButtonFactory`, giving future WP modals one reusable way to create enabled/disabled semantic button specs with a shared border instead of local `actionButton`/`footerButton` wrapper methods.
-- Converted the main stock and review row-cell blocks to `WimGuiRowCell.of(...)`, making the intended shared row-cell composition pattern visible in current WP screens instead of leaving manual mutable cell setup as the example.
-- Replaced remaining anonymous GUI-side callback helpers with explicit classes such as `WimGuiModalListGapAdapter` and `WimGuiNoopCoreInteractionListener`, reducing Starsector classloader risk from generated companion classes.
-- Added `tools\validate-live-gui-classes.ps1` after a runtime `NoClassDefFoundError` exposed stale live-jar/classloader risk. It verifies required extracted GUI helper classes exist in both repo and live jars and that repo/live SHA-256 hashes match.
-- Expanded `tools\validate-live-gui-classes.ps1` to reject stale removed GUI helper classes as well as missing required helpers, so future migrations catch old adapter classes reappearing in jars.
-- Extracted shared jar class validation to `tools\validate-jar-classes.ps1`, so CI and local repo/live validation use the same required/forbidden class lists instead of drifting.
-- Added `tools\deploy-live-mod.ps1` so live testing copies data/config, graphics, jars, metadata, and docs together instead of updating only the jar and leaving Luna/config files stale.
-- Added explicit live-jar checks for reusable nested helper interfaces such as `WimGuiButtonPoller.ActionHandler` and `WimGuiModalListLayout.ExtraGapProvider`, keeping intentional nested classes covered without allowing anonymous GUI companion drift.
-- Restored `WeaponStockSnapshotBuilder$CostComparator` as a compatibility shim delegating to the newer `PriceComparator`, after runtime sorting on the remote market source showed Starsector could keep stale outer-class references across hot-copied jars.
-- Ported the accepted ACG GUI palette into `StockReviewStyle` and applied it to the stock review popup:
-  - top stock category headings use red/yellow/green fills with white text;
-  - nested toggle headings use the dark-gray collapsible heading color;
-  - Buy/increment buttons use green/confirm styling with white text;
-  - ordinary popup text uses white/default font, with gray reserved for disabled/locked controls.
-- Filtered stock review category counts and weapon rows to currently buyable market weapons plus player-inventory weapons that can be sold.
-- Gated `F8` popup opening to an active current market with weapon stock for sale, avoiding looting and non-trade planet contexts.
-- Changed successful popup purchases to rebuild the popup snapshot in place by default instead of force-refreshing the vanilla cargo core UI. The forced refresh fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
-- Added first planned-trade flow:
-  - top-level buy buttons plan from the cheapest eligible current-market submarkets;
-  - visible seller rows were later removed as low-value UI detail;
-  - planned trades check credits and cargo space before mutating cargo.
-  - successful trades rebuild the popup snapshot in place by default; the older close/reopen fallback remains behind `StockReviewStyle.REFRESH_VANILLA_CORE_AFTER_PURCHASE`.
-- Added signed planned-trade flow:
-  - positive planned quantity means buying;
-  - negative planned quantity means selling from player inventory;
-  - `Review Trades` opens a confirmation screen before cargo mutation;
-  - `Purchase All Until Sufficient` queues cheapest-first buys needed to reach barely sufficient stock while staying in the Buy GUI.
-  - `Sell All Until Sufficient` queues inventory sales that keep post-trade stock sufficient.
-  - `Reset All Trades` and per-row `Reset` clear planned trades without mutating cargo.
-- Added first transaction-side-effect hardening:
-  - local-market WP buys/sells now report a `PlayerMarketTransaction` to the touched `SubmarketPlugin` after cargo mutation;
-  - the report includes bought/sold cargo, line-item type, item id, quantity, unit price, timestamp, and `OPEN` vs `SNEAK` trade mode based on whether the submarket plugin reports itself as black market;
-  - Fixer's Market buys remain virtual WP-only trades and do not report to a real submarket. Sector Market buys drain real remote market cargo and report a best-effort transaction to the touched remote submarket.
-  - Review-confirm execution now catches unexpected queued-line crashes in `StockReviewExecutionController`, and `StockPurchaseService` catches mutation-phase failures after validation with operation/item/quantity logging before returning a controlled failure message.
-  - `StockPurchaseChecks` now owns shared purchase validation, player-cargo lookup, and safe campaign messages; `StockItemCargo` owns shared item stack/count/add/remove/reconcile/tidy/display-name helpers; `StockItemStacks` owns stack visibility, item id, price, legality, and cargo-space policy; `StockMarketTransactionReporter` owns best-effort transaction callback construction; `StockPurchaseMarketSources` owns local/sector source discovery and sell-target choice; `StockPurchasePlan` owns the shared cheapest-source buy plan math used by local and sector-market buys; and `StockPurchaseExecutor` owns mutation-phase sell/fixer-buy/planned-buy execution.
-- Cleaned up the `Cost` to `Price` terminology migration:
-  - the sort enum is now `PRICE`, while `COST` remains accepted as a config alias for compatibility;
-  - shared credit formatting lives in `CreditFormat`, keeping GUI rows and campaign trade messages on the same comma-grouping rules.
-- Added explicit patch verification:
-  - `tools\validate-cargo-stack-view-patch.ps1` compiles the ASM patcher and runs `Verify` mode against the active `starfarer_obf.jar`;
-  - the report checks target class/method presence, WEAPONS guard, embedded helper class, exact total-helper call counts, badge sprite render count, and known stale patch patterns.
-- Implemented the Buy/Review GUI performance and layout pass:
-  - weapon-name toggle headings plus `Storage`, unit `Price`, and planned trade cells use gray/semantic backgrounds;
-  - stock/trade/price cells were widened, with the weapon-name area shrinking to accommodate the richer table;
-  - a cached `StockReviewTradeContext` now owns pending totals, per-item price/cost data, cargo-space delta, credits, and affordability checks for render and controller paths;
-  - `StockReviewQuoteBook` caches sorted seller lists, line quotes, seller allocations, sell prices, and cargo-space estimates so the Buy/Review GUI does not repeatedly copy/sort market stocks or scan player cargo while rendering;
-  - seller-row `+1` / dynamic buy-step enabled states now share the same affordability logic as top-level weapon-row buttons;
-  - planned trades now quote and confirm through one execution order: sells first, explicit seller-specific buys second, generic cheapest buys last;
-  - whole-plan quote calculations now consume seller stock once across the full portfolio, avoiding independent line quotes that could overcommit the same cheapest seller stock;
-  - the stale purchase-preview helper was removed in favor of explicit quote/allocation classes;
-  - pending trade mutation now lives in `StockReviewPendingTrades`, keeping merge/reset/clear/executed-removal behavior out of `StockReviewPanelPlugin`;
-  - `WeaponStockSnapshot` now caches all-record and item-key indexes so pricing/review paths avoid repeated list allocation and linear scans;
-  - the visible `Refresh` button was removed because all meaningful state changes already refresh through explicit actions;
-  - buy/increment controls use green, sell/decrement controls use red, and bulk trade controls use purple;
-  - the Review GUI is now an expandable table grouped by `Buying` and `Selling`, with expandable weapon rows, weapon data, and seller allocation rows for buys.
-- Implemented the first filter screen:
-  - top-row `Filters: N` opens a scrollable filter list;
-  - active filters are moved to the top of the list;
-  - `Size`, `Type`, and `Damage` headings expand into filter rows;
-  - active filters use OR within a group and AND across groups.
-- Fixed row-level planned-trade reversibility:
-  - negative row adjustments first remove queued buys for that item before creating real sell plans;
-  - positive row adjustments first remove queued sells before creating real buy plans;
-  - `Sufficient` now compares the desired target against current queued plan state and uses red styling when it will reduce the plan or sell excess.
-- Hardened pending-trade data integrity with `StockReviewPendingTrade.create(...)`, so empty item keys and zero-quantity rows cannot be constructed by planner or pending-trade merge paths.
-- Hardened trade execution with a final source-stock preflight in `StockPurchaseExecutor.buyPlan(...)`, so stale local/sector market stock fails before partial cargo mutation begins.
-- Aligned `Sort: Stock` with the current visible `Storage` semantics. It now sorts by total owned stock, including player inventory, rather than the old outside-inventory-only count.
-- Centralized local trade submarket eligibility in `MarketStockService.isTradeSubmarket(...)`, so stock collection, buying, selling, and sell-price quoting share the same storage/local-resource/black-market filtering.
-- Replaced the remaining runtime-side anonymous purchase-source comparator with an explicit nested comparator and added live-jar validation to reject the stale generated `$PurchaseSource$1` class.
-- Replaced remaining hand-written nested-loop stock price sorts with explicit comparator classes in `StockReviewQuoteBook` and `StockReviewTradePlanner`.
-- Added LunaLib settings for sufficient-stock thresholds by weapon mount size:
-  - small weapons default to 16;
-  - medium weapons default to 8;
-  - large weapons default to 4.
-- Adjusted stock-review layout:
-  - widened the `Storage` cell and left-aligned its text with standard internal padding;
-  - moved `Total Cost` / `Total Profit` and `Credits Available` out of the scrollable list into fixed bottom summary rows above the footer buttons;
-  - summary value cells now use red/green backgrounds for net cost/profit instead of colored text.
-  - removed the Make Trades / Review Trades title-status header boxes to give the main trade panels more weapon-row space;
-  - expanded the fixed bottom summary to five rows: `Warning`, `Total Cost` / `Total Profit`, `Credits Available`, `Total Purchase Volume`, and `Cargo Space Available`;
-  - later condensed the summary to three rows: `Warning`, `Credits Available`, and `Cargo Space Available`, with the credit/cargo changes shown as signed bracketed deltas inside the two value cells;
-  - added orange near-limit summary fills for positive total cost at 95%-100% of available credits and purchase volume at 95%-100% of available cargo space, then replaced those with buy-side yellow / sell-side purple delta fills after the summary was condensed.
-  - switched compact GUI credit labels from `cr` to Starsector's cent-sign glyph (`\u00a2`, bundled font char id 162);
-  - added a fixed bottom `Warning` row above the credit/cargo summary rows, with persistent most-recent trade warnings for insufficient cargo capacity, insufficient credits, low post-trade credit balance, and low post-trade cargo capacity.
-  - extracted trade-warning policy to `StockReviewTradeWarnings`, keeping warning text, initial credit/cargo baselines, low-balance thresholds, and purchase-all partial-fill warning detection out of `StockReviewPanelPlugin`.
-- Corrected nested weapon-row sizing:
-  - removed the intermediate `Weapon Data` toggle heading;
-  - stock-review rows now use the shared indent-minus-width layout rule so each deeper level starts one indent farther right and shrinks by that same indent width, keeping the right edge aligned with the parent row;
-  - `Weapons/Wings`, stock categories, item rows, info headings, and data rows each occupy their own hierarchy depth;
-  - added nested `Basic Info` and `Advanced Info` toggle headings under expanded weapon rows;
-  - data rows use a 65% label / 35% value split;
-  - visible `Sellers` sections were removed from trade/review rows.
-- Adjusted the stock row layout after runtime width testing:
-  - shrank `Storage` to fit its capped worst-case label more tightly;
-  - widened the `Buying` / `Selling` plan cell so capped planned-trade values have more room;
-  - moved expanded weapon data rows onto a fixed-width doubled-indent path after the earlier shrink-only indentation still looked wrong in game.
-- Changed top stock category headings to summarize visible item types, queued selling units, and queued buying units separately, e.g. `No Stock [Weapon Types: N][Selling: N][Buying: N]` under Weapons and `No Stock [Wing Types: N][Selling: N][Buying: N]` under Wings.
-- Hardened Review Trades entry after bulk buy/sell sufficient testing:
-  - entering Review Trades now opens Buying and Selling groups expanded;
-  - the review list shows a no-trades fallback if a pending list contains no real buy/sell rows after netting or filtering.
-- Updated trade/filter presentation:
-  - active filters now render directly above the first filter-group heading instead of under an `Active Filters` heading;
-  - the filter list panel uses a narrow one-quarter-width list spec;
-  - `Buying`/`Selling` row cells are left-aligned with standard internal padding;
-  - `Price` cells are wider, with the extra width taken from the weapon heading area;
-  - buy-side controls use yellow, sell-side controls use purple, and general top/footer controls use the dark-gray heading color.
-- Added first fighter LPC/wing support to the clean stock-review popup:
-  - snapshot records now have a `StockItemType` and use type-prefixed internal keys;
-  - local, Sector Market, and Fixer's Market stock scans include visible fighter LPC stacks as well as weapons;
-  - player cargo and accessible storage counts include fighter LPC stacks;
-  - the Buy GUI renders top-level `Weapons` and `Wings` toggle headings, each with the usual stock categories beneath;
-  - wing rows share the same queue/review/confirm trade flow as weapons and use wing-specific detail rows;
-  - wing sufficiency defaults to 4 and is configurable through LunaLib.
-- Added the observed Fixer's Market catalog:
-  - a transient updater scans live sector market cargo on load and about once per in-game day;
-  - observed safe weapons and fighter LPCs are stored in save persistent data under type-prefixed stock item keys;
-  - Fixer's Market virtual stock uses the observed legal catalog plus currently visible live market stock, while optional tag/faction inference remains off by default.
+## Active Work
 
-## Active Manual Validation
+### Runtime Rollback Validation
 
-- Open market trade and verify:
-  - no crash;
-  - `F8` opens the Weapon Stock Review popup;
-  - `Esc` dismisses the popup, while nested filter/color/review screens return to the trade screen through their footer controls;
-  - category headings expand/collapse and preserve current state across refresh;
-  - Sort cycles through `Stock`, `Name`, and `Price`;
-  - Black Market toggle updates counts/categories;
-  - Sort/source/toggle actions no longer leave old text layered under new text;
-  - weapon rows expand/collapse;
-  - expanded rows show weapon data rows directly below the parent weapon row;
-  - compact buy-step controls plan buys from cheapest eligible seller stock and shrink below `+10` when fewer than ten are available;
-  - compact sell-step controls plan sells from player inventory stock and shrink below `-10` when fewer than ten are available;
-  - compact sell-step controls also shrink to queued buy quantity when they are only reversing the shopping cart, e.g. `-5` after queuing 5 buys from zero inventory;
-  - `Sufficient` buys enough to reach the desired count from the current queued state and turns red when it will reduce the queued plan or sell excess;
-  - `Filters: N` opens/closes cleanly, filters rows immediately, and preserves the normal stock/review/color-debug flows;
-  - failed buys show a message instead of mutating cargo;
-  - no-weapons and many-weapons markets remain responsive;
-  - commodities remain vanilla;
-  - weapon badges still render bottom-right;
-  - fighter LPC badges still render bottom-right;
-  - totals still aggregate player cargo plus all accessible storage;
-  - buy/sell/storage moves update while paused;
-  - no old diagnostic squares or static marker assets appear.
+Validate the trade rollback fault hook in game.
 
-## High-Value Future Work
+Steps:
 
-- Review-agent remediation backlog from the post-`7f628f6` review:
-  - [x] Defer buy-side `SubmarketPlugin.reportPlayerMarketTransaction(...)` callbacks until after cargo and credit mutations fully commit, so forced rollback paths do not fire non-rollbackable market side effects before the trade succeeds.
-  - [x] Harden trade money arithmetic with `long` totals and checked/capped multiplication/addition. High-value modded items, remote multipliers, and large virtual quantities must fail closed instead of overflowing `int`.
-  - [x] Make `tools\deploy-live-mod.ps1` clean/sync repo-managed live files before copying, with a safe target-root check and an opt-out only for debugging.
-  - [x] Keep the forced trade-failure hook developer-only or release-validated. Public builds must keep the default at `none`, and validation should fail if it drifts.
-  - [x] Add user-facing config documentation for `perItem`, `W:` / `F:` item-key prefixes, legacy `perWeapon`, stock ignore/desired overrides, Sector/Fixer blacklists, remote-source multipliers, and rollback debug hooks.
-  - [x] Update Luna setting descriptions that still imply remote sources are weapon-only; source modes support weapons and fighter LPCs.
-  - [x] Trigger and verify a passing GitHub `Sanity` workflow run before public release.
-  - [x] Bump `mod_info.json` version and add a short changelog as a release-prep task, not during ordinary development churn.
-- Review-agent remediation backlog from the post-`7d299e8` review:
-  - [x] No-op `WeaponsProcurementCountUpdater` unless optional patched cargo-cell badges are enabled. Keep the script registered so Luna changes can take effect mid-save, but refresh settings on a bounded cadence, skip weapon/fighter/storage count scans and property writes while disabled, and publish `wp.counts.ready=false` when the badge path is inactive.
-  - [x] Fix `.github/workflows/sanity.yml` so CI checks committed whitespace rather than running `git diff --check` against a clean checkout. Use `git show --check` for push events and a PR commit/range check for pull requests; keep local `git diff --check` in release docs because it remains useful before commits.
-  - [x] Add a non-proprietary repo-jar stale-class check to CI. Inspect `jars/weapons-procurement.jar` with `jar tf` and reject compact forbidden-class entries such as removed pending-purchase or anonymous GUI helper classes, while keeping full repo/live jar parity validation local.
-  - [x] Correct remote-source tooltip copy. Sector Market and Fixer's Market tooltips should say that selling while a remote source is active uses the current local legal buyer and that black-market selling is disabled in remote source modes; do not change trade behavior in this task.
-  - [x] Add `perItem` stock-config overrides while preserving backward-compatible `perWeapon` support. Merge legacy `perWeapon` first and newer `perItem` second, support raw weapon ids, `W:<weaponId>`, raw wing ids, and `F:<wingId>`, and rename internal item-generic fields such as `ignoredWeapons` to item terminology where feasible.
-  - [x] Resolve the stale `BUY_FROM_SUBMARKET` action path. Confirmed no current rendered row emits `StockReviewAction.buyFromSubmarket(...)`; removed the action/factory/handler path rather than preserving a source-specific plan that local execution ignores.
-  - [x] Improve trade rollback diagnostics without changing successful trade semantics. Added source labels to mutation-journal snapshots, added a disabled-by-default `wp.debug.failTradeStep` forced-failure hook, and documented manual rollback validation in `PACKAGING.md`.
-  - [x] Make rollback fault injection practical for runtime testing by adding a default-`none` LunaLib debug setting that publishes `wp.debug.failTradeStep`, avoiding JVM launch-argument edits during repeated in-game validation.
-  - [ ] Runtime-validate rollback after source removal, player cargo add, and credit mutation for local, Sector Market, Fixer's Market, and mixed sell-then-buy plans.
-- Review-agent remediation backlog from the post-`7f57528` review:
-  - [x] Add rollback/journaled safety to `StockPurchaseExecutor` mutation paths. Keep the existing final source-stock preflight, but record WP-touched player cargo counts, source/target cargo counts, and player credits before mutation; on failure, best-effort reconcile those values and log enough before/after detail to diagnose partial execution. Do not try to simulate extra black-market side effects here.
-  - [x] Align the Java fallback for optional patched cargo-cell badges with the clean-package default by making `WeaponsProcurementConfig.refreshAndPublishSettings()` fall back to `wp_enable_patched_badges=false` when Luna settings are missing or unreadable.
-  - [x] Fix remaining wing-capable UI copy that still says weapon-only text. Use item-neutral text in mixed contexts and `StockItemType` labels in section-specific contexts, especially category heading summaries, review empty states, and trade-planning messages.
-  - [x] Add fighter LPC / wing display-name matching to `WeaponMarketBlacklist` while preserving existing item-key, raw-id, and weapon display-name matching.
-  - [x] Fix the user-facing README `PACKAGING.md` link so it is repository-relative rather than a local `D:/...` path; added a low-noise docs sanity check for local drive-path links in README/PACKAGING.
-  - [x] Decouple Luna settings refresh from `StockReviewConfig.load()`. The config load is JSON-only; settings refresh happens explicitly at user-entry points such as popup/dialog open checks and count-updater refreshes.
-  - [x] Sanitize/migrate Fixer's Market observed-catalog persistent data by replacing any existing map with a fresh `HashMap<String, String>` containing only string key/value entries, discarding malformed entries safely and logging once.
-  - [x] Add non-proprietary CI or local sanity checks that do not require Starsector/Luna jars: PowerShell parser checks, stale source name checks, and docs links. Keep full compile/live-jar validation as a local release check.
-  - [x] Leave narrower reopen payloads deferred unless state-preservation bugs appear. The current full `StockReviewState` reopen copy is acceptable for in-session modal reopen, and changing it is more regression-prone than valuable without a concrete bug.
-- Expanded stock source feature:
-  - [x] replace the old Local/Global boolean with explicit `Local`, `Sector Market`, and `Fixer's Market` source modes;
-  - [x] keep `Local` as current-market stock review with the normal Black Market toggle;
-  - [x] add `Sector Market` as a live-scanned sector-wide stock source with real market/submarket identity, limited by actual sector stock and using the `wp_sector_market_price_multiplier` Luna setting, defaulting to 3x;
-  - [x] make Sector Market confirmation drain the touched remote market cargo stacks while still selling player cargo to the current local market;
-  - [x] add `Fixer's Market` as the virtual 999-stock source using live-scan plus optional faction/tag inference and the `wp_fixers_market_price_multiplier` Luna setting, defaulting to 5x;
-  - [x] add independent Luna toggles for Sector and Fixer's Market availability plus a JSON blacklist for banning weapons from either remote source;
-  - [x] keep Fixer's Market live-scanned eligible weapons on by default, but make tag/faction inference opt-in because that path is more likely to admit secret or restricted weapons;
-  - [x] make Fixer's Market learn from observed real market cargo over time, preserving spoiler-safe legal weapons/wings in save data so the Fixer catalog becomes more complete across market refreshes;
-  - [x] use commit `a02e507` as the confirmed-good reference for stock-review nested indentation and button right-edge sizing.
-  - [x] disable and gray out the Black Market button for non-local source modes;
-  - [x] add `Tariffs Paid` / average-markup summary row above credits/cargo deltas.
-- Current requested stock-review review/buy page work queue:
-  - [x] review page visually narrows by the width taken by buy/sell row controls, so the Review Trades layout does not inherit unnecessary trade-button width;
-  - [x] review page inner panel occupies the full list body from top to bottom, not bottom-anchored to visible rows;
-  - [x] fixed Buying/Selling toggle headings in Review Trades;
-  - [x] preserved the category-style gap between Selling and the Total Cost or Total Profit / Credits Available summary rows;
-  - [x] use `Review Trades` as the review page title and `Make Trades` as the buy/sell page title;
-  - [x] keep the buy/sell page inner panel static-height while scrolling instead of changing size at the bottom;
-  - [x] remove the old display modes; the list now shows only active-source buyable weapons or player-inventory weapons;
-  - [x] revise sorting: default Stock means lowest stored quantity first, then cheapest price, then name; Name then uses stock and price tie-breakers; removed low-value For Sale and Owned sorts; added Price sorting;
-  - [x] remove the top-row Storage toggle because storage counts are already shown in weapon rows;
-  - [x] keep `Storage` as total owned stock, including inventory, while preventing storage-only weapons from creating rows;
-  - [x] keep nested weapon data rows inside their parent heading width, ending before the `Storage` cell column;
-  - [x] render weapon data fields as LabelTextComponents; LabelTextComponents have no parent outer border, no fill on the label side, and gray fill only on the value side.
-- Current requested stock-review polish/work queue:
-  - [x] keep Sector Market stock uncached across snapshot rebuilds so confirmed remote purchases are reflected immediately;
-  - [x] calculate `Tariffs Paid` / average markup from true base weapon value rather than tariff-included source prices;
-  - [x] remove stale Global-source and Sellers-section helper paths after the source split;
-  - [x] remove borders from indented spacer regions behind weapon/toggle heading rows;
-  - [x] title-case toggle heading labels;
-  - [x] fix stock-review toggle headings not opening by routing enabled WP controls through visible-shell hitboxes on mouse-up instead of relying only on Starsector checked-state callbacks;
-  - [x] add reusable labelText containers for review summary rows such as `Total Cost` and `Credits Available`;
-  - [x] replace `-S` / `+S` with one `Sufficient` row button that buys deficits or sells excess to reach barely sufficient stock;
-  - [x] replace buggy disabled-button hover/highlight behavior by rendering disabled action cells as inert WP shells instead of disabled Starsector buttons;
-  - [x] port the ACG-style color debug menu behind a top-row `Colors` button, with temporary and permanent RGB overrides;
-  - [x] use the repo's dimmed-toggle button path for toggle headings instead of normal toggle visuals.
-  - [x] remove the redundant trade-screen close/cancel footer button; ESC still closes the popup, while footer controls stay focused on trade actions.
-- ACG GUI migration is now largely in drawdown:
-  - modal composition, modal list panels, scroll math, button semantics, toggle-heading labels, text helpers, host adapters, and live-jar helper validation have reusable `WimGui*` ownership;
-  - future WP screens should start from those helpers rather than copying stock-review renderer code;
-  - only continue extracting GUI helpers when a second screen needs the same behavior or when runtime testing exposes a concrete inconsistency.
-- Keep this validation loop for future migration slices:
-  - run `build.ps1`;
-  - run `git diff --check`;
-  - deploy the jar to the live Starsector mod folder;
-  - run `tools\validate-live-gui-classes.ps1`;
-  - restart Starsector before testing when new helper classes were introduced.
-- Continue polishing the new stock-control row system after runtime testing:
-  - verify the richer row still fits long modded weapon names at common UI scales;
-  - tune cell widths if labels such as `Storage`, `Price`, or `Buying` / `Selling` clip in game;
-  - adjust compact `+1`, `-1`, dynamic buy/sell step, `Sufficient`, or `Reset` widths only if runtime UI scale testing shows crowding.
-- Deferred feature/polish items:
-  - add wing-specific filters only if runtime testing shows the wing list is noisy enough to need them;
-  - improve failure messages for real observed cases such as no valid buyer, illegal markets, access restrictions, commission/faction restrictions, and other edge cases after collecting concrete runtime failures.
-- [x] Removed routine capped diagnostic logs from the count updater and embedded badge helper; only real failure logs remain on those hot paths.
-- Harden purchase side effects after runtime validation:
-  - verify the new transaction reporting actually triggers vanilla/modded suspicion/economy listeners as expected;
-  - tariff parity with vanilla;
-  - black-market sale side effects beyond the current best-effort `SNEAK` transaction callback only if runtime testing proves the existing callback is not enough;
-  - clearer failure text for commission/illegal-market cases.
-- [x] Added `PACKAGING.md` with forum-safe clean-popup packaging notes and separate optional patched-badge patch/restore guidance.
-- [x] Completed post-rebrand operational cleanup: removed the stale old live `Weapon Inventory Mod` folder, rebuilt/deployed the renamed mod jar, refreshed the patched core helper from a clean backup, and hardened the patcher against pre-rebrand helper calls.
+1. Open LunaLib settings.
+2. Set `DEV ONLY: force trade rollback failure` to one failure step.
+3. Test each relevant trade mode:
+   - local legal buy;
+   - local sell;
+   - local black-market buy/sell if available;
+   - Sector Market buy;
+   - Fixer's Market buy;
+   - mixed sell-then-buy plan.
+4. Confirm player credits, player cargo, and touched market cargo return to pre-confirm values after forced failure.
+5. Repeat for:
+   - `after-source-removal`;
+   - `after-player-cargo-remove`;
+   - `after-player-cargo-add`;
+   - `after-target-cargo-add`;
+   - `after-credit-mutation`.
+6. Reset the setting to `none`.
+
+Acceptance:
+
+- No GUI crash.
+- Controlled failure message appears.
+- WP-touched item counts and credits are restored.
+- Successful trades still work after resetting the debug setting.
+
+## Deferred Until Runtime Evidence
+
+- Tune row widths only after seeing clipping at real UI scales or with long modded names.
+- Add wing-specific filters only if wing rows are noisy in real saves.
+- Improve failure messages for concrete observed cases such as no valid buyer, illegal market, access restriction, commission/faction restrictions, or modded submarket behavior.
+- Add extra black-market suspicion/reputation/economy simulation only if runtime testing proves vanilla/modded transaction listeners are not firing through the current callback path.
+- Narrow popup reopen state payload only if stale warning/scroll/mode state becomes a real bug.
 
 ## Avoid Unless Reopened Deliberately
 
-- Do not retry late over-icon rendering casually; it caused invisibility/blur regressions.
-- Do not use layered background plus text badge rendering.
+- Do not retry late over-icon badge rendering; it caused invisibility/blur regressions.
+- Do not use layered background plus text badge rendering for tiny cargo-cell badges.
 - Do not put campaign-state or LunaLib calls into `WeaponsProcurementBadgeHelper`.
 - Do not reintroduce runtime reflection or raw GL rendering for the badge path.
+- Do not reintroduce seller-detail rows or source-specific local-buy actions without a deliberate UI design pass.
+- Do not treat build/static validation as proof that custom Starsector UI behavior works in game.
+
+## Validation Commands
+
+For code or asset changes:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
+git diff --check
+```
+
+For docs-only changes:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
+git diff --check
+```
