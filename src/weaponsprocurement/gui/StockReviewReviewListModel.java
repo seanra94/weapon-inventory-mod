@@ -75,7 +75,8 @@ final class StockReviewReviewListModel {
         String itemTooltip = StockReviewTooltips.itemDataToggle(record);
         rows.add(StockReviewListRow.item(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
                 cells, StockReviewAction.toggleItem(record.getItemKey()), itemTooltip,
-                StockReviewItemTooltip.forRecord(record, itemTooltip), StockReviewStyle.SECTION_INDENT));
+                StockReviewItemTooltip.forRecord(record, itemTooltip), StockReviewStyle.SECTION_INDENT,
+                StockReviewRowIcon.weapon(record)));
         if (!expanded) {
             return;
         }

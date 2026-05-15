@@ -23,6 +23,7 @@ final class WimGuiListRow<A> {
     private final float rightReserveWidth;
     private final String tooltip;
     private final TooltipMakerAPI.TooltipCreator tooltipCreator;
+    private final StockReviewRowIcon icon;
 
     WimGuiListRow(String label,
                   Color textColor,
@@ -38,7 +39,7 @@ final class WimGuiListRow<A> {
                   float rightReserveWidth,
                   String tooltip) {
         this(label, textColor, fillColor, buttonFillColor, borderColor, indent, mainAction,
-                mainAlignment, cells, topGap, cellGapOverride, rightReserveWidth, tooltip, null);
+                mainAlignment, cells, topGap, cellGapOverride, rightReserveWidth, tooltip, null, null);
     }
 
     WimGuiListRow(String label,
@@ -55,6 +56,25 @@ final class WimGuiListRow<A> {
                   float rightReserveWidth,
                   String tooltip,
                   TooltipMakerAPI.TooltipCreator tooltipCreator) {
+        this(label, textColor, fillColor, buttonFillColor, borderColor, indent, mainAction, mainAlignment,
+                cells, topGap, cellGapOverride, rightReserveWidth, tooltip, tooltipCreator, null);
+    }
+
+    WimGuiListRow(String label,
+                  Color textColor,
+                  Color fillColor,
+                  Color buttonFillColor,
+                  Color borderColor,
+                  float indent,
+                  A mainAction,
+                  Alignment mainAlignment,
+                  List<WimGuiRowCell<A>> cells,
+                  boolean topGap,
+                  Float cellGapOverride,
+                  float rightReserveWidth,
+                  String tooltip,
+                  TooltipMakerAPI.TooltipCreator tooltipCreator,
+                  StockReviewRowIcon icon) {
         this.label = label;
         this.textColor = textColor;
         this.fillColor = fillColor;
@@ -71,6 +91,7 @@ final class WimGuiListRow<A> {
         this.rightReserveWidth = Math.max(0f, rightReserveWidth);
         this.tooltip = tooltip;
         this.tooltipCreator = tooltipCreator;
+        this.icon = icon;
     }
 
     String getLabel() {
@@ -127,5 +148,9 @@ final class WimGuiListRow<A> {
 
     TooltipMakerAPI.TooltipCreator getTooltipCreator() {
         return tooltipCreator;
+    }
+
+    StockReviewRowIcon getIcon() {
+        return icon;
     }
 }

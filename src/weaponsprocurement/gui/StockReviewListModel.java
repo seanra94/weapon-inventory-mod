@@ -135,7 +135,8 @@ final class StockReviewListModel {
                         StockReviewTooltips.resetPlan()));
         String itemTooltip = StockReviewTooltips.itemDataToggle(record);
         rows.add(StockReviewListRow.item(label, cells, StockReviewAction.toggleItem(record.getItemKey()),
-                itemTooltip, StockReviewItemTooltip.forRecord(record, itemTooltip), StockReviewStyle.SECTION_INDENT));
+                itemTooltip, StockReviewItemTooltip.forRecord(record, itemTooltip), StockReviewStyle.SECTION_INDENT,
+                StockReviewRowIcon.weapon(record)));
         if (!expanded) {
             return;
         }

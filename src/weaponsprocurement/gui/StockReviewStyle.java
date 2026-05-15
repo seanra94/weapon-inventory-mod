@@ -1,11 +1,20 @@
 package weaponsprocurement.gui;
 
+import com.fs.starfarer.api.Global;
+
 import java.awt.Color;
 
 final class StockReviewStyle {
     static final boolean SHOW_WIDTH_TEST_ROWS = false;
 
-    static final float WIDTH = 1180f;
+    private static final float FALLBACK_WIDTH = 1180f;
+    private static final float FALLBACK_HEIGHT = 640f;
+    private static final float MIN_FULLSCREEN_WIDTH = 900f;
+    private static final float MIN_FULLSCREEN_HEIGHT = 520f;
+    private static final float SCREEN_EDGE_X_MARGIN = 24f;
+    private static final float SCREEN_EDGE_Y_MARGIN = 34f;
+
+    static final float WIDTH = fullscreenWidth();
     static final float PAD = 10f;
     static final float SMALL_PAD = 4f;
     static final float SECTION_GAP = PAD;
@@ -30,17 +39,13 @@ final class StockReviewStyle {
             + PLAN_CELL_WIDTH + TRADE_CONTROL_BLOCK_WIDTH + 3f * BUTTON_GAP;
     static final float REVIEW_STOCK_CELL_WIDTH = STOCK_CELL_WIDTH;
     static final float REVIEW_ROW_RIGHT_BLOCK_WIDTH = REVIEW_STOCK_CELL_WIDTH + PLAN_CELL_WIDTH + BUTTON_GAP;
-    static final float REVIEW_WIDTH = WIDTH - TRADE_ROW_RIGHT_BLOCK_WIDTH + REVIEW_ROW_RIGHT_BLOCK_WIDTH;
+    static final float REVIEW_WIDTH = WIDTH;
     static final float DEBUG_VALUE_WIDTH = 430f;
     static final float DEBUG_SAMPLE_WIDTH = 130f;
     static final float DEBUG_DELTA_BUTTON_WIDTH = 48f;
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float ROW_HEIGHT = 22f;
     static final float ROW_GAP = 4f;
-    static final int LIST_VISIBLE_ROWS = 17;
-    static final float LIST_INNER_HEIGHT = LIST_VISIBLE_ROWS * ROW_HEIGHT
-            + (LIST_VISIBLE_ROWS - 1) * ROW_GAP;
-    static final float LIST_PANEL_HEIGHT = LIST_INNER_HEIGHT + 2f * SMALL_PAD;
     static final float CATEGORY_TOP_GAP = ROW_GAP;
     static final float SUMMARY_ROW_GAP = 4f;
     static final int SUMMARY_ROW_COUNT = 4;
@@ -49,10 +54,11 @@ final class StockReviewStyle {
     static final float TRADE_ACTION_ROW_TOP = PAD;
     static final float TRADE_LIST_TOP = TRADE_ACTION_ROW_TOP + ACTION_BUTTON_HEIGHT + SECTION_GAP;
     static final float REVIEW_LIST_TOP = TRADE_LIST_TOP;
-    static final float TRADE_LIST_HEIGHT = LIST_PANEL_HEIGHT;
-    static final float REVIEW_LIST_HEIGHT = LIST_PANEL_HEIGHT;
-    static final float SUMMARY_TOP = TRADE_LIST_TOP + LIST_PANEL_HEIGHT + SECTION_GAP;
-    static final float HEIGHT = SUMMARY_TOP + SUMMARY_HEIGHT + SECTION_GAP + ACTION_BUTTON_HEIGHT + PAD;
+    static final float HEIGHT = fullscreenHeight();
+    static final float SUMMARY_TOP = HEIGHT - PAD - ACTION_BUTTON_HEIGHT - SECTION_GAP - SUMMARY_HEIGHT;
+    static final float TRADE_LIST_HEIGHT = Math.max(ROW_HEIGHT + 2f * SMALL_PAD,
+            SUMMARY_TOP - SECTION_GAP - TRADE_LIST_TOP);
+    static final float REVIEW_LIST_HEIGHT = TRADE_LIST_HEIGHT;
     static final float TEXT_TOP_PAD = WimGuiStyle.TEXT_TOP_PAD;
     static final float TEXT_LEFT_PAD = WimGuiStyle.TEXT_LEFT_PAD;
     static final float WEAPON_INDENT = 18f;
@@ -199,6 +205,27 @@ final class StockReviewStyle {
             ROW_BORDER);
 
     private StockReviewStyle() {
+    }
+
+    private static float fullscreenWidth() {
+        return screenDimension(true, FALLBACK_WIDTH, MIN_FULLSCREEN_WIDTH, SCREEN_EDGE_X_MARGIN);
+    }
+
+    private static float fullscreenHeight() {
+        return screenDimension(false, FALLBACK_HEIGHT, MIN_FULLSCREEN_HEIGHT, SCREEN_EDGE_Y_MARGIN);
+    }
+
+    private static float screenDimension(boolean width, float fallback, float minimum, float edgeMargin) {
+        try {
+            float screen = width
+                    ? Global.getSettings().getScreenWidth()
+                    : Global.getSettings().getScreenHeight();
+            if (screen > 0f && !Float.isNaN(screen) && !Float.isInfinite(screen)) {
+                return Math.max(minimum, screen - 2f * edgeMargin);
+            }
+        } catch (RuntimeException ignored) {
+        }
+        return fallback;
     }
 
     static void refreshColors() {

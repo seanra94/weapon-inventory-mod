@@ -5,8 +5,8 @@ Scope: Weapons Procurement, Starsector 0.98a campaign cargo/refit-style weapon h
 Last verified: 2026-05-16 against `C:\Games\Starsector\starsector-core\starfarer_obf.jar.wp_backup`
 Read when: attempting to make stock-review weapon rows match vanilla hover tooltips, cargo-cell tooltip behavior, or codex weapon tooltip layout
 Do not read for: ordinary stock list layout, trade execution, source pricing, or optional badge rendering unless a tooltip change crosses into private UI classes
-Related files: `src/weaponsprocurement/gui/StockReviewItemTooltip.java`, `src/weaponsprocurement/gui/WimGuiControls.java`, `src/weaponsprocurement/gui/WimGuiListRowRenderer.java`
-Search tags: vanilla tooltip, weapon hover, CargoDataGridView, CargoTooltipFactory, StandardTooltipV2, BaseWeaponSpec, bytecode, codex
+Related files: `src/weaponsprocurement/gui/StockReviewItemTooltip.java`, `src/weaponsprocurement/gui/StockReviewWeaponIconPlugin.java`, `src/weaponsprocurement/gui/WimGuiControls.java`, `src/weaponsprocurement/gui/WimGuiListRowRenderer.java`
+Search tags: vanilla tooltip, weapon hover, CargoDataGridView, CargoTooltipFactory, StandardTooltipV2, BaseWeaponSpec, bytecode, codex, TooltipLocation.RIGHT, StockReviewWeaponIconPlugin
 
 ## Summary
 
@@ -19,6 +19,8 @@ Search tags: vanilla tooltip, weapon hover, CargoDataGridView, CargoTooltipFacto
 - The detailed data is heavily conditional. It branches on beam/projectile/missile spec subtype, ammo/recharge behavior, damage tags, compare mode, campaign state, and whether a real cargo stack/context exists.
 - Copying the vanilla implementation verbatim into the clean/public mod path is not appropriate. It would require private Starsector classes or copied decompiled code, and would make public release compatibility brittle.
 - The public-safe route is a clean-room approximation using public APIs and the bytecode behavior map below. The private-only route would be an explicitly approved experiment that must be excluded from public export.
+- Current WP weapon hovers intentionally use a public-safe approximation with a 500f content width, custom stat rows, right-side tooltip placement, and shared type-motif weapon icons.
+- Do not regress the tooltip back to `TooltipLocation.BELOW` or `TooltipMakerAPI.beginGrid()` for stat rows without in-game proof; both caused visible clipping in the stock-review list.
 
 ## Index
 
@@ -28,6 +30,7 @@ Search tags: vanilla tooltip, weapon hover, CargoDataGridView, CargoTooltipFacto
 - `Conditional Data Rules`: Tags and context that change rows.
 - `Why Verbatim Copy Is Unsafe`: Public release and runtime risks.
 - `Implementation Options`: Practical paths for this mod.
+- `Current WP Approximation`: The user-approved implementation shape and code ownership points.
 - `Evidence / Provenance`: Bytecode commands and files used.
 
 ## Details
@@ -186,6 +189,33 @@ Not recommended:
 - Copy decompiled vanilla source into WP.
 - Patch `CargoDataGridView` or `CargoStackView` for tooltip access.
 - Depend on the currently patched live core jar as evidence for vanilla behavior; use the unpatched backup for bytecode reads.
+
+### Current WP Approximation
+
+The 2026-05-16 implementation that the user called a solid foundation is intentionally not a verbatim vanilla tooltip. It preserves the parts that matter visually and behaviorally while staying public-release safe.
+
+Keep these ownership points stable:
+
+- `StockReviewItemTooltip` owns weapon hover content. It builds the title, design type, description, cargo/price/owned context, `Primary data`, custom primary text, `Ancillary data`, custom ancillary text, and Codex entry id.
+- `StockReviewItemTooltip.addIconGrid(...)` uses explicit custom stat rows instead of `TooltipMakerAPI.beginGrid()`. The API grid rendered lower than its reserved height and let `Flux / damage` overlap the `Ancillary data` heading.
+- `WimGuiControls.addTooltipTo(...)` gives `StockReviewItemTooltip` instances `TooltipLocation.RIGHT`. The old forced `TooltipLocation.BELOW` anchor let tall weapon hovers run through the bottom of the screen when rows were near the footer.
+- `StockReviewWeaponIconPlugin` owns the public-safe weapon icon motif. It draws a black backing, a type motif, and the weapon sprite on top. The mapping is:
+  - Ballistic: yellow square.
+  - Energy: blue circle.
+  - Missile: green diamond.
+  - Hybrid: orange square-in-circle.
+  - Composite: lime diamond-in-square.
+  - Synergy: turquoise diamond-in-circle.
+  - Universal: grey diamond-in-square-in-circle.
+- `StockReviewListModel` and `StockReviewReviewListModel` attach `StockReviewRowIcon.weapon(record)` to weapon rows only. Wings keep the existing text-only row treatment.
+- `WimGuiListRowRenderer` gives a weapon icon its own square slot with height equal to the row action height, then shifts the normal toggle button right and narrows it by that slot plus the normal button gap.
+
+Regression checks:
+
+- Hover rows near the bottom of the list; the tooltip should open to the right rather than below and should not cut off the Codex footer or lower ancillary rows.
+- Hover a high-EMP weapon such as Mjolnir; `Flux / damage` must not draw behind `Ancillary data`.
+- Hover weapons with custom `%s` tooltip text such as Phase Lance; placeholders should be substituted before percent escaping, not shown raw and not crash.
+- Check ballistic, energy, missile, hybrid, composite, synergy, and universal weapon icons if available; their row icons and tooltip icon motifs should match the same mapping.
 
 ## Evidence / Provenance
 

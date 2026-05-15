@@ -5,6 +5,7 @@ import com.fs.starfarer.api.campaign.BaseCustomUIPanelPlugin;
 import com.fs.starfarer.api.campaign.CargoAPI;
 import com.fs.starfarer.api.campaign.CargoStackAPI;
 import com.fs.starfarer.api.combat.DamageType;
+import com.fs.starfarer.api.combat.WeaponAPI;
 import com.fs.starfarer.api.graphics.SpriteAPI;
 import com.fs.starfarer.api.impl.codex.CodexDataV2;
 import com.fs.starfarer.api.loading.Description;
@@ -27,25 +28,34 @@ import java.util.List;
 import java.util.Locale;
 
 final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
-    private static final float CONTENT_WIDTH = 400f;
-    private static final float OUTER_PAD_X = 12f;
-    private static final float OUTER_PAD_TOP = 6f;
-    private static final float OUTER_PAD_BOTTOM = 8f;
+    private static final float VANILLA_TOOLTIP_WIDTH = 400f;
+    private static final float CONTENT_WIDTH = VANILLA_TOOLTIP_WIDTH * 1.25f;
+    private static final float WING_TOOLTIP_WIDTH = 424f;
+    private static final float OUTER_PAD_X = 16f;
+    private static final float OUTER_PAD_TOP = 8f;
+    private static final float OUTER_PAD_BOTTOM = OUTER_PAD_X;
     private static final float WIDTH = CONTENT_WIDTH + 2f * OUTER_PAD_X;
-    private static final float MAX_TOOLTIP_HEIGHT = 900f;
-    private static final float SECTION_PAD = 10f;
-    private static final float SMALL_PAD = 3f;
-    private static final float SECTION_CONTENT_PAD = 14f;
-    private static final float GRID_ROW_HEIGHT = 21f;
-    private static final float ICON_SIZE = 80f;
-    private static final float ICON_LEFT = 20f;
-    private static final float ICON_TOP = 10f;
-    private static final float ICON_INSET = 10f;
-    private static final float ICON_GRID_GAP = 34f;
-    private static final float GRID_WIDTH = CONTENT_WIDTH - ICON_LEFT - ICON_SIZE - ICON_GRID_GAP;
+    private static final float TOOLTIP_LAYOUT_HEIGHT = 1400f;
+    private static final float SECTION_PAD = 9f;
+    private static final float SMALL_PAD = 4f;
+    private static final float SECTION_CONTENT_PAD = 12f;
+    private static final float CUSTOM_TEXT_PAD = 6f;
+    private static final float GRID_BOTTOM_PAD = 8f;
+    private static final float GRID_ROW_HEIGHT = 24f;
+    private static final float SECTION_HEADING_HEIGHT = 22f;
+    private static final float ICON_SIZE = 92f;
+    private static final float ICON_LEFT = 28f;
+    private static final float ICON_TOP = 12f;
+    private static final float ICON_INSET = 2f;
+    private static final float ICON_GRID_GAP = 44f;
+    private static final float GRID_WIDTH = CONTENT_WIDTH - ICON_LEFT - ICON_SIZE - ICON_GRID_GAP - 8f;
+    private static final float GRID_LABEL_WIDTH = 188f;
     private static final Color VANILLA_SECTION = new Color(9, 78, 88, 225);
-    private static final Color ICON_BACKING = new Color(0, 0, 0, 220);
-    private static final Color ICON_FRAME = new Color(230, 214, 0, 255);
+    private static final Color TOOLTIP_TEXT = new Color(215, 215, 215, 255);
+    private static final Color TOOLTIP_MUTED = new Color(175, 175, 175, 255);
+    private static final int DESCRIPTION_MAX_LINES = 4;
+    private static final int CUSTOM_TEXT_MAX_LINES = 3;
+    private static final float ESTIMATED_DESCRIPTION_CHAR_WIDTH = 8f;
 
     private final WeaponStockRecord record;
     private final String toggleText;
@@ -75,7 +85,7 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
 
     @Override
     public float getTooltipWidth(Object tooltipParam) {
-        return WIDTH;
+        return record.isWing() ? WING_TOOLTIP_WIDTH : WIDTH;
     }
 
     @Override
@@ -86,7 +96,7 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
             tooltip.addTitle(record.getDisplayName(), titleColor());
             createWingTooltip(tooltip);
             if (WimGuiTooltip.hasText(toggleText)) {
-                tooltip.addPara(toggleText, SECTION_PAD, StockReviewStyle.MUTED,
+                tooltip.addPara(tooltipFormat(toggleText), SECTION_PAD, StockReviewStyle.MUTED,
                         highlightColor(), "Basic Info", "Advanced Info");
             }
         } else {
@@ -96,8 +106,8 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
     }
 
     private void addPaddedWeaponTooltip(TooltipMakerAPI tooltip) {
-        CustomPanelAPI panel = Global.getSettings().createCustom(WIDTH, MAX_TOOLTIP_HEIGHT, new BaseCustomUIPanelPlugin());
-        TooltipMakerAPI content = panel.createUIElement(CONTENT_WIDTH, MAX_TOOLTIP_HEIGHT, false);
+        CustomPanelAPI panel = Global.getSettings().createCustom(WIDTH, TOOLTIP_LAYOUT_HEIGHT, new BaseCustomUIPanelPlugin());
+        TooltipMakerAPI content = panel.createUIElement(CONTENT_WIDTH, TOOLTIP_LAYOUT_HEIGHT, false);
         content.setParaFontDefault();
         content.setParaFontColor(textColor());
         createWeaponTooltip(content);
@@ -117,12 +127,14 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         addCargoContext(tooltip);
 
         addSectionHeading(tooltip, "Primary data", SECTION_PAD);
-        addIconGrid(tooltip, weaponSpriteName(spec), primaryRows(spec), true, SECTION_CONTENT_PAD);
-        addSpecPara(tooltip, spec.getCustomPrimary(), spec.getCustomPrimaryHL(), SMALL_PAD);
+        addIconGrid(tooltip, StockReviewWeaponIconPlugin.spriteName(spec), primaryRows(spec), true,
+                StockReviewWeaponIconPlugin.motifType(spec), SECTION_CONTENT_PAD);
+        addSpecPara(tooltip, spec.getCustomPrimary(), spec.getCustomPrimaryHL(), CUSTOM_TEXT_PAD, spec);
 
         addSectionHeading(tooltip, "Ancillary data", SECTION_PAD);
-        addIconGrid(tooltip, damageIconSpriteName(spec.getDamageType()), ancillaryRows(spec), false, SECTION_CONTENT_PAD);
-        addSpecPara(tooltip, spec.getCustomAncillary(), spec.getCustomAncillaryHL(), SMALL_PAD);
+        addIconGrid(tooltip, damageIconSpriteName(spec.getDamageType()), ancillaryRows(spec), false,
+                null, SECTION_CONTENT_PAD);
+        addSpecPara(tooltip, spec.getCustomAncillary(), spec.getCustomAncillaryHL(), CUSTOM_TEXT_PAD, spec);
     }
 
     private void createWingTooltip(TooltipMakerAPI tooltip) {
@@ -151,13 +163,13 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         }
         String firstPara = description.getText1FirstPara();
         if (hasText(firstPara)) {
-            LabelAPI label = tooltip.addPara(firstPara.trim(), SECTION_PAD);
+            LabelAPI label = tooltip.addPara(tooltipFormat(truncateDescription(firstPara.trim())), SECTION_PAD);
             if (hasText(description.getText2()) && description.getText2().trim().startsWith("-")) {
                 label.italicize();
             }
         }
         if (hasText(description.getText2()) && description.getText2().trim().startsWith("-")) {
-            LabelAPI label = tooltip.addPara(description.getText2().trim(), SMALL_PAD, mutedColor());
+            LabelAPI label = tooltip.addPara(tooltipFormat(description.getText2().trim()), SMALL_PAD, mutedColor());
             label.italicize();
         }
     }
@@ -184,7 +196,6 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         addRow(rows, "Mount type", format(spec.getSize()) + ", " + format(spec.getMountType()));
         addMountNotes(rows, spec);
         addRow(rows, "Ordnance points", record.getOpCostLabel());
-        addSpacer(rows);
         addRow(rows, "Range", record.getRangeLabel());
         addRow(rows, damageLabel(spec), damageValue(spec));
         if (hasMeaningful(record.getEmpLabel()) && !"0".equals(record.getEmpLabel())) {
@@ -193,7 +204,6 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         if (!spec.isNoDPSInTooltip()) {
             addRow(rows, "Damage / second", record.getSustainedDamagePerSecondLabel());
         }
-        addSpacer(rows);
         addRow(rows, "Flux / second", record.getSustainedFluxPerSecondLabel());
         addRow(rows, "Flux / shot", fluxPerShotLabel(spec));
         addRow(rows, "Flux / damage", record.getFluxPerDamageLabel());
@@ -205,7 +215,6 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         DamageType damageType = spec.getDamageType();
         addRow(rows, "Damage type", damageType == null ? "?" : damageType.getDisplayName());
         addRow(rows, "", damageMultiplierLabel(damageType));
-        addSpacer(rows);
         addRow(rows, "Speed", format(spec.getSpeedStr()));
         addRow(rows, "Tracking", format(spec.getTrackingStr()));
         addRow(rows, "Accuracy", format(spec.getAccuracyStr()));
@@ -226,59 +235,115 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         return rows;
     }
 
-    private void addIconGrid(TooltipMakerAPI tooltip, String spriteName, List<StatRow> rows, boolean framed, float pad) {
+    private void addIconGrid(TooltipMakerAPI tooltip,
+                             String spriteName,
+                             List<StatRow> rows,
+                             boolean weaponTile,
+                             WeaponAPI.WeaponType motifType,
+                             float pad) {
         if (rows.isEmpty()) {
             return;
         }
         int visibleRows = Math.max(1, rows.size());
         float height = Math.max(ICON_SIZE + ICON_TOP, visibleRows * GRID_ROW_HEIGHT);
         CustomPanelAPI panel = Global.getSettings().createCustom(CONTENT_WIDTH, height, new BaseCustomUIPanelPlugin());
-        CustomPanelAPI icon = panel.createCustomPanel(ICON_SIZE, ICON_SIZE, new IconPanelPlugin(spriteName, framed));
+        CustomPanelAPI icon = panel.createCustomPanel(ICON_SIZE, ICON_SIZE,
+                weaponTile
+                        ? new StockReviewWeaponIconPlugin(spriteName, motifType)
+                        : new IconPanelPlugin(spriteName));
         panel.addComponent(icon).inTL(ICON_LEFT, Math.min(ICON_TOP, Math.max(0f, height - ICON_SIZE)));
 
-        TooltipMakerAPI grid = panel.createUIElement(GRID_WIDTH, height, false);
-        grid.setParaFontDefault();
-        grid.setParaFontColor(textColor());
-        grid.setGridRowHeight(GRID_ROW_HEIGHT);
-        grid.beginGrid(GRID_WIDTH, 1);
-        grid.setGridLabelColor(textColor());
-        grid.setGridValueColor(highlightColor());
         for (int i = 0; i < rows.size(); i++) {
             StatRow row = rows.get(i);
-            grid.addToGrid(0, i, row.label, row.value);
+            addStatRow(panel, ICON_LEFT + ICON_SIZE + ICON_GRID_GAP, i * GRID_ROW_HEIGHT,
+                    GRID_WIDTH, GRID_ROW_HEIGHT, row);
         }
-        grid.addGrid(0f);
-        grid.resetGridRowHeight();
-        panel.addUIElement(grid).inTL(ICON_LEFT + ICON_SIZE + ICON_GRID_GAP, 0f);
         tooltip.addCustom(panel, pad);
+        tooltip.addSpacer(GRID_BOTTOM_PAD);
+    }
+
+    private static void addStatRow(CustomPanelAPI panel,
+                                   float x,
+                                   float y,
+                                   float width,
+                                   float height,
+                                   StatRow row) {
+        if (row == null) {
+            return;
+        }
+        if (!hasText(row.label)) {
+            addPanelLabel(panel, row.value, highlightColor(), x, y, width, height, Alignment.RMID);
+            return;
+        }
+        float valueX = x + GRID_LABEL_WIDTH;
+        float valueWidth = Math.max(20f, width - GRID_LABEL_WIDTH);
+        addPanelLabel(panel, row.label, textColor(), x, y, GRID_LABEL_WIDTH, height, Alignment.LMID);
+        addPanelLabel(panel, row.value, highlightColor(), valueX, y, valueWidth, height, Alignment.RMID);
     }
 
     private static void addSectionHeading(TooltipMakerAPI tooltip, String text, float pad) {
-        tooltip.addSectionHeading(text, VANILLA_SECTION, VANILLA_SECTION, Alignment.MID, pad);
+        CustomPanelAPI panel = Global.getSettings().createCustom(CONTENT_WIDTH, SECTION_HEADING_HEIGHT,
+                new SectionHeadingPlugin());
+        addPanelLabel(panel, text, textColor(), 0f, 0f, CONTENT_WIDTH,
+                SECTION_HEADING_HEIGHT, Alignment.MID);
+        tooltip.addCustom(panel, pad);
+    }
+
+    private static void addPanelLabel(CustomPanelAPI parent,
+                                      String text,
+                                      Color color,
+                                      float x,
+                                      float y,
+                                      float width,
+                                      float height,
+                                      Alignment alignment) {
+        float labelX = x;
+        float labelWidth = width;
+        if (Alignment.LMID.equals(alignment)) {
+            labelX += WimGuiStyle.TEXT_LEFT_PAD;
+            labelWidth = Math.max(8f, width - WimGuiStyle.TEXT_LEFT_PAD);
+        }
+        TooltipMakerAPI label = parent.createUIElement(labelWidth, height, false);
+        label.setParaFontDefault();
+        label.setParaFontColor(color);
+        int maxChars = WimGuiText.estimatedChars(labelWidth);
+        LabelAPI line = label.addPara(tooltipFormat(WimGuiText.fit(text, maxChars)), 0f, color);
+        line.setAlignment(alignment);
+        parent.addUIElement(label).inTL(labelX, y + WimGuiStyle.TEXT_TOP_PAD);
     }
 
     private static void beginStyledGrid(TooltipMakerAPI tooltip) {
-        tooltip.beginGrid(WIDTH, 3);
+        tooltip.beginGrid(WING_TOOLTIP_WIDTH, 3);
         tooltip.setGridLabelColor(textColor());
         tooltip.setGridValueColor(textColor());
     }
 
-    private void addSpecPara(TooltipMakerAPI tooltip, String text, String highlight, float pad) {
+    private void addSpecPara(TooltipMakerAPI tooltip,
+                             String text,
+                             String highlight,
+                             float pad,
+                             WeaponSpecAPI spec) {
         if (!hasText(text)) {
             return;
         }
-        String[] highlights = splitHighlights(highlight);
+        tooltip.addSpacer(SMALL_PAD);
+        String[] rawHighlights = splitHighlights(highlight);
+        String substitutedText = substituteFormatSpecifiers(text, rawHighlights, spec);
+        String displayText = truncateForLines(substitutedText, CUSTOM_TEXT_MAX_LINES, CONTENT_WIDTH);
+        String[] highlights = visibleHighlights(displayText, rawHighlights);
         if (highlights.length > 0) {
-            LabelAPI label = tooltip.addPara(text, pad, textColor(), highlightColor(), highlights);
+            LabelAPI label = tooltip.addPara(tooltipFormat(displayText), pad, textColor(), highlightColor(), highlights);
             label.setHighlight(highlights);
             label.setHighlightColor(highlightColor());
+            tooltip.addSpacer(SMALL_PAD);
             return;
         }
-        tooltip.addPara(text, pad, textColor());
+        tooltip.addPara(tooltipFormat(displayText), pad, textColor());
+        tooltip.addSpacer(SMALL_PAD);
     }
 
     private void addHighlightedPara(TooltipMakerAPI tooltip, String text, String highlight, float pad) {
-        LabelAPI label = tooltip.addPara(text, pad, textColor(), highlightColor(), highlight);
+        LabelAPI label = tooltip.addPara(tooltipFormat(text), pad, textColor(), highlightColor(), highlight);
         label.setHighlight(highlight);
         label.setHighlightColor(highlightColor());
     }
@@ -315,13 +380,6 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
             price = Math.round(Math.max(0f, record.getSpec().getBaseValue()));
         }
         return price <= 0 ? null : CreditFormat.credits(price);
-    }
-
-    private static String weaponSpriteName(WeaponSpecAPI spec) {
-        if (hasText(spec.getTurretSpriteName())) {
-            return spec.getTurretSpriteName();
-        }
-        return spec.getHardpointSpriteName();
     }
 
     private static String damageIconSpriteName(DamageType type) {
@@ -471,11 +529,11 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
     }
 
     private static Color textColor() {
-        return Misc.getTextColor();
+        return TOOLTIP_TEXT;
     }
 
     private static Color mutedColor() {
-        return Misc.getGrayColor();
+        return TOOLTIP_MUTED;
     }
 
     private static Color highlightColor() {
@@ -486,6 +544,133 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         if (hasText(entryId)) {
             tooltip.setCodexEntryId(entryId);
         }
+    }
+
+    private static String truncateDescription(String text) {
+        if (!hasText(text)) {
+            return text;
+        }
+        return truncateForLines(text, DESCRIPTION_MAX_LINES, CONTENT_WIDTH);
+    }
+
+    private static String truncateForLines(String text, int maxLines, float width) {
+        if (!hasText(text)) {
+            return text;
+        }
+        String normalized = text.trim().replaceAll("\\s+", " ");
+        if (maxLines <= 0) {
+            return normalized;
+        }
+        int charsPerLine = Math.max(32, (int) Math.floor(CONTENT_WIDTH / ESTIMATED_DESCRIPTION_CHAR_WIDTH));
+        if (validNumber(width) && width > 0f) {
+            charsPerLine = Math.max(32, (int) Math.floor(width / ESTIMATED_DESCRIPTION_CHAR_WIDTH));
+        }
+        String[] words = normalized.split(" ");
+        StringBuilder result = new StringBuilder(normalized.length());
+        int line = 1;
+        int lineChars = 0;
+        boolean truncated = false;
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+            if (word.length() <= 0) {
+                continue;
+            }
+            int addedChars = lineChars <= 0 ? word.length() : word.length() + 1;
+            if (lineChars > 0 && lineChars + addedChars > charsPerLine) {
+                line++;
+                lineChars = 0;
+                addedChars = word.length();
+            }
+            if (line > maxLines) {
+                truncated = true;
+                break;
+            }
+            if (result.length() > 0) {
+                result.append(' ');
+            }
+            result.append(word);
+            lineChars += addedChars;
+        }
+        if (!truncated && result.length() == normalized.length()) {
+            return normalized;
+        }
+        return trimForEllipsis(result.toString()) + "...";
+    }
+
+    private static String[] visibleHighlights(String text, String[] highlights) {
+        if (!hasText(text) || highlights == null || highlights.length <= 0) {
+            return new String[0];
+        }
+        List<String> result = new ArrayList<String>();
+        for (int i = 0; i < highlights.length; i++) {
+            String highlight = highlights[i];
+            if (hasText(highlight) && text.indexOf(highlight) >= 0) {
+                result.add(highlight);
+            }
+        }
+        return result.toArray(new String[result.size()]);
+    }
+
+    private static String substituteFormatSpecifiers(String text, String[] highlights, WeaponSpecAPI spec) {
+        if (!hasText(text)) {
+            return text;
+        }
+        StringBuilder result = new StringBuilder(text.length());
+        int highlightIndex = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c != '%' || i + 1 >= text.length()) {
+                result.append(c);
+                continue;
+            }
+            char next = text.charAt(i + 1);
+            if (next == '%') {
+                result.append('%');
+                i++;
+                continue;
+            }
+            if (next == 's' || next == 'd' || next == 'f') {
+                result.append(formatHighlightValue(highlights, highlightIndex, spec));
+                highlightIndex++;
+                i++;
+                continue;
+            }
+            result.append(c);
+        }
+        return result.toString();
+    }
+
+    private static String formatHighlightValue(String[] highlights, int index, WeaponSpecAPI spec) {
+        if (highlights != null && index >= 0 && index < highlights.length && hasText(highlights[index])) {
+            return highlights[index].trim();
+        }
+        if (index == 0 && spec != null && spec.getDerivedStats() != null) {
+            float value = spec.isBeam()
+                    ? spec.getDerivedStats().getDps()
+                    : spec.getDerivedStats().getDamagePerShot();
+            if (validNumber(value) && value > 0f) {
+                return formatOneDecimalTrim(value);
+            }
+        }
+        return "?";
+    }
+
+    private static String trimForEllipsis(String value) {
+        if (value == null) {
+            return "";
+        }
+        String trimmed = value.trim();
+        while (trimmed.endsWith(",") || trimmed.endsWith(";") || trimmed.endsWith(":") || trimmed.endsWith(".")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1).trim();
+        }
+        return trimmed;
+    }
+
+    private static String tooltipFormat(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("%", "%%");
     }
 
     private static boolean hasText(String value) {
@@ -555,14 +740,30 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
         }
     }
 
-    private static final class IconPanelPlugin extends BaseCustomUIPanelPlugin {
-        private final String spriteName;
-        private final boolean framed;
+    private static final class SectionHeadingPlugin extends BaseCustomUIPanelPlugin {
         private PositionAPI position;
 
-        private IconPanelPlugin(String spriteName, boolean framed) {
+        @Override
+        public void positionChanged(PositionAPI position) {
+            this.position = position;
+        }
+
+        @Override
+        public void renderBelow(float alphaMult) {
+            if (position == null) {
+                return;
+            }
+            Misc.renderQuadAlpha(position.getX(), position.getY(), position.getWidth(),
+                    position.getHeight(), VANILLA_SECTION, alphaMult);
+        }
+    }
+
+    private static final class IconPanelPlugin extends BaseCustomUIPanelPlugin {
+        private final String spriteName;
+        private PositionAPI position;
+
+        private IconPanelPlugin(String spriteName) {
             this.spriteName = spriteName;
-            this.framed = framed;
         }
 
         @Override
@@ -579,48 +780,51 @@ final class StockReviewItemTooltip implements TooltipMakerAPI.TooltipCreator {
             float y = position.getY();
             float width = position.getWidth();
             float height = position.getHeight();
-            Misc.renderQuadAlpha(x, y, width, height, ICON_BACKING, alphaMult);
-            if (framed) {
-                renderFrame(x, y, width, height, alphaMult);
-            }
-            renderSprite(x, y, width, height, alphaMult);
+            renderSprite(x, y, width, height, ICON_INSET, alphaMult);
         }
 
-        private void renderFrame(float x, float y, float width, float height, float alphaMult) {
-            float thickness = 4f;
-            Misc.renderQuadAlpha(x, y, width, thickness, ICON_FRAME, alphaMult);
-            Misc.renderQuadAlpha(x, y + height - thickness, width, thickness, ICON_FRAME, alphaMult);
-            Misc.renderQuadAlpha(x, y, thickness, height, ICON_FRAME, alphaMult);
-            Misc.renderQuadAlpha(x + width - thickness, y, thickness, height, ICON_FRAME, alphaMult);
+        private void renderSprite(float x, float y, float width, float height, float inset, float alphaMult) {
+            float maxWidth = Math.max(1f, width - 2f * inset);
+            float maxHeight = Math.max(1f, height - 2f * inset);
+            renderFittedSprite(spriteName, Color.WHITE, x + width * 0.5f, y + height * 0.5f,
+                    maxWidth, maxHeight, alphaMult);
         }
 
-        private void renderSprite(float x, float y, float width, float height, float alphaMult) {
-            if (!hasText(spriteName)) {
-                return;
+        private boolean renderFittedSprite(String path,
+                                           Color color,
+                                           float centerX,
+                                           float centerY,
+                                           float maxWidth,
+                                           float maxHeight,
+                                           float alphaMult) {
+            if (!hasText(path)) {
+                return false;
             }
             SpriteAPI sprite;
             try {
-                sprite = Global.getSettings().getSprite(spriteName);
+                sprite = Global.getSettings().getSprite(path);
             } catch (RuntimeException ex) {
-                return;
+                return false;
             }
             if (sprite == null || sprite.getWidth() <= 0f || sprite.getHeight() <= 0f) {
-                return;
+                return false;
             }
             float oldWidth = sprite.getWidth();
             float oldHeight = sprite.getHeight();
             float oldAlpha = sprite.getAlphaMult();
             Color oldColor = sprite.getColor();
-            float maxWidth = Math.max(1f, width - 2f * ICON_INSET);
-            float maxHeight = Math.max(1f, height - 2f * ICON_INSET);
-            float scale = Math.min(maxWidth / oldWidth, maxHeight / oldHeight);
+            float oldAngle = sprite.getAngle();
+            float scale = Math.min(Math.max(1f, maxWidth) / oldWidth, Math.max(1f, maxHeight) / oldHeight);
             sprite.setSize(oldWidth * scale, oldHeight * scale);
             sprite.setAlphaMult(oldAlpha * alphaMult);
-            sprite.setColor(Color.WHITE);
-            sprite.renderAtCenter(x + width * 0.5f, y + height * 0.5f);
+            sprite.setColor(color == null ? Color.WHITE : color);
+            sprite.setAngle(0f);
+            sprite.renderAtCenter(centerX, centerY);
             sprite.setSize(oldWidth, oldHeight);
             sprite.setAlphaMult(oldAlpha);
             sprite.setColor(oldColor);
+            sprite.setAngle(oldAngle);
+            return true;
         }
     }
 }

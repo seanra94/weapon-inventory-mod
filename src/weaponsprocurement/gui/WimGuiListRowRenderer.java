@@ -35,7 +35,7 @@ final class WimGuiListRowRenderer {
         float labelLeft = row.getIndent();
         float labelWidth = Math.max(minLabelWidth, width - labelLeft - reservedBlockWidth - textLeftPad);
         if (row.getMainAction() != null) {
-            addMainAction(rowPanel, row, labelLeft, labelWidth, actionHeight, defaultBorder, buttons);
+            addMainAction(rowPanel, row, labelLeft, labelWidth, actionHeight, buttonGap, defaultBorder, buttons);
         } else {
             addLabel(rowPanel, row.getLabel(), row.getTextColor(), labelLeft, labelWidth, rowHeight);
         }
@@ -55,15 +55,25 @@ final class WimGuiListRowRenderer {
                                           float labelLeft,
                                           float labelWidth,
                                           float actionHeight,
+                                          float buttonGap,
                                           java.awt.Color defaultBorder,
                                           List<WimGuiButtonBinding<A>> buttons) {
+        float buttonLeft = labelLeft;
+        float buttonWidth = labelWidth;
+        StockReviewRowIcon icon = row.getIcon();
+        if (icon != null) {
+            float iconSize = actionHeight;
+            addRowIcon(rowPanel, icon, labelLeft, 0f, iconSize);
+            buttonLeft += iconSize + buttonGap;
+            buttonWidth = Math.max(8f, labelWidth - iconSize - buttonGap);
+        }
         WimGuiControls.addBoundButton(
                 rowPanel,
-                labelLeft,
+                buttonLeft,
                 0f,
                 actionHeight,
                 WimGuiButtonSpec.toggle(
-                        labelWidth,
+                        buttonWidth,
                         row.getLabel(),
                         row.getTextColor(),
                         row.getMainAction(),
@@ -73,6 +83,19 @@ final class WimGuiListRowRenderer {
                         row.getTooltip(),
                         row.getTooltipCreator()),
                 buttons);
+    }
+
+    private static void addRowIcon(CustomPanelAPI parent,
+                                   StockReviewRowIcon icon,
+                                   float x,
+                                   float y,
+                                   float size) {
+        if (icon == null || size <= 0f) {
+            return;
+        }
+        CustomPanelAPI panel = parent.createCustomPanel(size, size,
+                new StockReviewWeaponIconPlugin(icon.getSpriteName(), icon.getMotifType()));
+        parent.addComponent(panel).inTL(x, y);
     }
 
     private static void addLabel(CustomPanelAPI parent,

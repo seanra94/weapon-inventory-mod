@@ -290,7 +290,10 @@ final class WimGuiControls {
         if (creator == null) {
             return;
         }
-        element.addTooltipTo(creator, target, TooltipMakerAPI.TooltipLocation.BELOW);
+        TooltipMakerAPI.TooltipLocation location = tooltipCreator instanceof StockReviewItemTooltip
+                ? TooltipMakerAPI.TooltipLocation.RIGHT
+                : TooltipMakerAPI.TooltipLocation.BELOW;
+        element.addTooltipTo(creator, target, location);
     }
 
     private static TooltipMakerAPI.TooltipCreator textTooltip(String tooltip) {
