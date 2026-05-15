@@ -21,9 +21,10 @@ public class WP_OpenDialog extends BaseCommandPlugin {
                            InteractionDialogAPI dialog,
                            List<Misc.Token> params,
                            Map<String, MemoryAPI> memoryMap) {
-        String mode = params == null || params.isEmpty()
+        String rawMode = params == null || params.isEmpty()
                 ? MODE_OPEN
-                : params.get(0).getString(memoryMap).toLowerCase(Locale.US);
+                : params.get(0).getString(memoryMap);
+        String mode = rawMode == null ? MODE_OPEN : rawMode.toLowerCase(Locale.US);
 
         WeaponsProcurementConfig.refreshAndPublishSettings();
         if (MODE_CAN_SHOW.equals(mode)) {

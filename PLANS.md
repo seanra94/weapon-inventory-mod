@@ -10,10 +10,34 @@ The repo is in release-prep shape for the clean popup path:
 - Local, Sector Market, and Fixer's Market source modes exist.
 - Sector Market drains real remote cargo; Fixer's Market is virtual.
 - Fixer's Market learns safe observed stock over time.
-- Optional patched cargo-cell badges are disabled by default and isolated from the clean popup.
+- Optional patched cargo-cell badges are private-only and isolated from the clean popup.
 - Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
 ## Active Work
+
+### Public Release Separation
+
+Prepare the private repo so a curated public `Shattersphere-Mods` repo/package can contain the clean procurement GUI with no badge/bytecode/private-doc traces.
+
+Completed:
+
+- Badge-only Java files can be omitted while the clean GUI still builds.
+- The clean plugin no longer imports or directly registers badge updater classes.
+- Patched-badge Luna/settings publication moved out of the public-safe config path.
+- Public validation is separated from private patched-badge validation.
+- `tools/export-public.ps1` creates a curated public tree and runs a leak scan.
+- Public README/PACKAGING docs describe only the clean GUI path.
+- `tools/deploy-live-mod.ps1` stages and queues deploys when the live jar is locked.
+
+Acceptance:
+
+- Public output builds the clean GUI.
+- Public output contains no `AGENTS.md`, `.agent/`, `HANDOVER.md`, `PLANS.md`, private archives, local machine paths, badge sprites, patcher tools, bytecode patch docs, or patched-badge settings.
+- Private repo still retains the optional patched-badge work for personal/advanced use.
+
+Still open:
+
+- Decide whether the public repo should commit the built jar or build jars only for release packages.
 
 ### Runtime Rollback Validation
 

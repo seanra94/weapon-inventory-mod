@@ -27,6 +27,24 @@ final class WimGuiControls {
                                        WimGuiButtonColors colors,
                                        Color borderColor,
                                        String tooltip) {
+        return addButton(parent, x, y, width, height, label, textColor, action, enabled, alignment,
+                colors, borderColor, tooltip, null);
+    }
+
+    static WimGuiButtonShell addButton(CustomPanelAPI parent,
+                                       float x,
+                                       float y,
+                                       float width,
+                                       float height,
+                                       String label,
+                                       Color textColor,
+                                       Object action,
+                                       boolean enabled,
+                                       Alignment alignment,
+                                       WimGuiButtonColors colors,
+                                       Color borderColor,
+                                       String tooltip,
+                                       TooltipMakerAPI.TooltipCreator tooltipCreator) {
         Color idle = colors == null ? WimGuiStyle.UNCOLOURED_BUTTON : colors.idle;
         Color hover = colors == null ? idle : colors.hover;
         Color shellFill = enabled ? idle : WimGuiStyle.DISABLED_BACKGROUND;
@@ -40,7 +58,7 @@ final class WimGuiControls {
         parent.addComponent(shell).inTL(x, y);
         if (!enabled) {
             addLabel(shell, label, resolvedText, 0f, 0f, width, height, alignment);
-            addTooltipHost(shell, width, height, tooltip);
+            addTooltipHost(shell, width, height, tooltip, tooltipCreator);
             return new WimGuiButtonShell(shell, null);
         }
 
@@ -58,9 +76,7 @@ final class WimGuiControls {
                 0f);
         button.setEnabled(enabled);
         button.setQuickMode(true);
-        if (WimGuiTooltip.hasText(tooltip)) {
-            element.addTooltipTo(new WimGuiTooltip(tooltip), shell, TooltipMakerAPI.TooltipLocation.BELOW);
-        }
+        addTooltipTo(element, shell, tooltip, tooltipCreator);
         shell.addUIElement(element).inTL(0f, 0f);
         addLabel(shell, label, resolvedText, 0f, 0f, width, height, alignment);
         return new WimGuiButtonShell(shell, button);
@@ -85,7 +101,8 @@ final class WimGuiControls {
                 spec.alignment,
                 spec.colors,
                 spec.borderColor,
-                spec.tooltip);
+                spec.tooltip,
+                spec.tooltipCreator);
         if (spec.enabled && bindings != null) {
             bindings.add(new WimGuiButtonBinding<A>(shell.panel, shell.button, spec.action));
         }
@@ -247,9 +264,41 @@ final class WimGuiControls {
         if (!WimGuiTooltip.hasText(tooltip)) {
             return;
         }
+        addTooltipHost(parent, width, height, tooltip, null);
+    }
+
+    private static void addTooltipHost(CustomPanelAPI parent,
+                                       float width,
+                                       float height,
+                                       String tooltip,
+                                       TooltipMakerAPI.TooltipCreator tooltipCreator) {
+        if (!hasTooltip(tooltip, tooltipCreator)) {
+            return;
+        }
         TooltipMakerAPI element = parent.createUIElement(width, height, false);
-        element.addTooltipTo(new WimGuiTooltip(tooltip), parent, TooltipMakerAPI.TooltipLocation.BELOW);
+        addTooltipTo(element, parent, tooltip, tooltipCreator);
         parent.addUIElement(element).inTL(0f, 0f);
+    }
+
+    private static void addTooltipTo(TooltipMakerAPI element,
+                                     CustomPanelAPI target,
+                                     String tooltip,
+                                     TooltipMakerAPI.TooltipCreator tooltipCreator) {
+        TooltipMakerAPI.TooltipCreator creator = tooltipCreator == null
+                ? textTooltip(tooltip)
+                : tooltipCreator;
+        if (creator == null) {
+            return;
+        }
+        element.addTooltipTo(creator, target, TooltipMakerAPI.TooltipLocation.BELOW);
+    }
+
+    private static TooltipMakerAPI.TooltipCreator textTooltip(String tooltip) {
+        return WimGuiTooltip.hasText(tooltip) ? new WimGuiTooltip(tooltip) : null;
+    }
+
+    private static boolean hasTooltip(String tooltip, TooltipMakerAPI.TooltipCreator tooltipCreator) {
+        return tooltipCreator != null || WimGuiTooltip.hasText(tooltip);
     }
 
     static WimGuiTextLayout addWrappedLabel(CustomPanelAPI parent,

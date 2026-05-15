@@ -88,8 +88,16 @@ final class StockReviewQuoteBook {
         if (unitPrice < 0) {
             return StockReviewQuote.priceUnavailable();
         }
-        float cargo = trade.getQuantity() * fallbackUnitCargoSpace(trade.getItemKey());
-        return new StockReviewQuote(TradeMoney.lineTotal(unitPrice, trade.getQuantity()), cargo,
+        if (trade.getQuantity() == Integer.MIN_VALUE) {
+            return StockReviewQuote.priceUnavailable();
+        }
+        int sellQuantity = -trade.getQuantity();
+        long credits = TradeMoney.lineTotal(unitPrice, sellQuantity);
+        if (!TradeMoney.canExecuteCreditMutation(credits)) {
+            return StockReviewQuote.priceUnavailable();
+        }
+        float cargo = -sellQuantity * fallbackUnitCargoSpace(trade.getItemKey());
+        return new StockReviewQuote(-credits, cargo,
                 Collections.<StockReviewSellerAllocation>emptyList());
     }
 

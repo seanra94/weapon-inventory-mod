@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class WimGuiScroll {
+    interface ExtraGapProvider<T> {
+        float extraGapBefore(T item);
+    }
+
     static final int DEFAULT_WHEEL_STEP = 3;
 
     private WimGuiScroll() {
@@ -26,11 +30,7 @@ final class WimGuiScroll {
     }
 
     static int usefulOffset(int requestedOffset, int maxOffset, int scrollDelta) {
-        int clamped = Math.max(0, Math.min(requestedOffset, Math.max(0, maxOffset)));
-        if (clamped != 1) {
-            return clamped;
-        }
-        return scrollDelta > 0 && maxOffset >= 2 ? 2 : 0;
+        return Math.max(0, Math.min(requestedOffset, Math.max(0, maxOffset)));
     }
 
     static int usefulOffsetByDelta(int currentOffset, int scrollDelta, int maxOffset) {
@@ -42,34 +42,37 @@ final class WimGuiScroll {
                                                  float containerHeight,
                                                  float rowHeight,
                                                  float rowGap) {
+        return verticalSlice(rows, requestedOffset, containerHeight, rowHeight, rowGap, null);
+    }
+
+    static <T> WimGuiScrollSlice<T> verticalSlice(List<T> rows,
+                                                 int requestedOffset,
+                                                 float containerHeight,
+                                                 float rowHeight,
+                                                 float rowGap,
+                                                 ExtraGapProvider<T> extraGapProvider) {
         int itemCount = rows == null ? 0 : rows.size();
-        int totalSlots = verticalSlotCount(containerHeight, rowHeight, rowGap);
-        if (itemCount <= totalSlots) {
+        if (itemCount <= 0) {
+            return new WimGuiScrollSlice<T>(0, rows == null ? new ArrayList<T>() : rows, false, false, 0);
+        }
+        if (fits(rows, 0, itemCount, false, false, containerHeight, rowHeight, rowGap, extraGapProvider)) {
             return new WimGuiScrollSlice<T>(0, rows == null ? new ArrayList<T>() : rows, false, false, 0);
         }
 
-        int maxOffset = Math.max(0, itemCount - 1);
+        int maxOffset = bottomOffset(rows, itemCount, containerHeight, rowHeight, rowGap, extraGapProvider);
         int offset = usefulOffset(requestedOffset, maxOffset);
         boolean hasAbove;
         boolean hasBelow;
         int visibleSlots;
-        int finalMaxOffset;
-        while (true) {
-            hasAbove = offset > 0;
-            visibleSlots = totalSlots - (hasAbove ? 1 : 0);
-            hasBelow = offset + visibleSlots < itemCount;
-            if (hasBelow) {
-                visibleSlots -= 1;
-            }
-            visibleSlots = Math.max(1, visibleSlots);
-
-            finalMaxOffset = Math.max(0, itemCount - visibleSlots);
-            int useful = usefulOffset(offset, finalMaxOffset);
-            if (useful == offset) {
-                break;
-            }
-            offset = useful;
+        hasAbove = offset > 0;
+        visibleSlots = visibleCount(rows, offset, itemCount, hasAbove, false,
+                containerHeight, rowHeight, rowGap, extraGapProvider);
+        hasBelow = offset + visibleSlots < itemCount;
+        if (hasBelow) {
+            visibleSlots = visibleCount(rows, offset, itemCount, hasAbove, true,
+                    containerHeight, rowHeight, rowGap, extraGapProvider);
         }
+        visibleSlots = Math.max(1, visibleSlots);
 
         int end = Math.min(itemCount, offset + visibleSlots);
         hasBelow = end < itemCount;
@@ -78,6 +81,69 @@ final class WimGuiScroll {
                 new ArrayList<T>(rows.subList(offset, end)),
                 hasAbove,
                 hasBelow,
-                finalMaxOffset);
+                maxOffset);
+    }
+
+    private static <T> boolean fits(List<T> rows,
+                                    int start,
+                                    int end,
+                                    boolean hasAbove,
+                                    boolean hasBelow,
+                                    float containerHeight,
+                                    float rowHeight,
+                                    float rowGap,
+                                    ExtraGapProvider<T> extraGapProvider) {
+        return visibleCount(rows, start, end, hasAbove, hasBelow,
+                containerHeight, rowHeight, rowGap, extraGapProvider) >= end - start;
+    }
+
+    private static <T> int visibleCount(List<T> rows,
+                                        int start,
+                                        int end,
+                                        boolean hasAbove,
+                                        boolean reserveBelow,
+                                        float containerHeight,
+                                        float rowHeight,
+                                        float rowGap,
+                                        ExtraGapProvider<T> extraGapProvider) {
+        float y = 0f;
+        if (hasAbove) {
+            if (rowHeight > containerHeight) {
+                return 0;
+            }
+            y += rowHeight + rowGap;
+        }
+        int visible = 0;
+        for (int i = start; i < end; i++) {
+            float extraGap = extraGapProvider == null ? 0f : Math.max(0f, extraGapProvider.extraGapBefore(rows.get(i)));
+            float rowTop = y + extraGap;
+            float requiredBottom = rowTop + rowHeight;
+            if (reserveBelow) {
+                requiredBottom += rowGap + rowHeight;
+            }
+            if (requiredBottom > containerHeight + 0.01f) {
+                break;
+            }
+            visible++;
+            y = rowTop + rowHeight + rowGap;
+        }
+        return visible;
+    }
+
+    private static <T> int bottomOffset(List<T> rows,
+                                        int itemCount,
+                                        float containerHeight,
+                                        float rowHeight,
+                                        float rowGap,
+                                        ExtraGapProvider<T> extraGapProvider) {
+        int bottomOffset = Math.max(0, itemCount - 1);
+        for (int candidate = itemCount - 1; candidate >= 0; candidate--) {
+            if (!fits(rows, candidate, itemCount, candidate > 0, false,
+                    containerHeight, rowHeight, rowGap, extraGapProvider)) {
+                break;
+            }
+            bottomOffset = candidate;
+        }
+        return bottomOffset;
     }
 }

@@ -10,5 +10,4 @@
 - Added observed Fixer's Market catalog learning from real market stock.
 - Added per-item desired-stock overrides and Sector/Fixer blacklist config.
 - Added trade rollback journaling and overflow-safe trade-money totals.
-- Added optional patched cargo-cell badge support as an advanced path.
 - Added packaging, deployment, validation, and non-proprietary CI checks.

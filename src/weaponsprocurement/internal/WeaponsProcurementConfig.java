@@ -8,7 +8,6 @@ public final class WeaponsProcurementConfig {
 
     private static final String MOD_ID = "weapons_procurement";
     private static final String SETTING_UPDATE_INTERVAL = "wp_update_interval_seconds";
-    private static final String SETTING_ENABLE_PATCHED_BADGES = "wp_enable_patched_badges";
     private static final String SETTING_ENABLE_DIALOG_OPTION = "wp_enable_dialog_option";
     private static final String SETTING_ENABLE_SECTOR_MARKET = "wp_enable_sector_market";
     private static final String SETTING_ENABLE_FIXERS_MARKET = "wp_enable_fixers_market";
@@ -19,9 +18,7 @@ public final class WeaponsProcurementConfig {
     private static final String SETTING_DESIRED_MEDIUM_WEAPON_COUNT = "wp_desired_medium_weapon_count";
     private static final String SETTING_DESIRED_LARGE_WEAPON_COUNT = "wp_desired_large_weapon_count";
     private static final String SETTING_DESIRED_FIGHTER_WING_COUNT = "wp_desired_fighter_wing_count";
-    private static final String SETTING_DEBUG_TRADE_FAILURE_STEP = "wp_debug_trade_failure_step";
     private static final String KEY_UPDATE_INTERVAL = "wp.config.updateIntervalSeconds";
-    private static final String KEY_PATCHED_BADGES_ENABLED = "wp.config.patchedBadgesEnabled";
     private static final String KEY_DIALOG_OPTION_ENABLED = "wp.config.dialogOptionEnabled";
     private static final String KEY_SECTOR_MARKET_ENABLED = "wp.config.sectorMarketEnabled";
     private static final String KEY_FIXERS_MARKET_ENABLED = "wp.config.fixersMarketEnabled";
@@ -48,6 +45,7 @@ public final class WeaponsProcurementConfig {
     private static final int MIN_DESIRED_WEAPON_COUNT = 0;
     private static final int MAX_DESIRED_WEAPON_COUNT = 999;
     private static final int MAX_CONFIG_LOGS = 10;
+    private static final String INITIAL_DEBUG_TRADE_FAILURE_STEP = System.getProperty(KEY_DEBUG_TRADE_FAILURE_STEP, "");
 
     private static int configLogs = 0;
     private static boolean configErrorLogged = false;
@@ -61,7 +59,6 @@ public final class WeaponsProcurementConfig {
 
     public static float refreshAndPublishSettings() {
         float effective = DEFAULT_UPDATE_INTERVAL_SEC;
-        boolean badgesEnabled = false;
         boolean dialogOptionEnabled = false;
         boolean sectorMarketEnabled = true;
         boolean fixersMarketEnabled = true;
@@ -73,56 +70,45 @@ public final class WeaponsProcurementConfig {
         int desiredLargeWeaponCount = DEFAULT_DESIRED_LARGE_WEAPON_COUNT;
         int desiredFighterWingCount = DEFAULT_DESIRED_FIGHTER_WING_COUNT;
         String debugTradeFailureStep = "";
-        try {
-            Double value = LunaSettings.getDouble(MOD_ID, SETTING_UPDATE_INTERVAL);
-            if (value != null) {
-                effective = (float) value.doubleValue();
-            }
-            Boolean enabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_PATCHED_BADGES);
-            if (enabled != null) {
-                badgesEnabled = enabled.booleanValue();
-            }
-            Boolean dialogOption = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_DIALOG_OPTION);
-            if (dialogOption != null) {
-                dialogOptionEnabled = dialogOption.booleanValue();
-            }
-            Boolean sectorEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_SECTOR_MARKET);
-            if (sectorEnabled != null) {
-                sectorMarketEnabled = sectorEnabled.booleanValue();
-            }
-            Boolean fixersEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_FIXERS_MARKET);
-            if (fixersEnabled != null) {
-                fixersMarketEnabled = fixersEnabled.booleanValue();
-            }
-            Boolean inferenceEnabled = LunaSettings.getBoolean(MOD_ID, SETTING_ENABLE_FIXERS_MARKET_TAG_INFERENCE);
-            if (inferenceEnabled != null) {
-                fixersMarketTagInferenceEnabled = inferenceEnabled.booleanValue();
-            }
-            Double sectorMultiplier = LunaSettings.getDouble(MOD_ID, SETTING_SECTOR_MARKET_PRICE_MULTIPLIER);
-            if (sectorMultiplier != null) {
-                sectorMarketPriceMultiplier = (float) sectorMultiplier.doubleValue();
-            }
-            Double fixersMultiplier = LunaSettings.getDouble(MOD_ID, SETTING_FIXERS_MARKET_PRICE_MULTIPLIER);
-            if (fixersMultiplier != null) {
-                fixersMarketPriceMultiplier = (float) fixersMultiplier.doubleValue();
-            }
-            desiredSmallWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_SMALL_WEAPON_COUNT, DEFAULT_DESIRED_SMALL_WEAPON_COUNT);
-            desiredMediumWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_MEDIUM_WEAPON_COUNT, DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT);
-            desiredLargeWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_LARGE_WEAPON_COUNT, DEFAULT_DESIRED_LARGE_WEAPON_COUNT);
-            desiredFighterWingCount = readDesiredWeaponCount(SETTING_DESIRED_FIGHTER_WING_COUNT, DEFAULT_DESIRED_FIGHTER_WING_COUNT);
-            debugTradeFailureStep = readDebugTradeFailureStep();
-        } catch (Throwable t) {
-            if (!configErrorLogged) {
-                configErrorLogged = true;
-                LOG.error("WP_CONFIG luna settings read error", t);
-            }
+
+        Double updateInterval = readDoubleSetting(SETTING_UPDATE_INTERVAL);
+        if (updateInterval != null) {
+            effective = (float) updateInterval.doubleValue();
         }
+        Boolean dialogOption = readBooleanSetting(SETTING_ENABLE_DIALOG_OPTION);
+        if (dialogOption != null) {
+            dialogOptionEnabled = dialogOption.booleanValue();
+        }
+        Boolean sectorEnabled = readBooleanSetting(SETTING_ENABLE_SECTOR_MARKET);
+        if (sectorEnabled != null) {
+            sectorMarketEnabled = sectorEnabled.booleanValue();
+        }
+        Boolean fixersEnabled = readBooleanSetting(SETTING_ENABLE_FIXERS_MARKET);
+        if (fixersEnabled != null) {
+            fixersMarketEnabled = fixersEnabled.booleanValue();
+        }
+        Boolean inferenceEnabled = readBooleanSetting(SETTING_ENABLE_FIXERS_MARKET_TAG_INFERENCE);
+        if (inferenceEnabled != null) {
+            fixersMarketTagInferenceEnabled = inferenceEnabled.booleanValue();
+        }
+        Double sectorMultiplier = readDoubleSetting(SETTING_SECTOR_MARKET_PRICE_MULTIPLIER);
+        if (sectorMultiplier != null) {
+            sectorMarketPriceMultiplier = (float) sectorMultiplier.doubleValue();
+        }
+        Double fixersMultiplier = readDoubleSetting(SETTING_FIXERS_MARKET_PRICE_MULTIPLIER);
+        if (fixersMultiplier != null) {
+            fixersMarketPriceMultiplier = (float) fixersMultiplier.doubleValue();
+        }
+        desiredSmallWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_SMALL_WEAPON_COUNT, DEFAULT_DESIRED_SMALL_WEAPON_COUNT);
+        desiredMediumWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_MEDIUM_WEAPON_COUNT, DEFAULT_DESIRED_MEDIUM_WEAPON_COUNT);
+        desiredLargeWeaponCount = readDesiredWeaponCount(SETTING_DESIRED_LARGE_WEAPON_COUNT, DEFAULT_DESIRED_LARGE_WEAPON_COUNT);
+        desiredFighterWingCount = readDesiredWeaponCount(SETTING_DESIRED_FIGHTER_WING_COUNT, DEFAULT_DESIRED_FIGHTER_WING_COUNT);
+        debugTradeFailureStep = readDebugTradeFailureStep();
 
         effective = clamp(effective, MIN_UPDATE_INTERVAL_SEC, MAX_UPDATE_INTERVAL_SEC);
         sectorMarketPriceMultiplier = clamp(sectorMarketPriceMultiplier, MIN_REMOTE_MARKET_PRICE_MULTIPLIER, MAX_REMOTE_MARKET_PRICE_MULTIPLIER);
         fixersMarketPriceMultiplier = clamp(fixersMarketPriceMultiplier, MIN_REMOTE_MARKET_PRICE_MULTIPLIER, MAX_REMOTE_MARKET_PRICE_MULTIPLIER);
         System.setProperty(KEY_UPDATE_INTERVAL, Float.toString(effective));
-        System.setProperty(KEY_PATCHED_BADGES_ENABLED, Boolean.toString(badgesEnabled));
         System.setProperty(KEY_DIALOG_OPTION_ENABLED, Boolean.toString(dialogOptionEnabled));
         System.setProperty(KEY_SECTOR_MARKET_ENABLED, Boolean.toString(sectorMarketEnabled));
         System.setProperty(KEY_FIXERS_MARKET_ENABLED, Boolean.toString(fixersMarketEnabled));
@@ -137,7 +123,6 @@ public final class WeaponsProcurementConfig {
         if (configLogs < MAX_CONFIG_LOGS) {
             configLogs++;
             LOG.info("WP_CONFIG updateIntervalSeconds=" + effective
-                    + " patchedBadgesEnabled=" + badgesEnabled
                     + " dialogOptionEnabled=" + dialogOptionEnabled
                     + " sectorMarketEnabled=" + sectorMarketEnabled
                     + " fixersMarketEnabled=" + fixersMarketEnabled
@@ -159,10 +144,6 @@ public final class WeaponsProcurementConfig {
 
     public static boolean isDialogueOptionEnabled() {
         return Boolean.parseBoolean(System.getProperty(KEY_DIALOG_OPTION_ENABLED, "false"));
-    }
-
-    public static boolean isPatchedBadgesEnabled() {
-        return Boolean.parseBoolean(System.getProperty(KEY_PATCHED_BADGES_ENABLED, "false"));
     }
 
     public static boolean isFixersMarketEnabled() {
@@ -209,7 +190,7 @@ public final class WeaponsProcurementConfig {
     }
 
     private static int readDesiredWeaponCount(String settingId, int defaultValue) {
-        Double value = LunaSettings.getDouble(MOD_ID, settingId);
+        Double value = readDoubleSetting(settingId);
         if (value == null) {
             return defaultValue;
         }
@@ -217,11 +198,7 @@ public final class WeaponsProcurementConfig {
     }
 
     private static String readDebugTradeFailureStep() {
-        String value = LunaSettings.getString(MOD_ID, SETTING_DEBUG_TRADE_FAILURE_STEP);
-        if (value == null) {
-            return "";
-        }
-        value = value.trim();
+        String value = INITIAL_DEBUG_TRADE_FAILURE_STEP == null ? "" : INITIAL_DEBUG_TRADE_FAILURE_STEP.trim();
         if (value.length() == 0 || "none".equalsIgnoreCase(value)) {
             return "";
         }
@@ -234,6 +211,31 @@ public final class WeaponsProcurementConfig {
         }
         LOG.warn("WP_CONFIG ignored unknown debug trade failure step: " + value);
         return "";
+    }
+
+    private static Double readDoubleSetting(String settingId) {
+        try {
+            return LunaSettings.getDouble(MOD_ID, settingId);
+        } catch (Throwable t) {
+            logConfigReadError(settingId, t);
+            return null;
+        }
+    }
+
+    private static Boolean readBooleanSetting(String settingId) {
+        try {
+            return LunaSettings.getBoolean(MOD_ID, settingId);
+        } catch (Throwable t) {
+            logConfigReadError(settingId, t);
+            return null;
+        }
+    }
+
+    private static void logConfigReadError(String settingId, Throwable t) {
+        if (!configErrorLogged) {
+            configErrorLogged = true;
+            LOG.error("WP_CONFIG luna settings read error settingId=" + settingId, t);
+        }
     }
 
     private static int readPublishedDesiredWeaponCount(String propertyKey, int fallback) {

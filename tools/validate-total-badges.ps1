@@ -1,9 +1,17 @@
 param(
     [string]$RepoRoot = (Split-Path -Parent $PSScriptRoot),
-    [string]$DeployRoot = "C:\Games\Starsector\mods\Weapons Procurement"
+    [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY,
+    [string]$DeployRoot = ""
 )
 
 Add-Type -AssemblyName System.Drawing
+
+if ([string]::IsNullOrWhiteSpace($DeployRoot)) {
+    if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
+        throw "Set STARSECTOR_DIRECTORY, pass -StarsectorDir, or pass -DeployRoot."
+    }
+    $DeployRoot = Join-Path $StarsectorDir "mods\Weapons Procurement"
+}
 
 $required = @(
     "wp_total_red_0.png",
@@ -52,7 +60,11 @@ function Test-JsonFilesNoBom {
         [string]$Label
     )
 
-    $jsonFiles = Get-ChildItem -LiteralPath $BasePath -Recurse -File -Filter *.json
+    $configPath = Join-Path $BasePath "data\config"
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        throw "$Label missing data\config at '$configPath'"
+    }
+    $jsonFiles = Get-ChildItem -LiteralPath $configPath -Recurse -File -Filter *.json
     foreach ($file in $jsonFiles) {
         $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
         if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
@@ -119,11 +131,8 @@ function Test-LunaReleaseDefaults {
 
     $rows = Import-Csv -LiteralPath $settingsPath
     $debugRow = $rows | Where-Object { $_.fieldID -eq "wp_debug_trade_failure_step" } | Select-Object -First 1
-    if ($null -eq $debugRow) {
-        throw "$Label Luna settings missing wp_debug_trade_failure_step"
-    }
-    if ($debugRow.defaultValue -ne "none") {
-        throw "$Label wp_debug_trade_failure_step default must be 'none' for release packages, found '$($debugRow.defaultValue)'"
+    if ($null -ne $debugRow) {
+        throw "$Label Luna settings must not expose wp_debug_trade_failure_step in release packages"
     }
 }
 
@@ -136,4 +145,4 @@ Test-StockReviewConfig -BasePath $DeployRoot -Label "DEPLOY"
 Test-LunaReleaseDefaults -BasePath $RepoRoot -Label "SOURCE"
 Test-LunaReleaseDefaults -BasePath $DeployRoot -Label "DEPLOY"
 
-Write-Host "Total badge, stock config, Luna default, and JSON BOM validation passed for source and deploy paths."
+Write-Host "Total badge, stock config, Luna release-safety, and JSON BOM validation passed for source and deploy paths."

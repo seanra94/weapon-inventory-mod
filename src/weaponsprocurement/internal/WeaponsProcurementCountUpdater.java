@@ -31,6 +31,8 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
     private float elapsedSinceSettingsRefresh = SETTINGS_REFRESH_INTERVAL_SEC;
     private float updateIntervalSec = UPDATE_INTERVAL_SEC;
     private boolean updaterErrorLogged = false;
+    private static boolean cargoCountErrorLogged = false;
+    private static boolean storageCountErrorLogged = false;
 
     public WeaponsProcurementCountUpdater() {
         System.setProperty(KEY_READY, "false");
@@ -51,9 +53,9 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
         elapsedSinceSettingsRefresh += amount;
         if (elapsedSinceSettingsRefresh >= SETTINGS_REFRESH_INTERVAL_SEC) {
             elapsedSinceSettingsRefresh = 0f;
-            updateIntervalSec = WeaponsProcurementConfig.refreshAndPublishSettings();
+            updateIntervalSec = WeaponsProcurementBadgeConfig.refreshAndPublishBadgeSettings();
         }
-        if (!WeaponsProcurementConfig.isPatchedBadgesEnabled()) {
+        if (!WeaponsProcurementBadgeConfig.isEnabled()) {
             System.setProperty(KEY_READY, "false");
             elapsedSinceUpdate = 0f;
             return;
@@ -124,26 +126,42 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
 
     private static Map<String, Integer> collectWeaponCounts(CargoAPI cargo) {
         Map<String, Integer> counts = new HashMap<String, Integer>();
-        if (cargo == null || cargo.getWeapons() == null) {
+        if (cargo == null) {
             return counts;
         }
-        for (CargoAPI.CargoItemQuantity<String> quantity : cargo.getWeapons()) {
-            if (quantity != null) {
-                addCount(counts, quantity.getItem(), quantity.getCount());
+        try {
+            List<CargoAPI.CargoItemQuantity<String>> weapons = cargo.getWeapons();
+            if (weapons == null) {
+                return counts;
             }
+            for (CargoAPI.CargoItemQuantity<String> quantity : weapons) {
+                if (quantity != null) {
+                    addCount(counts, quantity.getItem(), quantity.getCount());
+                }
+            }
+        } catch (Throwable t) {
+            logCargoCountErrorOnce("weapons", t);
         }
         return counts;
     }
 
     private static Map<String, Integer> collectFighterCounts(CargoAPI cargo) {
         Map<String, Integer> counts = new HashMap<String, Integer>();
-        if (cargo == null || cargo.getFighters() == null) {
+        if (cargo == null) {
             return counts;
         }
-        for (CargoAPI.CargoItemQuantity<String> quantity : cargo.getFighters()) {
-            if (quantity != null) {
-                addCount(counts, quantity.getItem(), quantity.getCount());
+        try {
+            List<CargoAPI.CargoItemQuantity<String>> fighters = cargo.getFighters();
+            if (fighters == null) {
+                return counts;
             }
+            for (CargoAPI.CargoItemQuantity<String> quantity : fighters) {
+                if (quantity != null) {
+                    addCount(counts, quantity.getItem(), quantity.getCount());
+                }
+            }
+        } catch (Throwable t) {
+            logCargoCountErrorOnce("fighters", t);
         }
         return counts;
     }
@@ -155,12 +173,16 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
             return;
         }
         for (MarketAPI market : markets) {
-            if (market == null || !Misc.playerHasStorageAccess(market)) {
-                continue;
+            try {
+                if (market == null || !Misc.playerHasStorageAccess(market)) {
+                    continue;
+                }
+                CargoAPI storageCargo = Misc.getStorageCargo(market);
+                mergeCounts(weaponCounts, collectWeaponCounts(storageCargo));
+                mergeCounts(fighterCounts, collectFighterCounts(storageCargo));
+            } catch (Throwable t) {
+                logStorageCountErrorOnce(market, t);
             }
-            CargoAPI storageCargo = Misc.getStorageCargo(market);
-            mergeCounts(weaponCounts, collectWeaponCounts(storageCargo));
-            mergeCounts(fighterCounts, collectFighterCounts(storageCargo));
         }
     }
 
@@ -181,5 +203,32 @@ public class WeaponsProcurementCountUpdater implements EveryFrameScript {
     private static int getCount(Map<String, Integer> counts, String id) {
         Integer count = counts.get(id);
         return count == null ? 0 : count.intValue();
+    }
+
+    private static void logCargoCountErrorOnce(String kind, Throwable t) {
+        if (cargoCountErrorLogged) {
+            return;
+        }
+        cargoCountErrorLogged = true;
+        LOG.warn("WP_COUNT_UPDATER cargo count failed for " + kind + "; continuing with partial counts", t);
+    }
+
+    private static void logStorageCountErrorOnce(MarketAPI market, Throwable t) {
+        if (storageCountErrorLogged) {
+            return;
+        }
+        storageCountErrorLogged = true;
+        LOG.warn("WP_COUNT_UPDATER storage count failed for market=" + marketLabel(market) + "; continuing with partial counts", t);
+    }
+
+    private static String marketLabel(MarketAPI market) {
+        if (market == null) {
+            return "null";
+        }
+        try {
+            return market.getId() + "/" + market.getName();
+        } catch (Throwable ignored) {
+            return String.valueOf(market);
+        }
     }
 }

@@ -1,28 +1,17 @@
 # Weapons Procurement Packaging Notes
 
-## Two Distributions
-
-The mod currently has two user-facing paths:
-
-- Clean popup path:
-  - normal Starsector mod files only;
-  - `F8` opens the Weapon Stock Review popup in valid market/trade contexts;
-  - no core jar patching required;
-  - intended as the forum-safe default distribution.
-
-- Optional patched badge path:
-  - same normal mod files plus a deterministic patch to `starfarer_obf.jar`;
-  - adds ownership-count badges inside vanilla weapon and fighter LPC cargo cells;
-  - should be treated as personal/advanced-use packaging unless the distribution target explicitly accepts core-jar patch instructions.
-
-The clean popup must remain useful and buildable if the patched badge tooling is removed later.
-
 ## Clean Package
+
+The public package is the clean procurement GUI:
+
+- normal Starsector mod files only;
+- `F8` opens the Weapon Stock Review popup in valid market/storage contexts;
+- optional LunaLib market-dialog entry can add `Open "Weapon Procurement"`;
+- no private docs, local paths, deploy queues, or internal archives.
 
 Include:
 
 - `data/`
-- `graphics/`
 - `jars/weapons-procurement.jar`
 - `mod_info.json`
 - `README.md`
@@ -30,43 +19,36 @@ Include:
 - `CHANGELOG.md`
 - `PACKAGING.md`
 
-Do not require users to run the patcher for the clean package. In clean builds, keep `wp_enable_patched_badges=false` by default.
-Before public release, bump `mod_info.json` and update `CHANGELOG.md`.
+Include `graphics/` only if a future public GUI asset actually needs it.
 
-## Patched Badge Package
-
-Include the clean package plus clear instructions for:
-
-1. Backing up or restoring the vanilla core jar.
-2. Running `tools/cargo-stack-view-patcher.ps1 -Mode Restore`.
-3. Running `tools/cargo-stack-view-patcher.ps1 -Mode Patch`.
-4. Running `tools/validate-cargo-stack-view-patch.ps1`.
-5. Restarting Starsector before testing.
-
-Do not ship a prepatched `starfarer_obf.jar`. The patcher should operate on the user's installed game copy.
+Before public release, bump `mod_info.json` when appropriate and update `CHANGELOG.md`.
 
 ## Validation Before Release
 
 For code or asset changes:
 
 ```powershell
+$env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
 git diff --check
 ```
 
-`tools\deploy-live-mod.ps1` performs a clean sync of repo-managed clean-package files by default. Use `-NoClean` only for local debugging when intentionally preserving extra live files.
+`tools\deploy-live-mod.ps1` performs a clean sync of repo-managed clean-package files by default. If Starsector is locking the live jar, it stages the built files and queues a background deploy for after the lock clears. Use `-NoClean` only for local debugging when intentionally preserving extra live files.
 
-For clean-only documentation changes, run `tools\validate-doc-links.ps1` and `git diff --check`.
+For documentation-only changes:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
+git diff --check
+```
 
 ## Trade Rollback Fault Validation
 
-`StockPurchaseExecutor` has an internal, disabled-by-default fault hook for validating rollback of WP-touched cargo counts and player credits. Temporarily set the LunaLib debug setting `DEV ONLY: force trade rollback failure` to one of these values during a local test run:
+`StockPurchaseExecutor` has an internal, disabled-by-default fault hook for validating rollback of WP-touched cargo counts and player credits. Temporarily start Starsector with the JVM system property `wp.debug.failTradeStep` set to one of these values during a local test run:
 
 - `after-source-removal`
 - `after-player-cargo-remove`
@@ -74,4 +56,4 @@ For clean-only documentation changes, run `tools\validate-doc-links.ps1` and `gi
 - `after-target-cargo-add`
 - `after-credit-mutation`
 
-Use it only for manual validation, then set it back to `none` before normal play or packaging. `tools\validate-total-badges.ps1` fails release validation if the setting default is anything other than `none`. The setting publishes the JVM system property `wp.debug.failTradeStep`, so a manual `-Dwp.debug.failTradeStep=...` launch argument can still be used if needed. Test local buy, local sell, Sector Market buy, Fixer's Market buy, and mixed sell-then-buy plans, and confirm player cargo, touched market cargo, and credits return to their pre-confirm values after the forced failure.
+Use it only for manual validation, then remove the property or set it to `none` before normal play or packaging. Test local buy, local sell, Sector Market buy, Fixer's Market buy, and mixed sell-then-buy plans, and confirm player cargo, touched market cargo, and credits return to their pre-confirm values after the forced failure.

@@ -76,7 +76,7 @@ public class WeaponsProcurementBadgeHelper {
 
     private static boolean isPatchedBadgesEnabled() {
         String raw = System.getProperty(KEY_PATCHED_BADGES_ENABLED);
-        return raw == null || "true".equalsIgnoreCase(raw);
+        return "true".equalsIgnoreCase(raw);
     }
 
     private static Integer readCount(String kind, String id, boolean player) {

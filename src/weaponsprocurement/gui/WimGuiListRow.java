@@ -1,6 +1,7 @@
 package weaponsprocurement.gui;
 
 import com.fs.starfarer.api.ui.Alignment;
+import com.fs.starfarer.api.ui.TooltipMakerAPI;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ final class WimGuiListRow<A> {
     private final Float cellGapOverride;
     private final float rightReserveWidth;
     private final String tooltip;
+    private final TooltipMakerAPI.TooltipCreator tooltipCreator;
 
     WimGuiListRow(String label,
                   Color textColor,
@@ -35,6 +37,24 @@ final class WimGuiListRow<A> {
                   Float cellGapOverride,
                   float rightReserveWidth,
                   String tooltip) {
+        this(label, textColor, fillColor, buttonFillColor, borderColor, indent, mainAction,
+                mainAlignment, cells, topGap, cellGapOverride, rightReserveWidth, tooltip, null);
+    }
+
+    WimGuiListRow(String label,
+                  Color textColor,
+                  Color fillColor,
+                  Color buttonFillColor,
+                  Color borderColor,
+                  float indent,
+                  A mainAction,
+                  Alignment mainAlignment,
+                  List<WimGuiRowCell<A>> cells,
+                  boolean topGap,
+                  Float cellGapOverride,
+                  float rightReserveWidth,
+                  String tooltip,
+                  TooltipMakerAPI.TooltipCreator tooltipCreator) {
         this.label = label;
         this.textColor = textColor;
         this.fillColor = fillColor;
@@ -50,6 +70,7 @@ final class WimGuiListRow<A> {
         this.cellGapOverride = cellGapOverride;
         this.rightReserveWidth = Math.max(0f, rightReserveWidth);
         this.tooltip = tooltip;
+        this.tooltipCreator = tooltipCreator;
     }
 
     String getLabel() {
@@ -102,5 +123,9 @@ final class WimGuiListRow<A> {
 
     String getTooltip() {
         return tooltip;
+    }
+
+    TooltipMakerAPI.TooltipCreator getTooltipCreator() {
+        return tooltipCreator;
     }
 }

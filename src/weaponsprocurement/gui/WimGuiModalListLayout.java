@@ -31,6 +31,16 @@ final class WimGuiModalListLayout<T> {
                                                 float bodyHeight,
                                                 float panelWidth,
                                                 WimGuiModalLayout modal) {
+        return compute(rows, requestedOffset, bodyTop, bodyHeight, panelWidth, modal, null);
+    }
+
+    static <T> WimGuiModalListLayout<T> compute(List<T> rows,
+                                                int requestedOffset,
+                                                float bodyTop,
+                                                float bodyHeight,
+                                                float panelWidth,
+                                                WimGuiModalLayout modal,
+                                                WimGuiScroll.ExtraGapProvider<T> extraGapProvider) {
         float availablePanelHeight = Math.max(modal.rowHeight, bodyHeight);
         float availableInnerHeight = Math.max(modal.rowHeight, availablePanelHeight - 2f * modal.listInset);
         WimGuiScrollSlice<T> slice = WimGuiScroll.verticalSlice(
@@ -38,7 +48,8 @@ final class WimGuiModalListLayout<T> {
                 requestedOffset,
                 availableInnerHeight,
                 modal.rowHeight,
-                modal.rowGap);
+                modal.rowGap,
+                extraGapProvider);
         float renderedPanelHeight = availablePanelHeight;
         float panelTop = bodyTop;
         float innerWidth = Math.max(1f, panelWidth - 2f * modal.listInset);

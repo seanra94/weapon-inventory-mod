@@ -49,7 +49,7 @@ final class StockReviewReviewListModel {
         if (!expanded) {
             return;
         }
-        if (StockReviewTradeGroup.SELLING.equals(tradeGroup)) {
+        if (StockReviewStyle.SHOW_WIDTH_TEST_ROWS && StockReviewTradeGroup.SELLING.equals(tradeGroup)) {
             addWorstCaseReviewRow(rows);
         }
         for (int i = 0; i < groupTrades.size(); i++) {
@@ -72,9 +72,10 @@ final class StockReviewReviewListModel {
         List<WimGuiRowCell<StockReviewAction>> cells = WimGuiRowCell.of(
                 StockReviewTradeRowCells.storage(record.getStorageCount(), trade.getQuantity(), StockReviewStyle.REVIEW_STOCK_CELL_WIDTH),
                 StockReviewTradeRowCells.plan(trade.getQuantity(), cost));
+        String itemTooltip = StockReviewTooltips.itemDataToggle(record);
         rows.add(StockReviewListRow.item(WimGuiToggleHeading.label(record.getDisplayName(), expanded),
-                cells, StockReviewAction.toggleItem(record.getItemKey()), StockReviewTooltips.itemDataToggle(record),
-                StockReviewStyle.SECTION_INDENT));
+                cells, StockReviewAction.toggleItem(record.getItemKey()), itemTooltip,
+                StockReviewItemTooltip.forRecord(record, itemTooltip), StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
         }

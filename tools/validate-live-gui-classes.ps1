@@ -3,7 +3,7 @@ param(
 )
 
 if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
-    $StarsectorDir = "C:\Games\Starsector"
+    throw "Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot

@@ -1,7 +1,6 @@
 fieldID,fieldName,fieldType,defaultValue,secondaryValue,fieldDescription,minValue,maxValue,tab
 wp_header,Weapons Procurement,Header,Settings,,,,,
 wp_update_interval_seconds,Update interval (seconds),Double,0.20,,"How often counts refresh while paused/open trade. Lower is more responsive but can cost more CPU.",0.05,2.00,
-wp_enable_patched_badges,Enable patched cargo-cell badges,Boolean,false,,"Personal-use optional feature. The clean stock-review popup does not require this.",,,
 wp_enable_dialog_option,Enable market dialogue option,Boolean,false,,"When enabled, adds an Open ""Weapon Procurement"" option to normal market interaction dialogs. The F8 hotkey remains available.",,,
 wp_enable_sector_market,Enable Sector Market,Boolean,true,,"When enabled, the stock review source button can select the Sector Market. The Sector Market sells weapons and fighter LPCs currently present in live sector markets.",,,
 wp_enable_fixers_market,Enable Fixer's Market,Boolean,true,,"When enabled, the stock review source button can select the Fixer's Market. The Fixer's Market sells virtual stock for eligible weapons and fighter LPCs.",,,
@@ -12,5 +11,3 @@ wp_desired_small_weapon_count,Desired stock: small weapons,Double,16,,"Default s
 wp_desired_medium_weapon_count,Desired stock: medium weapons,Double,8,,"Default sufficient-stock threshold for medium-slot weapons in the stock review popup.",0,999,
 wp_desired_large_weapon_count,Desired stock: large weapons,Double,4,,"Default sufficient-stock threshold for large-slot weapons in the stock review popup.",0,999,
 wp_desired_fighter_wing_count,Desired stock: fighter wings,Double,4,,"Default sufficient-stock threshold for fighter LPCs in the stock review popup.",0,999,
-wp_debug_header,Debug,Header,Settings,,,,,Debug
-wp_debug_trade_failure_step,DEV ONLY: force trade rollback failure,String,none,,"Validation only. Set to none for normal play and public packages. Accepted values: after-source-removal, after-player-cargo-remove, after-player-cargo-add, after-target-cargo-add, after-credit-mutation.",,,Debug

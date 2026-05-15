@@ -5,8 +5,8 @@ import com.fs.starfarer.api.EveryFrameScript;
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import org.apache.log4j.Logger;
-import weaponsprocurement.internal.WeaponsProcurementFixerCatalogUpdater;
 import weaponsprocurement.internal.WeaponsProcurementCountUpdater;
+import weaponsprocurement.internal.WeaponsProcurementFixerCatalogUpdater;
 import weaponsprocurement.gui.StockReviewHotkeyScript;
 
 import java.util.List;
@@ -18,14 +18,16 @@ public class WeaponsProcurementModPlugin extends BaseModPlugin {
     public void onGameLoad(boolean newGame) {
         SectorAPI sector = Global.getSector();
         if (sector == null) {
-            LOG.warn("WP_COUNT_UPDATER registration skipped: sector is null");
+            LOG.warn("WP_PLUGIN registration skipped: sector is null");
             return;
         }
+        // PRIVATE_BADGE_START
         if (!hasScript(sector.getTransientScripts(), WeaponsProcurementCountUpdater.class)
                 && !hasScript(sector.getScripts(), WeaponsProcurementCountUpdater.class)) {
             sector.addTransientScript(new WeaponsProcurementCountUpdater());
             LOG.info("WP_COUNT_UPDATER registered");
         }
+        // PRIVATE_BADGE_END
         if (!hasScript(sector.getTransientScripts(), StockReviewHotkeyScript.class)
                 && !hasScript(sector.getScripts(), StockReviewHotkeyScript.class)) {
             sector.addTransientScript(new StockReviewHotkeyScript());

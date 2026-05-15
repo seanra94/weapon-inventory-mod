@@ -23,10 +23,15 @@ The optional patched cargo-cell badge path remains isolated and advanced-use onl
 
 User-facing docs:
 
+- `AGENTS.md`: repo-local rules, commands, deploy policy, and knowledge map.
 - `README.md`: install/use summary.
 - `CONFIG.md`: JSON item overrides, blacklists, Luna settings, debug hooks.
 - `PACKAGING.md`: release validation, clean package, optional patched-badge instructions.
 - `CHANGELOG.md`: release notes.
+- `.agent/INDEX.md`: map of active docs and archival reference notes.
+- `.agent/BRIEF.md`: compact current-state handoff.
+- `.agent/PUBLIC_RELEASE.md`: private public-export checklist for `Shattersphere-Mods`. Never publish it.
+- `.agent/archive/INDEX.md`: archive map for deep dives and historical references.
 
 ## Entry Points
 
@@ -133,6 +138,7 @@ Normal clean popup work must remain independent of this path.
 Normal code/asset validation:
 
 ```powershell
+$env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
@@ -143,7 +149,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.p
 git diff --check
 ```
 
-`deploy-live-mod.ps1` clean-syncs repo-managed files to `C:\Games\Starsector\mods\Weapons Procurement`.
+`deploy-live-mod.ps1` clean-syncs repo-managed files to `C:\Games\Starsector\mods\Weapons Procurement`. If the live jar is locked by Starsector, it stages the built files and starts a minimized visible queued worker that publishes after the lock clears.
 
 For docs-only edits, `validate-doc-links.ps1` and `git diff --check` are usually sufficient.
 

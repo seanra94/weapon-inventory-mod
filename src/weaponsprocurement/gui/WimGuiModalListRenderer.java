@@ -29,7 +29,8 @@ final class WimGuiModalListRenderer {
                 spec.panelTop,
                 spec.panelHeight,
                 spec.panelWidth,
-                spec.modal);
+                spec.modal,
+                gapProvider(extraGapProvider));
         WimGuiScrollSlice<WimGuiListRow<A>> slice = layout.scrollSlice;
         CustomPanelAPI listPanel = root.createCustomPanel(
                 spec.panelWidth,
@@ -37,7 +38,7 @@ final class WimGuiModalListRenderer {
                 new WimGuiPanelPlugin(spec.panelFill, spec.panelBorder));
         root.addComponent(listPanel).inTL(spec.panelLeft, layout.panelTop);
 
-        float y = spec.rowHorizontalPad;
+        float y = spec.rowHorizontalPad + finalPageTopOffset(slice, layout.panelHeight, spec, extraGapProvider);
         if (slice.hasAbove) {
             renderRow(listPanel, scrollRowFactory.createScrollRow(WimGuiScrollIndicator.ABOVE,
                     -layout.pageDelta()), y, spec, buttons);
@@ -101,6 +102,39 @@ final class WimGuiModalListRenderer {
                 spec.minLabelWidth,
                 spec.rowBorder,
                 buttons);
+    }
+
+    private static <A> float finalPageTopOffset(WimGuiScrollSlice<WimGuiListRow<A>> slice,
+                                                float panelHeight,
+                                                WimGuiModalListSpec spec,
+                                                ExtraGapProvider<A> extraGapProvider) {
+        if (slice == null || !slice.hasAbove || slice.hasBelow || slice.items.isEmpty()) {
+            return 0f;
+        }
+        float contentBottom = spec.rowHeight;
+        for (int i = 0; i < slice.items.size(); i++) {
+            WimGuiListRow<A> row = slice.items.get(i);
+            contentBottom += spec.rowGap + gapBefore(row, extraGapProvider) + spec.rowHeight;
+        }
+        float innerHeight = panelHeight - 2f * spec.rowHorizontalPad;
+        return Math.max(0f, innerHeight - contentBottom);
+    }
+
+    private static <A> float gapBefore(WimGuiListRow<A> row, ExtraGapProvider<A> extraGapProvider) {
+        return extraGapProvider == null ? 0f : Math.max(0f, extraGapProvider.extraGapBefore(row));
+    }
+
+    private static <A> WimGuiScroll.ExtraGapProvider<WimGuiListRow<A>> gapProvider(
+            final ExtraGapProvider<A> extraGapProvider) {
+        if (extraGapProvider == null) {
+            return null;
+        }
+        return new WimGuiScroll.ExtraGapProvider<WimGuiListRow<A>>() {
+            @Override
+            public float extraGapBefore(WimGuiListRow<A> row) {
+                return extraGapProvider.extraGapBefore(row);
+            }
+        };
     }
 
 }

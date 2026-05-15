@@ -80,7 +80,7 @@ Sector Market uses real live stock from markets in the current save. Fixer's Mar
 
 ## Rollback Debug Hook
 
-`DEV ONLY: force trade rollback failure` is for local validation of trade rollback. Keep it set to `none` for normal play and public packages.
+The trade rollback fault hook is developer-only and is not exposed in LunaLib settings. For a local validation run, start Starsector with the JVM system property `wp.debug.failTradeStep` set to one accepted value.
 
 Accepted test values are:
 
@@ -90,4 +90,4 @@ Accepted test values are:
 - `after-target-cargo-add`
 - `after-credit-mutation`
 
-The release validation script fails if this setting's default is not `none`.
+Leave the property unset, empty, or `none` for normal play and public packages.

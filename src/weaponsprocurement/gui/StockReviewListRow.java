@@ -1,6 +1,7 @@
 package weaponsprocurement.gui;
 
 import com.fs.starfarer.api.ui.Alignment;
+import com.fs.starfarer.api.ui.TooltipMakerAPI;
 
 import java.awt.Color;
 import java.util.List;
@@ -103,9 +104,18 @@ final class StockReviewListRow {
                                                  StockReviewAction action,
                                                  String tooltip,
                                                  float indent) {
+        return item(label, cells, action, tooltip, null, indent);
+    }
+
+    static WimGuiListRow<StockReviewAction> item(String label,
+                                                 List<WimGuiRowCell<StockReviewAction>> cells,
+                                                 StockReviewAction action,
+                                                 String tooltip,
+                                                 TooltipMakerAPI.TooltipCreator tooltipCreator,
+                                                 float indent) {
         return row(label, StockReviewStyle.TEXT, StockReviewStyle.ROW_BACKGROUND,
                 StockReviewStyle.CELL_BACKGROUND, StockReviewStyle.ROW_BORDER,
-                indent, action, Alignment.LMID, cells, false, tooltip);
+                indent, action, Alignment.LMID, cells, false, tooltip, tooltipCreator);
     }
 
     static WimGuiListRow<StockReviewAction> labelTextIndented(String label, String value, float indent) {
@@ -219,6 +229,22 @@ final class StockReviewListRow {
                                                         List<WimGuiRowCell<StockReviewAction>> cells,
                                                         boolean topGap,
                                                         String tooltip) {
+        return row(label, textColor, fillColor, buttonFillColor, borderColor, indent, action,
+                alignment, cells, topGap, tooltip, null);
+    }
+
+    private static WimGuiListRow<StockReviewAction> row(String label,
+                                                        Color textColor,
+                                                        Color fillColor,
+                                                        Color buttonFillColor,
+                                                        Color borderColor,
+                                                        float indent,
+                                                        StockReviewAction action,
+                                                        Alignment alignment,
+                                                        List<WimGuiRowCell<StockReviewAction>> cells,
+                                                        boolean topGap,
+                                                        String tooltip,
+                                                        TooltipMakerAPI.TooltipCreator tooltipCreator) {
         return new WimGuiListRow<StockReviewAction>(
                 label,
                 textColor,
@@ -232,7 +258,8 @@ final class StockReviewListRow {
                 topGap,
                 null,
                 0f,
-                tooltip);
+                tooltip,
+                tooltipCreator);
     }
 
     private static WimGuiListRow<StockReviewAction> row(String label,

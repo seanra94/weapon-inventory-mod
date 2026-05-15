@@ -15,17 +15,7 @@ Weapons Procurement adds a stock review and trade-planning popup for Starsector 
 4. Open `Review Trades`.
 5. Confirm trades.
 
-This clean path does not require patching `starfarer_obf.jar`.
-
-## Optional Patched-Badge Path
-
-An optional advanced path can render ownership badges directly in vanilla cargo cells by patching `starfarer_obf.jar`.
-
-- This is not required for normal popup usage.
-- The clean/default setting leaves patched badges disabled (`wp_enable_patched_badges=false`).
-- If you patch your core jar, you can enable badges in Luna settings.
-
-Use [PACKAGING.md](PACKAGING.md) for patch/restore and validation steps.
+This workflow uses normal mod files only.
 
 ## Source Modes
 
@@ -57,17 +47,13 @@ Release notes are tracked in [CHANGELOG.md](CHANGELOG.md).
 - No rows visible:
   - check source mode and filters;
   - verify current market or inventory has relevant items.
-- Patched badges do not show:
-  - expected on clean installs;
-  - requires patched core jar plus enabled Luna setting.
 
 ## Build/Validation
 
 ```powershell
+$env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1

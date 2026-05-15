@@ -86,7 +86,9 @@ final class StockReviewListModel {
         if (!expanded) {
             return records.size();
         }
-        if (StockItemType.WEAPON.equals(itemType) && StockCategory.NO_STOCK.equals(category)) {
+        if (StockReviewStyle.SHOW_WIDTH_TEST_ROWS
+                && StockItemType.WEAPON.equals(itemType)
+                && StockCategory.NO_STOCK.equals(category)) {
             addWorstCaseTestRow(rows);
         }
         for (int i = 0; i < records.size(); i++) {
@@ -131,8 +133,9 @@ final class StockReviewListModel {
                 WimGuiRowCell.standardAction("Reset", StockReviewStyle.RESET_BUTTON_WIDTH, StockReviewStyle.ACTION_BACKGROUND,
                         StockReviewAction.resetPlan(record.getItemKey()), planQuantity != 0,
                         StockReviewTooltips.resetPlan()));
+        String itemTooltip = StockReviewTooltips.itemDataToggle(record);
         rows.add(StockReviewListRow.item(label, cells, StockReviewAction.toggleItem(record.getItemKey()),
-                StockReviewTooltips.itemDataToggle(record), StockReviewStyle.SECTION_INDENT));
+                itemTooltip, StockReviewItemTooltip.forRecord(record, itemTooltip), StockReviewStyle.SECTION_INDENT));
         if (!expanded) {
             return;
         }

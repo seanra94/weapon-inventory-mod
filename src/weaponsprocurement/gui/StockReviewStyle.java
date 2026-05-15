@@ -3,10 +3,12 @@ package weaponsprocurement.gui;
 import java.awt.Color;
 
 final class StockReviewStyle {
+    static final boolean SHOW_WIDTH_TEST_ROWS = false;
+
     static final float WIDTH = 1180f;
-    static final float HEIGHT = 640f;
     static final float PAD = 10f;
     static final float SMALL_PAD = 4f;
+    static final float SECTION_GAP = PAD;
     static final float HEADER_HEIGHT = 58f;
     static final float ACTION_ROW_HEIGHT = 28f;
     static final float FOOTER_HEIGHT = 34f;
@@ -34,13 +36,23 @@ final class StockReviewStyle {
     static final float DEBUG_DELTA_BUTTON_WIDTH = 48f;
     static final float ACTION_BUTTON_HEIGHT = 22f;
     static final float ROW_HEIGHT = 22f;
-    static final float ROW_GAP = 3f;
+    static final float ROW_GAP = 4f;
+    static final int LIST_VISIBLE_ROWS = 17;
+    static final float LIST_INNER_HEIGHT = LIST_VISIBLE_ROWS * ROW_HEIGHT
+            + (LIST_VISIBLE_ROWS - 1) * ROW_GAP;
+    static final float LIST_PANEL_HEIGHT = LIST_INNER_HEIGHT + 2f * SMALL_PAD;
     static final float CATEGORY_TOP_GAP = ROW_GAP;
     static final float SUMMARY_ROW_GAP = 4f;
     static final int SUMMARY_ROW_COUNT = 4;
     static final float SUMMARY_HEIGHT = SUMMARY_ROW_COUNT * ROW_HEIGHT
             + (SUMMARY_ROW_COUNT - 1) * SUMMARY_ROW_GAP;
-    static final float SUMMARY_TOP = HEIGHT - PAD - ACTION_BUTTON_HEIGHT - SMALL_PAD - SUMMARY_HEIGHT;
+    static final float TRADE_ACTION_ROW_TOP = PAD;
+    static final float TRADE_LIST_TOP = TRADE_ACTION_ROW_TOP + ACTION_BUTTON_HEIGHT + SECTION_GAP;
+    static final float REVIEW_LIST_TOP = TRADE_LIST_TOP;
+    static final float TRADE_LIST_HEIGHT = LIST_PANEL_HEIGHT;
+    static final float REVIEW_LIST_HEIGHT = LIST_PANEL_HEIGHT;
+    static final float SUMMARY_TOP = TRADE_LIST_TOP + LIST_PANEL_HEIGHT + SECTION_GAP;
+    static final float HEIGHT = SUMMARY_TOP + SUMMARY_HEIGHT + SECTION_GAP + ACTION_BUTTON_HEIGHT + PAD;
     static final float TEXT_TOP_PAD = WimGuiStyle.TEXT_TOP_PAD;
     static final float TEXT_LEFT_PAD = WimGuiStyle.TEXT_LEFT_PAD;
     static final float WEAPON_INDENT = 18f;
@@ -74,11 +86,6 @@ final class StockReviewStyle {
             SMALL_PAD);
     static final float LIST_TOP = MODAL.bodyTop();
     static final float LIST_HEIGHT = MODAL.bodyHeight();
-    static final float TRADE_ACTION_ROW_TOP = PAD;
-    static final float TRADE_LIST_TOP = TRADE_ACTION_ROW_TOP + ACTION_ROW_HEIGHT + SMALL_PAD;
-    static final float REVIEW_LIST_TOP = PAD;
-    static final float TRADE_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - TRADE_LIST_TOP - SMALL_PAD);
-    static final float REVIEW_LIST_HEIGHT = Math.max(ROW_HEIGHT, SUMMARY_TOP - REVIEW_LIST_TOP - SMALL_PAD);
     static final float LIST_WIDTH = MODAL.contentWidth();
     static final float FILTER_LIST_WIDTH = LIST_WIDTH / 4f;
     static final float REVIEW_LIST_WIDTH = REVIEW_MODAL.contentWidth();

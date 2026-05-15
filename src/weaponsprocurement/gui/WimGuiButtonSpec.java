@@ -1,6 +1,7 @@
 package weaponsprocurement.gui;
 
 import com.fs.starfarer.api.ui.Alignment;
+import com.fs.starfarer.api.ui.TooltipMakerAPI;
 
 import java.awt.Color;
 
@@ -14,6 +15,7 @@ final class WimGuiButtonSpec<A> {
     final WimGuiButtonColors colors;
     final Color borderColor;
     final String tooltip;
+    final TooltipMakerAPI.TooltipCreator tooltipCreator;
 
     WimGuiButtonSpec(float width,
                      String label,
@@ -24,6 +26,19 @@ final class WimGuiButtonSpec<A> {
                      WimGuiButtonColors colors,
                      Color borderColor,
                      String tooltip) {
+        this(width, label, textColor, action, enabled, alignment, colors, borderColor, tooltip, null);
+    }
+
+    WimGuiButtonSpec(float width,
+                     String label,
+                     Color textColor,
+                     A action,
+                     boolean enabled,
+                     Alignment alignment,
+                     WimGuiButtonColors colors,
+                     Color borderColor,
+                     String tooltip,
+                     TooltipMakerAPI.TooltipCreator tooltipCreator) {
         this.width = width;
         this.label = label;
         this.textColor = textColor;
@@ -33,6 +48,7 @@ final class WimGuiButtonSpec<A> {
         this.colors = colors;
         this.borderColor = borderColor;
         this.tooltip = tooltip;
+        this.tooltipCreator = tooltipCreator;
     }
 
     static <A> WimGuiButtonSpec<A> sameColor(float width,
@@ -109,6 +125,28 @@ final class WimGuiButtonSpec<A> {
                                           Color borderColor,
                                           String tooltip) {
         return dimmedInner(width, label, textColor, action, true, alignment, color, borderColor, tooltip);
+    }
+
+    static <A> WimGuiButtonSpec<A> toggle(float width,
+                                          String label,
+                                          Color textColor,
+                                          A action,
+                                          Alignment alignment,
+                                          Color color,
+                                          Color borderColor,
+                                          String tooltip,
+                                          TooltipMakerAPI.TooltipCreator tooltipCreator) {
+        return new WimGuiButtonSpec<A>(
+                width,
+                label,
+                textColor,
+                action,
+                true,
+                alignment,
+                WimGuiButtonColors.dimmedInner(color),
+                borderColor,
+                tooltip,
+                tooltipCreator);
     }
 
     static <A> WimGuiButtonSpec<A> semantic(float width,

@@ -24,6 +24,9 @@ final class StockPurchaseMarketSources {
             return result;
         }
         for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
+            if (submarket == null) {
+                continue;
+            }
             if (onlySubmarketId != null && !onlySubmarketId.equals(submarket.getSpecId())) {
                 continue;
             }

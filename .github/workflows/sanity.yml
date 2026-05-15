@@ -57,7 +57,11 @@ jobs:
 
       - name: Validate documentation links
         shell: pwsh
-        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1 -IncludePrivateDocs
+
+      - name: Validate public export boundary
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\export-public.ps1
 
       - name: Reject stale stock-review pending purchase class
         shell: pwsh

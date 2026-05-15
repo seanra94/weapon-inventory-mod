@@ -1,4 +1,5 @@
 build/
+.agent-deploy/
 tools/patcher/build/
 .pytest_cache/
 *.class

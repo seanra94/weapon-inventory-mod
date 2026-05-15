@@ -4,7 +4,7 @@ param(
 )
 
 if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
-    $StarsectorDir = "C:\Games\Starsector"
+    throw "Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
 }
 
 $apiJar = Join-Path $StarsectorDir "starsector-core\starfarer.api.jar"
