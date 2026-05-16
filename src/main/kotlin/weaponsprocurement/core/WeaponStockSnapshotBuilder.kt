@@ -178,7 +178,7 @@ class WeaponStockSnapshotBuilder {
             if (result != 0) return result
             result = compareByPrice(left, right)
             if (result != 0) return result
-            return left.displayName.compareTo(right.displayName, ignoreCase = true)
+            return left.displayName.orEmpty().compareTo(right.displayName.orEmpty(), ignoreCase = true)
         }
 
         private fun compareByNeed(left: WeaponStockRecord, right: WeaponStockRecord): Int {
@@ -203,7 +203,7 @@ class WeaponStockSnapshotBuilder {
 
     private class NameComparator private constructor() : Comparator<WeaponStockRecord> {
         override fun compare(left: WeaponStockRecord, right: WeaponStockRecord): Int {
-            var result = left.displayName.compareTo(right.displayName, ignoreCase = true)
+            var result = left.displayName.orEmpty().compareTo(right.displayName.orEmpty(), ignoreCase = true)
             if (result != 0) return result
             result = compareByNeed(left, right)
             if (result != 0) return result
@@ -222,7 +222,7 @@ class WeaponStockSnapshotBuilder {
             if (result != 0) return result
             result = right.neededCount.compareTo(left.neededCount)
             if (result != 0) return result
-            return left.displayName.compareTo(right.displayName, ignoreCase = true)
+            return left.displayName.orEmpty().compareTo(right.displayName.orEmpty(), ignoreCase = true)
         }
 
         companion object {

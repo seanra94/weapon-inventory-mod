@@ -55,10 +55,11 @@ Completed:
 - Inventory counts, market stock collection, and market blacklist services converted to Kotlin.
 - Global remote stock service and persistent Fixer observed catalog storage converted to Kotlin.
 - Stock review config loading and stock snapshot assembly converted to Kotlin.
+- Stock record/stat label helpers converted to Kotlin.
 
 Still open:
 
-- Convert remaining core stock record/stat label helpers before moving into trade execution.
+- Convert trade/quote/execution packages.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
