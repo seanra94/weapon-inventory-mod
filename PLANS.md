@@ -51,11 +51,11 @@ Completed:
 - LazyLib is declared as a required dependency for the Kotlin runtime.
 - Optional badge source is physically separated under `src/privateBadge`.
 - `tools/validate-kotlin-migration.ps1` validates build files, dependency declarations, Java migration status, clean jar badge-class exclusion, and public-export boundaries.
+- Core enums/value helpers and low-risk stock/Fixer catalog helpers converted to Kotlin while preserving the `weaponsprocurement.core` Java interop surface.
 
 Still open:
 
-- Convert core model/value classes and enums.
-- Convert stock/source/Fixer catalog packages.
+- Convert remaining stock/source/Fixer catalog services.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
