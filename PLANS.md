@@ -59,10 +59,11 @@ Completed:
 - Pending trade state, line quote, portfolio quote, and seller allocation value classes converted to Kotlin.
 - Quote book and trade context converted to Kotlin.
 - Trade validation, source lookup, and transaction-reporting helpers converted to Kotlin.
+- Purchase service and executor mutation/rollback code converted to Kotlin.
 
 Still open:
 
-- Convert purchase service and executor mutation code.
+- Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
