@@ -71,6 +71,7 @@ Completed:
 - Stock-review tooltip copy helpers and color-debug row model converted to Kotlin.
 - Stock-review style constants and modal list style specs converted to Kotlin.
 - Shared WimGui text wrapping, control rendering helpers, and button-style validator converted for Kotlin source.
+- Stock-review list row factories, expanded item-info rows, and main list model converted to Kotlin.
 
 Still open:
 
