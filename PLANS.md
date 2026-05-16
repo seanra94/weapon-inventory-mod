@@ -57,10 +57,11 @@ Completed:
 - Stock review config loading and stock snapshot assembly converted to Kotlin.
 - Stock record/stat label helpers converted to Kotlin.
 - Pending trade state, line quote, portfolio quote, and seller allocation value classes converted to Kotlin.
+- Quote book and trade context converted to Kotlin.
 
 Still open:
 
-- Convert quote book and trade context, then trade execution packages.
+- Convert trade execution packages.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
