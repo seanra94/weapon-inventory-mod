@@ -69,6 +69,7 @@ Completed:
 - Stock-review trade planner, row-cell helper, and trade controller converted to Kotlin.
 - Stock-review footer, summary, and review-list model converted to Kotlin.
 - Stock-review tooltip copy helpers and color-debug row model converted to Kotlin.
+- Stock-review style constants and modal list style specs converted to Kotlin.
 
 Still open:
 
