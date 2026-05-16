@@ -54,10 +54,11 @@ Completed:
 - Core enums/value helpers and low-risk stock/Fixer catalog helpers converted to Kotlin while preserving the `weaponsprocurement.core` Java interop surface.
 - Inventory counts, market stock collection, and market blacklist services converted to Kotlin.
 - Global remote stock service and persistent Fixer observed catalog storage converted to Kotlin.
+- Stock review config loading and stock snapshot assembly converted to Kotlin.
 
 Still open:
 
-- Convert remaining source/config services, starting with `StockReviewConfig` and snapshot builders.
+- Convert remaining core stock record/stat label helpers before moving into trade execution.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
