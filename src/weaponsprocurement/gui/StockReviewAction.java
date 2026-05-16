@@ -3,7 +3,7 @@ package weaponsprocurement.gui;
 import weaponsprocurement.core.StockCategory;
 import weaponsprocurement.core.StockItemType;
 
-final class StockReviewAction {
+public final class StockReviewAction {
     enum Type {
         TOGGLE_CATEGORY,
         TOGGLE_ITEM_TYPE,

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final class WimGuiListRow<A> {
+public final class WimGuiListRow<A> {
     private final String label;
     private final Color textColor;
     private final Color fillColor;
