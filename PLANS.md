@@ -11,7 +11,7 @@ The repo is in release-prep shape for the clean popup path:
 - Sector Market drains real remote cargo; Fixer's Market is virtual.
 - Fixer's Market uses runtime theoretical sale capability plus rarity estimates, with observed live/persistent stock used for reference prices and correction.
 - Optional patched cargo-cell badges are private-only and isolated from the clean popup.
-- Gradle/Kotlin migration is complete at the source-language boundary; `build.ps1` remains the compatibility entry point.
+- Gradle/Kotlin migration and first-pass AGC-style package ownership split are complete; `build.ps1` remains the compatibility entry point.
 - Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
 ## Active Work
@@ -90,7 +90,7 @@ Completed:
 
 Still open:
 
-- Continue AGC-style package/ownership cleanup in focused feature chunks.
+- No source-structure blocker remains for the migration. Future cleanup should be tied to concrete feature or bug work.
 
 ### Runtime Rollback Validation
 
