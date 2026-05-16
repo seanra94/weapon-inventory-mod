@@ -7,7 +7,7 @@ class StockReviewFilterListModel private constructor() {
         @JvmStatic
         fun build(state: StockReviewState): List<WimGuiListRow<StockReviewAction>> {
             val rows = ArrayList<WimGuiListRow<StockReviewAction>>()
-            val active = state.activeFilters
+            val active = state.getActiveFilters()
             if (active.isNotEmpty()) {
                 for (filter in StockReviewFilter.values()) {
                     if (active.contains(filter)) {
@@ -36,7 +36,7 @@ class StockReviewFilterListModel private constructor() {
             topGap: Boolean,
         ) {
             val expanded = state.isExpanded(group)
-            val activeInGroup = StockReviewFilters.activeInGroup(state.activeFilters, group)
+            val activeInGroup = StockReviewFilters.activeInGroup(state.getActiveFilters(), group)
             val label = WimGuiToggleHeading.countedLabel(group.label, activeInGroup.size, expanded)
             rows.add(
                 StockReviewListRow.filterHeading(
