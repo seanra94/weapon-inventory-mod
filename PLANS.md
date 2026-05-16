@@ -85,6 +85,8 @@ Completed:
 - Config ownership split into `weaponsprocurement.config`.
 - Runtime lifecycle scripts split into `weaponsprocurement.lifecycle`.
 - Former `core` package split into `weaponsprocurement.stock` and `weaponsprocurement.trade`.
+- Shared WimGui primitives moved under `weaponsprocurement.ui`.
+- Stock review UI feature files moved under `weaponsprocurement.ui.stockreview`.
 
 Still open:
 

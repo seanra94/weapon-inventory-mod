@@ -1,6 +1,6 @@
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $legacyGuiDir = Join-Path $repoRoot "src\weaponsprocurement\gui"
-$kotlinGuiDir = Join-Path $repoRoot "src\main\kotlin\weaponsprocurement\gui"
+$kotlinGuiDir = Join-Path $repoRoot "src\main\kotlin\weaponsprocurement\ui"
 $controlsCandidates = @(
     (Join-Path $legacyGuiDir "WimGuiControls.java"),
     (Join-Path $kotlinGuiDir "WimGuiControls.kt")
