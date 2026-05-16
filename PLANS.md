@@ -63,6 +63,7 @@ Completed:
 - Shared WimGui and stock-review UI primitive/value classes converted to Kotlin.
 - Stock-review source/filter/mode state and player-cargo helper code converted to Kotlin.
 - WimGui style, modal input, button polling, list layout, and campaign dialog host helpers converted to Kotlin.
+- Stock-review action model, row cells/list rows, and height-aware scroll slicing converted to Kotlin.
 
 Still open:
 
