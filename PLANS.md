@@ -76,6 +76,7 @@ Completed:
 - Stock-review UI action controller and trade execution controller converted to Kotlin.
 - Stock-review modal panel plugin and main renderer converted to Kotlin.
 - Stock-review hotkey script, Fixer catalog updater, stable mod plugin entrypoint, and public-export plugin stripping converted for Kotlin.
+- Luna/settings publication bridge converted to Kotlin while preserving Java-facing static config API.
 
 Still open:
 
