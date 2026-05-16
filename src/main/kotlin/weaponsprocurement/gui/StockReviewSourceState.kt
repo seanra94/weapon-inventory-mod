@@ -1,6 +1,6 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockReviewConfig
+import weaponsprocurement.config.StockReviewConfig
 import weaponsprocurement.core.StockSortMode
 import weaponsprocurement.core.StockSourceMode
 

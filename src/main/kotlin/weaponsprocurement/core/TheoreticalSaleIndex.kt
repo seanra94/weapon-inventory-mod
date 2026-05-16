@@ -9,6 +9,7 @@ import com.fs.starfarer.api.combat.WeaponAPI
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
+import weaponsprocurement.config.WeaponMarketBlacklist
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet

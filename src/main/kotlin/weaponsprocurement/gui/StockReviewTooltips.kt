@@ -4,7 +4,7 @@ import weaponsprocurement.core.StockCategory
 import weaponsprocurement.core.StockSortMode
 import weaponsprocurement.core.StockSourceMode
 import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.config.WeaponsProcurementConfig
 import java.util.Locale
 
 class StockReviewTooltips private constructor() {

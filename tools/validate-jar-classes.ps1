@@ -38,7 +38,7 @@ $requiredClasses = @(
     'weaponsprocurement/core/StockItemStacks.class',
     'weaponsprocurement/core/FixerMarketObservedCatalog.class',
     'weaponsprocurement/core/FixerMarketObservedCatalog$ObservedItem.class',
-    'weaponsprocurement/core/WeaponMarketBlacklist.class',
+    'weaponsprocurement/config/WeaponMarketBlacklist.class',
     'weaponsprocurement/core/StockItemType.class',
     'weaponsprocurement/core/StockSourceMode.class',
     'weaponsprocurement/gui/WimGuiCampaignDialogHost.class',
@@ -83,7 +83,8 @@ $requiredClasses = @(
     'weaponsprocurement/gui/StockReviewTradeWarnings.class',
     'weaponsprocurement/gui/StockReviewPendingTrade.class',
     'weaponsprocurement/core/WeaponStockSnapshotBuilder$CostComparator.class',
-    'weaponsprocurement/internal/WeaponsProcurementFixerCatalogUpdater.class',
+    'weaponsprocurement/lifecycle/WeaponsProcurementFixerCatalogUpdater.class',
+    'weaponsprocurement/lifecycle/StockReviewHotkeyScript.class',
     'com/fs/starfarer/api/impl/campaign/rulecmd/WP_OpenDialog.class'
 )
 
@@ -103,6 +104,11 @@ $forbiddenClasses = @(
     'weaponsprocurement/gui/WimGuiColorDebug$1.class',
     'weaponsprocurement/core/StockDisplayMode.class',
     'weaponsprocurement/core/StockStatusClassifier.class',
+    'weaponsprocurement/core/StockReviewConfig.class',
+    'weaponsprocurement/core/WeaponMarketBlacklist.class',
+    'weaponsprocurement/gui/StockReviewHotkeyScript.class',
+    'weaponsprocurement/internal/WeaponsProcurementConfig.class',
+    'weaponsprocurement/internal/WeaponsProcurementFixerCatalogUpdater.class',
     'weaponsprocurement/core/StockPurchaseService$PurchaseLine.class',
     'weaponsprocurement/core/StockPurchaseService$PurchasePlan.class',
     'weaponsprocurement/core/StockPurchaseService$PurchaseSource.class',

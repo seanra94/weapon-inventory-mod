@@ -5,9 +5,10 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.ui.CustomPanelAPI
 import org.apache.log4j.Logger
 import weaponsprocurement.core.StockPurchaseService
-import weaponsprocurement.core.StockReviewConfig
+import weaponsprocurement.config.StockReviewConfig
 import weaponsprocurement.core.WeaponStockSnapshot
 import weaponsprocurement.core.WeaponStockSnapshotBuilder
+import weaponsprocurement.lifecycle.StockReviewHotkeyScript
 
 class StockReviewPanelPlugin(
     private val initialMarket: MarketAPI?,

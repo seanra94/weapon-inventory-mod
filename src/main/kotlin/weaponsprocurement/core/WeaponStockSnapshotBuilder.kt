@@ -6,6 +6,7 @@ import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
+import weaponsprocurement.config.StockReviewConfig
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator

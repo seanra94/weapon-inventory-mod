@@ -1,10 +1,11 @@
-package weaponsprocurement.core
+package weaponsprocurement.config
 
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
 import org.apache.log4j.Logger
 import org.json.JSONObject
+import weaponsprocurement.core.StockItemType
 import java.util.Collections
 import java.util.HashSet
 import java.util.Locale

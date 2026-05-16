@@ -1,10 +1,10 @@
-package weaponsprocurement.internal
+package weaponsprocurement.lifecycle
 
 import com.fs.starfarer.api.EveryFrameScript
 import com.fs.starfarer.api.Global
 import org.apache.log4j.Logger
 import weaponsprocurement.core.FixerMarketObservedCatalog
-import weaponsprocurement.core.WeaponMarketBlacklist
+import weaponsprocurement.config.WeaponMarketBlacklist
 
 class WeaponsProcurementFixerCatalogUpdater : EveryFrameScript {
     private val catalog = FixerMarketObservedCatalog()

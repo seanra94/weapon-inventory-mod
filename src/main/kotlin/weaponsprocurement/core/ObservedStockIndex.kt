@@ -2,6 +2,7 @@ package weaponsprocurement.core
 
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets
+import weaponsprocurement.config.WeaponMarketBlacklist
 import java.util.HashMap
 
 class ObservedStockIndex {

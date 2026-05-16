@@ -1,4 +1,4 @@
-package weaponsprocurement.internal
+package weaponsprocurement.config
 
 import lunalib.lunaSettings.LunaSettings
 import org.apache.log4j.Logger

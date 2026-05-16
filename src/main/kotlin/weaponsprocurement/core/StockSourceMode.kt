@@ -1,6 +1,6 @@
 package weaponsprocurement.core
 
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.config.WeaponsProcurementConfig
 
 enum class StockSourceMode(
     val label: String,

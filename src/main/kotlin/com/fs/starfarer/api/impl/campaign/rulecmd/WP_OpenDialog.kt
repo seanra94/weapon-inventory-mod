@@ -5,8 +5,8 @@ import com.fs.starfarer.api.campaign.InteractionDialogAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.rules.MemoryAPI
 import com.fs.starfarer.api.util.Misc
-import weaponsprocurement.gui.StockReviewHotkeyScript
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.lifecycle.StockReviewHotkeyScript
+import weaponsprocurement.config.WeaponsProcurementConfig
 import java.util.Locale
 
 class WP_OpenDialog : BaseCommandPlugin() {

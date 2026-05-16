@@ -4,7 +4,8 @@ import com.fs.starfarer.api.campaign.FactionAPI
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.config.WeaponsProcurementConfig
 import java.util.ArrayList
 import java.util.Collections
 import java.util.HashMap

@@ -1,4 +1,4 @@
-package weaponsprocurement.gui
+package weaponsprocurement.lifecycle
 
 import com.fs.starfarer.api.EveryFrameScript
 import com.fs.starfarer.api.Global
@@ -7,10 +7,18 @@ import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import org.apache.log4j.Logger
 import org.lwjgl.input.Keyboard
+import weaponsprocurement.gui.StockReviewLaunchState
+import weaponsprocurement.gui.StockReviewPanelPlugin
+import weaponsprocurement.gui.StockReviewState
+import weaponsprocurement.gui.StockReviewStyle
+import weaponsprocurement.gui.WimGuiCampaignDialogHost
+import weaponsprocurement.gui.WimGuiDialogOpener
+import weaponsprocurement.gui.WimGuiDialogTracker
+import weaponsprocurement.gui.WimGuiHotkeyLatch
 import weaponsprocurement.core.MarketStockService
 import weaponsprocurement.core.StockItemStacks
-import weaponsprocurement.core.StockReviewConfig
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.config.StockReviewConfig
+import weaponsprocurement.config.WeaponsProcurementConfig
 
 class StockReviewHotkeyScript : EveryFrameScript {
     private val hotkey = WimGuiHotkeyLatch(HOTKEY)

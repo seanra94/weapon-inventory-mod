@@ -3,6 +3,7 @@ package weaponsprocurement.core
 import com.fs.starfarer.api.combat.WeaponAPI
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
+import weaponsprocurement.config.StockReviewConfig
 
 class DesiredStockService(private val config: StockReviewConfig) {
     fun desiredCount(weaponId: String?, spec: WeaponSpecAPI?): Int {

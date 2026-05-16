@@ -5,8 +5,8 @@ import com.fs.starfarer.api.EveryFrameScript
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.SectorAPI
 import org.apache.log4j.Logger
-import weaponsprocurement.gui.StockReviewHotkeyScript
-import weaponsprocurement.internal.WeaponsProcurementFixerCatalogUpdater
+import weaponsprocurement.lifecycle.StockReviewHotkeyScript
+import weaponsprocurement.lifecycle.WeaponsProcurementFixerCatalogUpdater
 
 class WeaponsProcurementModPlugin : BaseModPlugin() {
     override fun onGameLoad(newGame: Boolean) {

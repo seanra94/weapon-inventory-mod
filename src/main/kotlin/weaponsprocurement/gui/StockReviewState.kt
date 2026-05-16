@@ -2,7 +2,7 @@ package weaponsprocurement.gui
 
 import weaponsprocurement.core.StockCategory
 import weaponsprocurement.core.StockItemType
-import weaponsprocurement.core.StockReviewConfig
+import weaponsprocurement.config.StockReviewConfig
 import weaponsprocurement.core.StockSortMode
 import weaponsprocurement.core.StockSourceMode
 

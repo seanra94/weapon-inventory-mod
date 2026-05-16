@@ -4,7 +4,7 @@ import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
 import org.apache.log4j.Logger
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.config.WeaponsProcurementConfig
 import java.util.ArrayList
 import java.util.IdentityHashMap
 

@@ -1,10 +1,12 @@
-package weaponsprocurement.core
+package weaponsprocurement.config
 
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.combat.WeaponAPI
 import org.apache.log4j.Logger
 import org.json.JSONObject
-import weaponsprocurement.internal.WeaponsProcurementConfig
+import weaponsprocurement.core.OwnedSourcePolicy
+import weaponsprocurement.core.StockItemType
+import weaponsprocurement.core.StockSortMode
 import java.util.Collections
 import java.util.HashMap
 

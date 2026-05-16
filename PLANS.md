@@ -82,6 +82,8 @@ Completed:
 - Public export script updated for the Kotlin private-badge source layout.
 - Dialog rule-command entrypoint converted to Kotlin while preserving the `WP_OpenDialog` rules class name.
 - Final no-Java-source migration gate passes for the private repo and public export.
+- Config ownership split into `weaponsprocurement.config`.
+- Runtime lifecycle scripts split into `weaponsprocurement.lifecycle`.
 
 Still open:
 
