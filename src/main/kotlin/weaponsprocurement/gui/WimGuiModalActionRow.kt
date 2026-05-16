@@ -13,7 +13,7 @@ class WimGuiModalActionRow private constructor() {
             buttonHeight: Float,
             buttonGap: Float,
             specs: List<WimGuiButtonSpec<A>>,
-            bindings: List<WimGuiButtonBinding<A>>,
+            bindings: MutableList<WimGuiButtonBinding<A>>,
         ) {
             val y = modal.actionRowY(headerHeight, headerToActionGap)
             WimGuiControls.addButtonRow(parent, modal.padding, y, buttonHeight, buttonGap, specs, bindings)

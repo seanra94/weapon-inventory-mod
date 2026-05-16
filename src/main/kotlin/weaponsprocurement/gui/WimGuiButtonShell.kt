@@ -5,5 +5,5 @@ import com.fs.starfarer.api.ui.CustomPanelAPI
 
 class WimGuiButtonShell(
     @JvmField val panel: CustomPanelAPI,
-    @JvmField val button: ButtonAPI,
+    @JvmField val button: ButtonAPI?,
 )

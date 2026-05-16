@@ -77,7 +77,7 @@ class WimGuiListRowRenderer private constructor() {
                     buttonWidth,
                     row.getLabel(),
                     row.getTextColor() ?: WimGuiStyle.DEFAULT_TEXT,
-                    row.getMainAction(),
+                    row.getMainAction()!!,
                     row.getMainAlignment(),
                     row.getButtonFillColor() ?: WimGuiStyle.UNCOLOURED_BUTTON,
                     defaultBorder,
