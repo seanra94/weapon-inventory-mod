@@ -11,7 +11,7 @@ The repo is in release-prep shape for the clean popup path:
 - Sector Market drains real remote cargo; Fixer's Market is virtual.
 - Fixer's Market uses runtime theoretical sale capability plus rarity estimates, with observed live/persistent stock used for reference prices and correction.
 - Optional patched cargo-cell badges are private-only and isolated from the clean popup.
-- Gradle/Kotlin migration foundation is underway; `build.ps1` remains the compatibility entry point.
+- Gradle/Kotlin migration is complete at the source-language boundary; `build.ps1` remains the compatibility entry point.
 - Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
 ## Active Work
@@ -78,11 +78,14 @@ Completed:
 - Stock-review hotkey script, Fixer catalog updater, stable mod plugin entrypoint, and public-export plugin stripping converted for Kotlin.
 - Luna/settings publication bridge converted to Kotlin while preserving Java-facing static config API.
 - Vanilla-style stock-review item tooltip converted to Kotlin.
+- Private patched-badge config/helper/count-updater source converted to Kotlin.
+- Public export script updated for the Kotlin private-badge source layout.
+- Dialog rule-command entrypoint converted to Kotlin while preserving the `WP_OpenDialog` rules class name.
+- Final no-Java-source migration gate passes for the private repo and public export.
 
 Still open:
 
-- Convert private badge source.
-- Add final no-Java-source gate when conversion is complete.
+- Continue AGC-style package/ownership cleanup in focused feature chunks.
 
 ### Runtime Rollback Validation
 
