@@ -19,7 +19,7 @@ class ObservedStockIndex {
                 if (!isEligible(itemKey, blacklist)) continue
                 val sources = stock.getSubmarketStocks(itemKey)
                 for (source in sources) {
-                    if (source == null || source.count <= 0 || !source.isPurchasable()) continue
+                    if (source.count <= 0 || !source.isPurchasable()) continue
                     val current = result[itemKey]
                     val vanillaSupported = isVanillaSupportedSubmarket(source.submarketId)
                     if (current == null) {

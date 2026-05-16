@@ -52,10 +52,11 @@ Completed:
 - Optional badge source is physically separated under `src/privateBadge`.
 - `tools/validate-kotlin-migration.ps1` validates build files, dependency declarations, Java migration status, clean jar badge-class exclusion, and public-export boundaries.
 - Core enums/value helpers and low-risk stock/Fixer catalog helpers converted to Kotlin while preserving the `weaponsprocurement.core` Java interop surface.
+- Inventory counts, market stock collection, and market blacklist services converted to Kotlin.
 
 Still open:
 
-- Convert remaining stock/source/Fixer catalog services.
+- Convert remaining source/Fixer catalog services, starting with `GlobalWeaponMarketService` and persistent observed catalog storage.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
