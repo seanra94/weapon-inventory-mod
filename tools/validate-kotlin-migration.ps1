@@ -88,6 +88,23 @@ if ($RequireNoJava) {
     Write-Gate -Status "SKIP" -Message "$($javaSources.Count) Java source file(s) remain; final no-Java gate not requested"
 }
 
+$kotlinSources = @(Get-ChildItem -LiteralPath (Join-Path $repoRoot "src") -Recurse -File -Filter *.kt -ErrorAction SilentlyContinue)
+$projectWildcardImports = New-Object System.Collections.Generic.List[string]
+foreach ($file in $kotlinSources) {
+    $lines = Get-Content -LiteralPath $file.FullName
+    for ($lineIndex = 0; $lineIndex -lt $lines.Count; $lineIndex++) {
+        if ($lines[$lineIndex] -match '^\s*import\s+weaponsprocurement\..*\.\*\s*$') {
+            $relative = [System.IO.Path]::GetFullPath($file.FullName).Substring([System.IO.Path]::GetFullPath($repoRoot).TrimEnd('\', '/').Length + 1)
+            $projectWildcardImports.Add("${relative}:$($lineIndex + 1)")
+        }
+    }
+}
+if ($projectWildcardImports.Count -eq 0) {
+    Write-Gate -Status "PASS" -Message "no repo-owned wildcard imports remain"
+} else {
+    Add-Failure "repo-owned wildcard imports remain:`n$($projectWildcardImports -join "`n")"
+}
+
 $badgeTerms = @(
     "WeaponsProcurementBadgeHelper",
     "WeaponsProcurementBadgeConfig",
