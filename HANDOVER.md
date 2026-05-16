@@ -56,6 +56,7 @@ Important ownership:
 - `MarketStockService`: current-market stock collection and submarket filtering.
 - `GlobalWeaponMarketService`: Sector Market and Fixer's Market stock construction.
 - `FixerMarketObservedCatalog`: save-persistent observed Fixer catalog.
+- `ObservedStockIndex`, `TheoreticalSaleIndex`, `RarityClassifier`: Fixer's Market current-stock reference, runtime sale-capability catalog, and rarity labels.
 - `WeaponMarketBlacklist`: Sector/Fixer blacklist matching by key, raw id, or display name.
 - `StockReviewConfig`: JSON stock defaults and per-item overrides.
 - `DesiredStockService`: effective desired thresholds.
@@ -64,7 +65,7 @@ Important ownership:
 
 - `Local`: current market, with the normal Black Market toggle.
 - `Sector Market`: live sector-wide stock from real market cargo. Purchases drain remote cargo and use the sector multiplier.
-- `Fixer's Market`: virtual stock from observed safe items plus optional inference. Purchases do not drain real cargo and use the fixer multiplier.
+- `Fixer's Market`: virtual stock from safe runtime faction catalogs plus observed market reference prices. Purchases do not drain real cargo and use the fixer multiplier.
 
 Remote source modes disable black-market selling. Sells while a remote source is active use the current local legal buyer.
 

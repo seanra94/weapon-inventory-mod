@@ -91,10 +91,18 @@ public final class MarketStockService {
     public static final class MarketStock {
         private final Map<String, Integer> totals;
         private final Map<String, List<SubmarketWeaponStock>> byItemKey;
+        private final Map<String, FixerRarity> rarityByItemKey;
 
         private MarketStock(Map<String, Integer> totals, Map<String, List<SubmarketWeaponStock>> byItemKey) {
+            this(totals, byItemKey, Collections.<String, FixerRarity>emptyMap());
+        }
+
+        private MarketStock(Map<String, Integer> totals,
+                            Map<String, List<SubmarketWeaponStock>> byItemKey,
+                            Map<String, FixerRarity> rarityByItemKey) {
             this.totals = totals;
             this.byItemKey = byItemKey;
+            this.rarityByItemKey = rarityByItemKey;
         }
 
         public int getTotal(String itemKey) {
@@ -113,13 +121,22 @@ public final class MarketStockService {
         public Iterable<String> itemKeys() {
             return totals.keySet();
         }
+
+        public FixerRarity getRarity(String itemKey) {
+            return rarityByItemKey.get(itemKey);
+        }
     }
 
     public static final class MarketStockBuilder {
         private final Map<String, Integer> totals = new HashMap<String, Integer>();
         private final Map<String, List<SubmarketWeaponStock>> byItemKey = new HashMap<String, List<SubmarketWeaponStock>>();
+        private final Map<String, FixerRarity> rarityByItemKey = new HashMap<String, FixerRarity>();
 
         public void add(String itemKey, SubmarketWeaponStock stock) {
+            add(itemKey, stock, null);
+        }
+
+        public void add(String itemKey, SubmarketWeaponStock stock, FixerRarity rarity) {
             if (itemKey == null || itemKey.isEmpty() || stock == null || stock.getCount() <= 0) {
                 return;
             }
@@ -130,6 +147,9 @@ public final class MarketStockService {
                 byItemKey.put(itemKey, stocks);
             }
             stocks.add(stock);
+            if (rarity != null && !rarityByItemKey.containsKey(itemKey)) {
+                rarityByItemKey.put(itemKey, rarity);
+            }
         }
 
         public void addAll(MarketStock stock) {
@@ -145,7 +165,7 @@ public final class MarketStockService {
         }
 
         public MarketStock build() {
-            return new MarketStock(totals, byItemKey);
+            return new MarketStock(totals, byItemKey, rarityByItemKey);
         }
     }
 }

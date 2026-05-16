@@ -13,7 +13,7 @@ Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockR
 - Stock items are typed with `W:` and `F:` keys; raw ids are compatibility inputs only.
 - Local, Sector Market, and Fixer's Market have intentionally different source and drain semantics.
 - Sector Market stock is live and should not be cached across popup rebuilds.
-- Fixer's Market should move toward a runtime theoretical-sale catalog plus rarity estimate, with observed stock used as a correction layer.
+- Fixer's Market uses a runtime theoretical-sale catalog plus rarity estimate, with observed stock used for reference prices and correction.
 - Pending trades are signed staged intent; only `Confirm Trades` mutates cargo/credits.
 - Quote the whole portfolio when planned lines can contend for the same stock.
 - Use the final source-stock preflight and rollback journal around WP-touched cargo and credits.
@@ -52,7 +52,7 @@ Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockR
 - `Local` reviews the current market and honors the Black Market toggle.
 - `Sector Market` scans live in-sector market weapon and fighter LPC cargo, keeps real market/submarket identity on each stock source, applies `wp_sector_market_price_multiplier`, and drains actual remote market cargo on confirmation.
 - `Fixer's Market` offers virtual 999-stock, applies `wp_fixers_market_price_multiplier`, and does not drain real market cargo.
-- The current implementation builds Fixer's Market from observed safe items plus optional faction-inferred weapons. The preferred next model is deterministic runtime theoretical capability for weapons/fighter LPCs, with observation retained as correction rather than as the primary catalog source.
+- The current implementation builds Fixer's Market from live observed references, persistent observed fallback data, and deterministic runtime theoretical capability for weapons/fighter LPCs.
 - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo that purchases can drain.
 - Remote source modes disable black-market selling. Selling in remote modes uses the current local legal buyer.
 - Sector and Fixer's Market can be independently disabled through LunaLib.
@@ -82,8 +82,10 @@ Implementation guidance:
 Current WP code state:
 
 - `WeaponsProcurementFixerCatalogUpdater` scans real market cargo about once per in-game day and stores safe observed weapon/wing item keys in sector persistent data.
-- `GlobalWeaponMarketService.collectFixersWeaponStock()` currently adds observed items and, when `wp_enable_fixers_market_tag_inference` is enabled, infers faction weapons from `FactionAPI.getWeaponSellFrequency()` or `getKnownWeapons()`.
-- That inference is weapon-only today. Fighter LPC theoretical inference and any ship catalog are future work.
+- `ObservedStockIndex` scans current real market cargo and supplies the cheapest live reference price/cargo-space data.
+- `TheoreticalSaleIndex` uses runtime faction known weapons/fighters, vanilla-supported submarket tier caps, item safety filters, and the Fixer blacklist to build cold-start virtual stock.
+- `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices.
+- Ship cataloging remains future work.
 - Keep the persistent observed catalog as simple Java collections to avoid custom save-object compatibility problems.
 - Sanitize persistent maps into string key/value entries before use.
 - Exclude obvious special/hidden tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers when offering virtual Fixer stock.

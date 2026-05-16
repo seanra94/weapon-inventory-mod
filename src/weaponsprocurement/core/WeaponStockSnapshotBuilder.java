@@ -77,7 +77,8 @@ public final class WeaponStockSnapshotBuilder {
                     purchasableCount,
                     desiredCount,
                     category,
-                    marketStock.getSubmarketStocks(itemKey)));
+                    marketStock.getSubmarketStocks(itemKey),
+                    marketStock.getRarity(itemKey)));
         }
 
         for (List<WeaponStockRecord> records : grouped.values()) {

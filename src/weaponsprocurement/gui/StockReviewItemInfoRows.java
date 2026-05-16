@@ -58,6 +58,7 @@ final class StockReviewItemInfoRows {
                                      float listWidth,
                                      float dataIndent) {
         addRequiredDataRow(rows, "Desired", String.valueOf(record.getDesiredCount()), rightReserveWidth, listWidth, dataIndent);
+        addDataRow(rows, "Rarity", record.getFixerRarityLabel(), rightReserveWidth, listWidth, dataIndent);
         if (record.isWing()) {
             addDataRow(rows, "Primary Role", record.getTypeLabel(), rightReserveWidth, listWidth, dataIndent);
             addRequiredDataRow(rows, "Size", "WING", rightReserveWidth, listWidth, dataIndent);

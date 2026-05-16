@@ -21,6 +21,7 @@ public final class WeaponStockRecord {
     private final int desiredCount;
     private final StockCategory category;
     private final List<SubmarketWeaponStock> submarketStocks;
+    private final FixerRarity fixerRarity;
 
     public WeaponStockRecord(String weaponId,
                              String displayName,
@@ -41,7 +42,8 @@ public final class WeaponStockRecord {
                 purchasableCount,
                 desiredCount,
                 category,
-                submarketStocks);
+                submarketStocks,
+                null);
     }
 
     public WeaponStockRecord(StockItemType itemType,
@@ -55,6 +57,32 @@ public final class WeaponStockRecord {
                              int desiredCount,
                              StockCategory category,
                              List<SubmarketWeaponStock> submarketStocks) {
+        this(itemType,
+                itemId,
+                displayName,
+                spec,
+                wingSpec,
+                ownedCount,
+                playerCargoCount,
+                purchasableCount,
+                desiredCount,
+                category,
+                submarketStocks,
+                null);
+    }
+
+    public WeaponStockRecord(StockItemType itemType,
+                             String itemId,
+                             String displayName,
+                             WeaponSpecAPI spec,
+                             FighterWingSpecAPI wingSpec,
+                             int ownedCount,
+                             int playerCargoCount,
+                             int purchasableCount,
+                             int desiredCount,
+                             StockCategory category,
+                             List<SubmarketWeaponStock> submarketStocks,
+                             FixerRarity fixerRarity) {
         this.itemType = itemType == null ? StockItemType.WEAPON : itemType;
         this.itemId = itemId;
         this.itemKey = this.itemType.key(itemId);
@@ -67,6 +95,7 @@ public final class WeaponStockRecord {
         this.desiredCount = desiredCount;
         this.category = category;
         this.submarketStocks = Collections.unmodifiableList(submarketStocks);
+        this.fixerRarity = fixerRarity;
     }
 
     public String getItemKey() {
@@ -149,6 +178,10 @@ public final class WeaponStockRecord {
 
     public List<SubmarketWeaponStock> getSubmarketStocks() {
         return submarketStocks;
+    }
+
+    public String getFixerRarityLabel() {
+        return fixerRarity == null ? null : fixerRarity.getLabel();
     }
 
     public String getSizeLabel() {

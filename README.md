@@ -30,7 +30,7 @@ Availability of source modes is controlled by Luna settings.
 - `Enable market dialogue option`
 - `Enable Sector Market`
 - `Enable Fixer's Market`
-- `Enable Fixer's Market tag inference` (default off)
+- `Legacy Fixer catalog inference flag` (compatibility only; Fixer's Market now uses safe runtime cataloging by default)
 - `Sector Market price multiplier`
 - `Fixer's Market price multiplier`
 - desired stock thresholds for small/medium/large weapons and wings

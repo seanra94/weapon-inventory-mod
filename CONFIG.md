@@ -72,11 +72,11 @@ LunaLib owns runtime toggles and price multipliers:
 
 - `Enable Sector Market`
 - `Enable Fixer's Market`
-- `Enable Fixer's Market tag inference`
+- `Legacy Fixer catalog inference flag`
 - `Sector Market price multiplier`
 - `Fixer's Market price multiplier`
 
-Sector Market uses real live stock from markets in the current save. Fixer's Market uses observed eligible stock plus optional inference, and is intentionally expensive.
+Sector Market uses real live stock from markets in the current save. Fixer's Market uses observed eligible stock plus a safe runtime faction catalog, and is intentionally expensive. The legacy inference flag is kept so old configs load cleanly, but it no longer changes Fixer's Market behavior.
 
 ## Rollback Debug Hook
 

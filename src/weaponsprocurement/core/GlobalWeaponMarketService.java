@@ -1,19 +1,13 @@
 package weaponsprocurement.core;
 
-import com.fs.starfarer.api.Global;
-import com.fs.starfarer.api.campaign.FactionAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.EconomyAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
-import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import weaponsprocurement.internal.WeaponsProcurementConfig;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public final class GlobalWeaponMarketService {
     public static final String VIRTUAL_SUBMARKET_ID = "wp_fixers_market";
@@ -22,26 +16,18 @@ public final class GlobalWeaponMarketService {
     public static final int VIRTUAL_STOCK = 999;
 
     private final MarketStockService marketStockService = new MarketStockService();
+    private final ObservedStockIndex observedStockIndex = new ObservedStockIndex();
+    private final TheoreticalSaleIndex theoreticalSaleIndex = new TheoreticalSaleIndex();
     private final FixerMarketObservedCatalog observedCatalog = new FixerMarketObservedCatalog();
-    private final Map<String, MarketStockService.MarketStock> cache = new HashMap<String, MarketStockService.MarketStock>();
 
     public MarketStockService.MarketStock collectSectorWeaponStock(SectorAPI sector) {
         return buildSectorWeaponStock(sector, WeaponsProcurementConfig.sectorMarketPriceMultiplier());
     }
 
     public MarketStockService.MarketStock collectFixersWeaponStock(SectorAPI sector) {
-        boolean includeInferred = WeaponsProcurementConfig.isFixersMarketTagInferenceEnabled();
         float priceMultiplier = WeaponsProcurementConfig.fixersMarketPriceMultiplier();
         WeaponMarketBlacklist blacklist = WeaponMarketBlacklist.load();
-        String key = "fixers|" + includeInferred + "|" + priceMultiplier + "|" + blacklist.cacheKey()
-                + "|" + observedCatalog.cacheKey(sector);
-        MarketStockService.MarketStock cached = cache.get(key);
-        if (cached != null) {
-            return cached;
-        }
-        MarketStockService.MarketStock result = buildFixersWeaponStock(sector, includeInferred, priceMultiplier, blacklist);
-        cache.put(key, result);
-        return result;
+        return buildFixersWeaponStock(sector, priceMultiplier, blacklist);
     }
 
     /**
@@ -87,142 +73,94 @@ public final class GlobalWeaponMarketService {
     }
 
     private MarketStockService.MarketStock buildFixersWeaponStock(SectorAPI sector,
-                                                                  boolean includeInferred,
                                                                   float priceMultiplier,
                                                                   WeaponMarketBlacklist blacklist) {
         MarketStockService.MarketStockBuilder builder = new MarketStockService.MarketStockBuilder();
-        EconomyAPI economy = sector == null ? null : sector.getEconomy();
-        List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
-        if (markets == null) {
-            return builder.build();
-        }
-        Map<String, SubmarketWeaponStock> cheapestByWeapon = new HashMap<String, SubmarketWeaponStock>();
-        Set<String> activeFactionIds = new HashSet<String>();
-        for (int i = 0; i < markets.size(); i++) {
-            MarketAPI market = markets.get(i);
-            if (market != null && market.getFactionId() != null && !market.getFactionId().isEmpty()) {
-                activeFactionIds.add(market.getFactionId());
-            }
-            MarketStockService.MarketStock stock = marketStockService.collectCurrentMarketItemStock(market, true);
-            for (String itemKey : stock.itemKeys()) {
-                if (blacklist.isBannedFromFixers(itemKey)) {
-                    continue;
-                }
-                if (!FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) {
-                    continue;
-                }
-                List<SubmarketWeaponStock> sources = stock.getSubmarketStocks(itemKey);
-                for (int j = 0; j < sources.size(); j++) {
-                    SubmarketWeaponStock source = sources.get(j);
-                    if (source.getCount() <= 0) {
-                        continue;
-                    }
-                    SubmarketWeaponStock current = cheapestByWeapon.get(itemKey);
-                    if (current == null || compareReferenceSource(source, current) < 0) {
-                        cheapestByWeapon.put(itemKey, source);
-                    }
-                }
-            }
-        }
-        addObservedCatalogItems(sector, cheapestByWeapon, blacklist);
-        if (includeInferred) {
-            addInferredFactionWeapons(sector, activeFactionIds, cheapestByWeapon, blacklist);
-        }
-        for (Map.Entry<String, SubmarketWeaponStock> entry : cheapestByWeapon.entrySet()) {
-            SubmarketWeaponStock source = entry.getValue();
+        Map<String, ReferenceItem> references = new HashMap<String, ReferenceItem>();
+        addLiveObservedReferences(sector, references, blacklist);
+        addPersistentObservedReferences(sector, references, blacklist);
+        addTheoreticalCandidates(sector, references, blacklist);
+
+        for (Map.Entry<String, ReferenceItem> entry : references.entrySet()) {
+            ReferenceItem reference = entry.getValue();
             builder.add(entry.getKey(), new SubmarketWeaponStock(
                     VIRTUAL_SUBMARKET_ID,
                     FIXERS_MARKET_NAME,
                     VIRTUAL_STOCK,
-                    markedUpPrice(source.getBaseUnitPrice(), priceMultiplier),
-                    source.getBaseUnitPrice(),
-                    source.getUnitCargoSpace(),
-                    true));
+                    markedUpPrice(reference.baseUnitPrice, priceMultiplier),
+                    reference.baseUnitPrice,
+                    reference.unitCargoSpace,
+                    true),
+                    reference.rarity);
         }
         return builder.build();
     }
 
-    private void addObservedCatalogItems(SectorAPI sector,
-                                         Map<String, SubmarketWeaponStock> cheapestByWeapon,
-                                         WeaponMarketBlacklist blacklist) {
+    private void addLiveObservedReferences(SectorAPI sector,
+                                           Map<String, ReferenceItem> references,
+                                           WeaponMarketBlacklist blacklist) {
+        Map<String, ObservedStockIndex.ObservedItem> observed = observedStockIndex.collect(sector, blacklist);
+        for (Map.Entry<String, ObservedStockIndex.ObservedItem> entry : observed.entrySet()) {
+            ObservedStockIndex.ObservedItem item = entry.getValue();
+            SubmarketWeaponStock source = item == null ? null : item.getCheapestReferenceSource();
+            if (source == null) {
+                continue;
+            }
+            references.put(entry.getKey(), new ReferenceItem(
+                    source.getBaseUnitPrice(),
+                    source.getUnitCargoSpace(),
+                    RarityClassifier.observedOnly(item)));
+        }
+    }
+
+    private void addPersistentObservedReferences(SectorAPI sector,
+                                                 Map<String, ReferenceItem> references,
+                                                 WeaponMarketBlacklist blacklist) {
         Map<String, FixerMarketObservedCatalog.ObservedItem> observed = observedCatalog.observedItems(sector, blacklist);
         for (Map.Entry<String, FixerMarketObservedCatalog.ObservedItem> entry : observed.entrySet()) {
             String itemKey = entry.getKey();
-            if (cheapestByWeapon.containsKey(itemKey)) {
+            if (references.containsKey(itemKey)) {
                 continue;
             }
             FixerMarketObservedCatalog.ObservedItem item = entry.getValue();
-            cheapestByWeapon.put(itemKey, new SubmarketWeaponStock(
-                    VIRTUAL_SUBMARKET_ID,
-                    FIXERS_MARKET_NAME,
-                    VIRTUAL_STOCK,
-                    item.getBaseUnitPrice(),
+            references.put(itemKey, new ReferenceItem(
                     item.getBaseUnitPrice(),
                     item.getUnitCargoSpace(),
-                    true));
+                    null));
         }
     }
 
-    private static void addInferredFactionWeapons(SectorAPI sector,
-                                                  Set<String> activeFactionIds,
-                                                  Map<String, SubmarketWeaponStock> cheapestByWeapon,
-                                                  WeaponMarketBlacklist blacklist) {
-        if (sector == null || activeFactionIds == null || activeFactionIds.isEmpty()) {
-            return;
-        }
-        for (String factionId : activeFactionIds) {
-            FactionAPI faction = sector.getFaction(factionId);
-            for (String weaponId : inferredWeaponIds(faction)) {
-                String itemKey = StockItemType.WEAPON.key(weaponId);
-                if (cheapestByWeapon.containsKey(itemKey)
-                        || blacklist.isBannedFromFixers(itemKey)
-                        || !FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) {
-                    continue;
-                }
-                WeaponSpecAPI spec = safeWeaponSpec(weaponId);
-                if (spec == null) {
-                    continue;
-                }
-                cheapestByWeapon.put(itemKey, new SubmarketWeaponStock(
-                        VIRTUAL_SUBMARKET_ID,
-                        FIXERS_MARKET_NAME,
-                        VIRTUAL_STOCK,
-                        Math.max(0, Math.round(spec.getBaseValue())),
-                        1f,
-                        true));
+    private void addTheoreticalCandidates(SectorAPI sector,
+                                          Map<String, ReferenceItem> references,
+                                          WeaponMarketBlacklist blacklist) {
+        Map<String, TheoreticalSaleIndex.Candidate> candidates = theoreticalSaleIndex.collect(sector, blacklist);
+        for (Map.Entry<String, TheoreticalSaleIndex.Candidate> entry : candidates.entrySet()) {
+            TheoreticalSaleIndex.Candidate candidate = entry.getValue();
+            ReferenceItem current = references.get(entry.getKey());
+            if (current == null) {
+                references.put(entry.getKey(), new ReferenceItem(
+                        candidate.getBaseUnitPrice(),
+                        candidate.getUnitCargoSpace(),
+                        candidate.getRarity()));
+            } else if (current.rarity == null) {
+                current.rarity = candidate.getRarity();
             }
         }
-    }
-
-    private static Set<String> inferredWeaponIds(FactionAPI faction) {
-        if (faction == null) {
-            return Collections.emptySet();
-        }
-        Map<String, Float> sellFrequency = faction.getWeaponSellFrequency();
-        if (sellFrequency != null && !sellFrequency.isEmpty()) {
-            return sellFrequency.keySet();
-        }
-        Set<String> knownWeapons = faction.getKnownWeapons();
-        return knownWeapons == null ? Collections.<String>emptySet() : knownWeapons;
     }
 
     private static int markedUpPrice(int unitPrice, float priceMultiplier) {
         return Math.max(0, Math.round(Math.max(0, unitPrice) * Math.max(1f, priceMultiplier)));
     }
 
-    private static int compareReferenceSource(SubmarketWeaponStock left, SubmarketWeaponStock right) {
-        int result = Integer.compare(left.getBaseUnitPrice(), right.getBaseUnitPrice());
-        if (result != 0) {
-            return result;
-        }
-        return left.getDisplaySourceName().compareToIgnoreCase(right.getDisplaySourceName());
-    }
+    private static final class ReferenceItem {
+        private final int baseUnitPrice;
+        private final float unitCargoSpace;
+        private FixerRarity rarity;
 
-    private static WeaponSpecAPI safeWeaponSpec(String weaponId) {
-        try {
-            return Global.getSettings().getWeaponSpec(weaponId);
-        } catch (Throwable ignored) {
-            return null;
+        private ReferenceItem(int baseUnitPrice, float unitCargoSpace, FixerRarity rarity) {
+            this.baseUnitPrice = Math.max(0, baseUnitPrice);
+            this.unitCargoSpace = Math.max(0.01f, unitCargoSpace);
+            this.rarity = rarity;
         }
     }
 }
