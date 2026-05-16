@@ -5,11 +5,11 @@ import weaponsprocurement.core.WeaponStockRecord
 
 class StockReviewRowIcon private constructor(
     val spriteName: String,
-    val motifType: WeaponAPI.WeaponType,
+    val motifType: WeaponAPI.WeaponType?,
 ) {
     companion object {
         @JvmStatic
-        fun weapon(spriteName: String?, motifType: WeaponAPI.WeaponType): StockReviewRowIcon? {
+        fun weapon(spriteName: String?, motifType: WeaponAPI.WeaponType?): StockReviewRowIcon? {
             if (!WimGuiTooltip.hasText(spriteName)) return null
             return StockReviewRowIcon(spriteName!!, motifType)
         }

@@ -28,7 +28,7 @@ class StockReviewColorDebugRows private constructor() {
                 StockReviewListRow.form(
                     "Variable",
                     WimGuiRowCell.of(
-                        WimGuiRowCell.standardAction(target.label + " " + count, StockReviewStyle.DEBUG_VALUE_WIDTH, StockReviewStyle.ACTION_BACKGROUND, StockReviewAction.debugCycleTarget(1), true, "Cycle the color variable being edited."),
+                        WimGuiRowCell.standardAction((target?.label ?: "Unknown") + " " + count, StockReviewStyle.DEBUG_VALUE_WIDTH, StockReviewStyle.ACTION_BACKGROUND, StockReviewAction.debugCycleTarget(1), true, "Cycle the color variable being edited."),
                     ),
                 ),
             )
