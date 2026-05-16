@@ -242,6 +242,38 @@ if (Test-Path -LiteralPath $publicPlugin) {
     Set-Content -LiteralPath $publicPlugin -Value $pluginText -NoNewline
 }
 
+$publicPluginKt = Join-Path $resolvedOutput "src/main/kotlin/weaponsprocurement/plugins/WeaponsProcurementModPlugin.kt"
+if (Test-Path -LiteralPath $publicPluginKt) {
+    $pluginText = Get-Content -LiteralPath $publicPluginKt -Raw
+    $hasBadgeUpdaterReference = $pluginText.IndexOf("WeaponsProcurementCountUpdater", [System.StringComparison]::Ordinal) -ge 0
+    $hasBadgeStartMarker = $pluginText.IndexOf("PRIVATE_BADGE_START", [System.StringComparison]::Ordinal) -ge 0
+    $hasBadgeEndMarker = $pluginText.IndexOf("PRIVATE_BADGE_END", [System.StringComparison]::Ordinal) -ge 0
+    if ($hasBadgeUpdaterReference -and (-not $hasBadgeStartMarker -or -not $hasBadgeEndMarker)) {
+        throw "Public export cannot safely strip private badge registration: marker block missing in WeaponsProcurementModPlugin.kt"
+    }
+    $pluginText = [regex]::Replace(
+        $pluginText,
+        "(?ms)\r?\n        // PRIVATE_BADGE_START.*?        // PRIVATE_BADGE_END\r?\n",
+        "`r`n"
+    )
+    $pluginText = [regex]::Replace(
+        $pluginText,
+        "(?m)^\s*private const val BADGE_UPDATER_CLASS.*\r?\n",
+        ""
+    )
+    $pluginText = [regex]::Replace(
+        $pluginText,
+        "(?ms)\r?\n    private fun registerOptionalPrivateScript\(.*?\r?\n    @Throws",
+        "`r`n    @Throws"
+    )
+    $pluginText = [regex]::Replace(
+        $pluginText,
+        "(?ms)\r?\n    @Throws\(ClassNotFoundException::class\)\r?\n    private fun loadScriptClass\(.*?\r?\n    private fun hasScript",
+        "`r`n    private fun hasScript"
+    )
+    Set-Content -LiteralPath $publicPluginKt -Value $pluginText -NoNewline
+}
+
 $leakTerms = @(
     "AGENTS.md",
     ".agent/",

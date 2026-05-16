@@ -75,6 +75,7 @@ Completed:
 - Stock-review weapon icon renderer and debug color store converted to Kotlin.
 - Stock-review UI action controller and trade execution controller converted to Kotlin.
 - Stock-review modal panel plugin and main renderer converted to Kotlin.
+- Stock-review hotkey script, Fixer catalog updater, stable mod plugin entrypoint, and public-export plugin stripping converted for Kotlin.
 
 Still open:
 
