@@ -77,11 +77,11 @@ Completed:
 - Stock-review modal panel plugin and main renderer converted to Kotlin.
 - Stock-review hotkey script, Fixer catalog updater, stable mod plugin entrypoint, and public-export plugin stripping converted for Kotlin.
 - Luna/settings publication bridge converted to Kotlin while preserving Java-facing static config API.
+- Vanilla-style stock-review item tooltip converted to Kotlin.
 
 Still open:
 
-- Convert UI/rendering/tooltips and split large GUI ownership.
-- Convert lifecycle/plugin code and private badge source.
+- Convert private badge source.
 - Add final no-Java-source gate when conversion is complete.
 
 ### Runtime Rollback Validation
