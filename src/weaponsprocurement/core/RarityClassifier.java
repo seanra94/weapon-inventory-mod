@@ -8,11 +8,11 @@ public final class RarityClassifier {
     }
 
     public static FixerRarity classify(int tier, Float sellFrequency) {
-        if (sellFrequency != null && sellFrequency.floatValue() <= VERY_LOW_SELL_FREQUENCY) {
-            return FixerRarity.VERY_RARE;
-        }
         if (tier <= 0 || (sellFrequency != null && sellFrequency.floatValue() >= HIGH_SELL_FREQUENCY)) {
             return FixerRarity.COMMON;
+        }
+        if (sellFrequency != null && sellFrequency.floatValue() <= VERY_LOW_SELL_FREQUENCY) {
+            return FixerRarity.VERY_RARE;
         }
         if (tier == 1) {
             return FixerRarity.UNCOMMON;

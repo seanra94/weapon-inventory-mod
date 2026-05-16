@@ -40,7 +40,7 @@ final class StockReviewListModel {
             return "No Sector Market weapon or wing stock is currently available.";
         }
         if (StockSourceMode.FIXERS.equals(sourceMode)) {
-            return "Fixer's Market has not observed any eligible stock yet, or all eligible stock is blacklisted.";
+            return "Fixer's Market has no eligible theoretical or observed stock, or all eligible stock is blacklisted.";
         }
         return "No local weapon or wing stock is buyable here, and no player-cargo weapons or wings are available to sell.";
     }

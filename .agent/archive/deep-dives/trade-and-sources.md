@@ -75,7 +75,7 @@ Implementation guidance:
 - Build candidate stock after the campaign economy is loaded using `Global.getSector().getEconomy().getMarketsCopy()`, `MarketAPI`, `SubmarketAPI`, `CargoAPI`, `FactionAPI`, and `Global.getSettings()`.
 - Treat custom submarkets as `UNKNOWN_CUSTOM_SUBMARKET` for theoretical capability unless an adapter exists; current cargo inspection is still exact.
 - For current stock, inspect `SubmarketAPI.getCargo()` and `cargo.getMothballedShips()`. This is the only exact answer to "what is sold right now?"
-- For theoretical vanilla-style weapons/fighter LPCs, start with the relevant faction's known items and apply tags, system-weapon checks, tier caps, and blacklist/safety filters.
+- For theoretical vanilla-style weapons/fighter LPCs, start with the relevant faction's sell-frequency map when present; fall back to known items only when the sell-frequency map is absent or empty. Then apply tags, system-weapon checks, tier caps, zero/negative frequency exclusion, and blacklist/safety filters.
 - For ships, keep capability and rarity separate. Faction-known hulls are candidate inputs, but `FleetFactoryV3`, priority hulls, hull frequency, doctrine, role/variant availability, combat budget, stability, and `maxShipSize` all affect whether a ship is plausible in a particular submarket.
 - Do not call `updateCargoPrePlayerInteraction()` repeatedly to sample availability. Vanilla stock updates clear and re-roll ships/weapons, are gated by a 30-day interval, and use unseeded item RNG. Forced probing would mutate visible market state, hitch on load, and still misclassify rare items.
 
@@ -83,8 +83,9 @@ Current WP code state:
 
 - `WeaponsProcurementFixerCatalogUpdater` scans real market cargo about once per in-game day and stores safe observed weapon/wing item keys in sector persistent data.
 - `ObservedStockIndex` scans current real market cargo and supplies the cheapest live reference price/cargo-space data.
-- `TheoreticalSaleIndex` uses runtime faction known weapons/fighters, vanilla-supported submarket tier caps, item safety filters, and the Fixer blacklist to build cold-start virtual stock.
-- `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices.
+- `TheoreticalSaleIndex` uses runtime faction sell-frequency maps when present, otherwise faction known weapons/fighters, plus vanilla-supported submarket tier caps, item safety filters, and the Fixer blacklist to build cold-start virtual stock.
+- `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices; tier-0 candidates remain common unless filtered out.
+- The theoretical catalog does not add unconditional fallback factions for black markets. It uses the market faction and the submarket faction where present, avoiding broad independent-catalog leakage.
 - Ship cataloging remains future work.
 - Keep the persistent observed catalog as simple Java collections to avoid custom save-object compatibility problems.
 - Sanitize persistent maps into string key/value entries before use.

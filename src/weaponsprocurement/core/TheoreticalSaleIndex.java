@@ -7,7 +7,6 @@ import com.fs.starfarer.api.campaign.econ.EconomyAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import com.fs.starfarer.api.combat.WeaponAPI;
-import com.fs.starfarer.api.impl.campaign.ids.Factions;
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets;
 import com.fs.starfarer.api.loading.FighterWingSpecAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
@@ -60,14 +59,11 @@ public final class TheoreticalSaleIndex {
                                           int tierCap,
                                           boolean militarySubmarket,
                                           WeaponMarketBlacklist blacklist) {
-        if (faction == null || faction.getKnownWeapons() == null) {
+        if (faction == null) {
             return;
         }
         Map<String, Float> sellFrequency = faction.getWeaponSellFrequency();
-        Set<String> ids = new HashSet<String>(faction.getKnownWeapons());
-        if (sellFrequency != null) {
-            ids.addAll(sellFrequency.keySet());
-        }
+        Set<String> ids = candidateIds(faction.getKnownWeapons(), sellFrequency);
         for (String weaponId : ids) {
             WeaponSpecAPI spec = safeWeaponSpec(weaponId);
             if (spec == null || spec.getTier() > tierCap) {
@@ -90,6 +86,9 @@ public final class TheoreticalSaleIndex {
             } catch (Throwable ignored) {
             }
             Float frequency = frequency(sellFrequency, weaponId);
+            if (frequency != null && frequency.floatValue() <= 0f) {
+                continue;
+            }
             addCandidate(result, itemKey, spec.getTier(), frequency, Math.max(0, Math.round(spec.getBaseValue())), 1f);
         }
     }
@@ -99,11 +98,12 @@ public final class TheoreticalSaleIndex {
                                         int tierCap,
                                         boolean militarySubmarket,
                                         WeaponMarketBlacklist blacklist) {
-        if (faction == null || faction.getKnownFighters() == null) {
+        if (faction == null) {
             return;
         }
         Map<String, Float> sellFrequency = faction.getFighterSellFrequency();
-        for (String wingId : faction.getKnownFighters()) {
+        Set<String> ids = candidateIds(faction.getKnownFighters(), sellFrequency);
+        for (String wingId : ids) {
             FighterWingSpecAPI spec = safeWingSpec(wingId);
             if (spec == null || spec.getTier() > tierCap) {
                 continue;
@@ -119,6 +119,9 @@ public final class TheoreticalSaleIndex {
                 continue;
             }
             Float frequency = frequency(sellFrequency, wingId);
+            if (frequency != null && frequency.floatValue() <= 0f) {
+                continue;
+            }
             addCandidate(result, itemKey, spec.getTier(), frequency, Math.max(0, Math.round(spec.getBaseValue())), 1f);
         }
     }
@@ -153,7 +156,6 @@ public final class TheoreticalSaleIndex {
         } else if (Submarkets.SUBMARKET_BLACK.equals(id)) {
             addFactionId(result, market == null ? null : market.getFactionId());
             addFactionId(result, submarket.getFaction() == null ? null : submarket.getFaction().getId());
-            addFactionId(result, Factions.INDEPENDENT);
         }
         return result;
     }
@@ -207,6 +209,16 @@ public final class TheoreticalSaleIndex {
 
     private static Float frequency(Map<String, Float> frequencies, String itemId) {
         return frequencies == null ? null : frequencies.get(itemId);
+    }
+
+    private static Set<String> candidateIds(Set<String> knownIds, Map<String, Float> sellFrequency) {
+        if (sellFrequency != null && !sellFrequency.isEmpty()) {
+            return new HashSet<String>(sellFrequency.keySet());
+        }
+        if (knownIds == null || knownIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return new HashSet<String>(knownIds);
     }
 
     private static boolean hasTag(Set<String> tags, String target) {

@@ -1,13 +1,19 @@
 package weaponsprocurement.core;
 
+import com.fs.starfarer.api.campaign.FactionAPI;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import com.fs.starfarer.api.campaign.econ.EconomyAPI;
 import com.fs.starfarer.api.campaign.econ.MarketAPI;
+import com.fs.starfarer.api.campaign.econ.SubmarketAPI;
 import weaponsprocurement.internal.WeaponsProcurementConfig;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class GlobalWeaponMarketService {
     public static final String VIRTUAL_SUBMARKET_ID = "wp_fixers_market";
@@ -19,6 +25,8 @@ public final class GlobalWeaponMarketService {
     private final ObservedStockIndex observedStockIndex = new ObservedStockIndex();
     private final TheoreticalSaleIndex theoreticalSaleIndex = new TheoreticalSaleIndex();
     private final FixerMarketObservedCatalog observedCatalog = new FixerMarketObservedCatalog();
+    private String theoreticalCacheKey;
+    private Map<String, TheoreticalSaleIndex.Candidate> theoreticalCache;
 
     public MarketStockService.MarketStock collectSectorWeaponStock(SectorAPI sector) {
         return buildSectorWeaponStock(sector, WeaponsProcurementConfig.sectorMarketPriceMultiplier());
@@ -133,7 +141,7 @@ public final class GlobalWeaponMarketService {
     private void addTheoreticalCandidates(SectorAPI sector,
                                           Map<String, ReferenceItem> references,
                                           WeaponMarketBlacklist blacklist) {
-        Map<String, TheoreticalSaleIndex.Candidate> candidates = theoreticalSaleIndex.collect(sector, blacklist);
+        Map<String, TheoreticalSaleIndex.Candidate> candidates = theoreticalCandidates(sector, blacklist);
         for (Map.Entry<String, TheoreticalSaleIndex.Candidate> entry : candidates.entrySet()) {
             TheoreticalSaleIndex.Candidate candidate = entry.getValue();
             ReferenceItem current = references.get(entry.getKey());
@@ -145,6 +153,91 @@ public final class GlobalWeaponMarketService {
             } else if (current.rarity == null) {
                 current.rarity = candidate.getRarity();
             }
+        }
+    }
+
+    private Map<String, TheoreticalSaleIndex.Candidate> theoreticalCandidates(SectorAPI sector,
+                                                                              WeaponMarketBlacklist blacklist) {
+        String key = theoreticalCacheKey(sector, blacklist);
+        if (key.equals(theoreticalCacheKey) && theoreticalCache != null) {
+            return theoreticalCache;
+        }
+        theoreticalCacheKey = key;
+        theoreticalCache = theoreticalSaleIndex.collect(sector, blacklist);
+        return theoreticalCache;
+    }
+
+    private static String theoreticalCacheKey(SectorAPI sector, WeaponMarketBlacklist blacklist) {
+        StringBuilder result = new StringBuilder();
+        result.append("blacklist=").append(blacklist == null ? "none" : blacklist.cacheKey());
+        Set<String> factionIds = new HashSet<String>();
+        EconomyAPI economy = sector == null ? null : sector.getEconomy();
+        List<MarketAPI> markets = economy == null ? null : economy.getMarketsCopy();
+        if (markets != null) {
+            for (int i = 0; i < markets.size(); i++) {
+                MarketAPI market = markets.get(i);
+                if (market == null) {
+                    continue;
+                }
+                append(result, "m", market.getId());
+                append(result, "mf", market.getFactionId());
+                addFactionId(factionIds, market.getFactionId());
+                List<SubmarketAPI> submarkets = market.getSubmarketsCopy();
+                if (submarkets == null) {
+                    continue;
+                }
+                for (int j = 0; j < submarkets.size(); j++) {
+                    SubmarketAPI submarket = submarkets.get(j);
+                    if (submarket == null) {
+                        continue;
+                    }
+                    append(result, "s", submarket.getSpecId());
+                    String submarketFactionId = submarket.getFaction() == null ? null : submarket.getFaction().getId();
+                    append(result, "sf", submarketFactionId);
+                    addFactionId(factionIds, submarketFactionId);
+                }
+            }
+        }
+        List<String> sortedFactionIds = new ArrayList<String>(factionIds);
+        Collections.sort(sortedFactionIds);
+        for (String factionId : sortedFactionIds) {
+            appendFactionSignature(result, sector, factionId);
+        }
+        return result.toString();
+    }
+
+    private static void appendFactionSignature(StringBuilder result, SectorAPI sector, String factionId) {
+        FactionAPI faction = safeFaction(sector, factionId);
+        append(result, "f", factionId);
+        if (faction == null) {
+            append(result, "missing", "true");
+            return;
+        }
+        append(result, "kw", Integer.toString(hash(faction.getKnownWeapons())));
+        append(result, "kf", Integer.toString(hash(faction.getKnownFighters())));
+        append(result, "wsf", Integer.toString(hash(faction.getWeaponSellFrequency())));
+        append(result, "fsf", Integer.toString(hash(faction.getFighterSellFrequency())));
+    }
+
+    private static FactionAPI safeFaction(SectorAPI sector, String factionId) {
+        try {
+            return sector == null || factionId == null ? null : sector.getFaction(factionId);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static int hash(Object value) {
+        return value == null ? 0 : value.hashCode();
+    }
+
+    private static void append(StringBuilder result, String key, String value) {
+        result.append('|').append(key).append('=').append(value == null ? "" : value);
+    }
+
+    private static void addFactionId(Set<String> result, String factionId) {
+        if (factionId != null && factionId.trim().length() > 0) {
+            result.add(factionId);
         }
     }
 
