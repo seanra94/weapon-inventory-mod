@@ -60,11 +60,10 @@ Completed:
 - Quote book and trade context converted to Kotlin.
 - Trade validation, source lookup, and transaction-reporting helpers converted to Kotlin.
 - Purchase service and executor mutation/rollback code converted to Kotlin.
+- Shared WimGui and stock-review UI primitive/value classes converted to Kotlin.
 
 Still open:
 
-- Convert UI/rendering/tooltips and split large GUI ownership.
-- Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
 - Add final no-Java-source gate when conversion is complete.
