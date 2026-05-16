@@ -67,6 +67,7 @@ Completed:
 - Stock-review expansion/state and trade-warning tracking converted to Kotlin.
 - WimGui modal panel base class plus list row/modal-list renderers converted to Kotlin.
 - Stock-review trade planner, row-cell helper, and trade controller converted to Kotlin.
+- Stock-review footer, summary, and review-list model converted to Kotlin.
 
 Still open:
 
