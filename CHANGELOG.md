@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added Gradle/Kotlin build support while preserving the existing `build.ps1` entry point.
+- Added LazyLib as a required dependency for Kotlin runtime support.
+- Separated optional patched-badge code into a private build surface so clean public builds exclude badge classes.
+
 ## 0.2.0 - 2026-05-09
 
 - Rebranded the mod as Weapons Procurement.
