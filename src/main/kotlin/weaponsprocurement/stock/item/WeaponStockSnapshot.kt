@@ -1,6 +1,7 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 import com.fs.starfarer.api.campaign.econ.MarketAPI
+import weaponsprocurement.stock.market.GlobalWeaponMarketService
 import java.util.ArrayList
 import java.util.Collections
 import java.util.EnumMap

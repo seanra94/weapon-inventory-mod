@@ -3,8 +3,8 @@ package weaponsprocurement.ui.stockreview
 import weaponsprocurement.ui.*
 
 import weaponsprocurement.config.StockReviewConfig
-import weaponsprocurement.stock.StockSortMode
-import weaponsprocurement.stock.StockSourceMode
+import weaponsprocurement.stock.item.StockSortMode
+import weaponsprocurement.stock.item.StockSourceMode
 
 class StockReviewSourceState {
     private var sortMode: StockSortMode

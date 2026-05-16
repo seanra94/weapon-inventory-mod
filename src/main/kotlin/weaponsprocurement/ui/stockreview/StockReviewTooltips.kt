@@ -2,10 +2,10 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.stock.StockCategory
-import weaponsprocurement.stock.StockSortMode
-import weaponsprocurement.stock.StockSourceMode
-import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.item.StockCategory
+import weaponsprocurement.stock.item.StockSortMode
+import weaponsprocurement.stock.item.StockSourceMode
+import weaponsprocurement.stock.item.WeaponStockRecord
 import weaponsprocurement.config.WeaponsProcurementConfig
 import java.util.Locale
 

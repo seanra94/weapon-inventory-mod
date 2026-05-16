@@ -2,10 +2,10 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.stock.SubmarketWeaponStock
+import weaponsprocurement.stock.item.SubmarketWeaponStock
 import weaponsprocurement.trade.TradeMoney
-import weaponsprocurement.stock.WeaponStockRecord
-import weaponsprocurement.stock.WeaponStockSnapshot
+import weaponsprocurement.stock.item.WeaponStockRecord
+import weaponsprocurement.stock.item.WeaponStockSnapshot
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator

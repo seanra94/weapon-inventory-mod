@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.market
 
 import com.fs.starfarer.api.campaign.FactionAPI
 import com.fs.starfarer.api.campaign.SectorAPI
@@ -6,6 +6,12 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
 import weaponsprocurement.config.WeaponMarketBlacklist
 import weaponsprocurement.config.WeaponsProcurementConfig
+import weaponsprocurement.stock.fixer.FixerMarketObservedCatalog
+import weaponsprocurement.stock.fixer.FixerRarity
+import weaponsprocurement.stock.fixer.ObservedStockIndex
+import weaponsprocurement.stock.fixer.RarityClassifier
+import weaponsprocurement.stock.fixer.TheoreticalSaleIndex
+import weaponsprocurement.stock.item.SubmarketWeaponStock
 import java.util.ArrayList
 import java.util.Collections
 import java.util.HashMap

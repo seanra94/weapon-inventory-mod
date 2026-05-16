@@ -2,7 +2,7 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.item.WeaponStockRecord
 import java.util.EnumSet
 
 class StockReviewFilters private constructor() {

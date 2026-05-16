@@ -2,9 +2,9 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.stock.SubmarketWeaponStock
-import weaponsprocurement.stock.WeaponStockRecord
-import weaponsprocurement.stock.WeaponStockSnapshot
+import weaponsprocurement.stock.item.SubmarketWeaponStock
+import weaponsprocurement.stock.item.WeaponStockRecord
+import weaponsprocurement.stock.item.WeaponStockSnapshot
 import java.util.HashMap
 
 class StockReviewTradeContext(

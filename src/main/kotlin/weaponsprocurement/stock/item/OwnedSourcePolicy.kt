@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 enum class OwnedSourcePolicy {
     FLEET_ONLY,

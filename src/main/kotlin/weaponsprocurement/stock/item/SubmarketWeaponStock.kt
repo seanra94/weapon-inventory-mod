@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 class SubmarketWeaponStock(
     val marketId: String?,

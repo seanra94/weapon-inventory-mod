@@ -3,8 +3,8 @@ package weaponsprocurement.ui.stockreview
 import weaponsprocurement.ui.*
 
 import com.fs.starfarer.api.ui.CustomPanelAPI
-import weaponsprocurement.stock.StockSourceMode
-import weaponsprocurement.stock.WeaponStockSnapshot
+import weaponsprocurement.stock.item.StockSourceMode
+import weaponsprocurement.stock.item.WeaponStockSnapshot
 import java.awt.Color
 
 class StockReviewRenderer :

@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.fixer
 
 enum class FixerRarity(val label: String) {
     COMMON("Common"),

@@ -2,8 +2,8 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.stock.StockCategory
-import weaponsprocurement.stock.StockItemType
+import weaponsprocurement.stock.item.StockCategory
+import weaponsprocurement.stock.item.StockItemType
 
 class StockReviewAction private constructor(
     private val type: Type,

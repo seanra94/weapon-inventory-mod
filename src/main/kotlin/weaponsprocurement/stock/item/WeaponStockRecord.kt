@@ -1,9 +1,10 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.MissileSpecAPI
 import com.fs.starfarer.api.loading.ProjectileWeaponSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
+import weaponsprocurement.stock.fixer.FixerRarity
 import java.util.Collections
 import java.util.Locale
 

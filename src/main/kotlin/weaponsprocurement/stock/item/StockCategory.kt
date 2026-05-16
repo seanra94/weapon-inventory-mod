@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 enum class StockCategory(val label: String) {
     NO_STOCK("No Stock"),

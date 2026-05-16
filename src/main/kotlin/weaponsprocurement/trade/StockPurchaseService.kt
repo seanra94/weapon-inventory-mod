@@ -1,6 +1,8 @@
 package weaponsprocurement.trade
 
-import weaponsprocurement.stock.*
+import weaponsprocurement.stock.item.*
+import weaponsprocurement.stock.market.*
+import weaponsprocurement.stock.fixer.*
 
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI

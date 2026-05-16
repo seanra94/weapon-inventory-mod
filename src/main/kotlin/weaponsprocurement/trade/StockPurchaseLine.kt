@@ -1,6 +1,8 @@
 package weaponsprocurement.trade
 
-import weaponsprocurement.stock.*
+import weaponsprocurement.stock.item.*
+import weaponsprocurement.stock.market.*
+import weaponsprocurement.stock.fixer.*
 
 class StockPurchaseLine(
     @JvmField val source: StockPurchaseSource,

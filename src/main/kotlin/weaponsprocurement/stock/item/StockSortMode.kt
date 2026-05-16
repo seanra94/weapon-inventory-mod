@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 enum class StockSortMode(val label: String) {
     NEED("Stock"),

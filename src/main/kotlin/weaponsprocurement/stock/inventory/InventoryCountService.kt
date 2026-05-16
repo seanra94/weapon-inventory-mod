@@ -1,9 +1,11 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.inventory
 
 import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.util.Misc
+import weaponsprocurement.stock.item.OwnedSourcePolicy
+import weaponsprocurement.stock.item.StockItemType
 import java.util.HashMap
 
 class InventoryCountService {

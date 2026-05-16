@@ -4,9 +4,9 @@ import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.combat.WeaponAPI
 import org.apache.log4j.Logger
 import org.json.JSONObject
-import weaponsprocurement.stock.OwnedSourcePolicy
-import weaponsprocurement.stock.StockItemType
-import weaponsprocurement.stock.StockSortMode
+import weaponsprocurement.stock.item.OwnedSourcePolicy
+import weaponsprocurement.stock.item.StockItemType
+import weaponsprocurement.stock.item.StockSortMode
 import java.util.Collections
 import java.util.HashMap
 

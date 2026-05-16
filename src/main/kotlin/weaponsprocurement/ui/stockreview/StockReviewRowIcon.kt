@@ -3,7 +3,7 @@ package weaponsprocurement.ui.stockreview
 import weaponsprocurement.ui.*
 
 import com.fs.starfarer.api.combat.WeaponAPI
-import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.item.WeaponStockRecord
 
 class StockReviewRowIcon private constructor(
     val spriteName: String,

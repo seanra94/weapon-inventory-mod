@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.fixer
 
 object RarityClassifier {
     private const val HIGH_SELL_FREQUENCY = 1f

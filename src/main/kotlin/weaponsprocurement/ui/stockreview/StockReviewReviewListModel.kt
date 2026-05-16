@@ -3,8 +3,8 @@ package weaponsprocurement.ui.stockreview
 import weaponsprocurement.ui.*
 
 import com.fs.starfarer.api.ui.Alignment
-import weaponsprocurement.stock.WeaponStockRecord
-import weaponsprocurement.stock.WeaponStockSnapshot
+import weaponsprocurement.stock.item.WeaponStockRecord
+import weaponsprocurement.stock.item.WeaponStockSnapshot
 import java.awt.Color
 import java.util.ArrayList
 import java.util.Locale

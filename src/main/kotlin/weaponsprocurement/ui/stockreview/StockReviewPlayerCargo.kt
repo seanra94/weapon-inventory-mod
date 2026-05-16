@@ -6,9 +6,9 @@ import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.campaign.SubmarketPlugin
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
-import weaponsprocurement.stock.MarketStockService
-import weaponsprocurement.stock.StockItemStacks
-import weaponsprocurement.stock.StockItemType
+import weaponsprocurement.stock.market.MarketStockService
+import weaponsprocurement.stock.item.StockItemStacks
+import weaponsprocurement.stock.item.StockItemType
 import java.util.HashMap
 
 class StockReviewPlayerCargo private constructor() {

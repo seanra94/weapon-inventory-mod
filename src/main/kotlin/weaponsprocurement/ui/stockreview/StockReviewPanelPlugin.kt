@@ -8,8 +8,8 @@ import com.fs.starfarer.api.ui.CustomPanelAPI
 import org.apache.log4j.Logger
 import weaponsprocurement.trade.StockPurchaseService
 import weaponsprocurement.config.StockReviewConfig
-import weaponsprocurement.stock.WeaponStockSnapshot
-import weaponsprocurement.stock.WeaponStockSnapshotBuilder
+import weaponsprocurement.stock.item.WeaponStockSnapshot
+import weaponsprocurement.stock.item.WeaponStockSnapshotBuilder
 import weaponsprocurement.lifecycle.StockReviewHotkeyScript
 
 class StockReviewPanelPlugin(

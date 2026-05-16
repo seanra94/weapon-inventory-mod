@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.CargoAPI
@@ -7,6 +7,9 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
 import weaponsprocurement.config.StockReviewConfig
+import weaponsprocurement.stock.inventory.InventoryCountService
+import weaponsprocurement.stock.market.GlobalWeaponMarketService
+import weaponsprocurement.stock.market.MarketStockService
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator

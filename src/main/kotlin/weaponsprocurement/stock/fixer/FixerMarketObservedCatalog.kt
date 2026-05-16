@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.fixer
 
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.SectorAPI
@@ -8,6 +8,9 @@ import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
 import org.apache.log4j.Logger
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.stock.item.StockItemType
+import weaponsprocurement.stock.item.SubmarketWeaponStock
+import weaponsprocurement.stock.market.MarketStockService
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet

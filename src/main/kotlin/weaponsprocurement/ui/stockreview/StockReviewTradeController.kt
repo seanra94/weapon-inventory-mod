@@ -2,7 +2,7 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.stock.WeaponStockSnapshot
+import weaponsprocurement.stock.item.WeaponStockSnapshot
 import kotlin.math.abs
 
 class StockReviewTradeController(

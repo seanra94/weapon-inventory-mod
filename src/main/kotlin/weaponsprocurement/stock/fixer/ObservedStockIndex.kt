@@ -1,8 +1,10 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.fixer
 
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.stock.item.SubmarketWeaponStock
+import weaponsprocurement.stock.market.MarketStockService
 import java.util.HashMap
 
 class ObservedStockIndex {

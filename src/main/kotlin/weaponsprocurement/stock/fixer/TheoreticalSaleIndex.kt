@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.fixer
 
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.FactionAPI
@@ -10,6 +10,7 @@ import com.fs.starfarer.api.impl.campaign.ids.Submarkets
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.stock.item.StockItemType
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet

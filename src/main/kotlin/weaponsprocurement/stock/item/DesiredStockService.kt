@@ -1,4 +1,4 @@
-package weaponsprocurement.stock
+package weaponsprocurement.stock.item
 
 import com.fs.starfarer.api.combat.WeaponAPI
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
