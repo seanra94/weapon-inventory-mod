@@ -84,6 +84,7 @@ Completed:
 - Final no-Java-source migration gate passes for the private repo and public export.
 - Config ownership split into `weaponsprocurement.config`.
 - Runtime lifecycle scripts split into `weaponsprocurement.lifecycle`.
+- Former `core` package split into `weaponsprocurement.stock` and `weaponsprocurement.trade`.
 
 Still open:
 

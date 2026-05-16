@@ -2,7 +2,7 @@ package weaponsprocurement.gui
 
 import com.fs.starfarer.api.combat.DamageType
 import com.fs.starfarer.api.combat.WeaponAPI
-import weaponsprocurement.core.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockRecord
 
 enum class StockReviewFilter(
     val group: StockReviewFilterGroup,

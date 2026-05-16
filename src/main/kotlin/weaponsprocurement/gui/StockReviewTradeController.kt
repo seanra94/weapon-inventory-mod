@@ -1,6 +1,6 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.WeaponStockSnapshot
 import kotlin.math.abs
 
 class StockReviewTradeController(

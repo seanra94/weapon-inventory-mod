@@ -1,7 +1,7 @@
 package weaponsprocurement.gui
 
 import com.fs.starfarer.api.combat.WeaponAPI
-import weaponsprocurement.core.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockRecord
 
 class StockReviewRowIcon private constructor(
     val spriteName: String,

@@ -4,10 +4,10 @@ import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.ui.CustomPanelAPI
 import org.apache.log4j.Logger
-import weaponsprocurement.core.StockPurchaseService
+import weaponsprocurement.trade.StockPurchaseService
 import weaponsprocurement.config.StockReviewConfig
-import weaponsprocurement.core.WeaponStockSnapshot
-import weaponsprocurement.core.WeaponStockSnapshotBuilder
+import weaponsprocurement.stock.WeaponStockSnapshot
+import weaponsprocurement.stock.WeaponStockSnapshotBuilder
 import weaponsprocurement.lifecycle.StockReviewHotkeyScript
 
 class StockReviewPanelPlugin(

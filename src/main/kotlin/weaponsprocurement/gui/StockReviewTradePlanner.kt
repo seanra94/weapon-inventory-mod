@@ -1,9 +1,9 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockCategory
-import weaponsprocurement.core.StockItemType
-import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.StockCategory
+import weaponsprocurement.stock.StockItemType
+import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.util.ArrayList
 
 class StockReviewTradePlanner private constructor() {

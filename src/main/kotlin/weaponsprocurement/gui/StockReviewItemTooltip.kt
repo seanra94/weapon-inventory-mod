@@ -18,9 +18,9 @@ import com.fs.starfarer.api.ui.LabelAPI
 import com.fs.starfarer.api.ui.PositionAPI
 import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.util.Misc
-import weaponsprocurement.core.CreditFormat
-import weaponsprocurement.core.SubmarketWeaponStock
-import weaponsprocurement.core.WeaponStockRecord
+import weaponsprocurement.trade.CreditFormat
+import weaponsprocurement.stock.SubmarketWeaponStock
+import weaponsprocurement.stock.WeaponStockRecord
 import java.awt.Color
 import java.util.Locale
 

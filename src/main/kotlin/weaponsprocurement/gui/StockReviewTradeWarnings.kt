@@ -1,7 +1,7 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockSnapshot
 
 class StockReviewTradeWarnings private constructor() {
     companion object {

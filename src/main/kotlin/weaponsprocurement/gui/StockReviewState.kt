@@ -1,10 +1,10 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockCategory
-import weaponsprocurement.core.StockItemType
+import weaponsprocurement.stock.StockCategory
+import weaponsprocurement.stock.StockItemType
 import weaponsprocurement.config.StockReviewConfig
-import weaponsprocurement.core.StockSortMode
-import weaponsprocurement.core.StockSourceMode
+import weaponsprocurement.stock.StockSortMode
+import weaponsprocurement.stock.StockSourceMode
 
 class StockReviewState : WimGuiScrollableListState {
     private val expansion: StockReviewExpansionState

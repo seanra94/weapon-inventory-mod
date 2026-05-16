@@ -1,8 +1,8 @@
 package weaponsprocurement.gui
 
 import com.fs.starfarer.api.ui.CustomPanelAPI
-import weaponsprocurement.core.StockSourceMode
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.StockSourceMode
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.awt.Color
 
 class StockReviewRenderer :

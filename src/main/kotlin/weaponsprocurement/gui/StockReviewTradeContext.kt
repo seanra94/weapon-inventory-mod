@@ -1,8 +1,8 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.SubmarketWeaponStock
-import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.SubmarketWeaponStock
+import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.util.HashMap
 
 class StockReviewTradeContext(

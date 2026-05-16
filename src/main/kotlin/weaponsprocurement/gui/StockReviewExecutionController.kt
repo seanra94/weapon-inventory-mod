@@ -3,11 +3,11 @@ package weaponsprocurement.gui
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import org.apache.log4j.Logger
-import weaponsprocurement.core.StockPurchaseService
-import weaponsprocurement.core.StockSourceMode
-import weaponsprocurement.core.SubmarketWeaponStock
-import weaponsprocurement.core.TradeMoney
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.trade.StockPurchaseService
+import weaponsprocurement.stock.StockSourceMode
+import weaponsprocurement.stock.SubmarketWeaponStock
+import weaponsprocurement.trade.TradeMoney
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.util.Collections
 
 class StockReviewExecutionController(

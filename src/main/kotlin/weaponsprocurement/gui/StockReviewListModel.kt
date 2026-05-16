@@ -1,10 +1,10 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockCategory
-import weaponsprocurement.core.StockItemType
-import weaponsprocurement.core.StockSourceMode
-import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.StockCategory
+import weaponsprocurement.stock.StockItemType
+import weaponsprocurement.stock.StockSourceMode
+import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.awt.Color
 import java.util.Locale
 

@@ -1,6 +1,6 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.CreditFormat
+import weaponsprocurement.trade.CreditFormat
 import kotlin.math.abs
 
 class StockReviewFormat private constructor() {

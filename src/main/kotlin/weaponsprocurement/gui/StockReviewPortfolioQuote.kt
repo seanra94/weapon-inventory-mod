@@ -1,6 +1,6 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.TradeMoney
+import weaponsprocurement.trade.TradeMoney
 import java.util.HashMap
 
 class StockReviewPortfolioQuote {

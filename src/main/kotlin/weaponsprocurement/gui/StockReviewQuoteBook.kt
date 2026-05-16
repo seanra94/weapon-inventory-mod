@@ -1,9 +1,9 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.SubmarketWeaponStock
-import weaponsprocurement.core.TradeMoney
-import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.SubmarketWeaponStock
+import weaponsprocurement.trade.TradeMoney
+import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.util.ArrayList
 import java.util.Collections
 import java.util.Comparator

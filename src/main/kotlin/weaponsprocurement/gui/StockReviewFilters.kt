@@ -1,6 +1,6 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockRecord
 import java.util.EnumSet
 
 class StockReviewFilters private constructor() {

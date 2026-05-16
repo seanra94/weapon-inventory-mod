@@ -15,8 +15,8 @@ import weaponsprocurement.gui.WimGuiCampaignDialogHost
 import weaponsprocurement.gui.WimGuiDialogOpener
 import weaponsprocurement.gui.WimGuiDialogTracker
 import weaponsprocurement.gui.WimGuiHotkeyLatch
-import weaponsprocurement.core.MarketStockService
-import weaponsprocurement.core.StockItemStacks
+import weaponsprocurement.stock.MarketStockService
+import weaponsprocurement.stock.StockItemStacks
 import weaponsprocurement.config.StockReviewConfig
 import weaponsprocurement.config.WeaponsProcurementConfig
 

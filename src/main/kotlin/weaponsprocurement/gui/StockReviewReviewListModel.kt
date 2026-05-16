@@ -1,8 +1,8 @@
 package weaponsprocurement.gui
 
 import com.fs.starfarer.api.ui.Alignment
-import weaponsprocurement.core.WeaponStockRecord
-import weaponsprocurement.core.WeaponStockSnapshot
+import weaponsprocurement.stock.WeaponStockRecord
+import weaponsprocurement.stock.WeaponStockSnapshot
 import java.awt.Color
 import java.util.ArrayList
 import java.util.Locale

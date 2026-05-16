@@ -1,7 +1,7 @@
 package weaponsprocurement.gui
 
 import com.fs.starfarer.api.ui.Alignment
-import weaponsprocurement.core.CreditFormat
+import weaponsprocurement.trade.CreditFormat
 import java.awt.Color
 import kotlin.math.abs
 

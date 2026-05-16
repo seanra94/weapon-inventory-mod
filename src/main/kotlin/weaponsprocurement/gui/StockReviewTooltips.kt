@@ -1,9 +1,9 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockCategory
-import weaponsprocurement.core.StockSortMode
-import weaponsprocurement.core.StockSourceMode
-import weaponsprocurement.core.WeaponStockRecord
+import weaponsprocurement.stock.StockCategory
+import weaponsprocurement.stock.StockSortMode
+import weaponsprocurement.stock.StockSourceMode
+import weaponsprocurement.stock.WeaponStockRecord
 import weaponsprocurement.config.WeaponsProcurementConfig
 import java.util.Locale
 

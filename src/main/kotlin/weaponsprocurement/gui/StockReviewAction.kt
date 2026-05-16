@@ -1,7 +1,7 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockCategory
-import weaponsprocurement.core.StockItemType
+import weaponsprocurement.stock.StockCategory
+import weaponsprocurement.stock.StockItemType
 
 class StockReviewAction private constructor(
     private val type: Type,

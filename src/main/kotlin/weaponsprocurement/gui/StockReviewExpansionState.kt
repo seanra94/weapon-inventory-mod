@@ -1,7 +1,7 @@
 package weaponsprocurement.gui
 
-import weaponsprocurement.core.StockCategory
-import weaponsprocurement.core.StockItemType
+import weaponsprocurement.stock.StockCategory
+import weaponsprocurement.stock.StockItemType
 import java.util.EnumMap
 import java.util.HashSet
 

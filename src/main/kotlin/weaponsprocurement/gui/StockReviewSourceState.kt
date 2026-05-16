@@ -1,8 +1,8 @@
 package weaponsprocurement.gui
 
 import weaponsprocurement.config.StockReviewConfig
-import weaponsprocurement.core.StockSortMode
-import weaponsprocurement.core.StockSourceMode
+import weaponsprocurement.stock.StockSortMode
+import weaponsprocurement.stock.StockSourceMode
 
 class StockReviewSourceState {
     private var sortMode: StockSortMode
