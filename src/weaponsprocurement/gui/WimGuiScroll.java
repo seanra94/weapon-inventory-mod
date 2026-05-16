@@ -3,8 +3,8 @@ package weaponsprocurement.gui;
 import java.util.ArrayList;
 import java.util.List;
 
-final class WimGuiScroll {
-    interface ExtraGapProvider<T> {
+public final class WimGuiScroll {
+    public interface ExtraGapProvider<T> {
         float extraGapBefore(T item);
     }
 

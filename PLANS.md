@@ -62,6 +62,7 @@ Completed:
 - Purchase service and executor mutation/rollback code converted to Kotlin.
 - Shared WimGui and stock-review UI primitive/value classes converted to Kotlin.
 - Stock-review source/filter/mode state and player-cargo helper code converted to Kotlin.
+- WimGui style, modal input, button polling, list layout, and campaign dialog host helpers converted to Kotlin.
 
 Still open:
 

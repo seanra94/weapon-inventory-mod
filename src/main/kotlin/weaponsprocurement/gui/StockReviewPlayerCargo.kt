@@ -13,30 +13,31 @@ class StockReviewPlayerCargo private constructor() {
     companion object {
         @JvmStatic
         fun currentCredits(): Float {
-            val cargo = WimGuiCampaignDialogHost.current().playerCargo
+            val cargo = WimGuiCampaignDialogHost.current().getPlayerCargo()
             return cargo?.credits?.get() ?: 0f
         }
 
         @JvmStatic
         fun currentCargoSpaceLeft(): Float {
-            val cargo = WimGuiCampaignDialogHost.current().playerCargo
+            val cargo = WimGuiCampaignDialogHost.current().getPlayerCargo()
             return cargo?.spaceLeft ?: 0f
         }
 
         @JvmStatic
         fun currentCargoCapacity(): Float {
-            val cargo = WimGuiCampaignDialogHost.current().playerCargo
+            val cargo = WimGuiCampaignDialogHost.current().getPlayerCargo()
             return cargo?.maxCapacity ?: 0f
         }
 
         @JvmStatic
         fun sellUnitPricesByItem(market: MarketAPI?, includeBlackMarket: Boolean): Map<String, Int> {
             val result = HashMap<String, Int>()
-            val cargo = WimGuiCampaignDialogHost.current().playerCargo
-            if (cargo == null || cargo.stacksCopy == null) {
+            val cargo = WimGuiCampaignDialogHost.current().getPlayerCargo()
+            val stacks = cargo?.getStacksCopy()
+            if (stacks == null) {
                 return result
             }
-            for (stack in cargo.stacksCopy) {
+            for (stack in stacks) {
                 val itemType = if (StockItemStacks.isVisibleWingStack(stack)) StockItemType.WING else StockItemType.WEAPON
                 if (!StockItemStacks.isVisibleItemStack(stack, itemType)) {
                     continue
