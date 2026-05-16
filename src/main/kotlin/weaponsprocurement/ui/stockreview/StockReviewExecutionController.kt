@@ -5,10 +5,10 @@ import weaponsprocurement.ui.*
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import org.apache.log4j.Logger
-import weaponsprocurement.trade.StockPurchaseService
+import weaponsprocurement.trade.execution.StockPurchaseService
 import weaponsprocurement.stock.item.StockSourceMode
 import weaponsprocurement.stock.item.SubmarketWeaponStock
-import weaponsprocurement.trade.TradeMoney
+import weaponsprocurement.trade.plan.TradeMoney
 import weaponsprocurement.stock.item.WeaponStockSnapshot
 import java.util.Collections
 

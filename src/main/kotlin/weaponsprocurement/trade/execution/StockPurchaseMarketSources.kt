@@ -1,8 +1,10 @@
-package weaponsprocurement.trade
+package weaponsprocurement.trade.execution
 
 import weaponsprocurement.stock.item.*
 import weaponsprocurement.stock.market.*
 import weaponsprocurement.stock.fixer.*
+import weaponsprocurement.trade.plan.StockPurchaseSource
+import weaponsprocurement.trade.plan.StockSellTarget
 
 import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.CargoStackAPI

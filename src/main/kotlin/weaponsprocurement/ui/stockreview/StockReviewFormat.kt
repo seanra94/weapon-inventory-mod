@@ -2,7 +2,7 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.trade.CreditFormat
+import weaponsprocurement.trade.quote.CreditFormat
 import kotlin.math.abs
 
 class StockReviewFormat private constructor() {

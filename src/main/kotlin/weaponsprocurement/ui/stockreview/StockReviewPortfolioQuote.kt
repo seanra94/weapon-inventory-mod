@@ -2,7 +2,7 @@ package weaponsprocurement.ui.stockreview
 
 import weaponsprocurement.ui.*
 
-import weaponsprocurement.trade.TradeMoney
+import weaponsprocurement.trade.plan.TradeMoney
 import java.util.HashMap
 
 class StockReviewPortfolioQuote {

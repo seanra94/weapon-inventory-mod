@@ -1,4 +1,4 @@
-package weaponsprocurement.trade
+package weaponsprocurement.trade.quote
 
 import weaponsprocurement.stock.item.*
 import weaponsprocurement.stock.market.*

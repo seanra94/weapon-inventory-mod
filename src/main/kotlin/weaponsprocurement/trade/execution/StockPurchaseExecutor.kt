@@ -1,4 +1,4 @@
-package weaponsprocurement.trade
+package weaponsprocurement.trade.execution
 
 import weaponsprocurement.stock.item.*
 import weaponsprocurement.stock.market.*
@@ -9,6 +9,11 @@ import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
 import org.apache.log4j.Logger
 import weaponsprocurement.config.WeaponsProcurementConfig
+import weaponsprocurement.trade.plan.StockPurchasePlan
+import weaponsprocurement.trade.plan.StockPurchaseSource
+import weaponsprocurement.trade.plan.StockSellTarget
+import weaponsprocurement.trade.plan.TradeMoney
+import weaponsprocurement.trade.quote.CreditFormat
 import java.util.ArrayList
 import java.util.IdentityHashMap
 

@@ -3,7 +3,7 @@ package weaponsprocurement.ui.stockreview
 import weaponsprocurement.ui.*
 
 import com.fs.starfarer.api.ui.Alignment
-import weaponsprocurement.trade.CreditFormat
+import weaponsprocurement.trade.quote.CreditFormat
 import java.awt.Color
 import kotlin.math.abs
 

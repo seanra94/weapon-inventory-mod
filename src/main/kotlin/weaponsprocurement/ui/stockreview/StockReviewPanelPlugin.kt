@@ -6,7 +6,7 @@ import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.ui.CustomPanelAPI
 import org.apache.log4j.Logger
-import weaponsprocurement.trade.StockPurchaseService
+import weaponsprocurement.trade.execution.StockPurchaseService
 import weaponsprocurement.config.StockReviewConfig
 import weaponsprocurement.stock.item.WeaponStockSnapshot
 import weaponsprocurement.stock.item.WeaponStockSnapshotBuilder

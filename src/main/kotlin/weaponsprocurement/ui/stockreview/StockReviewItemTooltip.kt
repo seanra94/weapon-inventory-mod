@@ -20,7 +20,7 @@ import com.fs.starfarer.api.ui.LabelAPI
 import com.fs.starfarer.api.ui.PositionAPI
 import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.util.Misc
-import weaponsprocurement.trade.CreditFormat
+import weaponsprocurement.trade.quote.CreditFormat
 import weaponsprocurement.stock.item.SubmarketWeaponStock
 import weaponsprocurement.stock.item.WeaponStockRecord
 import java.awt.Color

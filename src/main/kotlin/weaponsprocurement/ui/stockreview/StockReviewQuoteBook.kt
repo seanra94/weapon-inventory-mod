@@ -3,7 +3,7 @@ package weaponsprocurement.ui.stockreview
 import weaponsprocurement.ui.*
 
 import weaponsprocurement.stock.item.SubmarketWeaponStock
-import weaponsprocurement.trade.TradeMoney
+import weaponsprocurement.trade.plan.TradeMoney
 import weaponsprocurement.stock.item.WeaponStockRecord
 import weaponsprocurement.stock.item.WeaponStockSnapshot
 import java.util.ArrayList
