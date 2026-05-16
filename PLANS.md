@@ -56,10 +56,11 @@ Completed:
 - Global remote stock service and persistent Fixer observed catalog storage converted to Kotlin.
 - Stock review config loading and stock snapshot assembly converted to Kotlin.
 - Stock record/stat label helpers converted to Kotlin.
+- Pending trade state, line quote, portfolio quote, and seller allocation value classes converted to Kotlin.
 
 Still open:
 
-- Convert trade/quote/execution packages.
+- Convert quote book and trade context, then trade execution packages.
 - Convert trade/quote/execution packages.
 - Convert UI/rendering/tooltips and split large GUI ownership.
 - Convert lifecycle/plugin code and private badge source.
