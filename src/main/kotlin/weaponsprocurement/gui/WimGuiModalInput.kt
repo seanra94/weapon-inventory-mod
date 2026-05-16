@@ -17,7 +17,7 @@ class WimGuiModalInput<A>(buttonPollFramesAfterMouseEvent: Int) {
         this.listBounds = listBounds
     }
 
-    fun buttonBindings(): List<WimGuiButtonBinding<A>> = buttonPoller.bindings()
+    fun buttonBindings(): MutableList<WimGuiButtonBinding<A>> = buttonPoller.bindings()
 
     fun clearButtonBindings() {
         buttonPoller.clearBindings()

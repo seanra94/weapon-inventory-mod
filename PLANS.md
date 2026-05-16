@@ -65,6 +65,7 @@ Completed:
 - WimGui style, modal input, button polling, list layout, and campaign dialog host helpers converted to Kotlin.
 - Stock-review action model, row cells/list rows, and height-aware scroll slicing converted to Kotlin.
 - Stock-review expansion/state and trade-warning tracking converted to Kotlin.
+- WimGui modal panel base class plus list row/modal-list renderers converted to Kotlin.
 
 Still open:
 
