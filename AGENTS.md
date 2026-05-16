@@ -9,7 +9,7 @@ Repo-local instructions for Weapons Procurement. These override the workspace-le
 - Live clean-package target: `C:\Games\Starsector\mods\Weapons Procurement`
 - Runtime jar: `jars/weapons-procurement.jar`
 - Main plugin: `weaponsprocurement.plugins.WeaponsProcurementModPlugin`
-- Required dependency: LunaLib
+- Required dependencies: LazyLib and LunaLib
 
 ## Standard Commands
 
@@ -33,6 +33,7 @@ Runtime/source validation:
 $env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
@@ -51,6 +52,7 @@ Public export check:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\export-public.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 ```
 
 ## Deploy Policy
@@ -97,6 +99,7 @@ Do not read every archive file at session start. Search first, then open only th
 ## Hard Constraints
 
 - Clean `F8` popup is the public/default product. Optional patched badges must remain isolated.
+- Clean builds use `src/main/kotlin` plus legacy public Java under `src/weaponsprocurement`; private badge builds use `src/privateBadge`.
 - Do not ship or commit a prepatched `starfarer_obf.jar`.
 - Do not call Starsector campaign APIs from embedded patched-core badge helpers.
 - Do not reintroduce visible seller-detail/source-specific local buy rows without a design pass.

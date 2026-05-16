@@ -2,7 +2,7 @@
 
 Status: private
 Scope: Curating the private Weapons Procurement repo into a public GitHub repo/package for `https://github.com/Shattersphere-Mods`
-Last updated: 2026-05-12
+Last updated: 2026-05-17
 
 Never publish this file. It describes private-to-public export rules for keeping the public mod focused on the procurement GUI and free of private agent/archive material.
 
@@ -32,6 +32,7 @@ Do not push this private repo wholesale to the public organization.
 Public output should include only files needed for users/contributors to build and use the clean procurement GUI:
 
 - `src/` after badge-only Java references are physically removable;
+- Gradle wrapper and Kotlin build files required to compile the public source tree;
 - `data/campaign/rules.csv`;
 - public-safe `data/config/LunaSettings.csv`;
 - `data/config/weapons_procurement_market_blacklist.json`;
@@ -59,6 +60,7 @@ Exclude private and agent material:
 
 Exclude optional patched badge / bytecode material:
 
+- `src/privateBadge/`;
 - `src/weaponsprocurement/internal/WeaponsProcurementBadgeHelper.java`;
 - `src/weaponsprocurement/internal/WeaponsProcurementCountUpdater.java`;
 - any public-safe source references to those classes;
@@ -77,6 +79,8 @@ Exclude optional patched badge / bytecode material:
 Resolved:
 
 - `WeaponsProcurementModPlugin` uses a generic optional extension hook rather than direct badge updater imports.
+- Badge helpers are physically separated under `src/privateBadge`.
+- The private Gradle badge source set is stripped from public export output.
 - Public config omits `wp_enable_patched_badges`.
 - `data/config/settings.json` is treated as badge-only and omitted from public output.
 - Public docs describe only the clean GUI product.
@@ -85,6 +89,7 @@ Resolved:
 Still open:
 
 - Build the exported public tree and confirm the resulting jar contains no badge classes.
+- Run `tools/validate-kotlin-migration.ps1` after public export to confirm the clean/private boundary.
 - Decide whether public releases should commit/source-control the built jar or build it only for release packages.
 
 ## Leak Scan Terms
@@ -128,6 +133,7 @@ Public-output validation should eventually include:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 git diff --check
 ```
 

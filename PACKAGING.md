@@ -8,6 +8,7 @@ The public package is the clean procurement GUI:
 - `F8` opens the Weapon Stock Review popup in valid market/storage contexts;
 - optional LunaLib market-dialog entry can add `Open "Weapon Procurement"`;
 - no private docs, local paths, deploy queues, or internal archives.
+- LazyLib and LunaLib remain required dependencies.
 
 Include:
 
@@ -31,6 +32,7 @@ For code or asset changes:
 $env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1

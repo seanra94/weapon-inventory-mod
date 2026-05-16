@@ -11,6 +11,7 @@ The repo is in release-prep shape for the clean popup path:
 - Sector Market drains real remote cargo; Fixer's Market is virtual.
 - Fixer's Market uses runtime theoretical sale capability plus rarity estimates, with observed live/persistent stock used for reference prices and correction.
 - Optional patched cargo-cell badges are private-only and isolated from the clean popup.
+- Gradle/Kotlin migration foundation is underway; `build.ps1` remains the compatibility entry point.
 - Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
 ## Active Work
@@ -38,6 +39,27 @@ Acceptance:
 Still open:
 
 - Decide whether the public repo should commit the built jar or build jars only for release packages.
+
+### Kotlin Migration
+
+Migrate the repo to Kotlin and a Gradle build in reviewable chunks while preserving the current public mod identity, jar path, config ids, and trade behavior.
+
+Completed:
+
+- Gradle/Kotlin wrapper foundation added while legacy Java still compiles.
+- `build.ps1` delegates to Gradle for compatibility with existing commands.
+- LazyLib is declared as a required dependency for the Kotlin runtime.
+- Optional badge source is physically separated under `src/privateBadge`.
+- `tools/validate-kotlin-migration.ps1` validates build files, dependency declarations, Java migration status, clean jar badge-class exclusion, and public-export boundaries.
+
+Still open:
+
+- Convert core model/value classes and enums.
+- Convert stock/source/Fixer catalog packages.
+- Convert trade/quote/execution packages.
+- Convert UI/rendering/tooltips and split large GUI ownership.
+- Convert lifecycle/plugin code and private badge source.
+- Add final no-Java-source gate when conversion is complete.
 
 ### Runtime Rollback Validation
 

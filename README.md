@@ -5,6 +5,7 @@ Weapons Procurement adds a stock review and trade-planning popup for Starsector 
 ## Requirements
 
 - Starsector `0.98a`
+- [LazyLib](https://fractalsoftworks.com/forum/index.php?topic=5444.0) (required; provides the Kotlin runtime)
 - [LunaLib](https://fractalsoftworks.com/forum/index.php?topic=12712.0) (required)
 
 ## Main Workflow (Clean Path)
@@ -54,6 +55,7 @@ Release notes are tracked in [CHANGELOG.md](CHANGELOG.md).
 $env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-live-gui-classes.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-doc-links.ps1

@@ -1,12 +1,14 @@
 # Weapons Procurement Brief
 
-Last updated: 2026-05-12
+Last updated: 2026-05-17
 
 ## Current State
 
 Weapons Procurement is a Starsector `0.98a` mod for reviewing weapon and fighter LPC stock, planning buys/sells, and confirming trades from market/storage dialogs.
 
 The primary product path is the clean `F8` popup. The patched cargo-cell badge path is optional, advanced-use, and isolated from the clean popup.
+
+The build foundation is migrating to Gradle/Kotlin. `build.ps1` remains the normal entry point and now delegates to the Gradle wrapper; LazyLib is a required dependency because it supplies the Kotlin runtime in Starsector.
 
 ## Known-Good Source State
 
@@ -29,6 +31,7 @@ Runtime/source:
 $env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1

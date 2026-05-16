@@ -16,7 +16,7 @@ The optional patched cargo-cell badge path remains isolated and advanced-use onl
 ## Current Product Shape
 
 - `mod_info.json` id: `weapons_procurement`.
-- Required dependency: LunaLib.
+- Required dependencies: LazyLib and LunaLib.
 - Runtime jar: `jars/weapons-procurement.jar`.
 - Main plugin: `weaponsprocurement.plugins.WeaponsProcurementModPlugin`.
 - Clean package files: `data/`, `graphics/`, `jars/`, `mod_info.json`, `README.md`, `CONFIG.md`, `CHANGELOG.md`, `PACKAGING.md`.
@@ -38,7 +38,7 @@ User-facing docs:
 - `WeaponsProcurementModPlugin`: registers transient scripts on game load.
 - `StockReviewHotkeyScript`: opens the `F8` popup from valid campaign dialogs.
 - `WP_OpenDialog` plus `data/campaign/rules.csv`: optional dialog action.
-- `WeaponsProcurementCountUpdater`: publishes optional patched-badge count properties while paused. It no-ops unless patched badges are enabled.
+- `WeaponsProcurementCountUpdater`: private source-set script that publishes optional patched-badge count properties while paused. It is loaded reflectively only by private builds and no-ops unless patched badges are enabled.
 - `WeaponsProcurementFixerCatalogUpdater`: observes safe real market stock over time for Fixer's Market.
 
 ## Core Model
@@ -125,6 +125,7 @@ The patched badge path exists only for exact in-cell vanilla cargo badges.
 
 Rules:
 
+- Badge helpers live under `src/privateBadge/` and are excluded from the clean public Gradle build.
 - Keep patched helpers lookup-only; normal mod code computes state.
 - Do not call Starsector campaign APIs from `WeaponsProcurementBadgeHelper`.
 - Patch only `CargoStackView.renderAtCenter(FFF)V`.
@@ -142,6 +143,7 @@ Normal code/asset validation:
 $env:STARSECTOR_DIRECTORY = "X:\Path\To\Starsector"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-gui-button-style.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migration.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-total-badges.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-cargo-stack-view-patch.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\deploy-live-mod.ps1

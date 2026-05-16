@@ -26,11 +26,18 @@ $includeFiles = @(
     ".github/workflows/sanity.yml",
     ".gitignore",
     "build.ps1",
+    "build.gradle.kts",
     "CHANGELOG.md",
     "CONFIG.md",
+    "gradle.properties",
+    "gradle/wrapper/gradle-wrapper.jar",
+    "gradle/wrapper/gradle-wrapper.properties",
+    "gradlew",
+    "gradlew.bat",
     "mod_info.json",
     "PACKAGING.md",
     "README.md",
+    "settings.gradle.kts",
     "data/campaign/rules.csv",
     "data/config/LunaSettings.csv",
     "data/config/weapons_procurement_market_blacklist.json",
@@ -97,8 +104,60 @@ if (Test-Path -LiteralPath $publicWorkflow) {
         "(?ms)\r?\n      - name: Validate public export boundary\r?\n        shell: pwsh\r?\n        run: .*?export-public\.ps1.*?\r?\n",
         "`r`n"
     )
+    $workflowText = [regex]::Replace(
+        $workflowText,
+        "(?ms)\r?\n      - name: Validate Kotlin migration boundaries\r?\n        shell: pwsh\r?\n        run: .*?validate-kotlin-migration\.ps1.*?\r?\n",
+        "`r`n"
+    )
     Set-Content -LiteralPath $publicWorkflow -Value $workflowText -NoNewline
 }
+$publicGradleBuild = Join-Path $resolvedOutput "build.gradle.kts"
+if (Test-Path -LiteralPath $publicGradleBuild) {
+    $gradleText = Get-Content -LiteralPath $publicGradleBuild -Raw
+    $gradleText = [regex]::Replace(
+        $gradleText,
+        "(?ms)\r?\n?// PRIVATE_BADGE_GRADLE_START.*?// PRIVATE_BADGE_GRADLE_END\r?\n?",
+        "`r`n"
+    )
+    $gradleText = [regex]::Replace(
+        $gradleText,
+        "(?m)^\s*java\.exclude\(""privateBadge/\*\*""\)\r?\n",
+        ""
+    )
+    Set-Content -LiteralPath $publicGradleBuild -Value $gradleText -NoNewline
+}
+$publicBuildWrapper = Join-Path $resolvedOutput "build.ps1"
+@'
+param(
+    [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY,
+    [switch]$SkipClean
+)
+
+$ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrWhiteSpace($StarsectorDir)) {
+    throw "Set STARSECTOR_DIRECTORY or pass -StarsectorDir."
+}
+
+$gradleWrapper = Join-Path $PSScriptRoot "gradlew.bat"
+if (-not (Test-Path -LiteralPath $gradleWrapper)) {
+    throw "Missing Gradle wrapper at '$gradleWrapper'."
+}
+
+$gradleArgs = @("--no-daemon", "-PstarsectorDir=$StarsectorDir")
+if (-not $SkipClean) {
+    $gradleArgs += "clean"
+}
+$gradleArgs += "buildMod"
+
+& $gradleWrapper @gradleArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Gradle build failed with exit code $LASTEXITCODE."
+}
+
+$jarPath = Join-Path $PSScriptRoot "jars\weapons-procurement.jar"
+Write-Host "Built $jarPath"
+'@ | Set-Content -LiteralPath $publicBuildWrapper -NoNewline
 $publicDocValidator = Join-Path $resolvedOutput "tools/validate-doc-links.ps1"
 @'
 param(
@@ -139,9 +198,15 @@ Write-Host "Documentation link validation passed."
 '@ | Set-Content -LiteralPath $publicDocValidator -NoNewline
 
 $srcRoot = Join-Path $repoRoot "src"
-$sources = Get-ChildItem -LiteralPath $srcRoot -Recurse -File -Filter *.java
+$sources = Get-ChildItem -LiteralPath $srcRoot -Recurse -File |
+    Where-Object {
+        $_.Extension -in @(".java", ".kt")
+    }
 foreach ($source in $sources) {
     $relative = (Get-RelativePath -BasePath $repoRoot -FullPath $source.FullName).Replace("\", "/")
+    if ($relative.StartsWith("src/privateBadge/", [System.StringComparison]::OrdinalIgnoreCase)) {
+        continue
+    }
     if ($excludeSourceSuffixes -contains $relative) {
         continue
     }
@@ -161,8 +226,18 @@ if (Test-Path -LiteralPath $publicPlugin) {
     $pluginText = $pluginText.Replace("import weaponsprocurement.internal.WeaponsProcurementCountUpdater;`n", "")
     $pluginText = [regex]::Replace(
         $pluginText,
+        "(?m)^\s*private static final String BADGE_UPDATER_CLASS.*\r?\n",
+        ""
+    )
+    $pluginText = [regex]::Replace(
+        $pluginText,
         "(?ms)\r?\n        // PRIVATE_BADGE_START.*?        // PRIVATE_BADGE_END\r?\n",
         "`r`n"
+    )
+    $pluginText = [regex]::Replace(
+        $pluginText,
+        "(?ms)\r?\n    private void registerOptionalPrivateScript\(.*?\r?\n    private boolean hasScript",
+        "`r`n    private boolean hasScript"
     )
     Set-Content -LiteralPath $publicPlugin -Value $pluginText -NoNewline
 }
@@ -179,6 +254,9 @@ $leakTerms = @(
     "starfarer_obf",
     "CargoStackView",
     "bytecode",
+    "PRIVATE_BADGE",
+    "privateBadge",
+    "buildPrivateMod",
     "patched badge",
     "patched cargo-cell",
     "WeaponsProcurementBadgeHelper",
@@ -196,7 +274,7 @@ $leakTerms = @(
 
 $scanFiles = Get-ChildItem -LiteralPath $resolvedOutput -Recurse -File |
     Where-Object {
-        $_.Extension -in @(".java", ".ps1", ".md", ".csv", ".json", ".yml", ".yaml", ".txt")
+        $_.Extension -in @(".java", ".kt", ".ps1", ".md", ".csv", ".json", ".yml", ".yaml", ".txt", ".kts", ".gradle", ".properties")
     }
 $leaks = @()
 foreach ($file in $scanFiles) {

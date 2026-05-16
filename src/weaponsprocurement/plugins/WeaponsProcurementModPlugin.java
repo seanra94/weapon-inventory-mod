@@ -5,7 +5,6 @@ import com.fs.starfarer.api.EveryFrameScript;
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.SectorAPI;
 import org.apache.log4j.Logger;
-import weaponsprocurement.internal.WeaponsProcurementCountUpdater;
 import weaponsprocurement.internal.WeaponsProcurementFixerCatalogUpdater;
 import weaponsprocurement.gui.StockReviewHotkeyScript;
 
@@ -13,6 +12,7 @@ import java.util.List;
 
 public class WeaponsProcurementModPlugin extends BaseModPlugin {
     private static final Logger LOG = Logger.getLogger(WeaponsProcurementModPlugin.class);
+    private static final String BADGE_UPDATER_CLASS = "weaponsprocurement.internal.WeaponsProcurementCountUpdater";
 
     @Override
     public void onGameLoad(boolean newGame) {
@@ -22,11 +22,7 @@ public class WeaponsProcurementModPlugin extends BaseModPlugin {
             return;
         }
         // PRIVATE_BADGE_START
-        if (!hasScript(sector.getTransientScripts(), WeaponsProcurementCountUpdater.class)
-                && !hasScript(sector.getScripts(), WeaponsProcurementCountUpdater.class)) {
-            sector.addTransientScript(new WeaponsProcurementCountUpdater());
-            LOG.info("WP_COUNT_UPDATER registered");
-        }
+        registerOptionalPrivateScript(sector, BADGE_UPDATER_CLASS, "WP_COUNT_UPDATER");
         // PRIVATE_BADGE_END
         if (!hasScript(sector.getTransientScripts(), StockReviewHotkeyScript.class)
                 && !hasScript(sector.getScripts(), StockReviewHotkeyScript.class)) {
@@ -38,6 +34,40 @@ public class WeaponsProcurementModPlugin extends BaseModPlugin {
             sector.addTransientScript(new WeaponsProcurementFixerCatalogUpdater());
             LOG.info("WP_FIXER_CATALOG updater registered");
         }
+    }
+
+    private void registerOptionalPrivateScript(SectorAPI sector, String className, String logName) {
+        Class<?> rawClass;
+        try {
+            rawClass = loadScriptClass(className);
+        } catch (ClassNotFoundException ignored) {
+            LOG.info(logName + " optional private script not present");
+            return;
+        }
+
+        if (!EveryFrameScript.class.isAssignableFrom(rawClass)) {
+            LOG.warn(logName + " optional private script does not implement EveryFrameScript: " + className);
+            return;
+        }
+
+        Class<? extends EveryFrameScript> scriptClass = rawClass.asSubclass(EveryFrameScript.class);
+        if (hasScript(sector.getTransientScripts(), scriptClass) || hasScript(sector.getScripts(), scriptClass)) {
+            return;
+        }
+
+        try {
+            sector.addTransientScript(scriptClass.getDeclaredConstructor().newInstance());
+            LOG.info(logName + " registered");
+        } catch (Exception ex) {
+            LOG.warn(logName + " optional private script registration failed", ex);
+        }
+    }
+
+    private Class<?> loadScriptClass(String className) throws ClassNotFoundException {
+        if (Global.getSettings() != null && Global.getSettings().getScriptClassLoader() != null) {
+            return Global.getSettings().getScriptClassLoader().loadClass(className);
+        }
+        return Class.forName(className);
     }
 
     private boolean hasScript(List<EveryFrameScript> scripts, Class<? extends EveryFrameScript> scriptClass) {
