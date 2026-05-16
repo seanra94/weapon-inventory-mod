@@ -1,14 +1,12 @@
 package weaponsprocurement.ui.stockreview.rows
 
-import weaponsprocurement.ui.stockreview.actions.*
-import weaponsprocurement.ui.stockreview.state.*
-import weaponsprocurement.ui.stockreview.rows.*
-import weaponsprocurement.ui.stockreview.tooltips.*
-import weaponsprocurement.ui.stockreview.rendering.*
-import weaponsprocurement.ui.stockreview.trade.*
-
-import weaponsprocurement.ui.*
-
+import weaponsprocurement.ui.WimGuiListRow
+import weaponsprocurement.ui.WimGuiRowCell
+import weaponsprocurement.ui.stockreview.actions.StockReviewAction
+import weaponsprocurement.ui.stockreview.rendering.StockReviewFormat
+import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
+import weaponsprocurement.ui.stockreview.tooltips.StockReviewTooltips
+import weaponsprocurement.ui.stockreview.trade.StockReviewQuoteBook
 import com.fs.starfarer.api.ui.Alignment
 import weaponsprocurement.trade.quote.CreditFormat
 import java.awt.Color

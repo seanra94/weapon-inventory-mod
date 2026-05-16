@@ -1,8 +1,5 @@
 package weaponsprocurement.trade.plan
 
-import weaponsprocurement.stock.item.*
-import weaponsprocurement.stock.market.*
-import weaponsprocurement.stock.fixer.*
 
 object TradeMoney {
     const val MAX_EXECUTABLE_CREDITS: Long = 2147483647L

@@ -1,8 +1,5 @@
 package weaponsprocurement.trade.quote
 
-import weaponsprocurement.stock.item.*
-import weaponsprocurement.stock.market.*
-import weaponsprocurement.stock.fixer.*
 
 object CreditFormat {
     const val CREDIT_SYMBOL: String = "\u00a2"

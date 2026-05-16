@@ -1,5 +1,6 @@
 package weaponsprocurement.stock.market
 
+import weaponsprocurement.stock.fixer.TheoreticalSaleIndex.Candidate
 import com.fs.starfarer.api.campaign.FactionAPI
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI

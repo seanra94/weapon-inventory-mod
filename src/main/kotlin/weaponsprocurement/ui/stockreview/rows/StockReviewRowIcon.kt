@@ -1,14 +1,7 @@
 package weaponsprocurement.ui.stockreview.rows
 
-import weaponsprocurement.ui.stockreview.actions.*
-import weaponsprocurement.ui.stockreview.state.*
-import weaponsprocurement.ui.stockreview.rows.*
-import weaponsprocurement.ui.stockreview.tooltips.*
-import weaponsprocurement.ui.stockreview.rendering.*
-import weaponsprocurement.ui.stockreview.trade.*
-
-import weaponsprocurement.ui.*
-
+import weaponsprocurement.ui.WimGuiTooltip
+import weaponsprocurement.ui.stockreview.rendering.StockReviewWeaponIconPlugin
 import com.fs.starfarer.api.combat.WeaponAPI
 import weaponsprocurement.stock.item.WeaponStockRecord
 

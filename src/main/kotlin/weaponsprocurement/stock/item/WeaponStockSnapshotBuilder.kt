@@ -1,5 +1,6 @@
 package weaponsprocurement.stock.item
 
+import weaponsprocurement.stock.market.MarketStockService.MarketStock
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.SectorAPI

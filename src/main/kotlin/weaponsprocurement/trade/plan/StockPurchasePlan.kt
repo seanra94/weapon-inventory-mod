@@ -1,8 +1,5 @@
 package weaponsprocurement.trade.plan
 
-import weaponsprocurement.stock.item.*
-import weaponsprocurement.stock.market.*
-import weaponsprocurement.stock.fixer.*
 
 import java.util.ArrayList
 

@@ -1,14 +1,6 @@
 package weaponsprocurement.ui.stockreview.state
 
-import weaponsprocurement.ui.stockreview.actions.*
-import weaponsprocurement.ui.stockreview.state.*
-import weaponsprocurement.ui.stockreview.rows.*
-import weaponsprocurement.ui.stockreview.tooltips.*
-import weaponsprocurement.ui.stockreview.rendering.*
-import weaponsprocurement.ui.stockreview.trade.*
-
-import weaponsprocurement.ui.*
-
+import weaponsprocurement.ui.stockreview.trade.StockReviewTradeGroup
 import weaponsprocurement.stock.item.StockCategory
 import weaponsprocurement.stock.item.StockItemType
 import java.util.EnumMap

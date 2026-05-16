@@ -1,8 +1,6 @@
 package weaponsprocurement.trade.execution
 
-import weaponsprocurement.stock.item.*
-import weaponsprocurement.stock.market.*
-import weaponsprocurement.stock.fixer.*
+import weaponsprocurement.stock.item.StockItemType
 import weaponsprocurement.trade.plan.StockPurchasePlan
 import weaponsprocurement.trade.plan.TradeMoney
 import weaponsprocurement.trade.quote.CreditFormat

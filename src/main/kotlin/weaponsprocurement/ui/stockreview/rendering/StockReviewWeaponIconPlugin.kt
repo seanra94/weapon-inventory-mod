@@ -1,14 +1,6 @@
 package weaponsprocurement.ui.stockreview.rendering
 
-import weaponsprocurement.ui.stockreview.actions.*
-import weaponsprocurement.ui.stockreview.state.*
-import weaponsprocurement.ui.stockreview.rows.*
-import weaponsprocurement.ui.stockreview.tooltips.*
-import weaponsprocurement.ui.stockreview.rendering.*
-import weaponsprocurement.ui.stockreview.trade.*
-
-import weaponsprocurement.ui.*
-
+import weaponsprocurement.ui.WimGuiTooltip
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.BaseCustomUIPanelPlugin
 import com.fs.starfarer.api.combat.WeaponAPI

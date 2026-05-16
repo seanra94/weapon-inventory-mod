@@ -1,14 +1,9 @@
 package weaponsprocurement.ui.stockreview.trade
 
-import weaponsprocurement.ui.stockreview.actions.*
-import weaponsprocurement.ui.stockreview.state.*
-import weaponsprocurement.ui.stockreview.rows.*
-import weaponsprocurement.ui.stockreview.tooltips.*
-import weaponsprocurement.ui.stockreview.rendering.*
-import weaponsprocurement.ui.stockreview.trade.*
-
-import weaponsprocurement.ui.*
-
+import weaponsprocurement.trade.execution.StockPurchaseService.PurchaseResult
+import weaponsprocurement.ui.stockreview.rendering.StockReviewFormat
+import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
+import weaponsprocurement.ui.stockreview.state.StockReviewState
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import org.apache.log4j.Logger

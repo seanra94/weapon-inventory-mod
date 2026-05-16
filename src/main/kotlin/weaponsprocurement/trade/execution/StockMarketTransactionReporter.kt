@@ -1,8 +1,7 @@
 package weaponsprocurement.trade.execution
 
-import weaponsprocurement.stock.item.*
-import weaponsprocurement.stock.market.*
-import weaponsprocurement.stock.fixer.*
+import weaponsprocurement.stock.item.StockItemCargo
+import weaponsprocurement.stock.item.StockItemType
 import weaponsprocurement.trade.plan.TradeMoney
 
 import com.fs.starfarer.api.Global
