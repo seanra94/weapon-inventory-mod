@@ -11,7 +11,7 @@ The repo is in release-prep shape for the clean popup path:
 - Sector Market drains real remote cargo; Fixer's Market is virtual.
 - Fixer's Market uses runtime theoretical sale capability plus rarity estimates, with observed live/persistent stock used for reference prices and correction.
 - Optional patched cargo-cell badges are private-only and isolated from the clean popup.
-- Gradle/Kotlin migration and first-pass AGC-style package ownership split are complete; `build.ps1` remains the compatibility entry point.
+- Gradle/Kotlin migration and AGC-style package ownership split are complete; `build.ps1` remains the compatibility entry point.
 - Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
 ## Active Work
@@ -85,8 +85,10 @@ Completed:
 - Config ownership split into `weaponsprocurement.config`.
 - Runtime lifecycle scripts split into `weaponsprocurement.lifecycle`.
 - Former `core` package split into `weaponsprocurement.stock` and `weaponsprocurement.trade`.
+- Stock ownership split into `weaponsprocurement.stock.item`, `stock.inventory`, `stock.market`, and `stock.fixer`.
+- Trade ownership split into `weaponsprocurement.trade.plan`, `trade.execution`, and `trade.quote`.
 - Shared WimGui primitives moved under `weaponsprocurement.ui`.
-- Stock review UI feature files moved under `weaponsprocurement.ui.stockreview`.
+- Stock review UI feature files moved under `weaponsprocurement.ui.stockreview` and split into `actions`, `state`, `rows`, `tooltips`, `rendering`, and `trade`.
 
 Still open:
 

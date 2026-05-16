@@ -3,7 +3,7 @@ package weaponsprocurement.ui
 import com.fs.starfarer.api.Global
 import org.apache.log4j.Logger
 import org.json.JSONObject
-import weaponsprocurement.ui.stockreview.StockReviewStyle
+import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
 import java.awt.Color
 import java.util.Collections
 

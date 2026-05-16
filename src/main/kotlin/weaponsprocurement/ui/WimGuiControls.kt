@@ -5,7 +5,7 @@ import com.fs.starfarer.api.ui.ButtonAPI
 import com.fs.starfarer.api.ui.CustomPanelAPI
 import com.fs.starfarer.api.ui.CutStyle
 import com.fs.starfarer.api.ui.TooltipMakerAPI
-import weaponsprocurement.ui.stockreview.StockReviewItemTooltip
+import weaponsprocurement.ui.stockreview.tooltips.StockReviewItemTooltip
 import java.awt.Color
 
 object WimGuiControls {

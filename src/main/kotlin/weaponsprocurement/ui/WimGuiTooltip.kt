@@ -1,7 +1,7 @@
 package weaponsprocurement.ui
 
 import com.fs.starfarer.api.ui.TooltipMakerAPI
-import weaponsprocurement.ui.stockreview.StockReviewStyle
+import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
 
 class WimGuiTooltip(text: String?) : TooltipMakerAPI.TooltipCreator {
     private val text: String = text ?: ""

@@ -2,7 +2,7 @@ package weaponsprocurement.ui
 
 import com.fs.starfarer.api.ui.Alignment
 import com.fs.starfarer.api.ui.TooltipMakerAPI
-import weaponsprocurement.ui.stockreview.StockReviewRowIcon
+import weaponsprocurement.ui.stockreview.rows.StockReviewRowIcon
 import java.awt.Color
 import java.util.ArrayList
 import java.util.Collections

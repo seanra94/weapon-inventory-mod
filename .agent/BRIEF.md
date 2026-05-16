@@ -8,12 +8,12 @@ Weapons Procurement is a Starsector `0.98a` mod for reviewing weapon and fighter
 
 The primary product path is the clean `F8` popup. The patched cargo-cell badge path is optional, advanced-use, and isolated from the clean popup.
 
-The build foundation is migrating to Gradle/Kotlin. `build.ps1` remains the normal entry point and now delegates to the Gradle wrapper; LazyLib is a required dependency because it supplies the Kotlin runtime in Starsector.
+The source tree is fully migrated to Gradle/Kotlin. `build.ps1` remains the normal entry point and delegates to the Gradle wrapper; LazyLib is a required dependency because it supplies the Kotlin runtime in Starsector.
 
 ## Known-Good Source State
 
 - Current branch: `main`
-- Last pushed baseline before this doc restructuring: `a0e647b` (`Debloat repo documentation`)
+- Last pushed baseline before this brief update: `ab67cb4` (`Split trade packages by ownership`)
 - Version in `mod_info.json`: `0.2.0`
 
 ## Commands

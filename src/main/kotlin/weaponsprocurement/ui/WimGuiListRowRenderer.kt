@@ -2,8 +2,8 @@ package weaponsprocurement.ui
 
 import com.fs.starfarer.api.ui.Alignment
 import com.fs.starfarer.api.ui.CustomPanelAPI
-import weaponsprocurement.ui.stockreview.StockReviewRowIcon
-import weaponsprocurement.ui.stockreview.StockReviewWeaponIconPlugin
+import weaponsprocurement.ui.stockreview.rows.StockReviewRowIcon
+import weaponsprocurement.ui.stockreview.rendering.StockReviewWeaponIconPlugin
 import java.awt.Color
 
 class WimGuiListRowRenderer private constructor() {

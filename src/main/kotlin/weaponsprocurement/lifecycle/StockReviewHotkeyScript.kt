@@ -7,10 +7,10 @@ import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import org.apache.log4j.Logger
 import org.lwjgl.input.Keyboard
-import weaponsprocurement.ui.stockreview.StockReviewLaunchState
-import weaponsprocurement.ui.stockreview.StockReviewPanelPlugin
-import weaponsprocurement.ui.stockreview.StockReviewState
-import weaponsprocurement.ui.stockreview.StockReviewStyle
+import weaponsprocurement.ui.stockreview.state.StockReviewLaunchState
+import weaponsprocurement.ui.stockreview.rendering.StockReviewPanelPlugin
+import weaponsprocurement.ui.stockreview.state.StockReviewState
+import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
 import weaponsprocurement.ui.WimGuiCampaignDialogHost
 import weaponsprocurement.ui.WimGuiDialogOpener
 import weaponsprocurement.ui.WimGuiDialogTracker

@@ -1,0 +1,35 @@
+package weaponsprocurement.ui.stockreview.rows
+
+import weaponsprocurement.ui.stockreview.actions.*
+import weaponsprocurement.ui.stockreview.state.*
+import weaponsprocurement.ui.stockreview.rows.*
+import weaponsprocurement.ui.stockreview.tooltips.*
+import weaponsprocurement.ui.stockreview.rendering.*
+import weaponsprocurement.ui.stockreview.trade.*
+
+import weaponsprocurement.ui.*
+
+import com.fs.starfarer.api.combat.WeaponAPI
+import weaponsprocurement.stock.item.WeaponStockRecord
+
+class StockReviewRowIcon private constructor(
+    val spriteName: String,
+    val motifType: WeaponAPI.WeaponType?,
+) {
+    companion object {
+        @JvmStatic
+        fun weapon(spriteName: String?, motifType: WeaponAPI.WeaponType?): StockReviewRowIcon? {
+            if (!WimGuiTooltip.hasText(spriteName)) return null
+            return StockReviewRowIcon(spriteName!!, motifType)
+        }
+
+        @JvmStatic
+        fun weapon(record: WeaponStockRecord?): StockReviewRowIcon? {
+            if (record == null || record.isWing() || record.spec == null) return null
+            return weapon(
+                StockReviewWeaponIconPlugin.spriteName(record.spec),
+                StockReviewWeaponIconPlugin.motifType(record.spec),
+            )
+        }
+    }
+}
