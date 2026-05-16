@@ -2,28 +2,31 @@
 
 Status: active-reference
 Scope: Weapons Procurement trade planning, source modes, quotes, cargo mutation, and transaction reporting
-Last verified: 2026-05-12, archived from the pre-debloat `HANDOVER.md`
+Last verified: 2026-05-17, against local Starsector 0.98a bytecode and installed Diable Avionics 2.9.4 data
 Read when: changing Local/Sector/Fixer behavior, pending trades, quotes, tariffs, market blacklists, cargo mutation, or transaction callbacks
 Do not read for: pure UI row layout, patched badge rendering, or docs-only release notes
 Related files: `src/weaponsprocurement/core`, `src/weaponsprocurement/gui/StockReviewTrade*`, `src/weaponsprocurement/gui/StockReviewExecutionController.java`, `data/config/weapons_procurement_market_blacklist.json`
-Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockReviewQuoteBook`, `reportPlayerMarketTransaction`, `W:`, `F:`
+Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockReviewQuoteBook`, `reportPlayerMarketTransaction`, `TheoreticalSaleIndex`, `ObservedStockIndex`, `RarityClassifier`, `FactionAPI`, `W:`, `F:`
 
 ## Summary
 
 - Stock items are typed with `W:` and `F:` keys; raw ids are compatibility inputs only.
 - Local, Sector Market, and Fixer's Market have intentionally different source and drain semantics.
 - Sector Market stock is live and should not be cached across popup rebuilds.
-- Fixer's Market should prefer observed real market stock over spoiler-prone inference.
+- Fixer's Market should move toward a runtime theoretical-sale catalog plus rarity estimate, with observed stock used as a correction layer.
 - Pending trades are signed staged intent; only `Confirm Trades` mutates cargo/credits.
 - Quote the whole portfolio when planned lines can contend for the same stock.
 - Use the final source-stock preflight and rollback journal around WP-touched cargo and credits.
 - Treat transaction callbacks as post-commit side effects.
+- Do not probe availability by forcing submarket updates; that mutates live market cargo and still gives weak statistics.
 
 ## Index
 
 - `Stock Items And Row Scope`: item key and row inclusion rules.
 - `Source Modes`: Local/Sector/Fixer source semantics.
-- `Fixer's Market Safety`: observed catalog and inference cautions.
+- `Fixer's Market Catalog Direction`: theoretical catalog, rarity, and observed correction model.
+- `Vanilla Market Sale Model`: source-grounded rules for current and theoretical market stock.
+- `Diable Verification Notes`: installed-mod data that confirms why prefix/tag scanning is insufficient.
 - `Sorting And Filtering`: source-aware sort/filter behavior.
 - `Pending Trade Semantics`: queued trade rules.
 - `Quote And Cost Ownership`: quote/cache/long-money ownership.
@@ -48,20 +51,100 @@ Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockR
 
 - `Local` reviews the current market and honors the Black Market toggle.
 - `Sector Market` scans live in-sector market weapon and fighter LPC cargo, keeps real market/submarket identity on each stock source, applies `wp_sector_market_price_multiplier`, and drains actual remote market cargo on confirmation.
-- `Fixer's Market` offers virtual 999-stock from safe observed items plus optional inferred faction-known weapons, applies `wp_fixers_market_price_multiplier`, and does not drain real market cargo.
+- `Fixer's Market` offers virtual 999-stock, applies `wp_fixers_market_price_multiplier`, and does not drain real market cargo.
+- The current implementation builds Fixer's Market from observed safe items plus optional faction-inferred weapons. The preferred next model is deterministic runtime theoretical capability for weapons/fighter LPCs, with observation retained as correction rather than as the primary catalog source.
 - Do not cache Sector Market stock across popup snapshot rebuilds. It represents live remote cargo that purchases can drain.
 - Remote source modes disable black-market selling. Selling in remote modes uses the current local legal buyer.
 - Sector and Fixer's Market can be independently disabled through LunaLib.
 - `data/config/weapons_procurement_market_blacklist.json` blocks item keys, raw ids, weapon display names, and wing display names from remote source rows.
 
-## Fixer's Market Safety
+## Fixer's Market Catalog Direction
 
-- The observed Fixer catalog is the preferred public-build path because it learns only from real generated market stock.
-- `WeaponsProcurementFixerCatalogUpdater` scans real market cargo on load and about once per in-game day, then stores safe observed weapon/wing item keys in sector persistent data.
-- Keep the persistent catalog as simple Java collections to avoid custom save-object compatibility problems.
+Fixer's Market exists to bypass market RNG for a markup, so a cold-start blank catalog is not ideal. The best current design is:
+
+1. `ObservedStockIndex`: exact current stock from live cargo.
+2. `TheoreticalSaleIndex`: deterministic candidate set from runtime faction knowledge and vanilla-supported submarket filters.
+3. `RarityClassifier`: explanation/ranking layer that estimates common/uncommon/rare/very rare/never without simulating stock rolls.
+4. `ObservationCorrectionLayer`: quiet learning from real market visits that can adjust the static estimate over time.
+
+The observed Fixer catalog remains valuable, but should become a correction/confidence signal rather than the only way an item enters the Fixer catalog. This avoids the current cold-start weakness where a new save may not show a weapon or fighter LPC until it has appeared in generated cargo.
+
+Implementation guidance:
+
+- Do not parse mod folders at runtime. Active mods are already merged into Starsector registries, and mods can patch faction files, mutate known lists, generate markets dynamically, or change ownership through Nexerelin-style systems.
+- Build candidate stock after the campaign economy is loaded using `Global.getSector().getEconomy().getMarketsCopy()`, `MarketAPI`, `SubmarketAPI`, `CargoAPI`, `FactionAPI`, and `Global.getSettings()`.
+- Treat custom submarkets as `UNKNOWN_CUSTOM_SUBMARKET` for theoretical capability unless an adapter exists; current cargo inspection is still exact.
+- For current stock, inspect `SubmarketAPI.getCargo()` and `cargo.getMothballedShips()`. This is the only exact answer to "what is sold right now?"
+- For theoretical vanilla-style weapons/fighter LPCs, start with the relevant faction's known items and apply tags, system-weapon checks, tier caps, and blacklist/safety filters.
+- For ships, keep capability and rarity separate. Faction-known hulls are candidate inputs, but `FleetFactoryV3`, priority hulls, hull frequency, doctrine, role/variant availability, combat budget, stability, and `maxShipSize` all affect whether a ship is plausible in a particular submarket.
+- Do not call `updateCargoPrePlayerInteraction()` repeatedly to sample availability. Vanilla stock updates clear and re-roll ships/weapons, are gated by a 30-day interval, and use unseeded item RNG. Forced probing would mutate visible market state, hitch on load, and still misclassify rare items.
+
+Current WP code state:
+
+- `WeaponsProcurementFixerCatalogUpdater` scans real market cargo about once per in-game day and stores safe observed weapon/wing item keys in sector persistent data.
+- `GlobalWeaponMarketService.collectFixersWeaponStock()` currently adds observed items and, when `wp_enable_fixers_market_tag_inference` is enabled, infers faction weapons from `FactionAPI.getWeaponSellFrequency()` or `getKnownWeapons()`.
+- That inference is weapon-only today. Fighter LPC theoretical inference and any ship catalog are future work.
+- Keep the persistent observed catalog as simple Java collections to avoid custom save-object compatibility problems.
 - Sanitize persistent maps into string key/value entries before use.
-- Optional tag/faction inference is Luna-gated by `wp_enable_fixers_market_tag_inference` and defaults off.
-- Inference should use explicit `FactionAPI.getWeaponSellFrequency()` entries first, fall back to `getKnownWeapons()` only when a faction has no sell-frequency data, and exclude obvious special/hidden tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers.
+- Exclude obvious special/hidden tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers when offering virtual Fixer stock.
+
+## Vanilla Market Sale Model
+
+Verified from local Starsector 0.98a API bytecode:
+
+- Open, military, and black-market stock generation uses faction knowledge as candidate input. Weapon picks iterate `FactionAPI.getKnownWeapons()`, fighter picks iterate `FactionAPI.getKnownFighters()`, ship generation goes through `FleetFactoryV3`, and hullmod picks use `FactionAPI.getKnownHullMods()`.
+- Current stock is live cargo. Use `MarketAPI -> SubmarketAPI -> CargoAPI` for weapons/fighter LPCs and `cargo.getMothballedShips()` for ships.
+- Open market weapon/fighter calls pass tier cap `0`.
+- Military market weapon/fighter calls pass tier cap `3`.
+- Black market weapon/fighter calls pass tier cap `3`.
+- Hullmods use tier cap `1` for open markets and `4` for military/black markets.
+- Black-market hullmods are sourced from the submarket faction through the no-faction overload, not from an explicit market-owner faction parameter.
+- Weapon generation rejects `AIHints.SYSTEM` and the `no_sell` tag. The API also exposes `WEAPON_NO_SELL`, `WING_NO_SELL`, and `MILITARY_MARKET_ONLY`; scanners should reject those defensively for mods even though the checked vanilla bytecode paths mainly expose `no_sell` directly.
+- Stock updates are gated by `minSWUpdateInterval = 30` days and `sinceSWUpdate`.
+- Each stock update clears `cargo.getMothballedShips()` before re-rolling ships.
+- `itemGenRandom` is constructed with `new Random()` in `BaseSubmarketPlugin`, so stock rolls are not deterministic per save.
+
+Practical theoretical rules for WP/Fixer:
+
+```text
+Observed stock:
+market/submarket live cargo
+= exact current stock
+
+Theoretical weapon/LPC capability:
+market/submarket relevant faction
++ faction known weapon/wing set
++ submarket type
++ item tier/tags/hints
+= vanilla-supported candidate set
+
+Rarity:
+candidate set
++ tier/frequency/role/doctrine/budget/stability/submarket
+= player-facing estimate, not a hard sale gate
+```
+
+For weapons and fighter LPCs, static theoretical capability is strong enough to drive a Fixer catalog. For ships it is useful but less exact; mark low-confidence or custom-submarket cases clearly instead of pretending the classifier is exact.
+
+## Diable Verification Notes
+
+Installed local check used `C:\Games\Starsector\mods\Diable Avionics-2.9.4` as an example mod. It confirms the general model and the main traps:
+
+- `diableavionics.faction` declares faction id `diableavionics`.
+- The faction file declares 29 known ships and the same 29 as priority ships.
+- Only 26 hulls in `ship_data.csv` have the `diable_ship_bp` tag. The explicit-only known hulls are `diableavionics_versant`, `diableavionics_maelstrom`, and `diableavionics_pandemonium`.
+- The faction file declares 32 known weapons. All 32 are tagged `diable_weapon_bp`, and none of the known set had `no_sell` in the local data. `weapon_data.csv` contains a duplicate row for `diableavionics_uhlan`, so count unique ids rather than CSV rows.
+- Unique known weapon tiers are: tier 0 = 9, tier 1 = 12, tier 2 = 8, tier 3 = 3.
+- The faction file declares 12 known fighter wings. Known wing tiers are: tier 0 = 2, tier 1 = 3, tier 2 = 3, tier 3 = 4. None of the known wing set had `no_sell` in the local data.
+- The Diable econ files define Diable-owned markets (`diableavionics_prison`, `diableavionics_ressource`, `diableavionics_eclipse`, `diableavionics_shadow`) with faction, size, conditions, and industries. They do not list individual weapons, fighter LPCs, ships, or explicit submarkets.
+- `pirates.faction` also references Diable pirate hulls: `diableavionics_stratus_p`, `diableavionics_rime_p`, `diable_tidalp`, and `diableavionics_chinookp`.
+
+Consequences:
+
+- Do not infer sale capability from item id prefixes such as `diableavionics_*`.
+- Do not infer faction knowledge by scanning blueprint tags alone; explicit faction lists matter.
+- Do not treat `data/factions/weapon_categories.csv` or `data/factions/fighter_wings.csv` as sale catalogs. They are auxiliary weighting/autofit data and can omit known items or include no-sell/non-known items.
+- Use runtime `FactionAPI.getKnownWeapons()`, `getKnownFighters()`, `getKnownShips()`, and `getKnownHullMods()` when possible.
 
 ## Sorting And Filtering
 

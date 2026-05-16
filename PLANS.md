@@ -9,7 +9,7 @@ The repo is in release-prep shape for the clean popup path:
 - Weapons and fighter LPCs share the same stock/review/trade flow.
 - Local, Sector Market, and Fixer's Market source modes exist.
 - Sector Market drains real remote cargo; Fixer's Market is virtual.
-- Fixer's Market learns safe observed stock over time.
+- Fixer's Market learns safe observed stock over time; the preferred next catalog model is runtime theoretical sale capability plus rarity estimates, with observation used as correction.
 - Optional patched cargo-cell badges are private-only and isolated from the clean popup.
 - Packaging, deploy, live-jar validation, doc-link validation, and GitHub sanity checks exist.
 
@@ -69,6 +69,25 @@ Acceptance:
 - Controlled failure message appears.
 - WP-touched item counts and credits are restored.
 - Successful trades still work after resetting the debug setting.
+
+### Fixer's Market Theoretical Catalog
+
+Replace the observation-first Fixer catalog with a runtime sale-capability index for weapons and fighter LPCs.
+
+Steps:
+
+1. Add an `ObservedStockIndex` that indexes exact current market cargo from `MarketAPI -> SubmarketAPI -> CargoAPI`.
+2. Add a `TheoreticalSaleIndex` that derives vanilla-supported candidate weapons and fighter LPCs from runtime faction known sets, submarket type, item tags/hints, tier caps, and existing remote-market blacklist rules.
+3. Add a `RarityClassifier` that uses tier, sell frequency, faction knowledge, market/submarket type, and observed corrections to explain likelihood without forcing market restocks.
+4. Keep the existing observed Fixer catalog as a correction layer and fallback evidence source.
+5. Treat custom submarkets as unknown for theoretical capability until an explicit adapter exists.
+
+Acceptance:
+
+- New games can show plausible Fixer weapons and fighter LPCs before those items have appeared in observed live cargo.
+- Current live stock remains exact and source-draining behavior is unchanged for Sector Market.
+- Fixer's Market still excludes no-sell/system/spoiler/private items and respects blacklists.
+- No code calls submarket restock/update methods to probe availability.
 
 ## Deferred Until Runtime Evidence
 
