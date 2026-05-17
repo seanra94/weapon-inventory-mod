@@ -5,6 +5,7 @@ import weaponsprocurement.ui.WimGuiToggleHeading
 import weaponsprocurement.ui.stockreview.actions.StockReviewAction
 import weaponsprocurement.ui.stockreview.rows.StockReviewListRow
 import weaponsprocurement.ui.stockreview.tooltips.StockReviewTooltips
+import weaponsprocurement.stock.item.StockSourceMode
 import java.util.ArrayList
 
 class StockReviewFilterListModel private constructor() {
@@ -29,9 +30,22 @@ class StockReviewFilterListModel private constructor() {
                 }
             }
             for (group in StockReviewFilterGroup.values()) {
+                if (!shouldShowGroup(state, group, active)) {
+                    continue
+                }
                 addGroup(rows, state, group, active.isNotEmpty() || group.ordinal > 0)
             }
             return rows
+        }
+
+        private fun shouldShowGroup(
+            state: StockReviewState,
+            group: StockReviewFilterGroup,
+            activeFilters: Set<StockReviewFilter>,
+        ): Boolean {
+            if (group.weaponOnly) return true
+            if (StockSourceMode.FIXERS == state.getSourceMode()) return true
+            return StockReviewFilters.activeInGroup(activeFilters, group).isNotEmpty()
         }
 
         private fun addGroup(

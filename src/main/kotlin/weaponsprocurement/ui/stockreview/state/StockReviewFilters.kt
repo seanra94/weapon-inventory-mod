@@ -12,9 +12,6 @@ class StockReviewFilters private constructor() {
             if (activeFilters.isNullOrEmpty()) {
                 return true
             }
-            if (record != null && record.isWing()) {
-                return true
-            }
             for (group in StockReviewFilterGroup.values()) {
                 if (!matchesGroup(record, activeFilters, group)) {
                     return false
@@ -47,6 +44,9 @@ class StockReviewFilters private constructor() {
         ): Boolean {
             val groupFilters = activeInGroup(activeFilters, group)
             if (groupFilters.isEmpty()) {
+                return true
+            }
+            if (group.weaponOnly && record != null && record.isWing()) {
                 return true
             }
             for (filter in groupFilters) {

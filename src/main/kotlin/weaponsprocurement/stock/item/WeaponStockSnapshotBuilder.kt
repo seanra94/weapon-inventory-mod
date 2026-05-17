@@ -171,6 +171,7 @@ class WeaponStockSnapshotBuilder {
         private fun comparatorFor(sortMode: StockSortMode?): Comparator<WeaponStockRecord> {
             if (StockSortMode.NAME == sortMode) return NameComparator.INSTANCE
             if (StockSortMode.PRICE == sortMode) return PriceComparator.INSTANCE
+            if (StockSortMode.RARITY == sortMode) return RarityComparator.INSTANCE
             return NeedComparator.INSTANCE
         }
 
@@ -229,6 +230,21 @@ class WeaponStockSnapshotBuilder {
         companion object {
             @JvmField
             val INSTANCE: PriceComparator = PriceComparator()
+        }
+    }
+
+    private class RarityComparator private constructor() : Comparator<WeaponStockRecord> {
+        override fun compare(left: WeaponStockRecord, right: WeaponStockRecord): Int {
+            var result = left.fixerSortRank.compareTo(right.fixerSortRank)
+            if (result != 0) return result
+            result = compareByPrice(left, right)
+            if (result != 0) return result
+            return left.displayName.orEmpty().compareTo(right.displayName.orEmpty(), ignoreCase = true)
+        }
+
+        companion object {
+            @JvmField
+            val INSTANCE: RarityComparator = RarityComparator()
         }
     }
 

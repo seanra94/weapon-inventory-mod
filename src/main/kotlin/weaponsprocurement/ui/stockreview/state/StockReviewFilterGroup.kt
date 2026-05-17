@@ -1,8 +1,12 @@
 package weaponsprocurement.ui.stockreview.state
 
-import weaponsprocurement.ui.stockreview.actions.StockReviewAction.Type
-enum class StockReviewFilterGroup(val label: String) {
-    SIZE("Size"),
-    TYPE("Type"),
-    DAMAGE("Damage"),
+enum class StockReviewFilterGroup(
+    val label: String,
+    val weaponOnly: Boolean,
+) {
+    SIZE("Size", true),
+    TYPE("Type", true),
+    DAMAGE("Damage", true),
+    AVAILABILITY("Availability", false),
+    RARITY("Rarity", false),
 }

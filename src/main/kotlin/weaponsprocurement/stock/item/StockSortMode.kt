@@ -3,7 +3,8 @@ package weaponsprocurement.stock.item
 enum class StockSortMode(val label: String) {
     NEED("Stock"),
     NAME("Name"),
-    PRICE("Price");
+    PRICE("Price"),
+    RARITY("Rarity");
 
     fun next(): StockSortMode {
         val values = values()

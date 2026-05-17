@@ -5,6 +5,7 @@ import com.fs.starfarer.api.loading.MissileSpecAPI
 import com.fs.starfarer.api.loading.ProjectileWeaponSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
 import weaponsprocurement.stock.fixer.FixerCatalogMetadata
+import weaponsprocurement.stock.fixer.FixerCatalogSource
 import weaponsprocurement.stock.fixer.FixerRarity
 import java.util.Collections
 import java.util.Locale
@@ -126,11 +127,36 @@ class WeaponStockRecord(
     val fixerRarityLabel: String?
         get() = fixerCatalogMetadata?.rarity?.label
 
+    val fixerRarity: FixerRarity?
+        get() = fixerCatalogMetadata?.rarity
+
     val fixerAvailabilityLabel: String?
         get() = fixerCatalogMetadata?.source?.label
 
+    val fixerCatalogSource: FixerCatalogSource?
+        get() = fixerCatalogMetadata?.source
+
     val fixerAvailabilityDetails: String?
         get() = fixerCatalogMetadata?.source?.details
+
+    val fixerSortRank: Int
+        get() {
+            val rarityRank = when (fixerRarity) {
+                FixerRarity.COMMON -> 0
+                FixerRarity.UNCOMMON -> 1
+                FixerRarity.RARE -> 2
+                FixerRarity.VERY_RARE -> 3
+                FixerRarity.UNKNOWN_CUSTOM_SUBMARKET -> 4
+                null -> 5
+            }
+            return rarityRank * 10 + when (fixerCatalogSource) {
+                FixerCatalogSource.LIVE_STOCK -> 0
+                FixerCatalogSource.FACTION_CATALOG_OBSERVED_REFERENCE -> 1
+                FixerCatalogSource.FACTION_CATALOG -> 2
+                FixerCatalogSource.CUSTOM_LIVE_STOCK -> 3
+                null -> 4
+            }
+        }
 
     val sizeLabel: String
         get() {

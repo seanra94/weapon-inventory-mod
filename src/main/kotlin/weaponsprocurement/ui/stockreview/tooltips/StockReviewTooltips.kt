@@ -23,6 +23,9 @@ class StockReviewTooltips private constructor() {
             if (StockSortMode.PRICE == mode) {
                 return "Cycle item sorting. Sorts by price first, then lowest stock, then name."
             }
+            if (StockSortMode.RARITY == mode) {
+                return "Cycle item sorting. Sorts Fixer's Market items by rarity and catalog source first, then price and name. Non-Fixer rows sort last in this mode."
+            }
             return "Cycle item sorting. Sorts by lowest stock first, then price, then name."
         }
 
@@ -96,7 +99,11 @@ class StockReviewTooltips private constructor() {
 
         @JvmStatic
         fun filterHeading(group: StockReviewFilterGroup): String =
-            "Show or hide ${group.label.lowercase(Locale.US)} filters."
+            if (group.weaponOnly) {
+                "Show or hide ${group.label.lowercase(Locale.US)} filters. Weapon-only filters do not hide fighter LPC rows."
+            } else {
+                "Show or hide Fixer's Market ${group.label.lowercase(Locale.US)} filters."
+            }
 
         @JvmStatic
         fun filter(filter: StockReviewFilter, active: Boolean): String =
