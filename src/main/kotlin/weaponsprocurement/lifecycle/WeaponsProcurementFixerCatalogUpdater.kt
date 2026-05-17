@@ -5,6 +5,7 @@ import com.fs.starfarer.api.Global
 import org.apache.log4j.Logger
 import weaponsprocurement.stock.fixer.FixerMarketObservedCatalog
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.config.WeaponsProcurementConfig
 
 class WeaponsProcurementFixerCatalogUpdater : EveryFrameScript {
     private val catalog = FixerMarketObservedCatalog()
@@ -17,6 +18,9 @@ class WeaponsProcurementFixerCatalogUpdater : EveryFrameScript {
     override fun runWhilePaused(): Boolean = true
 
     override fun advance(amount: Float) {
+        if (!WeaponsProcurementConfig.isFixersMarketEnabled()) {
+            return
+        }
         val sector = Global.getSector()
         val clock = sector?.clock ?: return
         if (lastScanTimestamp != Long.MIN_VALUE && clock.getElapsedDaysSince(lastScanTimestamp) < SCAN_INTERVAL_DAYS) {

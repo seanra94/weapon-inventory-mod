@@ -85,7 +85,7 @@ Current WP code state:
 - `ObservedStockIndex` scans current real market cargo and supplies the cheapest live reference price/cargo-space data.
 - `TheoreticalSaleIndex` uses runtime faction sell-frequency maps when present, otherwise faction known weapons/fighters, plus vanilla-supported submarket tier caps, item safety filters, and the Fixer blacklist to build cold-start virtual stock.
 - `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices; tier-0 candidates remain common unless filtered out.
-- The theoretical catalog does not add unconditional fallback factions for black markets. It uses the market faction and the submarket faction where present, avoiding broad independent-catalog leakage.
+- The theoretical weapon/LPC catalog uses the market-owner faction for vanilla open, military, and black markets. Live observed cargo still captures custom submarket behavior without broad independent-catalog leakage.
 - Ship cataloging remains future work.
 - Keep the persistent observed catalog as simple Java collections to avoid custom save-object compatibility problems.
 - Sanitize persistent maps into string key/value entries before use.

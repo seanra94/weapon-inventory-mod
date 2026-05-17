@@ -20,6 +20,7 @@ class FixerMarketObservedCatalog {
         val catalog = rawCatalog(sector) ?: return 0
         val markets: List<MarketAPI> = sector?.economy?.marketsCopy ?: return 0
 
+        pruneInvalidPersistentEntries(catalog)
         var added = 0
         for (market in markets) {
             val stock = marketStockService.collectCurrentMarketItemStock(market, true)
@@ -38,17 +39,55 @@ class FixerMarketObservedCatalog {
         if (catalog == null || catalog.isEmpty()) return Collections.emptyMap()
 
         val result = HashMap<String, ObservedItem>()
-        for ((itemKey, encoded) in catalog) {
-            if (!isSafeFixerItem(itemKey) || isBanned(blacklist, itemKey)) continue
-            val item = decode(encoded) ?: continue
-            result[itemKey] = item
+        var pruned = 0
+        val iterator = catalog.entries.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            val itemKey = entry.key
+            val encoded = entry.value
+            if (!isSafeFixerItem(itemKey)) {
+                iterator.remove()
+                pruned++
+                continue
+            }
+            val item = decode(encoded)
+            if (item == null) {
+                iterator.remove()
+                pruned++
+                continue
+            }
+            if (!isBanned(blacklist, itemKey)) {
+                result[itemKey] = item
+            }
         }
-        return result
+        logPrunedEntries(pruned)
+        return Collections.unmodifiableMap(result)
     }
 
     fun cacheKey(sector: SectorAPI?): String {
         val catalog = rawCatalog(sector)
-        return if (catalog == null) "observed=none" else "observed=${catalog.size}:${catalog.hashCode()}"
+        if (catalog == null) return "observed=none"
+        pruneInvalidPersistentEntries(catalog)
+        return "observed=${catalog.size}:${catalog.hashCode()}"
+    }
+
+    private fun pruneInvalidPersistentEntries(catalog: MutableMap<String, String>) {
+        if (catalog.isEmpty()) return
+        var pruned = 0
+        for ((itemKey, encoded) in catalog) {
+            if (!isSafeFixerItem(itemKey) || decode(encoded) == null) {
+                pruned++
+            }
+        }
+        if (pruned <= 0) return
+        val iterator = catalog.entries.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (!isSafeFixerItem(entry.key) || decode(entry.value) == null) {
+                iterator.remove()
+            }
+        }
+        logPrunedEntries(pruned)
     }
 
     class ObservedItem private constructor(
@@ -84,6 +123,7 @@ class FixerMarketObservedCatalog {
         )
 
         private var migrationLogged = false
+        private var pruneLogged = false
 
         @JvmStatic
         fun isSafeFixerItem(itemKey: String?): Boolean {
@@ -160,7 +200,7 @@ class FixerMarketObservedCatalog {
         }
 
         private fun encode(baseUnitPrice: Int, unitCargoSpace: Float): String {
-            return "${Math.max(0, baseUnitPrice)}$VALUE_SEPARATOR${Math.max(0.01f, unitCargoSpace)}"
+            return "${Math.max(0, baseUnitPrice)}$VALUE_SEPARATOR${sanitizeUnitCargoSpace(unitCargoSpace)}"
         }
 
         private fun decode(value: String?): ObservedItem? {
@@ -169,9 +209,25 @@ class FixerMarketObservedCatalog {
             return try {
                 val baseUnitPrice = if (parts.isNotEmpty()) parts[0].toInt() else 0
                 val unitCargoSpace = if (parts.size > 1) parts[1].toFloat() else 1f
-                ObservedItem.create(Math.max(0, baseUnitPrice), Math.max(0.01f, unitCargoSpace))
+                if (!isFinite(unitCargoSpace)) return null
+                ObservedItem.create(Math.max(0, baseUnitPrice), sanitizeUnitCargoSpace(unitCargoSpace))
             } catch (_: RuntimeException) {
                 null
+            }
+        }
+
+        private fun sanitizeUnitCargoSpace(unitCargoSpace: Float): Float {
+            return if (isFinite(unitCargoSpace)) Math.max(0.01f, unitCargoSpace) else 1f
+        }
+
+        private fun isFinite(value: Float): Boolean {
+            return !value.isNaN() && !value.isInfinite()
+        }
+
+        private fun logPrunedEntries(pruned: Int) {
+            if (pruned > 0 && !pruneLogged) {
+                pruneLogged = true
+                LOG.warn("WP_FIXER_CATALOG pruned $pruned invalid or unsafe persistent entries.")
             }
         }
 

@@ -161,8 +161,9 @@ class GlobalWeaponMarketService {
 
         theoreticalCacheKey = key
         val collected = theoreticalSaleIndex.collect(sector, blacklist)
-        theoreticalCache = collected
-        return collected
+        val immutable = Collections.unmodifiableMap(HashMap(collected))
+        theoreticalCache = immutable
+        return immutable
     }
 
     private class ReferenceItem(
@@ -171,7 +172,11 @@ class GlobalWeaponMarketService {
         var rarity: FixerRarity?,
     ) {
         val baseUnitPrice: Int = Math.max(0, baseUnitPrice)
-        val unitCargoSpace: Float = Math.max(0.01f, unitCargoSpace)
+        val unitCargoSpace: Float = if (!unitCargoSpace.isNaN() && !unitCargoSpace.isInfinite()) {
+            Math.max(0.01f, unitCargoSpace)
+        } else {
+            1f
+        }
     }
 
     companion object {

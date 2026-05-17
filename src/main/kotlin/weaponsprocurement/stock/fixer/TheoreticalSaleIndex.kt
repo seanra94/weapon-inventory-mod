@@ -40,7 +40,7 @@ class TheoreticalSaleIndex {
                 }
             }
         }
-        return result
+        return Collections.unmodifiableMap(result)
     }
 
     class Candidate private constructor(
