@@ -10,6 +10,7 @@ import com.fs.starfarer.api.impl.campaign.ids.Submarkets
 import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.stock.item.StockItemStacks
 import weaponsprocurement.stock.item.StockItemType
 import java.util.Collections
 import java.util.HashMap
@@ -103,7 +104,14 @@ class TheoreticalSaleIndex {
                 }
                 val frequency = frequency(sellFrequency, weaponId)
                 if (frequency != null && frequency <= 0f) continue
-                addCandidate(result, itemKey, spec.tier, frequency, max(0, Math.round(spec.baseValue.toFloat())), 1f)
+                addCandidate(
+                    result,
+                    itemKey,
+                    spec.tier,
+                    frequency,
+                    referenceBaseUnitPrice(StockItemType.WEAPON, weaponId, max(0, Math.round(spec.baseValue.toFloat()))),
+                    StockItemStacks.referenceUnitCargoSpace(StockItemType.WEAPON, weaponId),
+                )
             }
         }
 
@@ -126,7 +134,14 @@ class TheoreticalSaleIndex {
                 if (!militarySubmarket && hasTag(spec.tags, "military_market_only")) continue
                 val frequency = frequency(sellFrequency, wingId)
                 if (frequency != null && frequency <= 0f) continue
-                addCandidate(result, itemKey, spec.tier, frequency, max(0, Math.round(spec.baseValue.toFloat())), 1f)
+                addCandidate(
+                    result,
+                    itemKey,
+                    spec.tier,
+                    frequency,
+                    referenceBaseUnitPrice(StockItemType.WING, wingId, max(0, Math.round(spec.baseValue.toFloat()))),
+                    StockItemStacks.referenceUnitCargoSpace(StockItemType.WING, wingId),
+                )
             }
         }
 
@@ -208,6 +223,11 @@ class TheoreticalSaleIndex {
 
         private fun frequency(frequencies: Map<String, Float>?, itemId: String): Float? {
             return frequencies?.get(itemId)
+        }
+
+        private fun referenceBaseUnitPrice(itemType: StockItemType, itemId: String, fallback: Int): Int {
+            val stackPrice = StockItemStacks.referenceBaseUnitPrice(itemType, itemId)
+            return if (stackPrice > 0) stackPrice else fallback
         }
 
         private fun candidateIds(knownIds: Set<String>?, sellFrequency: Map<String, Float>?): Set<String> {

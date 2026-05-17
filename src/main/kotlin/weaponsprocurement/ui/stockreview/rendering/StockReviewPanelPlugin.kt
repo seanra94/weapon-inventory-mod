@@ -37,11 +37,7 @@ class StockReviewPanelPlugin(
     StockReviewTradeController.Host,
     StockReviewExecutionController.Host {
     private val config: StockReviewConfig = StockReviewConfig.load()
-    private val state: StockReviewState = if (launchState?.getState() == null) {
-        StockReviewState(config)
-    } else {
-        StockReviewState(launchState.getState()!!)
-    }
+    private val state: StockReviewState = launchState?.getState()?.let { StockReviewState(it) } ?: StockReviewState(config)
     private val renderer = StockReviewRenderer()
     private val snapshotBuilder = WeaponStockSnapshotBuilder()
     private val purchaseService = StockPurchaseService()
@@ -83,19 +79,22 @@ class StockReviewPanelPlugin(
     override fun renderContent(
         content: CustomPanelAPI,
         buttonBindings: MutableList<WimGuiButtonBinding<StockReviewAction>>,
-    ): WimGuiListBounds = renderer.render(
-        content,
-        snapshot!!,
-        state,
-        pendingTrades.asList(),
-        modes.isReviewMode(),
-        modes.isFilterMode(),
-        modes.isColorDebugMode(),
-        modes.getColorDebugTargetIndex(),
-        modes.currentColorDebugDraft(),
-        modes.isColorDebugPersistent(),
-        buttonBindings,
-    )
+    ): WimGuiListBounds {
+        val currentSnapshot = snapshot ?: return StockReviewStyle.initialListBounds(modes.isReviewMode())
+        return renderer.render(
+            content,
+            currentSnapshot,
+            state,
+            pendingTrades.asList(),
+            modes.isReviewMode(),
+            modes.isFilterMode(),
+            modes.isColorDebugMode(),
+            modes.getColorDebugTargetIndex(),
+            modes.currentColorDebugDraft(),
+            modes.isColorDebugPersistent(),
+            buttonBindings,
+        )
+    }
 
     override fun onScroll(scrollDelta: Int, maxScrollOffset: Int) {
         state.adjustListScrollOffset(scrollDelta, maxScrollOffset)

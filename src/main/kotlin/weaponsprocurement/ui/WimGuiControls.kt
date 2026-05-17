@@ -246,6 +246,7 @@ object WimGuiControls {
             return
         }
         if (cell.isAction()) {
+            val action = cell.getAction() ?: return
             val fill = if (cell.isEnabled()) cell.getFillColor() else WimGuiStyle.DISABLED_BACKGROUND
             addBoundButton(
                 parent,
@@ -256,7 +257,7 @@ object WimGuiControls {
                     cell.getWidth(),
                     cell.getLabel(),
                     cell.getTextColor() ?: WimGuiStyle.DEFAULT_TEXT,
-                    cell.getAction()!!,
+                    action,
                     cell.isEnabled(),
                     Alignment.MID,
                     fill ?: WimGuiStyle.UNCOLOURED_BUTTON,

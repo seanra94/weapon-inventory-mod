@@ -3,6 +3,8 @@ package weaponsprocurement.stock.item
 import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.campaign.SubmarketPlugin
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
+import com.fs.starfarer.api.Global
+import com.fs.starfarer.api.campaign.CargoAPI
 import kotlin.math.max
 
 object StockItemStacks {
@@ -92,6 +94,31 @@ object StockItemStacks {
         if (stack == null) return 1f
         val value = stack.cargoSpacePerUnit
         return if (value <= 0f) 1f else value
+    }
+
+    @JvmStatic
+    fun referenceBaseUnitPrice(itemType: StockItemType?, itemId: String?): Int {
+        return baseUnitPrice(referenceStack(itemType, itemId))
+    }
+
+    @JvmStatic
+    fun referenceUnitCargoSpace(itemType: StockItemType?, itemId: String?): Float {
+        return unitCargoSpace(referenceStack(itemType, itemId))
+    }
+
+    @JvmStatic
+    fun referenceStack(itemType: StockItemType?, itemId: String?): CargoStackAPI? {
+        if (itemType == null || itemId.isNullOrBlank()) return null
+        return try {
+            val cargoType = if (StockItemType.WING == itemType) {
+                CargoAPI.CargoItemType.FIGHTER_CHIP
+            } else {
+                CargoAPI.CargoItemType.WEAPONS
+            }
+            Global.getSettings().createCargoStack(cargoType, itemId, null)
+        } catch (_: RuntimeException) {
+            null
+        }
     }
 
     private fun tariff(submarket: SubmarketAPI?): Float {

@@ -49,14 +49,15 @@ class StockReviewSourceState {
         if (!resolved.isEnabled) {
             sourceMode = StockSourceMode.LOCAL
             includeBlackMarket = false
-            return sourceMode as StockSourceMode
+            return StockSourceMode.LOCAL
         }
         return resolved
     }
 
     fun cycleSourceMode() {
-        sourceMode = getSourceMode().next()
-        if (sourceMode!!.isRemote()) {
+        val next = getSourceMode().next()
+        sourceMode = next
+        if (next.isRemote()) {
             includeBlackMarket = false
         }
     }

@@ -8,7 +8,6 @@ import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
 import weaponsprocurement.ui.stockreview.rendering.StockReviewWeaponIconPlugin
 import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.BaseCustomUIPanelPlugin
-import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.combat.DamageType
 import com.fs.starfarer.api.combat.WeaponAPI
@@ -25,6 +24,7 @@ import com.fs.starfarer.api.ui.PositionAPI
 import com.fs.starfarer.api.ui.TooltipMakerAPI
 import com.fs.starfarer.api.util.Misc
 import weaponsprocurement.trade.quote.CreditFormat
+import weaponsprocurement.stock.item.StockItemStacks
 import weaponsprocurement.stock.item.SubmarketWeaponStock
 import weaponsprocurement.stock.item.WeaponStockRecord
 import java.awt.Color
@@ -265,15 +265,9 @@ class StockReviewItemTooltip private constructor(
                 return value
             }
         }
-        try {
-            val stack = Global.getSettings().createCargoStack(CargoAPI.CargoItemType.WEAPONS, record.itemId, null)
-            if (stack != null) {
-                val value = stack.cargoSpacePerUnit
-                if (validNumber(value) && value > 0f) {
-                    return value
-                }
-            }
-        } catch (_: RuntimeException) {
+        val reference = StockItemStacks.referenceUnitCargoSpace(record.itemType, record.itemId)
+        if (validNumber(reference) && reference > 0f) {
+            return reference
         }
         return Float.NaN
     }
@@ -281,7 +275,10 @@ class StockReviewItemTooltip private constructor(
     private fun priceLabel(): String? {
         var price = record.cheapestPurchasableUnitPrice
         if (price == Int.MAX_VALUE) {
-            price = Math.round(maxOf(0f, record.spec?.baseValue ?: 0f))
+            price = StockItemStacks.referenceBaseUnitPrice(record.itemType, record.itemId)
+            if (price <= 0) {
+                price = Math.round(maxOf(0f, record.spec?.baseValue ?: 0f))
+            }
         }
         return if (price <= 0) null else CreditFormat.credits(price)
     }

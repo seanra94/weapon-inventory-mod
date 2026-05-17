@@ -63,8 +63,8 @@ abstract class WimGuiModalPanelPlugin<A>(
         }
         try {
             modalInput.clearButtonBindings()
-            val content = contentPanel.begin(currentRoot, width, height)
-            val renderedBounds = renderContent(content!!, modalInput.buttonBindings())
+            val content = contentPanel.begin(currentRoot, width, height) ?: return
+            val renderedBounds = renderContent(content, modalInput.buttonBindings())
             if (renderedBounds != null) {
                 listBounds = renderedBounds
                 modalInput.setListBounds(renderedBounds)

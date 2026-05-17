@@ -42,8 +42,8 @@ class StockPurchaseService {
         validation = StockPurchaseChecks.playerCargoAvailable(playerCargo)
         if (validation != null) return validation
 
-        val cargo = playerCargo!!
-        val checkedItemId = itemId!!
+        val cargo = playerCargo ?: return PurchaseResult.failure("Player cargo is unavailable.")
+        val checkedItemId = itemId ?: return PurchaseResult.failure("No " + itemType.singularLabel.lowercase() + " selected.")
         val playerStack = StockItemCargo.itemStack(cargo, itemType, checkedItemId)
         val available = StockItemCargo.itemCount(cargo, itemType, checkedItemId)
         if (playerStack == null || available <= 0) {
@@ -78,10 +78,12 @@ class StockPurchaseService {
 
         val totalCost = TradeMoney.lineTotal(unitPrice, requestedQuantity)
         val totalSpace = Math.max(1f, unitCargoSpace) * requestedQuantity
-        validation = StockPurchaseChecks.canCompletePurchase(playerCargo!!, totalCost, totalSpace)
+        val cargo = playerCargo ?: return PurchaseResult.failure("Player cargo is unavailable.")
+        val checkedItemId = itemId ?: return PurchaseResult.failure("No " + itemType.singularLabel.lowercase() + " selected.")
+        validation = StockPurchaseChecks.canCompletePurchase(cargo, totalCost, totalSpace)
         if (validation != null) return validation
 
-        return StockPurchaseExecutor.buyFromFixersMarket(LOG, playerCargo, itemType, itemId!!, requestedQuantity, totalCost)
+        return StockPurchaseExecutor.buyFromFixersMarket(LOG, cargo, itemType, checkedItemId, requestedQuantity, totalCost)
     }
 
     fun buyItemFromSectorSources(
@@ -103,7 +105,8 @@ class StockPurchaseService {
         validation = StockPurchaseChecks.playerCargoAvailable(playerCargo)
         if (validation != null) return validation
 
-        val checkedItemId = itemId!!
+        val cargo = playerCargo ?: return PurchaseResult.failure("Player cargo is unavailable.")
+        val checkedItemId = itemId ?: return PurchaseResult.failure("No " + itemType.singularLabel.lowercase() + " selected.")
         val sources = StockPurchaseMarketSources.collectSectorSources(sector, itemType, checkedItemId, stockSources)
         if (sources.isEmpty()) return PurchaseResult.failure("No sector-market stock is available.")
         Collections.sort(sources, StockPurchaseSource.PRICE_ORDER)
@@ -111,12 +114,12 @@ class StockPurchaseService {
         val plan = StockPurchasePlan.build(sources, requestedQuantity)
         validation = StockPurchaseChecks.buyPlanAvailable(plan, "No sector-market stock is available.")
         if (validation != null) return validation
-        validation = StockPurchaseChecks.canCompletePurchase(playerCargo!!, plan)
+        validation = StockPurchaseChecks.canCompletePurchase(cargo, plan)
         if (validation != null) return validation
 
         return StockPurchaseExecutor.buyPlan(
             LOG,
-            playerCargo,
+            cargo,
             null,
             itemType,
             checkedItemId,
@@ -146,9 +149,11 @@ class StockPurchaseService {
         validation = StockPurchaseChecks.playerCargoAvailable(playerCargo)
         if (validation != null) return validation
 
-        val checkedItemId = itemId!!
+        val cargo = playerCargo ?: return PurchaseResult.failure("Player cargo is unavailable.")
+        val checkedItemId = itemId ?: return PurchaseResult.failure("No " + itemType.singularLabel.lowercase() + " selected.")
+        val checkedMarket = market ?: return PurchaseResult.failure("No active market context.")
         val sources = StockPurchaseMarketSources.collectLocalSources(
-            market!!,
+            checkedMarket,
             itemType,
             checkedItemId,
             onlySubmarketId,
@@ -160,10 +165,10 @@ class StockPurchaseService {
         val plan = StockPurchasePlan.build(sources, requestedQuantity)
         validation = StockPurchaseChecks.buyPlanAvailable(plan, "No purchasable stock is available.")
         if (validation != null) return validation
-        validation = StockPurchaseChecks.canCompletePurchase(playerCargo!!, plan)
+        validation = StockPurchaseChecks.canCompletePurchase(cargo, plan)
         if (validation != null) return validation
 
-        return StockPurchaseExecutor.buyPlan(LOG, playerCargo, market, itemType, checkedItemId, plan, "", "buy from local market")
+        return StockPurchaseExecutor.buyPlan(LOG, cargo, checkedMarket, itemType, checkedItemId, plan, "", "buy from local market")
     }
 
     class PurchaseResult private constructor(
