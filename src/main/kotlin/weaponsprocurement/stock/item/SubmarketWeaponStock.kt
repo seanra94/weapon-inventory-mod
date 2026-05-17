@@ -55,5 +55,13 @@ class SubmarketWeaponStock(
             "$marketName / $submarketName"
         }
 
+    fun sourceKey(itemKey: String?): String = (itemKey ?: "") + "|" + (sourceId ?: "")
+
+    fun matchesSource(requestedSourceId: String?): Boolean {
+        if (requestedSourceId.isNullOrEmpty()) return false
+        if (requestedSourceId == sourceId) return true
+        return marketId.isNullOrEmpty() && requestedSourceId == submarketId
+    }
+
     fun isPurchasable(): Boolean = purchasable
 }

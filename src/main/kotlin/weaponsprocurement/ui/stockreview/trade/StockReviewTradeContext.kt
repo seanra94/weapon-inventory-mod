@@ -172,7 +172,7 @@ class StockReviewTradeContext(
     private fun submarketRemaining(record: WeaponStockRecord, submarketId: String): Int {
         var sourceCount = 0
         for (stock: SubmarketWeaponStock in record.submarketStocks) {
-            if ((submarketId == stock.sourceId || submarketId == stock.submarketId) && stock.isPurchasable()) {
+            if (stock.matchesSource(submarketId) && stock.isPurchasable()) {
                 sourceCount += stock.count
             }
         }

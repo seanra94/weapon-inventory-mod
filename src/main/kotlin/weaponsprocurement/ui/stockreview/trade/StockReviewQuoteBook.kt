@@ -104,7 +104,7 @@ class StockReviewQuoteBook(private val snapshot: WeaponStockSnapshot?) {
 
         for (stock in stocks) {
             if (remaining <= 0) break
-            if (trade.submarketId != null && !matchesSource(trade.submarketId, stock)) continue
+            if (trade.submarketId != null && !stock.matchesSource(trade.submarketId)) continue
 
             val available = if (remainingBySource == null) {
                 stock.count
@@ -122,7 +122,7 @@ class StockReviewQuoteBook(private val snapshot: WeaponStockSnapshot?) {
             allocations.add(StockReviewSellerAllocation(stock.displaySourceName, stock.sourceId, quantity, cost))
             remaining -= quantity
             if (remainingBySource != null) {
-                remainingBySource[sourceKey(trade.itemKey, stock)] = available - quantity
+                remainingBySource[stock.sourceKey(trade.itemKey)] = available - quantity
             }
         }
 
@@ -137,7 +137,7 @@ class StockReviewQuoteBook(private val snapshot: WeaponStockSnapshot?) {
         stock: SubmarketWeaponStock,
         remainingBySource: MutableMap<String, Int>,
     ): Int {
-        val key = sourceKey(itemKey, stock)
+        val key = stock.sourceKey(itemKey)
         val cached = remainingBySource[key]
         if (cached != null) return cached
         remainingBySource[key] = stock.count
@@ -235,13 +235,5 @@ class StockReviewQuoteBook(private val snapshot: WeaponStockSnapshot?) {
             return trade.itemKey + "|" + (trade.submarketId ?: "") + "|" + trade.quantity
         }
 
-        private fun sourceKey(itemKey: String?, stock: SubmarketWeaponStock?): String {
-            return (itemKey ?: "") + "|" + (stock?.sourceId ?: "")
-        }
-
-        private fun matchesSource(requestedSourceId: String?, stock: SubmarketWeaponStock?): Boolean {
-            if (stock == null || requestedSourceId == null) return false
-            return requestedSourceId == stock.sourceId || requestedSourceId == stock.submarketId
-        }
     }
 }

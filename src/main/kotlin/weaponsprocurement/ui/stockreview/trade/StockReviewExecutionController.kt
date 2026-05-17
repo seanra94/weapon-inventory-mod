@@ -184,7 +184,7 @@ class StockReviewExecutionController(
         }
         val result = ArrayList<SubmarketWeaponStock>()
         for (stock in record.submarketStocks) {
-            if (sourceId == stock.sourceId || sourceId == stock.submarketId) {
+            if (stock.matchesSource(sourceId)) {
                 result.add(stock)
             }
         }

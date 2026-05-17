@@ -4,11 +4,13 @@ import weaponsprocurement.ui.WimGuiListRow
 import weaponsprocurement.ui.WimGuiRowCell
 import weaponsprocurement.ui.WimGuiToggleHeading
 import weaponsprocurement.ui.stockreview.actions.StockReviewAction
+import weaponsprocurement.ui.stockreview.rendering.StockReviewFormat
 import weaponsprocurement.ui.stockreview.rendering.StockReviewStyle
 import weaponsprocurement.ui.stockreview.state.StockReviewState
 import weaponsprocurement.ui.stockreview.tooltips.StockReviewItemTooltip
 import weaponsprocurement.ui.stockreview.tooltips.StockReviewTooltips
 import weaponsprocurement.ui.stockreview.trade.StockReviewPendingTrade
+import weaponsprocurement.ui.stockreview.trade.StockReviewSellerAllocation
 import weaponsprocurement.ui.stockreview.trade.StockReviewTradeContext
 import weaponsprocurement.ui.stockreview.trade.StockReviewTradeGroup
 import com.fs.starfarer.api.ui.Alignment
@@ -116,7 +118,48 @@ class StockReviewReviewListModel private constructor() {
                 StockReviewStyle.DETAIL_INDENT,
                 StockReviewStyle.DATA_INDENT,
             )
+            if (trade.isBuy()) {
+                addSourceAllocationRows(rows, tradeContext.sellerAllocations(trade))
+            }
         }
+
+        private fun addSourceAllocationRows(
+            rows: MutableList<WimGuiListRow<StockReviewAction>>,
+            allocations: List<StockReviewSellerAllocation>,
+        ) {
+            if (allocations.isEmpty()) {
+                rows.add(
+                    StockReviewListRow.labelTextIndented(
+                        "Purchase Source",
+                        "Unavailable",
+                        StockReviewStyle.DATA_INDENT,
+                        true,
+                        StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH,
+                        StockReviewStyle.REVIEW_LIST_WIDTH,
+                    ),
+                )
+                return
+            }
+            for (i in allocations.indices) {
+                val allocation = allocations[i]
+                rows.add(
+                    StockReviewListRow.labelTextIndented(
+                        sourceLabel(allocation),
+                        allocationSummary(allocation),
+                        StockReviewStyle.DATA_INDENT,
+                        i == 0,
+                        StockReviewStyle.REVIEW_ROW_RIGHT_BLOCK_WIDTH,
+                        StockReviewStyle.REVIEW_LIST_WIDTH,
+                    ),
+                )
+            }
+        }
+
+        private fun sourceLabel(allocation: StockReviewSellerAllocation): String =
+            if (allocation.submarketName.isNullOrEmpty()) "Purchase Source" else allocation.submarketName
+
+        private fun allocationSummary(allocation: StockReviewSellerAllocation): String =
+            allocation.quantity.toString() + " / " + StockReviewFormat.credits(allocation.cost)
 
         private fun addWorstCaseReviewRow(rows: MutableList<WimGuiListRow<StockReviewAction>>) {
             val cells = WimGuiRowCell.of(
