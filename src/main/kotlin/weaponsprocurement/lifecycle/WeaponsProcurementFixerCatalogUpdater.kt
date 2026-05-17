@@ -6,11 +6,14 @@ import org.apache.log4j.Logger
 import weaponsprocurement.stock.fixer.FixerMarketObservedCatalog
 import weaponsprocurement.config.WeaponMarketBlacklist
 import weaponsprocurement.config.WeaponsProcurementConfig
+import weaponsprocurement.stock.fixer.ShipCatalogDiagnostics
 
 class WeaponsProcurementFixerCatalogUpdater : EveryFrameScript {
     private val catalog = FixerMarketObservedCatalog()
+    private val shipDiagnostics = ShipCatalogDiagnostics()
     private var lastScanTimestamp = Long.MIN_VALUE
     private var scanErrorLogged = false
+    private var shipDiagnosticsLogged = false
     private var scanLogs = 0
 
     override fun isDone(): Boolean = false
@@ -33,12 +36,21 @@ class WeaponsProcurementFixerCatalogUpdater : EveryFrameScript {
                 scanLogs++
                 LOG.info("WP_FIXER_CATALOG observed new legal items=$added")
             }
+            dumpShipDiagnosticsIfRequested(sector)
         } catch (t: RuntimeException) {
             if (!scanErrorLogged) {
                 scanErrorLogged = true
                 LOG.error("WP_FIXER_CATALOG scan failed", t)
             }
         }
+    }
+
+    private fun dumpShipDiagnosticsIfRequested(sector: com.fs.starfarer.api.campaign.SectorAPI?) {
+        if (shipDiagnosticsLogged) return
+        val spec = WeaponsProcurementConfig.debugShipCatalogSpec()
+        if (spec.isBlank() || spec.equals("false", ignoreCase = true) || spec.equals("none", ignoreCase = true)) return
+        shipDiagnosticsLogged = true
+        shipDiagnostics.dump(sector, spec, LOG)
     }
 
     companion object {

@@ -80,7 +80,11 @@ Sector Market uses real live stock from markets in the current save. Fixer's Mar
 
 ## Rollback Debug Hook
 
-The trade rollback fault hook is developer-only and is not exposed in LunaLib settings. For a local validation run, start Starsector with the JVM system property `wp.debug.failTradeStep` set to one accepted value.
+Developer-only diagnostics are not exposed in LunaLib settings.
+
+### Trade rollback fault hook
+
+For a local validation run, start Starsector with the JVM system property `wp.debug.failTradeStep` set to one accepted value.
 
 Accepted test values are:
 
@@ -91,3 +95,15 @@ Accepted test values are:
 - `after-credit-mutation`
 
 Leave the property unset, empty, or `none` for normal play and public packages.
+
+### Ship catalog diagnostic dump
+
+For a local validation run, start Starsector with the JVM system property `wp.debug.shipCatalog`.
+
+Accepted values are:
+
+- `summary` or `true`: log one `WP_SHIP_CATALOG_DIAG` summary plus observed/theoretical comparison.
+- `top` or `all`: also log the top theoretical ship candidates by rarity/source fit.
+- comma/space/semicolon-separated hull ids such as `paragon,onslaught,diableavionics_pandemonium`: log those hulls if observed or theoretically reachable.
+
+This diagnostic is intentionally read-only. It scans live mothballed market ships and faction-known hulls, but it does not add ships to Fixer's Market, mutate cargo, force restocks, or change prices.

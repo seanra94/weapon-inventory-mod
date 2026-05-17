@@ -88,6 +88,7 @@ Current WP code state:
 - `ObservedShipStockIndex` scans current market mothballed ships and records exact observed hull stock/reference prices without mutating cargo.
 - `TheoreticalShipSaleIndex` builds a non-trading candidate set from market-owner faction known hulls on vanilla-supported open/military/black submarkets.
 - `ShipRarityClassifier` estimates common/uncommon/rare/very rare using hull frequency, priority status, hull size, fleet points, doctrine, stability, submarket type, and a conservative ship-size cap model.
+- `ShipCatalogDiagnostics` is an opt-in read-only JVM-property diagnostic (`wp.debug.shipCatalog`) that logs `WP_SHIP_CATALOG_DIAG` summaries, top candidates, or named hulls for validation.
 - The ship catalog is intentionally not wired into stock rows, pending trades, quote math, purchase execution, or public-facing Fixer availability yet.
 - Persistent observed entries are fallback metadata only. They may provide price/cargo-space data for live or theoretical Fixer candidates, but they must not independently make an item available forever after a one-time observation.
 - `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices; tier-0 candidates remain common unless filtered out.

@@ -31,6 +31,7 @@ object WeaponsProcurementConfig {
     private const val KEY_DESIRED_LARGE_WEAPON_COUNT = "wp.config.desiredLargeWeaponCount"
     private const val KEY_DESIRED_FIGHTER_WING_COUNT = "wp.config.desiredFighterWingCount"
     const val KEY_DEBUG_TRADE_FAILURE_STEP: String = "wp.debug.failTradeStep"
+    const val KEY_DEBUG_SHIP_CATALOG: String = "wp.debug.shipCatalog"
 
     private const val DEFAULT_UPDATE_INTERVAL_SEC = 0.20f
     private const val MIN_UPDATE_INTERVAL_SEC = 0.05f
@@ -181,6 +182,9 @@ object WeaponsProcurementConfig {
 
     @JvmStatic
     fun desiredFighterWingCount(fallback: Int): Int = readPublishedDesiredWeaponCount(KEY_DESIRED_FIGHTER_WING_COUNT, fallback)
+
+    @JvmStatic
+    fun debugShipCatalogSpec(): String = System.getProperty(KEY_DEBUG_SHIP_CATALOG, "")
 
     private fun readDesiredWeaponCount(settingId: String, defaultValue: Int): Int {
         val value = readDoubleSetting(settingId) ?: return defaultValue
