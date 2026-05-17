@@ -58,7 +58,7 @@ class WeaponStockSnapshotBuilder {
             if (config.isIgnored(itemKey) || config.isIgnored(itemId)) continue
 
             val ownedCount = getCount(owned, itemKey)
-            val purchasableCount = marketStock.getTotal(itemKey)
+            val purchasableCount = marketStock.getPurchasableTotal(itemKey)
             if (!shouldInclude(getCount(playerCargoCounts, itemKey), marketStock.getSubmarketStocks(itemKey))) continue
 
             val desiredCount = if (StockItemType.WING == itemType) {

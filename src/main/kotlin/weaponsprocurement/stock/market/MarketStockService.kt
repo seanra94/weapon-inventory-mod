@@ -69,19 +69,27 @@ class MarketStockService {
 
     class MarketStock(
         private val totals: Map<String, Int>,
-        private val byItemKey: Map<String, MutableList<SubmarketWeaponStock>>,
+        private val purchasableTotals: Map<String, Int>,
+        private val byItemKey: Map<String, List<SubmarketWeaponStock>>,
         private val rarityByItemKey: Map<String, FixerRarity>,
     ) {
         constructor(
             totals: Map<String, Int>,
             byItemKey: Map<String, MutableList<SubmarketWeaponStock>>,
-        ) : this(totals, byItemKey, emptyMap())
+        ) : this(
+            immutableTotals(totals),
+            purchasableTotals(byItemKey),
+            immutableStocks(byItemKey),
+            emptyMap(),
+        )
 
         fun getTotal(itemKey: String?): Int = totals[itemKey] ?: 0
 
+        fun getPurchasableTotal(itemKey: String?): Int = purchasableTotals[itemKey] ?: 0
+
         fun getSubmarketStocks(itemKey: String?): List<SubmarketWeaponStock> {
             val stocks = byItemKey[itemKey] ?: return Collections.emptyList()
-            return Collections.unmodifiableList(stocks)
+            return stocks
         }
 
         fun itemKeys(): Iterable<String> = totals.keys
@@ -91,6 +99,7 @@ class MarketStockService {
 
     class MarketStockBuilder {
         private val totals = HashMap<String, Int>()
+        private val purchasableTotals = HashMap<String, Int>()
         private val byItemKey = HashMap<String, MutableList<SubmarketWeaponStock>>()
         private val rarityByItemKey = HashMap<String, FixerRarity>()
 
@@ -101,6 +110,9 @@ class MarketStockService {
         fun add(itemKey: String?, stock: SubmarketWeaponStock?, rarity: FixerRarity?) {
             if (itemKey.isNullOrEmpty() || stock == null || stock.count <= 0) return
             InventoryCountService.add(totals, itemKey, stock.count)
+            if (stock.isPurchasable()) {
+                InventoryCountService.add(purchasableTotals, itemKey, stock.count)
+            }
             var stocks = byItemKey[itemKey]
             if (stocks == null) {
                 stocks = ArrayList()
@@ -122,7 +134,12 @@ class MarketStockService {
             }
         }
 
-        fun build(): MarketStock = MarketStock(totals, byItemKey, rarityByItemKey)
+        fun build(): MarketStock = MarketStock(
+            immutableTotals(totals),
+            immutableTotals(purchasableTotals),
+            immutableStocks(byItemKey),
+            Collections.unmodifiableMap(HashMap(rarityByItemKey)),
+        )
     }
 
     companion object {
@@ -143,6 +160,33 @@ class MarketStockService {
         @JvmStatic
         fun isBlackMarketSubmarket(submarketId: String?): Boolean {
             return Submarkets.SUBMARKET_BLACK == submarketId
+        }
+
+        private fun immutableTotals(source: Map<String, Int>): Map<String, Int> =
+            Collections.unmodifiableMap(HashMap(source))
+
+        private fun immutableStocks(
+            source: Map<String, MutableList<SubmarketWeaponStock>>,
+        ): Map<String, List<SubmarketWeaponStock>> {
+            val result = HashMap<String, List<SubmarketWeaponStock>>()
+            for ((itemKey, stocks) in source) {
+                result[itemKey] = Collections.unmodifiableList(ArrayList(stocks))
+            }
+            return Collections.unmodifiableMap(result)
+        }
+
+        private fun purchasableTotals(
+            source: Map<String, MutableList<SubmarketWeaponStock>>,
+        ): Map<String, Int> {
+            val result = HashMap<String, Int>()
+            for ((itemKey, stocks) in source) {
+                for (stock in stocks) {
+                    if (stock.isPurchasable() && stock.count > 0) {
+                        InventoryCountService.add(result, itemKey, stock.count)
+                    }
+                }
+            }
+            return immutableTotals(result)
         }
     }
 }

@@ -76,7 +76,7 @@ class WeaponStockRecord(
 
     val itemType: StockItemType = itemType ?: StockItemType.WEAPON
     val itemKey: String = this.itemType.key(itemId)
-    val submarketStocks: List<SubmarketWeaponStock> = Collections.unmodifiableList(submarketStocks)
+    val submarketStocks: List<SubmarketWeaponStock> = Collections.unmodifiableList(ArrayList(submarketStocks))
     private val buyableCountValue: Int = computeBuyableCount(this.submarketStocks)
     private val cheapestPurchasableUnitPriceValue: Int = computeCheapestPurchasableUnitPrice(this.submarketStocks)
 

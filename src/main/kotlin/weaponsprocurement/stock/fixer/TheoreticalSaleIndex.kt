@@ -166,14 +166,11 @@ class TheoreticalSaleIndex {
         private fun relevantFactionIds(market: MarketAPI?, submarket: SubmarketAPI?): Set<String> {
             val result = HashSet<String>()
             val id = submarket?.specId
-            if (Submarkets.SUBMARKET_OPEN == id) {
+            if (Submarkets.SUBMARKET_OPEN == id ||
+                Submarkets.GENERIC_MILITARY == id ||
+                Submarkets.SUBMARKET_BLACK == id
+            ) {
                 addFactionId(result, market?.factionId)
-            } else if (Submarkets.GENERIC_MILITARY == id) {
-                addFactionId(result, market?.factionId)
-                addFactionId(result, submarket?.faction?.id)
-            } else if (Submarkets.SUBMARKET_BLACK == id) {
-                addFactionId(result, market?.factionId)
-                addFactionId(result, submarket?.faction?.id)
             }
             return result
         }
