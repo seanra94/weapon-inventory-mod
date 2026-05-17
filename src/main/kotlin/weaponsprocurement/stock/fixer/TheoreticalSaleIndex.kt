@@ -12,7 +12,6 @@ import weaponsprocurement.stock.item.StockItemType
 import java.util.Collections
 import java.util.HashMap
 import java.util.HashSet
-import java.util.Locale
 import kotlin.math.max
 
 class TheoreticalSaleIndex {
@@ -94,10 +93,7 @@ class TheoreticalSaleIndex {
                 val spec = StockItemSpecs.weaponSpec(weaponId)
                 if (spec == null || spec.tier > tierCap) continue
                 val itemKey = StockItemType.WEAPON.key(weaponId)
-                if (blacklist != null && blacklist.isBannedFromFixers(itemKey)) continue
-                if (!FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) continue
-                if (!militarySubmarket && hasTag(spec.tags, "military_market_only")) continue
-                if (StockItemSpecs.hasSystemHint(spec)) continue
+                if (!FixerCatalogPolicy.isEligibleTheoreticalItem(itemKey, blacklist, militarySubmarket)) continue
                 val frequency = frequency(sellFrequency, weaponId)
                 if (frequency != null && frequency <= 0f) continue
                 addCandidate(
@@ -125,9 +121,7 @@ class TheoreticalSaleIndex {
                 val spec = StockItemSpecs.wingSpec(wingId)
                 if (spec == null || spec.tier > tierCap) continue
                 val itemKey = StockItemType.WING.key(wingId)
-                if (blacklist != null && blacklist.isBannedFromFixers(itemKey)) continue
-                if (!FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) continue
-                if (!militarySubmarket && hasTag(spec.tags, "military_market_only")) continue
+                if (!FixerCatalogPolicy.isEligibleTheoreticalItem(itemKey, blacklist, militarySubmarket)) continue
                 val frequency = frequency(sellFrequency, wingId)
                 if (frequency != null && frequency <= 0f) continue
                 addCandidate(
@@ -227,15 +221,5 @@ class TheoreticalSaleIndex {
             return knownIds
         }
 
-        private fun hasTag(tags: Set<String>?, target: String?): Boolean {
-            if (tags == null || target == null) return false
-            val lowerTarget = target.lowercase(Locale.US)
-            for (tag in tags) {
-                if (lowerTarget == tag.lowercase(Locale.US)) {
-                    return true
-                }
-            }
-            return false
-        }
     }
 }

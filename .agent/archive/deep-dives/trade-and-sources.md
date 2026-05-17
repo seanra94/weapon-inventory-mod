@@ -84,6 +84,7 @@ Current WP code state:
 - `WeaponsProcurementFixerCatalogUpdater` scans real market cargo about once per in-game day and stores safe observed weapon/wing item keys in sector persistent data.
 - `ObservedStockIndex` scans current real market cargo and supplies the cheapest live reference price/cargo-space data.
 - `TheoreticalSaleIndex` uses runtime faction sell-frequency maps when present, otherwise faction known weapons/fighters, plus vanilla-supported submarket tier caps, item safety filters, and the Fixer blacklist to build cold-start virtual stock.
+- Persistent observed entries are fallback metadata only. They may provide price/cargo-space data for live or theoretical Fixer candidates, but they must not independently make an item available forever after a one-time observation.
 - `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices; tier-0 candidates remain common unless filtered out.
 - The theoretical weapon/LPC catalog uses the market-owner faction for vanilla open, military, and black markets. Live observed cargo still captures custom submarket behavior without broad independent-catalog leakage.
 - Ship cataloging remains future work.

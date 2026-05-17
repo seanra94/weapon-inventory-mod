@@ -74,8 +74,7 @@ class ObservedStockIndex {
 
     companion object {
         private fun isEligible(itemKey: String, blacklist: WeaponMarketBlacklist?): Boolean {
-            return FixerMarketObservedCatalog.isSafeFixerItem(itemKey) &&
-                (blacklist == null || !blacklist.isBannedFromFixers(itemKey))
+            return FixerCatalogPolicy.isEligibleObservedItem(itemKey, blacklist)
         }
 
         @JvmStatic

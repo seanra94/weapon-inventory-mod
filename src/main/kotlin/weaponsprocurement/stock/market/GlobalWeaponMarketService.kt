@@ -81,9 +81,9 @@ class GlobalWeaponMarketService {
     ): MarketStockService.MarketStock {
         val builder = MarketStockService.MarketStockBuilder()
         val references = HashMap<String, ReferenceItem>()
+        val persistentObserved = observedCatalog.observedItems(sector, blacklist)
         addLiveObservedReferences(sector, references, blacklist)
-        addPersistentObservedReferences(sector, references, blacklist)
-        addTheoreticalCandidates(sector, references, blacklist)
+        addTheoreticalCandidates(sector, references, blacklist, persistentObserved)
 
         for ((itemKey, reference) in references) {
             builder.add(
@@ -119,30 +119,20 @@ class GlobalWeaponMarketService {
         }
     }
 
-    private fun addPersistentObservedReferences(
-        sector: SectorAPI?,
-        references: MutableMap<String, ReferenceItem>,
-        blacklist: WeaponMarketBlacklist?,
-    ) {
-        val observed = observedCatalog.observedItems(sector, blacklist)
-        for ((itemKey, item) in observed) {
-            if (references.containsKey(itemKey)) continue
-            references[itemKey] = ReferenceItem(item.baseUnitPrice, item.unitCargoSpace, null)
-        }
-    }
-
     private fun addTheoreticalCandidates(
         sector: SectorAPI?,
         references: MutableMap<String, ReferenceItem>,
         blacklist: WeaponMarketBlacklist?,
+        persistentObserved: Map<String, FixerMarketObservedCatalog.ObservedItem>,
     ) {
         val candidates = theoreticalCandidates(sector, blacklist)
         for ((itemKey, candidate) in candidates) {
             val current = references[itemKey]
             if (current == null) {
+                val persistent = persistentObserved[itemKey]
                 references[itemKey] = ReferenceItem(
-                    candidate.baseUnitPrice,
-                    candidate.unitCargoSpace,
+                    persistent?.baseUnitPrice ?: candidate.baseUnitPrice,
+                    persistent?.unitCargoSpace ?: candidate.unitCargoSpace,
                     candidate.rarity,
                 )
             } else if (current.rarity == null) {

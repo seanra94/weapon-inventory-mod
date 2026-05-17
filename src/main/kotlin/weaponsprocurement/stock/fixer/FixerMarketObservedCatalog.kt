@@ -4,14 +4,10 @@ import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import org.apache.log4j.Logger
 import weaponsprocurement.config.WeaponMarketBlacklist
-import weaponsprocurement.stock.item.StockItemSpecs
-import weaponsprocurement.stock.item.StockItemType
 import weaponsprocurement.stock.item.SubmarketWeaponStock
 import weaponsprocurement.stock.market.MarketStockService
 import java.util.Collections
 import java.util.HashMap
-import java.util.HashSet
-import java.util.Locale
 
 class FixerMarketObservedCatalog {
     private val marketStockService = MarketStockService()
@@ -25,7 +21,7 @@ class FixerMarketObservedCatalog {
         for (market in markets) {
             val stock = marketStockService.collectCurrentMarketItemStock(market, true)
             for (itemKey in stock.itemKeys()) {
-                if (!isSafeFixerItem(itemKey) || isBanned(blacklist, itemKey)) continue
+                if (!FixerCatalogPolicy.isEligibleObservedItem(itemKey, blacklist)) continue
                 val source = cheapestReferenceSource(stock.getSubmarketStocks(itemKey)) ?: continue
                 if (!catalog.containsKey(itemKey)) added++
                 catalog[itemKey] = encode(source.baseUnitPrice, source.unitCargoSpace)
@@ -45,7 +41,7 @@ class FixerMarketObservedCatalog {
             val entry = iterator.next()
             val itemKey = entry.key
             val encoded = entry.value
-            if (!isSafeFixerItem(itemKey)) {
+            if (!FixerCatalogPolicy.isSafeItem(itemKey)) {
                 iterator.remove()
                 pruned++
                 continue
@@ -56,7 +52,7 @@ class FixerMarketObservedCatalog {
                 pruned++
                 continue
             }
-            if (!isBanned(blacklist, itemKey)) {
+            if (!FixerCatalogPolicy.isBanned(blacklist, itemKey)) {
                 result[itemKey] = item
             }
         }
@@ -75,7 +71,7 @@ class FixerMarketObservedCatalog {
         if (catalog.isEmpty()) return
         var pruned = 0
         for ((itemKey, encoded) in catalog) {
-            if (!isSafeFixerItem(itemKey) || decode(encoded) == null) {
+            if (!FixerCatalogPolicy.isSafeItem(itemKey) || decode(encoded) == null) {
                 pruned++
             }
         }
@@ -83,7 +79,7 @@ class FixerMarketObservedCatalog {
         val iterator = catalog.entries.iterator()
         while (iterator.hasNext()) {
             val entry = iterator.next()
-            if (!isSafeFixerItem(entry.key) || decode(entry.value) == null) {
+            if (!FixerCatalogPolicy.isSafeItem(entry.key) || decode(entry.value) == null) {
                 iterator.remove()
             }
         }
@@ -108,53 +104,12 @@ class FixerMarketObservedCatalog {
         private const val PERSISTENT_KEY = "weaponsProcurement.fixerObservedCatalog.v1"
         private const val VALUE_SEPARATOR = "|"
 
-        private val SPOILER_TAGS: Set<String> = tags(
-            "restricted",
-            "no_dealer",
-            "no_drop",
-            "no_bp_drop",
-            "omega",
-            "remnant",
-            "dweller",
-            "threat",
-            "hide_in_codex",
-            "invisible_in_codex",
-            "codex_unlockable",
-        )
-
         private var migrationLogged = false
         private var pruneLogged = false
 
         @JvmStatic
         fun isSafeFixerItem(itemKey: String?): Boolean {
-            val itemType = StockItemType.fromKey(itemKey)
-            val itemId = StockItemType.rawId(itemKey)
-            return if (StockItemType.WING == itemType) {
-                isSafeWing(itemId)
-            } else {
-                isSafeWeapon(itemId)
-            }
-        }
-
-        private fun isSafeWeapon(weaponId: String?): Boolean {
-            val spec = StockItemSpecs.weaponSpec(weaponId) ?: return false
-            if (StockItemSpecs.hasSystemHint(spec)) return false
-            val tags = lowerTags(spec.tags)
-            return !tags.contains("no_sell") &&
-                !tags.contains("weapon_no_sell") &&
-                !intersects(tags, SPOILER_TAGS)
-        }
-
-        private fun isSafeWing(wingId: String?): Boolean {
-            val spec = StockItemSpecs.wingSpec(wingId) ?: return false
-            val tags = lowerTags(spec.tags)
-            return !tags.contains("no_sell") &&
-                !tags.contains("wing_no_sell") &&
-                !intersects(tags, SPOILER_TAGS)
-        }
-
-        private fun isBanned(blacklist: WeaponMarketBlacklist?, itemKey: String?): Boolean {
-            return blacklist != null && blacklist.isBannedFromFixers(itemKey)
+            return FixerCatalogPolicy.isSafeItem(itemKey)
         }
 
         private fun cheapestReferenceSource(sources: List<SubmarketWeaponStock>?): SubmarketWeaponStock? {
@@ -229,29 +184,6 @@ class FixerMarketObservedCatalog {
                 pruneLogged = true
                 LOG.warn("WP_FIXER_CATALOG pruned $pruned invalid or unsafe persistent entries.")
             }
-        }
-
-        private fun lowerTags(tags: Set<String>?): Set<String> {
-            if (tags == null || tags.isEmpty()) return Collections.emptySet()
-            val result = HashSet<String>()
-            for (tag in tags) result.add(tag.lowercase(Locale.US))
-            return result
-        }
-
-        private fun intersects(left: Set<String>?, right: Set<String>?): Boolean {
-            if (left == null || right == null) return false
-            for (value in left) {
-                if (right.contains(value)) return true
-            }
-            return false
-        }
-
-        private fun tags(vararg tags: String): Set<String> {
-            val result = HashSet<String>()
-            for (tag in tags) {
-                result.add(tag)
-            }
-            return Collections.unmodifiableSet(result)
         }
 
         private fun compareReferenceSource(left: SubmarketWeaponStock, right: SubmarketWeaponStock): Int {
