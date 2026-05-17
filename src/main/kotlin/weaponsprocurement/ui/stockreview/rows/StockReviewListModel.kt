@@ -124,7 +124,7 @@ object StockReviewListModel {
         tradeContext: StockReviewTradeContext,
     ) {
         val expanded = state.isItemExpanded(record.itemKey)
-        val label = WimGuiToggleHeading.label(record.displayName, expanded)
+        val label = WimGuiToggleHeading.label(record.displayNameWithFixerMarker, expanded)
         val planQuantity = tradeContext.netQuantityForItem(record.itemKey)
         val sellRemaining = tradeContext.negativeAdjustmentRemaining(record, Int.MAX_VALUE)
         val transactionCost = tradeContext.transactionCostForItem(record.itemKey)

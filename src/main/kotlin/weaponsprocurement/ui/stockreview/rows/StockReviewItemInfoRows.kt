@@ -102,7 +102,7 @@ object StockReviewItemInfoRows {
             dataIndent,
             record.fixerAvailabilityDetails,
         )
-        addDataRow(rows, "Rarity", record.fixerRarityLabel, rightReserveWidth, listWidth, dataIndent)
+        addDataRow(rows, "Rarity", record.fixerRarityLabel, rightReserveWidth, listWidth, dataIndent, record.fixerRarityDetails)
         if (record.isWing()) {
             addDataRow(rows, "Primary Role", record.typeLabel, rightReserveWidth, listWidth, dataIndent)
             addRequiredDataRow(rows, "Size", "WING", rightReserveWidth, listWidth, dataIndent)

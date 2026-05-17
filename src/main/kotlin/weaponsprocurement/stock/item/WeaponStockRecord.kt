@@ -139,6 +139,27 @@ class WeaponStockRecord(
     val fixerAvailabilityDetails: String?
         get() = fixerCatalogMetadata?.source?.details
 
+    val fixerRarityDetails: String?
+        get() = fixerCatalogMetadata?.rarity?.details
+
+    val fixerInlineMarker: String?
+        get() {
+            val source = fixerCatalogSource?.shortLabel
+            val rarity = fixerRarity?.label
+            if (source == null && rarity == null) return null
+            return "[" + listOfNotNull(source, rarity).joinToString("/") + "]"
+        }
+
+    val displayNameWithFixerMarker: String
+        get() {
+            val marker = fixerInlineMarker
+            return if (marker.isNullOrBlank()) {
+                displayName.orEmpty()
+            } else {
+                displayName.orEmpty() + " " + marker
+            }
+        }
+
     val fixerSortRank: Int
         get() {
             val rarityRank = when (fixerRarity) {

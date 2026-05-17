@@ -107,7 +107,31 @@ class StockReviewTooltips private constructor() {
 
         @JvmStatic
         fun filter(filter: StockReviewFilter, active: Boolean): String =
-            (if (active) "Remove" else "Apply") + " the " + filter.label + " filter."
+            (if (active) "Remove" else "Apply") + " the " + filter.label + " filter. " + filterDescription(filter)
+
+        private fun filterDescription(filter: StockReviewFilter): String =
+            when (filter) {
+                StockReviewFilter.AVAILABILITY_LIVE ->
+                    "Shows Fixer rows backed by current real market cargo; buying still uses virtual Fixer stock."
+                StockReviewFilter.AVAILABILITY_CUSTOM ->
+                    "Shows Fixer rows seen only in unsupported/custom submarket cargo."
+                StockReviewFilter.AVAILABILITY_CATALOG ->
+                    "Shows cold-start theoretical candidates from current market-owner faction catalogs, using item-data reference prices."
+                StockReviewFilter.AVAILABILITY_OBSERVED_REFERENCE ->
+                    "Shows theoretical catalog candidates whose price or cargo-space reference was improved by prior observation."
+                StockReviewFilter.RARITY_COMMON ->
+                    "Shows low-tier or high-frequency Fixer catalog entries."
+                StockReviewFilter.RARITY_UNCOMMON ->
+                    "Shows mid-tier Fixer catalog entries."
+                StockReviewFilter.RARITY_RARE ->
+                    "Shows higher-tier Fixer catalog entries."
+                StockReviewFilter.RARITY_VERY_RARE ->
+                    "Shows top-tier or very low-frequency Fixer catalog entries."
+                StockReviewFilter.RARITY_UNKNOWN ->
+                    "Shows entries observed only in unsupported/custom submarkets, where WP has no vanilla rarity estimate."
+                else ->
+                    "Filters by vanilla weapon spec data; fighter LPC rows are not hidden by weapon-only filters."
+            }
 
         private fun oneDecimal(value: Float): String = String.format(Locale.US, "%.1f", value)
     }

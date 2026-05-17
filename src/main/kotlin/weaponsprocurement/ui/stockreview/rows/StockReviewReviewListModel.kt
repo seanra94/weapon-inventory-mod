@@ -97,7 +97,7 @@ class StockReviewReviewListModel private constructor() {
             val itemTooltip = StockReviewTooltips.itemDataToggle(record)
             rows.add(
                 StockReviewListRow.item(
-                    WimGuiToggleHeading.label(record.displayName, expanded),
+                    WimGuiToggleHeading.label(record.displayNameWithFixerMarker, expanded),
                     cells,
                     StockReviewAction.toggleItem(record.itemKey),
                     itemTooltip,
