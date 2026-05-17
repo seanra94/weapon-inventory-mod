@@ -77,6 +77,8 @@ class WeaponStockRecord(
     val itemType: StockItemType = itemType ?: StockItemType.WEAPON
     val itemKey: String = this.itemType.key(itemId)
     val submarketStocks: List<SubmarketWeaponStock> = Collections.unmodifiableList(submarketStocks)
+    private val buyableCountValue: Int = computeBuyableCount(this.submarketStocks)
+    private val cheapestPurchasableUnitPriceValue: Int = computeCheapestPurchasableUnitPrice(this.submarketStocks)
 
     fun isWing(): Boolean = StockItemType.WING == itemType
 
@@ -84,26 +86,13 @@ class WeaponStockRecord(
         get() = ownedCount
 
     val buyableCount: Int
-        get() {
-            var count = 0
-            for (stock in submarketStocks) {
-                if (stock.isPurchasable()) count += stock.count
-            }
-            return count
-        }
+        get() = buyableCountValue
 
     val neededCount: Int
         get() = Math.max(0, desiredCount - ownedCount)
 
     val cheapestPurchasableUnitPrice: Int
-        get() {
-            var cheapest = Int.MAX_VALUE
-            for (stock in submarketStocks) {
-                if (!stock.isPurchasable() || stock.count <= 0) continue
-                cheapest = Math.min(cheapest, stock.unitPrice)
-            }
-            return cheapest
-        }
+        get() = cheapestPurchasableUnitPriceValue
 
     val fixerRarityLabel: String?
         get() = fixerRarity?.label
@@ -323,6 +312,23 @@ class WeaponStockRecord(
 
         private fun valueOrUnknown(value: Any?): String {
             return value?.toString() ?: "?"
+        }
+
+        private fun computeBuyableCount(stocks: List<SubmarketWeaponStock>): Int {
+            var count = 0
+            for (stock in stocks) {
+                if (stock.isPurchasable()) count += stock.count
+            }
+            return count
+        }
+
+        private fun computeCheapestPurchasableUnitPrice(stocks: List<SubmarketWeaponStock>): Int {
+            var cheapest = Int.MAX_VALUE
+            for (stock in stocks) {
+                if (!stock.isPurchasable() || stock.count <= 0) continue
+                cheapest = Math.min(cheapest, stock.unitPrice)
+            }
+            return cheapest
         }
     }
 }

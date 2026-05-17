@@ -22,6 +22,8 @@ class TheoreticalSaleIndex {
         if (markets == null || markets.isEmpty()) return emptyMap()
 
         val result = HashMap<String, Candidate>()
+        val processed = HashSet<String>()
+        val factionsById = HashMap<String, FactionAPI?>()
         for (market in markets) {
             if (market == null || market.submarketsCopy == null) continue
             for (submarket in market.submarketsCopy) {
@@ -30,7 +32,9 @@ class TheoreticalSaleIndex {
                 val militarySubmarket = Submarkets.GENERIC_MILITARY == submarket.specId
                 val factionIds = relevantFactionIds(market, submarket)
                 for (factionId in factionIds) {
-                    val faction = safeFaction(sector, factionId)
+                    val scanKey = "$factionId|$tierCap|$militarySubmarket"
+                    if (!processed.add(scanKey)) continue
+                    val faction = faction(sector, factionId, factionsById)
                     addFactionWeapons(result, faction, tierCap, militarySubmarket, blacklist)
                     addFactionWings(result, faction, tierCap, militarySubmarket, blacklist)
                 }
@@ -197,6 +201,18 @@ class TheoreticalSaleIndex {
             }
         }
 
+        private fun faction(
+            sector: SectorAPI?,
+            factionId: String?,
+            factionsById: MutableMap<String, FactionAPI?>,
+        ): FactionAPI? {
+            if (factionId.isNullOrBlank()) return null
+            if (factionsById.containsKey(factionId)) return factionsById[factionId]
+            val faction = safeFaction(sector, factionId)
+            factionsById[factionId] = faction
+            return faction
+        }
+
         private fun frequency(frequencies: Map<String, Float>?, itemId: String): Float? {
             return frequencies?.get(itemId)
         }
@@ -208,10 +224,10 @@ class TheoreticalSaleIndex {
 
         private fun candidateIds(knownIds: Set<String>?, sellFrequency: Map<String, Float>?): Set<String> {
             if (sellFrequency != null && sellFrequency.isNotEmpty()) {
-                return HashSet(sellFrequency.keys)
+                return sellFrequency.keys
             }
             if (knownIds == null || knownIds.isEmpty()) return Collections.emptySet()
-            return HashSet(knownIds)
+            return knownIds
         }
 
         private fun hasTag(tags: Set<String>?, target: String?): Boolean {

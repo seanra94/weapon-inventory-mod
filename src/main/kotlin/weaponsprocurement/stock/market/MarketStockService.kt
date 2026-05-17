@@ -16,17 +16,6 @@ import java.util.HashMap
 
 class MarketStockService {
     fun collectCurrentMarketItemStock(market: MarketAPI?, includeBlackMarket: Boolean): MarketStock {
-        val builder = MarketStockBuilder()
-        builder.addAll(collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WEAPON))
-        builder.addAll(collectCurrentMarketStock(market, includeBlackMarket, StockItemType.WING))
-        return builder.build()
-    }
-
-    private fun collectCurrentMarketStock(
-        market: MarketAPI?,
-        includeBlackMarket: Boolean,
-        itemType: StockItemType,
-    ): MarketStock {
         val totals = HashMap<String, Int>()
         val byItemKey = HashMap<String, MutableList<SubmarketWeaponStock>>()
         val submarkets = market?.submarketsCopy
@@ -37,33 +26,45 @@ class MarketStockService {
             val cargo: CargoAPI = submarket.cargoNullOk ?: continue
             val stacks = cargo.stacksCopy ?: continue
             for (stack: CargoStackAPI in stacks) {
-                if (!StockItemStacks.isVisibleItemStack(stack, itemType)) continue
-                val itemKey = itemType.key(StockItemStacks.itemId(stack, itemType))
-                val count = Math.round(stack.size)
-                if (count <= 0) continue
-                InventoryCountService.add(totals, itemKey, count)
-                var stocks = byItemKey[itemKey]
-                if (stocks == null) {
-                    stocks = ArrayList()
-                    byItemKey[itemKey] = stocks
-                }
-                stocks.add(
-                    SubmarketWeaponStock(
-                        market.id,
-                        market.name,
-                        submarket.specId,
-                        submarket.nameOneLine,
-                        count,
-                        StockItemStacks.unitPrice(submarket, stack),
-                        StockItemStacks.baseUnitPrice(stack),
-                        StockItemStacks.unitCargoSpace(stack),
-                        StockItemStacks.isPurchasableItemStack(submarket, stack, itemType),
-                    )
-                )
+                addVisibleStack(totals, byItemKey, market, submarket, stack, StockItemType.WEAPON)
+                addVisibleStack(totals, byItemKey, market, submarket, stack, StockItemType.WING)
             }
         }
 
         return MarketStock(totals, byItemKey)
+    }
+
+    private fun addVisibleStack(
+        totals: MutableMap<String, Int>,
+        byItemKey: MutableMap<String, MutableList<SubmarketWeaponStock>>,
+        market: MarketAPI,
+        submarket: SubmarketAPI,
+        stack: CargoStackAPI,
+        itemType: StockItemType,
+    ) {
+        if (!StockItemStacks.isVisibleItemStack(stack, itemType)) return
+        val itemKey = itemType.key(StockItemStacks.itemId(stack, itemType))
+        val count = Math.round(stack.size)
+        if (count <= 0) return
+        InventoryCountService.add(totals, itemKey, count)
+        var stocks = byItemKey[itemKey]
+        if (stocks == null) {
+            stocks = ArrayList()
+            byItemKey[itemKey] = stocks
+        }
+        stocks.add(
+            SubmarketWeaponStock(
+                market.id,
+                market.name,
+                submarket.specId,
+                submarket.nameOneLine,
+                count,
+                StockItemStacks.unitPrice(submarket, stack),
+                StockItemStacks.baseUnitPrice(stack),
+                StockItemStacks.unitCargoSpace(stack),
+                StockItemStacks.isPurchasableItemStack(submarket, stack, itemType),
+            )
+        )
     }
 
     class MarketStock(
