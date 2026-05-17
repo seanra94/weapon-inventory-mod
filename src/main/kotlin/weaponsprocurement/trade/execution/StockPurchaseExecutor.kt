@@ -123,15 +123,18 @@ class StockPurchaseExecutor private constructor() {
             try {
                 val validation = buyPlanStillAvailable(plan, itemType, itemId)
                 if (validation != null) return validation
+                val checkedPlan = plan ?: return StockPurchaseService.PurchaseResult.failure("No purchasable stock is available.")
 
                 journal.recordCargo(playerCargo, "player cargo")
-                for (line in plan!!.lines) {
+                for (line in checkedPlan.lines) {
                     journal.recordCargo(line.source.cargo, "buy source " + sourceLabel(line.source, fallbackMarket))
                 }
-                for (line in plan.lines) {
-                    StockItemCargo.removeItem(line.source.cargo!!, itemType, itemId, line.quantity)
+                for (line in checkedPlan.lines) {
+                    val sourceCargo = line.source.cargo
+                        ?: return StockPurchaseService.PurchaseResult.failure("Trade source is no longer available.")
+                    StockItemCargo.removeItem(sourceCargo, itemType, itemId, line.quantity)
                     maybeFail(FAIL_AFTER_SOURCE_REMOVAL)
-                    StockItemCargo.tidyCargo(line.source.cargo)
+                    StockItemCargo.tidyCargo(sourceCargo)
                     val reportMarket = line.source.market ?: fallbackMarket
                     reportLines.add(
                         TransactionReportLine(
@@ -145,17 +148,17 @@ class StockPurchaseExecutor private constructor() {
                         )
                     )
                 }
-                StockItemCargo.addItem(playerCargo, itemType, itemId, plan.totalQuantity)
+                StockItemCargo.addItem(playerCargo, itemType, itemId, checkedPlan.totalQuantity)
                 maybeFail(FAIL_AFTER_PLAYER_CARGO_ADD)
-                playerCargo.credits.subtract(plan.totalCost.toFloat())
+                playerCargo.credits.subtract(checkedPlan.totalCost.toFloat())
                 maybeFail(FAIL_AFTER_CREDIT_MUTATION)
                 StockItemCargo.tidyCargo(playerCargo)
                 flushTransactionReports(log, reportLines)
 
-                val message = "Bought " + plan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId) +
-                    sourceLabel + " for " + CreditFormat.creditsLong(plan.totalCost) + "."
+                val message = "Bought " + checkedPlan.totalQuantity + " " + StockItemCargo.itemDisplayName(itemType, itemId) +
+                    sourceLabel + " for " + CreditFormat.creditsLong(checkedPlan.totalCost) + "."
                 StockPurchaseChecks.addCampaignMessage(message)
-                return StockPurchaseService.PurchaseResult.success(message, plan.totalQuantity, plan.totalCost)
+                return StockPurchaseService.PurchaseResult.success(message, checkedPlan.totalQuantity, checkedPlan.totalCost)
             } catch (t: Throwable) {
                 val totalQuantity = plan?.totalQuantity ?: 0
                 return executionFailure(log, operation, itemType, itemId, totalQuantity, t, journal)

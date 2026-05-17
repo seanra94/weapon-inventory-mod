@@ -128,7 +128,8 @@ class FixerMarketObservedCatalog {
             if (sources == null) return null
             for (source in sources) {
                 if (source.count <= 0 || !source.isPurchasable()) continue
-                if (best == null || compareReferenceSource(source, best!!) < 0) {
+                val currentBest = best
+                if (currentBest == null || compareReferenceSource(source, currentBest) < 0) {
                     best = source
                 }
             }

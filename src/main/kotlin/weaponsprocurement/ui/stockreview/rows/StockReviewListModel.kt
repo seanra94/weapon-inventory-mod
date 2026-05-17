@@ -28,8 +28,12 @@ object StockReviewListModel {
         tradeContext: StockReviewTradeContext,
     ): List<WimGuiListRow<StockReviewAction>> {
         val rows = ArrayList<WimGuiListRow<StockReviewAction>>()
+        if (state == null) {
+            rows.add(StockReviewListRow.empty(emptyStateMessage(snapshot, null)))
+            return rows
+        }
         var displayed = 0
-        displayed += addItemType(rows, snapshot, state!!, tradeContext, StockItemType.WEAPON, false)
+        displayed += addItemType(rows, snapshot, state, tradeContext, StockItemType.WEAPON, false)
         displayed += addItemType(rows, snapshot, state, tradeContext, StockItemType.WING, true)
         if (displayed == 0) {
             rows.add(StockReviewListRow.empty(emptyStateMessage(snapshot, state)))

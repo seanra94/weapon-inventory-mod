@@ -61,6 +61,7 @@ class WimGuiListRowRenderer private constructor() {
             defaultBorder: Color,
             buttons: MutableList<WimGuiButtonBinding<A>>,
         ) {
+            val action = row.getMainAction() ?: return
             var buttonLeft = labelLeft
             var buttonWidth = labelWidth
             val icon = row.getIcon()
@@ -79,7 +80,7 @@ class WimGuiListRowRenderer private constructor() {
                     buttonWidth,
                     row.getLabel(),
                     row.getTextColor() ?: WimGuiStyle.DEFAULT_TEXT,
-                    row.getMainAction()!!,
+                    action,
                     row.getMainAlignment(),
                     row.getButtonFillColor() ?: WimGuiStyle.UNCOLOURED_BUTTON,
                     defaultBorder,

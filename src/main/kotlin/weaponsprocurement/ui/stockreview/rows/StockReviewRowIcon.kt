@@ -12,8 +12,8 @@ class StockReviewRowIcon private constructor(
     companion object {
         @JvmStatic
         fun weapon(spriteName: String?, motifType: WeaponAPI.WeaponType?): StockReviewRowIcon? {
-            if (!WimGuiTooltip.hasText(spriteName)) return null
-            return StockReviewRowIcon(spriteName!!, motifType)
+            val resolvedSpriteName = spriteName?.takeIf { WimGuiTooltip.hasText(it) } ?: return null
+            return StockReviewRowIcon(resolvedSpriteName, motifType)
         }
 
         @JvmStatic

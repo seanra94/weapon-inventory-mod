@@ -578,11 +578,9 @@ class StockReviewItemTooltip private constructor(
         }
 
         private fun splitHighlights(highlight: String?): Array<String> {
-            if (!hasText(highlight)) {
-                return emptyArray()
-            }
+            val source = highlight?.takeIf { hasText(it) } ?: return emptyArray()
             val result = ArrayList<String>()
-            for (raw in highlight!!.split("|")) {
+            for (raw in source.split("|")) {
                 val trimmed = raw.trim()
                 if (trimmed.isNotEmpty()) {
                     result.add(trimmed)
@@ -613,10 +611,8 @@ class StockReviewItemTooltip private constructor(
         }
 
         private fun truncateForLines(text: String?, maxLines: Int, width: Float): String {
-            if (!hasText(text)) {
-                return text ?: ""
-            }
-            val normalized = text!!.trim().replace(Regex("\\s+"), " ")
+            val source = text?.takeIf { hasText(it) } ?: return text ?: ""
+            val normalized = source.trim().replace(Regex("\\s+"), " ")
             if (maxLines <= 0) {
                 return normalized
             }
@@ -660,8 +656,9 @@ class StockReviewItemTooltip private constructor(
                 return emptyArray()
             }
             val result = ArrayList<String>()
+            val source = text ?: return emptyArray()
             for (highlight in highlights) {
-                if (hasText(highlight) && text!!.contains(highlight)) {
+                if (hasText(highlight) && source.contains(highlight)) {
                     result.add(highlight)
                 }
             }
@@ -672,17 +669,18 @@ class StockReviewItemTooltip private constructor(
             if (!hasText(text)) {
                 return text ?: ""
             }
-            val result = StringBuilder(text!!.length)
+            val source = text ?: return ""
+            val result = StringBuilder(source.length)
             var highlightIndex = 0
             var i = 0
-            while (i < text.length) {
-                val c = text[i]
-                if (c != '%' || i + 1 >= text.length) {
+            while (i < source.length) {
+                val c = source[i]
+                if (c != '%' || i + 1 >= source.length) {
                     result.append(c)
                     i++
                     continue
                 }
-                val next = text[i + 1]
+                val next = source[i + 1]
                 if (next == '%') {
                     result.append('%')
                     i += 2
@@ -732,7 +730,7 @@ class StockReviewItemTooltip private constructor(
             if (!hasText(value)) {
                 return false
             }
-            val trimmed = value!!.trim()
+            val trimmed = value?.trim() ?: return false
             return trimmed != "?" && trimmed != "---" && !trimmed.equals("None", ignoreCase = true)
         }
 

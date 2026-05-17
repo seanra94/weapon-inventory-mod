@@ -244,8 +244,9 @@ object StockReviewItemInfoRows {
         if (!isMeaningful(value)) {
             return false
         }
+        val normalized = value?.replace("\u00b0/s", "")?.trim() ?: return false
         return try {
-            value!!.replace("\u00b0/s", "").trim().toFloat() > 0f
+            normalized.toFloat() > 0f
         } catch (ex: NumberFormatException) {
             true
         }

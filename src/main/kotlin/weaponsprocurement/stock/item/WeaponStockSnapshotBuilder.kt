@@ -55,6 +55,7 @@ class WeaponStockSnapshotBuilder {
             val spec = if (StockItemType.WEAPON == itemType) safeWeaponSpec(itemId) else null
             val wingSpec = if (StockItemType.WING == itemType) safeWingSpec(itemId) else null
             if (spec == null && wingSpec == null) continue
+            val displayName = displayName(itemType, spec, wingSpec) ?: continue
             if (config.isIgnored(itemKey) || config.isIgnored(itemId)) continue
 
             val ownedCount = getCount(owned, itemKey)
@@ -71,7 +72,7 @@ class WeaponStockSnapshotBuilder {
                 WeaponStockRecord(
                     itemType,
                     itemId,
-                    if (StockItemType.WING == itemType) wingSpec!!.wingName else spec!!.weaponName,
+                    displayName,
                     spec,
                     wingSpec,
                     ownedCount,
@@ -160,6 +161,18 @@ class WeaponStockSnapshotBuilder {
                 Global.getSettings().getFighterWingSpec(wingId)
             } catch (_: Throwable) {
                 null
+            }
+        }
+
+        private fun displayName(
+            itemType: StockItemType,
+            weaponSpec: WeaponSpecAPI?,
+            wingSpec: FighterWingSpecAPI?,
+        ): String? {
+            return if (StockItemType.WING == itemType) {
+                wingSpec?.wingName
+            } else {
+                weaponSpec?.weaponName
             }
         }
 
