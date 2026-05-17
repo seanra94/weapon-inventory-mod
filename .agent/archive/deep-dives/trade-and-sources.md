@@ -6,7 +6,7 @@ Last verified: 2026-05-17, against local Starsector 0.98a bytecode and installed
 Read when: changing Local/Sector/Fixer behavior, pending trades, quotes, tariffs, market blacklists, cargo mutation, or transaction callbacks
 Do not read for: pure UI row layout, patched badge rendering, or docs-only release notes
 Related files: `src/weaponsprocurement/core`, `src/weaponsprocurement/gui/StockReviewTrade*`, `src/weaponsprocurement/gui/StockReviewExecutionController.java`, `data/config/weapons_procurement_market_blacklist.json`
-Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockReviewQuoteBook`, `reportPlayerMarketTransaction`, `TheoreticalSaleIndex`, `ObservedStockIndex`, `RarityClassifier`, `FactionAPI`, `W:`, `F:`
+Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockReviewQuoteBook`, `reportPlayerMarketTransaction`, `TheoreticalSaleIndex`, `ObservedStockIndex`, `RarityClassifier`, `TheoreticalShipSaleIndex`, `ObservedShipStockIndex`, `FactionAPI`, `W:`, `F:`
 
 ## Summary
 
@@ -14,6 +14,7 @@ Search tags: `Sector Market`, `Fixer's Market`, `StockPurchaseExecutor`, `StockR
 - Local, Sector Market, and Fixer's Market have intentionally different source and drain semantics.
 - Sector Market stock is live and should not be cached across popup rebuilds.
 - Fixer's Market uses a runtime theoretical-sale catalog plus rarity estimate, with observed stock used for reference prices and correction.
+- Ships have a non-trading observed/theoretical catalog prototype; it is for future validation and does not feed Fixer stock rows or purchases.
 - Pending trades are signed staged intent; only `Confirm Trades` mutates cargo/credits.
 - Quote the whole portfolio when planned lines can contend for the same stock.
 - Use the final source-stock preflight and rollback journal around WP-touched cargo and credits.
@@ -84,12 +85,16 @@ Current WP code state:
 - `WeaponsProcurementFixerCatalogUpdater` scans real market cargo about once per in-game day and stores safe observed weapon/wing item keys in sector persistent data.
 - `ObservedStockIndex` scans current real market cargo and supplies the cheapest live reference price/cargo-space data.
 - `TheoreticalSaleIndex` uses runtime faction sell-frequency maps when present, otherwise faction known weapons/fighters, plus vanilla-supported submarket tier caps, item safety filters, and the Fixer blacklist to build cold-start virtual stock.
+- `ObservedShipStockIndex` scans current market mothballed ships and records exact observed hull stock/reference prices without mutating cargo.
+- `TheoreticalShipSaleIndex` builds a non-trading candidate set from market-owner faction known hulls on vanilla-supported open/military/black submarkets.
+- `ShipRarityClassifier` estimates common/uncommon/rare/very rare using hull frequency, priority status, hull size, fleet points, doctrine, stability, submarket type, and a conservative ship-size cap model.
+- The ship catalog is intentionally not wired into stock rows, pending trades, quote math, purchase execution, or public-facing Fixer availability yet.
 - Persistent observed entries are fallback metadata only. They may provide price/cargo-space data for live or theoretical Fixer candidates, but they must not independently make an item available forever after a one-time observation.
 - `RarityClassifier` attaches common/uncommon/rare/very rare/unknown labels for Fixer records without changing prices; tier-0 candidates remain common unless filtered out.
 - Expanded item info surfaces Fixer availability provenance, distinguishing live stock, custom live stock, faction catalog candidates, and catalog candidates using observed price/cargo references.
 - Fixer provenance is also visible through compact row markers and actionable through Fixer-only availability/rarity filters plus the `Rarity` sort mode. These UI controls must not change pricing, stock counts, or source-draining semantics.
 - The theoretical weapon/LPC catalog uses the market-owner faction for vanilla open, military, and black markets. Live observed cargo still captures custom submarket behavior without broad independent-catalog leakage.
-- Ship cataloging remains future work.
+- Ship trading remains future work. The current ship catalog layer is a source-system prototype only; do not use it to offer buyable ships until quote, UI, cargo-space, delivery, source-draining/virtual-stock semantics, and compatibility risks are designed separately.
 - Keep the persistent observed catalog as simple Java collections to avoid custom save-object compatibility problems.
 - Sanitize persistent maps into string key/value entries before use.
 - Exclude obvious special/hidden tags such as `restricted`, `no_dealer`, `omega`, `dweller`, `threat`, and codex-hidden/unlockable markers when offering virtual Fixer stock.
