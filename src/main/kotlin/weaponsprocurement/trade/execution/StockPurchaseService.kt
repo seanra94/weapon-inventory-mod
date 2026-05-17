@@ -49,11 +49,13 @@ class StockPurchaseService {
         if (playerStack == null || available <= 0) {
             return PurchaseResult.failure("No player-cargo stock is available to sell.")
         }
-        val quantity = Math.min(requestedQuantity, available)
+        if (available < requestedQuantity) {
+            return PurchaseResult.failure("Player cargo changed before confirmation. Reopen the review and try again.")
+        }
         val target = StockPurchaseMarketSources.sellTarget(market, playerStack, includeBlackMarket)
             ?: return PurchaseResult.failure("No valid market buyer is available.")
 
-        return StockPurchaseExecutor.sellToMarket(LOG, market, cargo, target, itemType, checkedItemId, quantity)
+        return StockPurchaseExecutor.sellToMarket(LOG, market, cargo, target, itemType, checkedItemId, requestedQuantity)
     }
 
     fun buyItemFromFixersMarket(
@@ -114,6 +116,12 @@ class StockPurchaseService {
         val plan = StockPurchasePlan.build(sources, requestedQuantity)
         validation = StockPurchaseChecks.buyPlanAvailable(plan, "No sector-market stock is available.")
         if (validation != null) return validation
+        validation = StockPurchaseChecks.buyPlanFillsRequest(
+            plan,
+            requestedQuantity,
+            "Sector-market stock changed before confirmation. Reopen the review and try again.",
+        )
+        if (validation != null) return validation
         validation = StockPurchaseChecks.canCompletePurchase(cargo, plan)
         if (validation != null) return validation
 
@@ -164,6 +172,12 @@ class StockPurchaseService {
 
         val plan = StockPurchasePlan.build(sources, requestedQuantity)
         validation = StockPurchaseChecks.buyPlanAvailable(plan, "No purchasable stock is available.")
+        if (validation != null) return validation
+        validation = StockPurchaseChecks.buyPlanFillsRequest(
+            plan,
+            requestedQuantity,
+            "Market stock changed before confirmation. Reopen the review and try again.",
+        )
         if (validation != null) return validation
         validation = StockPurchaseChecks.canCompletePurchase(cargo, plan)
         if (validation != null) return validation

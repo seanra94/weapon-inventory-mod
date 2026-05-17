@@ -132,6 +132,7 @@ class StockPurchaseExecutor private constructor() {
                 for (line in checkedPlan.lines) {
                     val sourceCargo = line.source.cargo
                         ?: return StockPurchaseService.PurchaseResult.failure("Trade source is no longer available.")
+                    val expectedSourceCount = StockItemCargo.itemCount(sourceCargo, itemType, itemId) - line.quantity
                     StockItemCargo.removeItem(sourceCargo, itemType, itemId, line.quantity)
                     maybeFail(FAIL_AFTER_SOURCE_REMOVAL)
                     StockItemCargo.tidyCargo(sourceCargo)
@@ -140,6 +141,9 @@ class StockPurchaseExecutor private constructor() {
                         TransactionReportLine(
                             reportMarket,
                             line.source.submarket,
+                            sourceCargo,
+                            expectedSourceCount,
+                            "buy source " + sourceLabel(line.source, fallbackMarket),
                             itemType,
                             itemId,
                             line.quantity,
@@ -188,7 +192,7 @@ class StockPurchaseExecutor private constructor() {
         }
 
         private fun flushTransactionReports(log: Logger, reportLines: List<TransactionReportLine>) {
-            for (reportLine in reportLines) reportLine.report(log)
+            for (reportLine in reportLines) reportLine.reportAndReconcile(log)
         }
 
         private fun reconcileAfterTransactionReport(
@@ -340,13 +344,16 @@ class StockPurchaseExecutor private constructor() {
     private class TransactionReportLine(
         private val market: MarketAPI?,
         private val submarket: SubmarketAPI?,
+        private val cargo: CargoAPI?,
+        private val expectedCount: Int,
+        private val label: String,
         private val itemType: StockItemType,
         private val itemId: String,
         private val quantity: Int,
         private val unitPrice: Int,
         private val buy: Boolean,
     ) {
-        fun report(log: Logger) {
+        fun reportAndReconcile(log: Logger) {
             StockMarketTransactionReporter.reportItemTransaction(
                 log,
                 market,
@@ -357,6 +364,9 @@ class StockPurchaseExecutor private constructor() {
                 unitPrice,
                 buy,
             )
+            if (cargo != null) {
+                reconcileAfterTransactionReport(log, cargo, itemType, itemId, expectedCount, label)
+            }
         }
     }
 }

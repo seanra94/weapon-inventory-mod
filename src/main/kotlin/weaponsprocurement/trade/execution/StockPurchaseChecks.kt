@@ -112,7 +112,17 @@ class StockPurchaseChecks private constructor() {
         }
 
         @JvmStatic
+        fun buyPlanFillsRequest(
+            plan: StockPurchasePlan,
+            requestedQuantity: Int,
+            message: String,
+        ): StockPurchaseService.PurchaseResult? {
+            return if (plan.totalQuantity < requestedQuantity) StockPurchaseService.PurchaseResult.failure(message) else null
+        }
+
+        @JvmStatic
         fun addCampaignMessage(message: String?) {
+            if (message.isNullOrEmpty()) return
             val ui = Global.getSector()?.campaignUI
             if (ui != null) ui.addMessage(message)
         }
