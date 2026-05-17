@@ -168,6 +168,8 @@ class StockReviewPanelPlugin(
     }
 
     override fun rebuildSnapshot() {
+        state.normalizeSourceMode()
+        renderer.invalidateModelCache()
         val host = WimGuiCampaignDialogHost.current()
         val sector = host.getSector()
         val market = host.getCurrentMarketOr(initialMarket)

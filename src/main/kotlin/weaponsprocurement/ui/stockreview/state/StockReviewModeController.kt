@@ -26,20 +26,24 @@ class StockReviewModeController(private var reviewMode: Boolean) {
     fun getRevision(): Int = revision
 
     fun enterFilters(state: StockReviewState) {
+        val changed = !filterMode || reviewMode || colorDebugMode || state.getListScrollOffset() != 0
         filterMode = true
         reviewMode = false
         colorDebugMode = false
         state.setListScrollOffset(0)
-        markChanged()
+        markChangedIf(changed)
     }
 
     fun leaveFilters(state: StockReviewState) {
+        val changed = filterMode || state.getListScrollOffset() != 0
         filterMode = false
         state.setListScrollOffset(0)
-        markChanged()
+        markChangedIf(changed)
     }
 
     fun enterColorDebug(state: StockReviewState) {
+        val previousDraft = colorDebugDraft?.rgb
+        val changed = !colorDebugMode || reviewMode || filterMode || state.getListScrollOffset() != 0 || previousDraft == null
         colorDebugReturnToReview = reviewMode
         colorDebugReturnScrollOffset = state.getListScrollOffset()
         colorDebugMode = true
@@ -47,23 +51,30 @@ class StockReviewModeController(private var reviewMode: Boolean) {
         filterMode = false
         state.setListScrollOffset(0)
         ensureColorDebugDraft()
-        markChanged()
+        markChangedIf(changed || previousDraft != colorDebugDraft?.rgb)
     }
 
     fun leaveColorDebug(state: StockReviewState) {
+        val changed = colorDebugMode ||
+            reviewMode != colorDebugReturnToReview ||
+            state.getListScrollOffset() != colorDebugReturnScrollOffset
         colorDebugMode = false
         reviewMode = colorDebugReturnToReview
         state.setListScrollOffset(colorDebugReturnScrollOffset)
-        markChanged()
+        markChangedIf(changed)
     }
 
     fun exitReview(state: StockReviewState) {
+        val changed = reviewMode || state.getListScrollOffset() != 0
         reviewMode = false
         state.setListScrollOffset(0)
-        markChanged()
+        markChangedIf(changed)
     }
 
     fun setReviewMode(reviewMode: Boolean) {
+        if (this.reviewMode == reviewMode) {
+            return
+        }
         this.reviewMode = reviewMode
         markChanged()
     }
@@ -76,15 +87,18 @@ class StockReviewModeController(private var reviewMode: Boolean) {
     fun cycleColorDebugTarget(delta: Int) {
         val targets = WimGuiColorDebug.targets()
         if (targets.isEmpty()) {
+            val changed = colorDebugTargetIndex != 0 || colorDebugDraft != null
             colorDebugTargetIndex = 0
             colorDebugDraft = null
-            markChanged()
+            markChangedIf(changed)
             return
         }
         val size = targets.size
+        val previousIndex = colorDebugTargetIndex
+        val previousDraft = colorDebugDraft?.rgb
         colorDebugTargetIndex = ((colorDebugTargetIndex + delta) % size + size) % size
         colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex))
-        markChanged()
+        markChangedIf(previousIndex != colorDebugTargetIndex || previousDraft != colorDebugDraft?.rgb)
     }
 
     fun currentColorDebugDraft(): Color? {
@@ -93,14 +107,16 @@ class StockReviewModeController(private var reviewMode: Boolean) {
     }
 
     fun adjustColorDebugDraft(redDelta: Int, greenDelta: Int, blueDelta: Int) {
+        val previous = currentColorDebugDraft()?.rgb
         colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), redDelta, greenDelta, blueDelta)
-        markChanged()
+        markChangedIf(previous != colorDebugDraft?.rgb)
     }
 
     fun restoreColorDebugDraft() {
         val target = WimGuiColorDebug.targetAt(colorDebugTargetIndex)
+        val previous = colorDebugDraft?.rgb
         colorDebugDraft = target?.defaultColor
-        markChanged()
+        markChangedIf(previous != colorDebugDraft?.rgb)
     }
 
     fun applyColorDebugDraft() {
@@ -121,5 +137,9 @@ class StockReviewModeController(private var reviewMode: Boolean) {
 
     private fun markChanged() {
         revision++
+    }
+
+    private fun markChangedIf(changed: Boolean) {
+        if (changed) markChanged()
     }
 }

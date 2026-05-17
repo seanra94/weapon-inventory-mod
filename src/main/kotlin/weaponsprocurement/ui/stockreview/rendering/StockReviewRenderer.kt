@@ -33,6 +33,10 @@ class StockReviewRenderer :
     private val buttonFactory = WimGuiSemanticButtonFactory<StockReviewAction>(StockReviewStyle.ROW_BORDER)
     private var cachedModel: RenderModel? = null
 
+    fun invalidateModelCache() {
+        cachedModel = null
+    }
+
     fun render(
         root: CustomPanelAPI,
         snapshot: WeaponStockSnapshot,
@@ -88,9 +92,20 @@ class StockReviewRenderer :
         colorDebugDraft: Color?,
         colorDebugPersistent: Boolean,
     ): RenderModel {
+        val key = RenderModelKey(
+            state.getContentRevision(),
+            pendingTradeRevision,
+            modeRevision,
+            reviewMode,
+            filterMode,
+            colorDebugMode,
+            colorDebugTargetIndex,
+            colorKey(colorDebugDraft),
+            colorDebugPersistent,
+        )
         val current = cachedModel
         if (current != null &&
-            current.matches(snapshot, state.getContentRevision(), pendingTradeRevision, modeRevision)
+            current.matches(snapshot, key)
         ) {
             return current
         }
@@ -112,7 +127,7 @@ class StockReviewRenderer :
             listSpec = StockReviewStyle.TRADE_LIST
         }
 
-        val built = RenderModel(snapshot, state.getContentRevision(), pendingTradeRevision, modeRevision, tradeContext, rows, listSpec)
+        val built = RenderModel(snapshot, key, tradeContext, rows, listSpec)
         cachedModel = built
         return built
     }
@@ -266,26 +281,45 @@ class StockReviewRenderer :
         }
 
         private fun onOff(enabled: Boolean): String = if (enabled) "On" else "Off"
+
+        private fun colorKey(color: Color?): Int = color?.rgb ?: 0
+    }
+
+    private class RenderModelKey(
+        val stateRevision: Int,
+        val pendingTradeRevision: Int,
+        val modeRevision: Int,
+        val reviewMode: Boolean,
+        val filterMode: Boolean,
+        val colorDebugMode: Boolean,
+        val colorDebugTargetIndex: Int,
+        val colorDebugDraftRgb: Int,
+        val colorDebugPersistent: Boolean,
+    ) {
+        fun matches(other: RenderModelKey): Boolean =
+            stateRevision == other.stateRevision &&
+                pendingTradeRevision == other.pendingTradeRevision &&
+                modeRevision == other.modeRevision &&
+                reviewMode == other.reviewMode &&
+                filterMode == other.filterMode &&
+                colorDebugMode == other.colorDebugMode &&
+                colorDebugTargetIndex == other.colorDebugTargetIndex &&
+                colorDebugDraftRgb == other.colorDebugDraftRgb &&
+                colorDebugPersistent == other.colorDebugPersistent
     }
 
     private class RenderModel(
         private val snapshot: WeaponStockSnapshot,
-        private val stateRevision: Int,
-        private val pendingTradeRevision: Int,
-        private val modeRevision: Int,
+        private val key: RenderModelKey,
         val tradeContext: StockReviewTradeContext,
         val rows: List<WimGuiListRow<StockReviewAction>>,
         val listSpec: WimGuiModalListSpec,
     ) {
         fun matches(
             snapshot: WeaponStockSnapshot,
-            stateRevision: Int,
-            pendingTradeRevision: Int,
-            modeRevision: Int,
+            key: RenderModelKey,
         ): Boolean =
             this.snapshot === snapshot &&
-                this.stateRevision == stateRevision &&
-                this.pendingTradeRevision == pendingTradeRevision &&
-                this.modeRevision == modeRevision
+                this.key.matches(key)
     }
 }

@@ -22,31 +22,34 @@ class StockReviewFilterState {
 
     fun isFilterActive(filter: StockReviewFilter?): Boolean = activeFilters.contains(filter)
 
-    fun toggleFilter(filter: StockReviewFilter?) {
+    fun toggleFilter(filter: StockReviewFilter?): Boolean {
         if (filter == null) {
-            return
+            return false
         }
         if (activeFilters.contains(filter)) {
             activeFilters.remove(filter)
         } else {
             activeFilters.add(filter)
         }
+        return true
     }
 
     fun getActiveFilters(): Set<StockReviewFilter> = EnumSet.copyOf(activeFilters)
 
     fun getActiveFilterCount(): Int = activeFilters.size
 
-    fun clearFilters() {
+    fun clearFilters(): Boolean {
+        if (activeFilters.isEmpty()) return false
         activeFilters.clear()
+        return true
     }
 
     fun isExpanded(group: StockReviewFilterGroup?): Boolean = expandedFilterGroups[group] == true
 
-    fun toggle(group: StockReviewFilterGroup?) {
-        if (group != null) {
-            expandedFilterGroups[group] = !isExpanded(group)
-        }
+    fun toggle(group: StockReviewFilterGroup?): Boolean {
+        if (group == null) return false
+        expandedFilterGroups[group] = !isExpanded(group)
+        return true
     }
 
     private fun initializeFilterGroups() {

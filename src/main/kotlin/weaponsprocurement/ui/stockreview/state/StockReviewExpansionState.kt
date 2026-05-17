@@ -35,10 +35,10 @@ class StockReviewExpansionState {
 
     fun isExpanded(category: StockCategory?): Boolean = expanded[category] == true
 
-    fun toggle(category: StockCategory?) {
-        if (category != null) {
-            expanded[category] = !isExpanded(category)
-        }
+    fun toggle(category: StockCategory?): Boolean {
+        if (category == null) return false
+        expanded[category] = !isExpanded(category)
+        return true
     }
 
     fun isExpanded(itemType: StockItemType?, category: StockCategory?): Boolean {
@@ -46,51 +46,52 @@ class StockReviewExpansionState {
         return byCategory?.get(category) == true
     }
 
-    fun toggle(itemType: StockItemType?, category: StockCategory?) {
+    fun toggle(itemType: StockItemType?, category: StockCategory?): Boolean {
         if (itemType == null) {
-            toggle(category)
-            return
+            return toggle(category)
         }
         if (category == null) {
-            return
+            return false
         }
         val byCategory = expandedByItemType.getOrPut(itemType) { EnumMap(StockCategory::class.java) }
         byCategory[category] = !isExpanded(itemType, category)
+        return true
     }
 
     fun isExpanded(itemType: StockItemType?): Boolean = expandedItemTypes[itemType] == true
 
-    fun toggle(itemType: StockItemType?) {
-        if (itemType != null) {
-            expandedItemTypes[itemType] = !isExpanded(itemType)
-        }
+    fun toggle(itemType: StockItemType?): Boolean {
+        if (itemType == null) return false
+        expandedItemTypes[itemType] = !isExpanded(itemType)
+        return true
     }
 
     fun isExpanded(tradeGroup: StockReviewTradeGroup?): Boolean = expandedTradeGroups[tradeGroup] == true
 
-    fun toggle(tradeGroup: StockReviewTradeGroup?) {
-        if (tradeGroup != null) {
-            expandedTradeGroups[tradeGroup] = !isExpanded(tradeGroup)
-        }
+    fun toggle(tradeGroup: StockReviewTradeGroup?): Boolean {
+        if (tradeGroup == null) return false
+        expandedTradeGroups[tradeGroup] = !isExpanded(tradeGroup)
+        return true
     }
 
-    fun setExpanded(tradeGroup: StockReviewTradeGroup?, value: Boolean) {
-        if (tradeGroup != null) {
-            expandedTradeGroups[tradeGroup] = value
-        }
+    fun setExpanded(tradeGroup: StockReviewTradeGroup?, value: Boolean): Boolean {
+        if (tradeGroup == null || isExpanded(tradeGroup) == value) return false
+        expandedTradeGroups[tradeGroup] = value
+        return true
     }
 
     fun isItemExpanded(itemKey: String?): Boolean = expandedItems.contains(itemKey)
 
-    fun toggleItem(itemKey: String?) {
+    fun toggleItem(itemKey: String?): Boolean {
         if (itemKey.isNullOrEmpty()) {
-            return
+            return false
         }
         if (expandedItems.contains(itemKey)) {
             expandedItems.remove(itemKey)
         } else {
             expandedItems.add(itemKey)
         }
+        return true
     }
 
     private fun initializeItemCategoryExpansion() {

@@ -28,20 +28,24 @@ class StockReviewSourceState {
 
     fun getSortMode(): StockSortMode = sortMode
 
-    fun cycleSortMode() {
+    fun cycleSortMode(): Boolean {
+        val previous = sortMode
         sortMode = sortMode.next()
+        return previous != sortMode
     }
 
     fun isIncludeCurrentMarketStorage(): Boolean = includeCurrentMarketStorage
 
     fun isIncludeBlackMarket(): Boolean = !getSourceMode().isRemote() && includeBlackMarket
 
-    fun toggleBlackMarket() {
+    fun toggleBlackMarket(): Boolean {
+        val previous = includeBlackMarket
         if (getSourceMode().isRemote()) {
             includeBlackMarket = false
-            return
+            return previous != includeBlackMarket
         }
         includeBlackMarket = !includeBlackMarket
+        return previous != includeBlackMarket
     }
 
     fun getSourceMode(): StockSourceMode {
@@ -54,11 +58,21 @@ class StockReviewSourceState {
         return resolved
     }
 
-    fun cycleSourceMode() {
+    fun cycleSourceMode(): Boolean {
+        val previousSource = getSourceMode()
+        val previousBlackMarket = includeBlackMarket
         val next = getSourceMode().next()
         sourceMode = next
         if (next.isRemote()) {
             includeBlackMarket = false
         }
+        return previousSource != next || previousBlackMarket != includeBlackMarket
+    }
+
+    fun normalizeSourceMode(): Boolean {
+        val previousSource = sourceMode
+        val previousBlackMarket = includeBlackMarket
+        getSourceMode()
+        return previousSource != sourceMode || previousBlackMarket != includeBlackMarket
     }
 }

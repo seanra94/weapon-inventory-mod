@@ -38,71 +38,67 @@ class StockReviewState : WimGuiScrollableListState {
 
     fun isExpanded(category: StockCategory?): Boolean = expansion.isExpanded(category)
     fun toggle(category: StockCategory?) {
-        expansion.toggle(category)
-        markContentChanged()
+        markContentChangedIf(expansion.toggle(category))
     }
     fun isExpanded(itemType: StockItemType?, category: StockCategory?): Boolean = expansion.isExpanded(itemType, category)
     fun toggle(itemType: StockItemType?, category: StockCategory?) {
-        expansion.toggle(itemType, category)
-        markContentChanged()
+        markContentChangedIf(expansion.toggle(itemType, category))
     }
     fun isExpanded(itemType: StockItemType?): Boolean = expansion.isExpanded(itemType)
     fun toggle(itemType: StockItemType?) {
-        expansion.toggle(itemType)
-        markContentChanged()
+        markContentChangedIf(expansion.toggle(itemType))
     }
     fun isExpanded(tradeGroup: StockReviewTradeGroup?): Boolean = expansion.isExpanded(tradeGroup)
     fun toggle(tradeGroup: StockReviewTradeGroup?) {
-        expansion.toggle(tradeGroup)
-        markContentChanged()
+        markContentChangedIf(expansion.toggle(tradeGroup))
     }
     fun setExpanded(tradeGroup: StockReviewTradeGroup?, value: Boolean) {
-        expansion.setExpanded(tradeGroup, value)
-        markContentChanged()
+        markContentChangedIf(expansion.setExpanded(tradeGroup, value))
     }
     fun isItemExpanded(itemKey: String?): Boolean = expansion.isItemExpanded(itemKey)
     fun toggleItem(itemKey: String?) {
-        expansion.toggleItem(itemKey)
-        markContentChanged()
+        markContentChangedIf(expansion.toggleItem(itemKey))
     }
 
     fun isFilterActive(filter: StockReviewFilter?): Boolean = filters.isFilterActive(filter)
 
     fun toggleFilter(filter: StockReviewFilter?) {
-        filters.toggleFilter(filter)
-        listScrollOffset = 0
-        markContentChanged()
+        if (filters.toggleFilter(filter)) {
+            listScrollOffset = 0
+            markContentChanged()
+        }
     }
 
     fun getActiveFilters(): Set<StockReviewFilter> = filters.getActiveFilters()
     fun getActiveFilterCount(): Int = filters.getActiveFilterCount()
 
     fun clearFilters() {
-        filters.clearFilters()
-        listScrollOffset = 0
-        markContentChanged()
+        if (filters.clearFilters()) {
+            listScrollOffset = 0
+            markContentChanged()
+        }
     }
 
     fun isExpanded(group: StockReviewFilterGroup?): Boolean = filters.isExpanded(group)
     fun toggle(group: StockReviewFilterGroup?) {
-        filters.toggle(group)
-        markContentChanged()
+        markContentChangedIf(filters.toggle(group))
     }
     fun getSortMode(): StockSortMode = source.getSortMode()
     fun cycleSortMode() {
-        source.cycleSortMode()
-        markContentChanged()
+        markContentChangedIf(source.cycleSortMode())
     }
     fun isIncludeCurrentMarketStorage(): Boolean = source.isIncludeCurrentMarketStorage()
     fun isIncludeBlackMarket(): Boolean = source.isIncludeBlackMarket()
     fun toggleBlackMarket() {
-        source.toggleBlackMarket()
-        markContentChanged()
+        markContentChangedIf(source.toggleBlackMarket())
     }
     fun getSourceMode(): StockSourceMode = source.getSourceMode()
     fun cycleSourceMode() {
-        source.cycleSourceMode()
-        markContentChanged()
+        markContentChangedIf(source.cycleSourceMode())
+    }
+
+    fun normalizeSourceMode() {
+        markContentChangedIf(source.normalizeSourceMode())
     }
 
     fun getContentRevision(): Int = contentRevision
@@ -141,5 +137,9 @@ class StockReviewState : WimGuiScrollableListState {
 
     private fun markContentChanged() {
         contentRevision++
+    }
+
+    private fun markContentChangedIf(changed: Boolean) {
+        if (changed) markContentChanged()
     }
 }
