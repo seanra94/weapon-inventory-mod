@@ -4,7 +4,6 @@ import weaponsprocurement.stock.fixer.TheoreticalSaleIndex.Candidate
 import com.fs.starfarer.api.campaign.FactionAPI
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
-import com.fs.starfarer.api.campaign.econ.SubmarketAPI
 import weaponsprocurement.config.WeaponMarketBlacklist
 import weaponsprocurement.config.WeaponsProcurementConfig
 import weaponsprocurement.stock.fixer.FixerMarketObservedCatalog
@@ -192,12 +191,9 @@ class GlobalWeaponMarketService {
                     append(result, "m", market?.id)
                     append(result, "mf", market?.factionId)
                     addFactionId(factionIds, market?.factionId)
-                    val submarkets: List<SubmarketAPI> = market?.submarketsCopy ?: continue
+                    val submarkets = market?.submarketsCopy ?: continue
                     for (submarket in submarkets) {
                         append(result, "s", submarket?.specId)
-                        val submarketFactionId = submarket?.faction?.id
-                        append(result, "sf", submarketFactionId)
-                        addFactionId(factionIds, submarketFactionId)
                     }
                 }
             }
