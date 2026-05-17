@@ -7,24 +7,35 @@ import java.util.Collections
 
 class StockReviewPendingTrades {
     private val trades = ArrayList<StockReviewPendingTrade>()
+    private val view: List<StockReviewPendingTrade> = Collections.unmodifiableList(trades)
+    private var revision = 0
 
-    fun asList(): List<StockReviewPendingTrade> = Collections.unmodifiableList(trades)
+    fun asList(): List<StockReviewPendingTrade> = view
+
+    fun getRevision(): Int = revision
 
     fun isEmpty(): Boolean = trades.isEmpty()
 
     fun clear() {
+        if (trades.isEmpty()) return
         trades.clear()
+        markChanged()
     }
 
     fun replaceWith(source: List<StockReviewPendingTrade>?) {
+        val hadTrades = trades.isNotEmpty()
         trades.clear()
-        if (source == null) return
+        if (source == null) {
+            if (hadTrades) markChanged()
+            return
+        }
         for (trade in source) {
             if (!trade.isZero()) {
                 val copy = trade.copy()
                 if (copy != null) trades.add(copy)
             }
         }
+        markChanged()
     }
 
     fun add(itemKey: String?, submarketId: String?, quantity: Int) {
@@ -32,11 +43,15 @@ class StockReviewPendingTrades {
         val existing = find(itemKey, submarketId)
         if (existing == null) {
             val trade = StockReviewPendingTrade.create(itemKey, submarketId, quantity)
-            if (trade != null) trades.add(trade)
+            if (trade != null) {
+                trades.add(trade)
+                markChanged()
+            }
             return
         }
         existing.addQuantity(quantity)
         if (existing.isZero()) trades.remove(existing)
+        markChanged()
     }
 
     fun adjustItemNet(itemKey: String?, delta: Int) {
@@ -51,11 +66,14 @@ class StockReviewPendingTrades {
     }
 
     fun resetItem(itemKey: String?) {
+        var changed = false
         for (i in trades.size - 1 downTo 0) {
             if (itemKey != null && itemKey == trades[i].itemKey) {
                 trades.removeAt(i)
+                changed = true
             }
         }
+        if (changed) markChanged()
     }
 
     fun removeExecuted(executionOrder: List<StockReviewPendingTrade>?, failedIndex: Int) {
@@ -73,6 +91,7 @@ class StockReviewPendingTrades {
                 trade.quantity == executed.quantity
             ) {
                 trades.removeAt(i)
+                markChanged()
                 return
             }
         }
@@ -98,6 +117,7 @@ class StockReviewPendingTrades {
             trade.addQuantity(-reduced)
             remaining -= reduced
             if (trade.isZero()) trades.removeAt(i)
+            markChanged()
             i--
         }
         return remaining
@@ -116,8 +136,13 @@ class StockReviewPendingTrades {
             trade.addQuantity(reduced)
             remaining -= reduced
             if (trade.isZero()) trades.removeAt(i)
+            markChanged()
             i--
         }
         return remaining
+    }
+
+    private fun markChanged() {
+        revision++
     }
 }

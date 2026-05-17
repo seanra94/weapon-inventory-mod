@@ -151,13 +151,22 @@ class StockReviewTradeContext(
     }
 
     private fun canAffordAdjustment(record: WeaponStockRecord, submarketId: String?, quantity: Int): Boolean {
-        val adjusted = quoteBook.quotePortfolio(
-            StockReviewTradePlanner.withAdjustment(pendingTrades, record.itemKey, submarketId, quantity)
-        )
-        val adjustedCost = adjusted.totalCost()
+        val adjustedCost: Long
+        val adjustedCargoSpaceDelta: Float
+        if (pendingTrades.isNullOrEmpty()) {
+            val adjusted = quoteBook.quoteSingleAdjustment(record.itemKey, submarketId, quantity)
+            adjustedCost = adjusted.cost
+            adjustedCargoSpaceDelta = adjusted.cargoSpaceDelta
+        } else {
+            val adjusted = quoteBook.quotePortfolio(
+                StockReviewTradePlanner.withAdjustment(pendingTrades, record.itemKey, submarketId, quantity),
+            )
+            adjustedCost = adjusted.totalCost()
+            adjustedCargoSpaceDelta = adjusted.totalCargoSpaceDelta()
+        }
         if (adjustedCost == StockReviewQuoteBook.PRICE_UNAVAILABLE.toLong()) return false
         if (adjustedCost > creditsValue) return false
-        return adjusted.totalCargoSpaceDelta() <= cargoSpaceLeftValue + 0.01f
+        return adjustedCargoSpaceDelta <= cargoSpaceLeftValue + 0.01f
     }
 
     private fun submarketRemaining(record: WeaponStockRecord, submarketId: String): Int {

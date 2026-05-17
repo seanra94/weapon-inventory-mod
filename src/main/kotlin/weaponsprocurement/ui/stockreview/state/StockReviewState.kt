@@ -17,6 +17,7 @@ class StockReviewState : WimGuiScrollableListState {
     private var tradeWarning = "None"
     private var initialCredits = -1f
     private var initialCargoCapacity = -1f
+    private var contentRevision = 0
 
     constructor(config: StockReviewConfig) {
         expansion = StockReviewExpansionState()
@@ -32,25 +33,45 @@ class StockReviewState : WimGuiScrollableListState {
         tradeWarning = source.tradeWarning
         initialCredits = source.initialCredits
         initialCargoCapacity = source.initialCargoCapacity
+        contentRevision = source.contentRevision
     }
 
     fun isExpanded(category: StockCategory?): Boolean = expansion.isExpanded(category)
-    fun toggle(category: StockCategory?) = expansion.toggle(category)
+    fun toggle(category: StockCategory?) {
+        expansion.toggle(category)
+        markContentChanged()
+    }
     fun isExpanded(itemType: StockItemType?, category: StockCategory?): Boolean = expansion.isExpanded(itemType, category)
-    fun toggle(itemType: StockItemType?, category: StockCategory?) = expansion.toggle(itemType, category)
+    fun toggle(itemType: StockItemType?, category: StockCategory?) {
+        expansion.toggle(itemType, category)
+        markContentChanged()
+    }
     fun isExpanded(itemType: StockItemType?): Boolean = expansion.isExpanded(itemType)
-    fun toggle(itemType: StockItemType?) = expansion.toggle(itemType)
+    fun toggle(itemType: StockItemType?) {
+        expansion.toggle(itemType)
+        markContentChanged()
+    }
     fun isExpanded(tradeGroup: StockReviewTradeGroup?): Boolean = expansion.isExpanded(tradeGroup)
-    fun toggle(tradeGroup: StockReviewTradeGroup?) = expansion.toggle(tradeGroup)
-    fun setExpanded(tradeGroup: StockReviewTradeGroup?, value: Boolean) = expansion.setExpanded(tradeGroup, value)
+    fun toggle(tradeGroup: StockReviewTradeGroup?) {
+        expansion.toggle(tradeGroup)
+        markContentChanged()
+    }
+    fun setExpanded(tradeGroup: StockReviewTradeGroup?, value: Boolean) {
+        expansion.setExpanded(tradeGroup, value)
+        markContentChanged()
+    }
     fun isItemExpanded(itemKey: String?): Boolean = expansion.isItemExpanded(itemKey)
-    fun toggleItem(itemKey: String?) = expansion.toggleItem(itemKey)
+    fun toggleItem(itemKey: String?) {
+        expansion.toggleItem(itemKey)
+        markContentChanged()
+    }
 
     fun isFilterActive(filter: StockReviewFilter?): Boolean = filters.isFilterActive(filter)
 
     fun toggleFilter(filter: StockReviewFilter?) {
         filters.toggleFilter(filter)
         listScrollOffset = 0
+        markContentChanged()
     }
 
     fun getActiveFilters(): Set<StockReviewFilter> = filters.getActiveFilters()
@@ -59,17 +80,32 @@ class StockReviewState : WimGuiScrollableListState {
     fun clearFilters() {
         filters.clearFilters()
         listScrollOffset = 0
+        markContentChanged()
     }
 
     fun isExpanded(group: StockReviewFilterGroup?): Boolean = filters.isExpanded(group)
-    fun toggle(group: StockReviewFilterGroup?) = filters.toggle(group)
+    fun toggle(group: StockReviewFilterGroup?) {
+        filters.toggle(group)
+        markContentChanged()
+    }
     fun getSortMode(): StockSortMode = source.getSortMode()
-    fun cycleSortMode() = source.cycleSortMode()
+    fun cycleSortMode() {
+        source.cycleSortMode()
+        markContentChanged()
+    }
     fun isIncludeCurrentMarketStorage(): Boolean = source.isIncludeCurrentMarketStorage()
     fun isIncludeBlackMarket(): Boolean = source.isIncludeBlackMarket()
-    fun toggleBlackMarket() = source.toggleBlackMarket()
+    fun toggleBlackMarket() {
+        source.toggleBlackMarket()
+        markContentChanged()
+    }
     fun getSourceMode(): StockSourceMode = source.getSourceMode()
-    fun cycleSourceMode() = source.cycleSourceMode()
+    fun cycleSourceMode() {
+        source.cycleSourceMode()
+        markContentChanged()
+    }
+
+    fun getContentRevision(): Int = contentRevision
 
     override fun getListScrollOffset(): Int = listScrollOffset
 
@@ -101,5 +137,9 @@ class StockReviewState : WimGuiScrollableListState {
         if (this.initialCargoCapacity < 0f) {
             this.initialCargoCapacity = Math.max(0f, initialCargoCapacity)
         }
+    }
+
+    private fun markContentChanged() {
+        contentRevision++
     }
 }

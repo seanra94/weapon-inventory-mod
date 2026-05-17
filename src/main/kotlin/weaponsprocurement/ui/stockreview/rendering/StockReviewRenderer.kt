@@ -31,12 +31,15 @@ class StockReviewRenderer :
     WimGuiModalListRenderer.ScrollRowFactory<StockReviewAction>,
     WimGuiModalListRenderer.ExtraGapProvider<StockReviewAction> {
     private val buttonFactory = WimGuiSemanticButtonFactory<StockReviewAction>(StockReviewStyle.ROW_BORDER)
+    private var cachedModel: RenderModel? = null
 
     fun render(
         root: CustomPanelAPI,
         snapshot: WeaponStockSnapshot,
         state: StockReviewState,
         pendingTrades: List<StockReviewPendingTrade>,
+        pendingTradeRevision: Int,
+        modeRevision: Int,
         reviewMode: Boolean,
         filterMode: Boolean,
         colorDebugMode: Boolean,
@@ -51,21 +54,67 @@ class StockReviewRenderer :
         if (!reviewMode && !filterMode && !colorDebugMode) {
             renderActionRow(root, snapshot, state, buttons)
         }
-        val tradeContext = StockReviewTradeContext(snapshot, pendingTrades)
-        val result = if (colorDebugMode) {
-            renderColorDebugList(root, colorDebugTargetIndex, colorDebugDraft, colorDebugPersistent, state, buttons)
-        } else if (filterMode) {
-            renderFilterList(root, state, buttons)
-        } else if (reviewMode) {
-            renderReviewList(root, snapshot, pendingTrades, state, tradeContext, buttons)
-        } else {
-            renderStockList(root, snapshot, state, tradeContext, buttons)
-        }
+        val model = renderModel(
+            snapshot,
+            state,
+            pendingTrades,
+            pendingTradeRevision,
+            modeRevision,
+            reviewMode,
+            filterMode,
+            colorDebugMode,
+            colorDebugTargetIndex,
+            colorDebugDraft,
+            colorDebugPersistent,
+        )
+        val result = renderRows(root, model.rows, state, model.listSpec, buttons)
         if (!filterMode && !colorDebugMode) {
-            StockReviewTradeSummaryRenderer.render(root, tradeContext, state, reviewMode)
+            StockReviewTradeSummaryRenderer.render(root, model.tradeContext, state, reviewMode)
         }
-        StockReviewFooterRenderer.render(root, tradeContext, pendingTrades, reviewMode, filterMode, colorDebugMode, buttons)
+        StockReviewFooterRenderer.render(root, model.tradeContext, pendingTrades, reviewMode, filterMode, colorDebugMode, buttons)
         return result
+    }
+
+    private fun renderModel(
+        snapshot: WeaponStockSnapshot,
+        state: StockReviewState,
+        pendingTrades: List<StockReviewPendingTrade>,
+        pendingTradeRevision: Int,
+        modeRevision: Int,
+        reviewMode: Boolean,
+        filterMode: Boolean,
+        colorDebugMode: Boolean,
+        colorDebugTargetIndex: Int,
+        colorDebugDraft: Color?,
+        colorDebugPersistent: Boolean,
+    ): RenderModel {
+        val current = cachedModel
+        if (current != null &&
+            current.matches(snapshot, state.getContentRevision(), pendingTradeRevision, modeRevision)
+        ) {
+            return current
+        }
+
+        val tradeContext = StockReviewTradeContext(snapshot, pendingTrades)
+        val rows: List<WimGuiListRow<StockReviewAction>>
+        val listSpec: WimGuiModalListSpec
+        if (colorDebugMode) {
+            rows = StockReviewColorDebugRows.build(colorDebugTargetIndex, colorDebugDraft, colorDebugPersistent)
+            listSpec = StockReviewStyle.LIST
+        } else if (filterMode) {
+            rows = StockReviewFilterListModel.build(state)
+            listSpec = StockReviewStyle.FILTER_LIST
+        } else if (reviewMode) {
+            rows = StockReviewReviewListModel.build(snapshot, pendingTrades, state, tradeContext)
+            listSpec = StockReviewStyle.REVIEW_LIST
+        } else {
+            rows = StockReviewListModel.build(snapshot, state, tradeContext)
+            listSpec = StockReviewStyle.TRADE_LIST
+        }
+
+        val built = RenderModel(snapshot, state.getContentRevision(), pendingTradeRevision, modeRevision, tradeContext, rows, listSpec)
+        cachedModel = built
+        return built
     }
 
     private fun renderHeader(
@@ -161,50 +210,6 @@ class StockReviewRenderer :
         )
     }
 
-    private fun renderStockList(
-        root: CustomPanelAPI,
-        snapshot: WeaponStockSnapshot,
-        state: StockReviewState,
-        tradeContext: StockReviewTradeContext,
-        buttons: MutableList<WimGuiButtonBinding<StockReviewAction>>,
-    ): WimGuiListBounds {
-        val rows = StockReviewListModel.build(snapshot, state, tradeContext)
-        return renderRows(root, rows, state, StockReviewStyle.TRADE_LIST, buttons)
-    }
-
-    private fun renderReviewList(
-        root: CustomPanelAPI,
-        snapshot: WeaponStockSnapshot,
-        pendingTrades: List<StockReviewPendingTrade>,
-        state: StockReviewState,
-        tradeContext: StockReviewTradeContext,
-        buttons: MutableList<WimGuiButtonBinding<StockReviewAction>>,
-    ): WimGuiListBounds {
-        val rows = StockReviewReviewListModel.build(snapshot, pendingTrades, state, tradeContext)
-        return renderRows(root, rows, state, StockReviewStyle.REVIEW_LIST, buttons)
-    }
-
-    private fun renderColorDebugList(
-        root: CustomPanelAPI,
-        targetIndex: Int,
-        draft: Color?,
-        persistent: Boolean,
-        state: StockReviewState,
-        buttons: MutableList<WimGuiButtonBinding<StockReviewAction>>,
-    ): WimGuiListBounds {
-        val rows = StockReviewColorDebugRows.build(targetIndex, draft, persistent)
-        return renderRows(root, rows, state, StockReviewStyle.LIST, buttons)
-    }
-
-    private fun renderFilterList(
-        root: CustomPanelAPI,
-        state: StockReviewState,
-        buttons: MutableList<WimGuiButtonBinding<StockReviewAction>>,
-    ): WimGuiListBounds {
-        val rows = StockReviewFilterListModel.build(state)
-        return renderRows(root, rows, state, StockReviewStyle.FILTER_LIST, buttons)
-    }
-
     private fun renderRows(
         root: CustomPanelAPI,
         rows: List<WimGuiListRow<StockReviewAction>>,
@@ -261,5 +266,26 @@ class StockReviewRenderer :
         }
 
         private fun onOff(enabled: Boolean): String = if (enabled) "On" else "Off"
+    }
+
+    private class RenderModel(
+        private val snapshot: WeaponStockSnapshot,
+        private val stateRevision: Int,
+        private val pendingTradeRevision: Int,
+        private val modeRevision: Int,
+        val tradeContext: StockReviewTradeContext,
+        val rows: List<WimGuiListRow<StockReviewAction>>,
+        val listSpec: WimGuiModalListSpec,
+    ) {
+        fun matches(
+            snapshot: WeaponStockSnapshot,
+            stateRevision: Int,
+            pendingTradeRevision: Int,
+            modeRevision: Int,
+        ): Boolean =
+            this.snapshot === snapshot &&
+                this.stateRevision == stateRevision &&
+                this.pendingTradeRevision == pendingTradeRevision &&
+                this.modeRevision == modeRevision
     }
 }

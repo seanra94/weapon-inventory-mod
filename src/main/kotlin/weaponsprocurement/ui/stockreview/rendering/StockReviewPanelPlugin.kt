@@ -86,6 +86,8 @@ class StockReviewPanelPlugin(
             currentSnapshot,
             state,
             pendingTrades.asList(),
+            pendingTrades.getRevision(),
+            modes.getRevision(),
             modes.isReviewMode(),
             modes.isFilterMode(),
             modes.isColorDebugMode(),

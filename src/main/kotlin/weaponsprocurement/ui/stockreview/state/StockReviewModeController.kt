@@ -11,6 +11,7 @@ class StockReviewModeController(private var reviewMode: Boolean) {
     private var colorDebugPersistent = false
     private var colorDebugTargetIndex = 0
     private var colorDebugDraft: Color? = null
+    private var revision = 0
 
     fun isReviewMode(): Boolean = reviewMode
 
@@ -22,16 +23,20 @@ class StockReviewModeController(private var reviewMode: Boolean) {
 
     fun getColorDebugTargetIndex(): Int = colorDebugTargetIndex
 
+    fun getRevision(): Int = revision
+
     fun enterFilters(state: StockReviewState) {
         filterMode = true
         reviewMode = false
         colorDebugMode = false
         state.setListScrollOffset(0)
+        markChanged()
     }
 
     fun leaveFilters(state: StockReviewState) {
         filterMode = false
         state.setListScrollOffset(0)
+        markChanged()
     }
 
     fun enterColorDebug(state: StockReviewState) {
@@ -42,25 +47,30 @@ class StockReviewModeController(private var reviewMode: Boolean) {
         filterMode = false
         state.setListScrollOffset(0)
         ensureColorDebugDraft()
+        markChanged()
     }
 
     fun leaveColorDebug(state: StockReviewState) {
         colorDebugMode = false
         reviewMode = colorDebugReturnToReview
         state.setListScrollOffset(colorDebugReturnScrollOffset)
+        markChanged()
     }
 
     fun exitReview(state: StockReviewState) {
         reviewMode = false
         state.setListScrollOffset(0)
+        markChanged()
     }
 
     fun setReviewMode(reviewMode: Boolean) {
         this.reviewMode = reviewMode
+        markChanged()
     }
 
     fun toggleColorDebugPersistence() {
         colorDebugPersistent = !colorDebugPersistent
+        markChanged()
     }
 
     fun cycleColorDebugTarget(delta: Int) {
@@ -68,11 +78,13 @@ class StockReviewModeController(private var reviewMode: Boolean) {
         if (targets.isEmpty()) {
             colorDebugTargetIndex = 0
             colorDebugDraft = null
+            markChanged()
             return
         }
         val size = targets.size
         colorDebugTargetIndex = ((colorDebugTargetIndex + delta) % size + size) % size
         colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex))
+        markChanged()
     }
 
     fun currentColorDebugDraft(): Color? {
@@ -82,11 +94,13 @@ class StockReviewModeController(private var reviewMode: Boolean) {
 
     fun adjustColorDebugDraft(redDelta: Int, greenDelta: Int, blueDelta: Int) {
         colorDebugDraft = WimGuiColorDebug.adjust(currentColorDebugDraft(), redDelta, greenDelta, blueDelta)
+        markChanged()
     }
 
     fun restoreColorDebugDraft() {
         val target = WimGuiColorDebug.targetAt(colorDebugTargetIndex)
         colorDebugDraft = target?.defaultColor
+        markChanged()
     }
 
     fun applyColorDebugDraft() {
@@ -95,6 +109,7 @@ class StockReviewModeController(private var reviewMode: Boolean) {
         if (colorDebugPersistent) {
             WimGuiColorDebug.save(target, currentColorDebugDraft())
         }
+        markChanged()
     }
 
     private fun ensureColorDebugDraft() {
@@ -102,5 +117,9 @@ class StockReviewModeController(private var reviewMode: Boolean) {
             return
         }
         colorDebugDraft = WimGuiColorDebug.currentColor(WimGuiColorDebug.targetAt(colorDebugTargetIndex))
+    }
+
+    private fun markChanged() {
+        revision++
     }
 }

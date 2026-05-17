@@ -11,7 +11,6 @@ import weaponsprocurement.ui.stockreview.state.StockReviewState
 import weaponsprocurement.ui.stockreview.tooltips.StockReviewItemTooltip
 import weaponsprocurement.ui.stockreview.tooltips.StockReviewTooltips
 import weaponsprocurement.ui.stockreview.trade.StockReviewTradeContext
-import weaponsprocurement.ui.stockreview.trade.StockReviewTradePlanner
 import weaponsprocurement.stock.item.StockCategory
 import weaponsprocurement.stock.item.StockItemType
 import weaponsprocurement.stock.item.StockSourceMode
@@ -93,10 +92,7 @@ object StockReviewListModel {
         color: Color,
         topGap: Boolean,
     ): Int {
-        val records = filteredRecords(
-            StockReviewTradePlanner.visibleTradeableRecords(snapshot, itemType, category),
-            state.getActiveFilters(),
-        )
+        val records = filteredRecords(snapshot?.getRecords(itemType, category), state.getActiveFilters())
         val expanded = state.isExpanded(itemType, category)
         val label = WimGuiToggleHeading.label(categoryHeading(itemType, category, records, tradeContext), expanded)
         rows.add(

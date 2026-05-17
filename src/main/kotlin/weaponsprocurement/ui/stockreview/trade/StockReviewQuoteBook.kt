@@ -58,6 +58,11 @@ class StockReviewQuoteBook(private val snapshot: WeaponStockSnapshot?) {
         return Int.MAX_VALUE
     }
 
+    fun quoteSingleAdjustment(itemKey: String?, submarketId: String?, quantity: Int): StockReviewQuote {
+        val trade = StockReviewPendingTrade.create(itemKey, submarketId, quantity) ?: return StockReviewQuote.ZERO
+        return quote(trade)
+    }
+
     private fun quote(trade: StockReviewPendingTrade?): StockReviewQuote {
         if (trade == null || trade.isZero()) return StockReviewQuote.ZERO
         val key = lineKey(trade)
