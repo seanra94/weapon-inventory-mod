@@ -1,6 +1,7 @@
 param(
     [string]$StarsectorDir = $env:STARSECTOR_DIRECTORY,
     [switch]$NoClean,
+    [switch]$AllowPrivateBadgeJar,
     [switch]$QueuedWorker,
     [string]$StagingRoot = "",
     [string]$SourceProject = "",
@@ -50,6 +51,46 @@ function Write-DeployLog {
 
 function Get-RelativeDeployItems {
     return $script:items
+}
+
+function Get-ZipEntryNames {
+    param([string]$Path)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        return @($zip.Entries | ForEach-Object { $_.FullName })
+    } finally {
+        $zip.Dispose()
+    }
+}
+
+function Assert-DeployJarBoundary {
+    param([string]$BaseRoot)
+
+    $jarPath = Join-Path $BaseRoot "jars\weapons-procurement.jar"
+    if (-not (Test-Path -LiteralPath $jarPath)) {
+        throw "Deploy jar not found: $jarPath"
+    }
+    if ($AllowPrivateBadgeJar) {
+        return
+    }
+
+    $privateTerms = @(
+        "WeaponsProcurementBadgeHelper",
+        "WeaponsProcurementBadgeConfig",
+        "WeaponsProcurementCountUpdater",
+        "weaponsprocurement/extensions/WeaponsProcurementExtensions",
+        "weaponsprocurement/internal/WeaponsProcurementBadge",
+        "weaponsprocurement/internal/WeaponsProcurementCountUpdater"
+    )
+    $privateEntries = @(Get-ZipEntryNames -Path $jarPath | Where-Object {
+        $entry = $_
+        $privateTerms | Where-Object { $entry.IndexOf($_, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 }
+    })
+    if ($privateEntries.Count -gt 0) {
+        throw "Refusing clean deploy because the jar contains private patched-badge classes. Rebuild clean with build.ps1, or pass -AllowPrivateBadgeJar for an intentional private deploy. Entries: $($privateEntries -join ', ')"
+    }
 }
 
 function Assert-DeployRoot {
@@ -178,6 +219,7 @@ function Publish-StagedDeploy {
     param([string]$StageRoot)
 
     Assert-DeployRoot
+    Assert-DeployJarBoundary -BaseRoot $StageRoot
     New-Item -ItemType Directory -Force -Path $deployRoot | Out-Null
 
     foreach ($item in (Get-RelativeDeployItems)) {
@@ -370,6 +412,9 @@ function Start-QueuedDeploy {
     if ($NoClean) {
         $args += "-NoClean"
     }
+    if ($AllowPrivateBadgeJar) {
+        $args += "-AllowPrivateBadgeJar"
+    }
 
     $argumentLine = ($args | ForEach-Object { ConvertTo-ProcessArgument -Value $_ }) -join " "
     $process = Start-MinimizedNoActivateProcess -FilePath $powerShellPath -ArgumentList $argumentLine
@@ -406,6 +451,7 @@ if ($QueuedWorker) {
     exit 0
 }
 
+Assert-DeployJarBoundary -BaseRoot $repoRoot
 $stagedRoot = New-DeployStaging
 $blockerPath = Get-DeployBlocker
 if (-not [string]::IsNullOrWhiteSpace($blockerPath)) {

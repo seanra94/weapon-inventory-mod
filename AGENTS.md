@@ -58,6 +58,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\validate-kotlin-migr
 ## Deploy Policy
 
 - Use `tools/deploy-live-mod.ps1`; do not hand-copy runtime files unless explicitly asked.
+- Clean deploys reject jars containing optional patched-badge classes by default. Use `-AllowPrivateBadgeJar` only for an intentional private patched-badge deploy.
 - Deploy runtime changes that affect jar code, `mod_info.json`, `data/`, `graphics/`, Luna settings, generated assets, or package metadata.
 - Do not deploy docs-only changes unless the user asks or release packaging requires mirrored docs.
 - If deployment is blocked by a running Starsector process or locked artifact, do not kill the process. The deploy script stages the built files and queues a waiting background deploy.
