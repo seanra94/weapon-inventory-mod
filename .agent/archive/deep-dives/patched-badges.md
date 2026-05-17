@@ -80,7 +80,8 @@ Display mapping:
 - `1..9`: yellow exact number.
 - `10..98`: green exact number.
 - `>=99`: green `99+`.
-- Missing/invalid bridge state: `wp_total_err.png`.
+- Missing/invalid count after the bridge is ready: `wp_total_err.png`.
+- Bridge not ready yet: no badge. This avoids flooding cargo cells with red `E` sprites during startup or when a clean jar is accidentally used with a patched core.
 
 Assets and checks:
 
@@ -111,7 +112,7 @@ Do not reintroduce:
 ## Helper/Classloader Constraints
 
 - `WeaponsProcurementBadgeHelper` is embedded in patched core and should only read `System` properties to select a precomposed badge sprite path.
-- Missing `wp.config.patchedBadgesEnabled` must fail closed. Treating an absent count bridge as enabled makes patched badges render the red error sprite when the optional private updater is stripped or not yet registered.
+- Missing `wp.config.patchedBadgesEnabled` must fail closed. Treating an absent count bridge as enabled made patched badges render the red error sprite when the optional private updater was stripped or not yet registered; the helper now returns no badge until `wp.counts.ready=true`.
 - LunaLib and normal campaign APIs belong in normal mod-side config/counting code, never in the embedded patched-core helper.
 - Embedded helper classes called by patched core must be visible to the core classloader.
 - If helper code ever uses nested/anonymous/lambda classes, the patcher must embed all generated companion classes.

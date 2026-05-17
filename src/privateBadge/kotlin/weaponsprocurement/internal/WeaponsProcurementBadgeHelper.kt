@@ -31,7 +31,11 @@ class WeaponsProcurementBadgeHelper private constructor() {
                 return null
             }
 
-            if (!isReady() || id.isNullOrEmpty()) {
+            if (!isReady()) {
+                return null
+            }
+
+            if (id.isNullOrEmpty()) {
                 return TOTAL_ERR
             }
 
