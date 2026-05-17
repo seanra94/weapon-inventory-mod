@@ -107,3 +107,15 @@ Accepted values are:
 - comma/space/semicolon-separated hull ids such as `paragon,onslaught,diableavionics_pandemonium`: log those hulls if observed or theoretically reachable.
 
 This diagnostic is intentionally read-only. It scans live mothballed market ships and faction-known hulls, but it does not add ships to Fixer's Market, mutate cargo, force restocks, or change prices.
+
+Analyze the resulting log with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\analyze-ship-catalog-diagnostics.ps1 -LogPath "C:\Games\Starsector\starsector-core\starsector.log"
+```
+
+To require specific hull evidence:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\analyze-ship-catalog-diagnostics.ps1 -LogPath "C:\Games\Starsector\starsector-core\starsector.log" -ExpectHull paragon,onslaught
+```
