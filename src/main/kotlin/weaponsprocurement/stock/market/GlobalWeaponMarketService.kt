@@ -6,6 +6,8 @@ import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import weaponsprocurement.config.WeaponMarketBlacklist
 import weaponsprocurement.config.WeaponsProcurementConfig
+import weaponsprocurement.stock.fixer.FixerCatalogMetadata
+import weaponsprocurement.stock.fixer.FixerCatalogSource
 import weaponsprocurement.stock.fixer.FixerMarketObservedCatalog
 import weaponsprocurement.stock.fixer.FixerRarity
 import weaponsprocurement.stock.fixer.ObservedStockIndex
@@ -96,7 +98,7 @@ class GlobalWeaponMarketService {
                     reference.unitCargoSpace,
                     true,
                 ),
-                reference.rarity,
+                FixerCatalogMetadata.create(reference.rarity, reference.source),
             )
         }
         return builder.build()
@@ -114,6 +116,11 @@ class GlobalWeaponMarketService {
                 source.baseUnitPrice,
                 source.unitCargoSpace,
                 RarityClassifier.observedOnly(item),
+                if (item.isOnlyUnsupportedCustomSubmarket) {
+                    FixerCatalogSource.CUSTOM_LIVE_STOCK
+                } else {
+                    FixerCatalogSource.LIVE_STOCK
+                },
             )
         }
     }
@@ -133,6 +140,11 @@ class GlobalWeaponMarketService {
                     persistent?.baseUnitPrice ?: candidate.baseUnitPrice,
                     persistent?.unitCargoSpace ?: candidate.unitCargoSpace,
                     candidate.rarity,
+                    if (persistent == null) {
+                        FixerCatalogSource.FACTION_CATALOG
+                    } else {
+                        FixerCatalogSource.FACTION_CATALOG_OBSERVED_REFERENCE
+                    },
                 )
             } else if (current.rarity == null) {
                 current.rarity = candidate.rarity
@@ -159,6 +171,7 @@ class GlobalWeaponMarketService {
         baseUnitPrice: Int,
         unitCargoSpace: Float,
         var rarity: FixerRarity?,
+        var source: FixerCatalogSource?,
     ) {
         val baseUnitPrice: Int = Math.max(0, baseUnitPrice)
         val unitCargoSpace: Float = if (!unitCargoSpace.isNaN() && !unitCargoSpace.isInfinite()) {

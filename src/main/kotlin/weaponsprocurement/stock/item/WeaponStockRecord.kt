@@ -4,6 +4,7 @@ import com.fs.starfarer.api.loading.FighterWingSpecAPI
 import com.fs.starfarer.api.loading.MissileSpecAPI
 import com.fs.starfarer.api.loading.ProjectileWeaponSpecAPI
 import com.fs.starfarer.api.loading.WeaponSpecAPI
+import weaponsprocurement.stock.fixer.FixerCatalogMetadata
 import weaponsprocurement.stock.fixer.FixerRarity
 import java.util.Collections
 import java.util.Locale
@@ -20,7 +21,7 @@ class WeaponStockRecord(
     val desiredCount: Int,
     val category: StockCategory?,
     submarketStocks: List<SubmarketWeaponStock>,
-    private val fixerRarity: FixerRarity?,
+    private val fixerCatalogMetadata: FixerCatalogMetadata?,
 ) {
     constructor(
         weaponId: String?,
@@ -44,7 +45,7 @@ class WeaponStockRecord(
         desiredCount,
         category,
         submarketStocks,
-        null,
+        null as FixerCatalogMetadata?,
     )
 
     constructor(
@@ -71,7 +72,35 @@ class WeaponStockRecord(
         desiredCount,
         category,
         submarketStocks,
-        null,
+        null as FixerCatalogMetadata?,
+    )
+
+    constructor(
+        itemType: StockItemType?,
+        itemId: String?,
+        displayName: String?,
+        spec: WeaponSpecAPI?,
+        wingSpec: FighterWingSpecAPI?,
+        ownedCount: Int,
+        playerCargoCount: Int,
+        purchasableCount: Int,
+        desiredCount: Int,
+        category: StockCategory?,
+        submarketStocks: List<SubmarketWeaponStock>,
+        fixerRarity: FixerRarity?,
+    ) : this(
+        itemType,
+        itemId,
+        displayName,
+        spec,
+        wingSpec,
+        ownedCount,
+        playerCargoCount,
+        purchasableCount,
+        desiredCount,
+        category,
+        submarketStocks,
+        FixerCatalogMetadata.create(fixerRarity, null),
     )
 
     val itemType: StockItemType = itemType ?: StockItemType.WEAPON
@@ -95,7 +124,13 @@ class WeaponStockRecord(
         get() = cheapestPurchasableUnitPriceValue
 
     val fixerRarityLabel: String?
-        get() = fixerRarity?.label
+        get() = fixerCatalogMetadata?.rarity?.label
+
+    val fixerAvailabilityLabel: String?
+        get() = fixerCatalogMetadata?.source?.label
+
+    val fixerAvailabilityDetails: String?
+        get() = fixerCatalogMetadata?.source?.details
 
     val sizeLabel: String
         get() {

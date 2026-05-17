@@ -219,12 +219,23 @@ object StockReviewListRow {
         topGap: Boolean,
         rightReserveWidth: Float,
         listWidth: Float,
+    ): WimGuiListRow<StockReviewAction> = labelTextIndented(label, value, indent, topGap, rightReserveWidth, listWidth, null)
+
+    @JvmStatic
+    fun labelTextIndented(
+        label: String?,
+        value: String?,
+        indent: Float,
+        topGap: Boolean,
+        rightReserveWidth: Float,
+        listWidth: Float,
+        tooltip: String?,
     ): WimGuiListRow<StockReviewAction> {
         val componentWidth = maxOf(
             40f,
             listWidth - indent - rightReserveWidth - 2f * StockReviewStyle.SMALL_PAD,
         )
-        return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth, StockReviewStyle.TEXT)
+        return labelTextRow(label, value, indent, topGap, componentWidth, rightReserveWidth, StockReviewStyle.TEXT, tooltip)
     }
 
     private fun labelTextRow(
@@ -235,6 +246,7 @@ object StockReviewListRow {
         componentWidth: Float,
         rightReserveWidth: Float,
         valueColor: Color?,
+        tooltip: String?,
     ): WimGuiListRow<StockReviewAction> {
         val labelWidth = componentWidth * 0.65f
         val valueWidth = componentWidth - labelWidth
@@ -269,6 +281,7 @@ object StockReviewListRow {
             topGap,
             0f,
             rightReserveWidth,
+            tooltip,
         )
     }
 

@@ -93,6 +93,15 @@ object StockReviewItemInfoRows {
         dataIndent: Float,
     ) {
         addRequiredDataRow(rows, "Desired", record.desiredCount.toString(), rightReserveWidth, listWidth, dataIndent)
+        addDataRow(
+            rows,
+            "Availability",
+            record.fixerAvailabilityLabel,
+            rightReserveWidth,
+            listWidth,
+            dataIndent,
+            record.fixerAvailabilityDetails,
+        )
         addDataRow(rows, "Rarity", record.fixerRarityLabel, rightReserveWidth, listWidth, dataIndent)
         if (record.isWing()) {
             addDataRow(rows, "Primary Role", record.typeLabel, rightReserveWidth, listWidth, dataIndent)
@@ -204,9 +213,19 @@ object StockReviewItemInfoRows {
         rightReserveWidth: Float,
         listWidth: Float,
         indent: Float,
+    ) = addDataRow(rows, label, value, rightReserveWidth, listWidth, indent, null)
+
+    private fun addDataRow(
+        rows: MutableList<WimGuiListRow<StockReviewAction>>,
+        label: String,
+        value: String?,
+        rightReserveWidth: Float,
+        listWidth: Float,
+        indent: Float,
+        tooltip: String?,
     ) {
         if (isMeaningful(value)) {
-            rows.add(dataRow(label, value, rightReserveWidth, listWidth, indent))
+            rows.add(dataRow(label, value, rightReserveWidth, listWidth, indent, tooltip))
         }
     }
 
@@ -229,6 +248,15 @@ object StockReviewItemInfoRows {
         rightReserveWidth: Float,
         listWidth: Float,
         indent: Float,
+    ): WimGuiListRow<StockReviewAction> = dataRow(label, value, rightReserveWidth, listWidth, indent, null)
+
+    private fun dataRow(
+        label: String,
+        value: String?,
+        rightReserveWidth: Float,
+        listWidth: Float,
+        indent: Float,
+        tooltip: String?,
     ): WimGuiListRow<StockReviewAction> = StockReviewListRow.labelTextIndented(
         label,
         value,
@@ -236,6 +264,7 @@ object StockReviewItemInfoRows {
         false,
         rightReserveWidth + StockReviewStyle.TEXT_LEFT_PAD,
         listWidth,
+        tooltip,
     )
 
     private fun isMeaningful(value: String?): Boolean = value != null && value.trim().isNotEmpty() && value.trim() != "?"

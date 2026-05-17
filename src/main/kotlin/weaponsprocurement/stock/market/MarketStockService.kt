@@ -5,6 +5,7 @@ import com.fs.starfarer.api.campaign.CargoStackAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets
+import weaponsprocurement.stock.fixer.FixerCatalogMetadata
 import weaponsprocurement.stock.fixer.FixerRarity
 import weaponsprocurement.stock.inventory.InventoryCountService
 import weaponsprocurement.stock.item.StockItemStacks
@@ -71,7 +72,7 @@ class MarketStockService {
         private val totals: Map<String, Int>,
         private val purchasableTotals: Map<String, Int>,
         private val byItemKey: Map<String, List<SubmarketWeaponStock>>,
-        private val rarityByItemKey: Map<String, FixerRarity>,
+        private val metadataByItemKey: Map<String, FixerCatalogMetadata>,
     ) {
         constructor(
             totals: Map<String, Int>,
@@ -94,20 +95,26 @@ class MarketStockService {
 
         fun itemKeys(): Iterable<String> = totals.keys
 
-        fun getRarity(itemKey: String?): FixerRarity? = rarityByItemKey[itemKey]
+        fun getRarity(itemKey: String?): FixerRarity? = metadataByItemKey[itemKey]?.rarity
+
+        fun getFixerCatalogMetadata(itemKey: String?): FixerCatalogMetadata? = metadataByItemKey[itemKey]
     }
 
     class MarketStockBuilder {
         private val totals = HashMap<String, Int>()
         private val purchasableTotals = HashMap<String, Int>()
         private val byItemKey = HashMap<String, MutableList<SubmarketWeaponStock>>()
-        private val rarityByItemKey = HashMap<String, FixerRarity>()
+        private val metadataByItemKey = HashMap<String, FixerCatalogMetadata>()
 
         fun add(itemKey: String?, stock: SubmarketWeaponStock?) {
-            add(itemKey, stock, null)
+            add(itemKey, stock, null as FixerCatalogMetadata?)
         }
 
         fun add(itemKey: String?, stock: SubmarketWeaponStock?, rarity: FixerRarity?) {
+            add(itemKey, stock, FixerCatalogMetadata.create(rarity, null))
+        }
+
+        fun add(itemKey: String?, stock: SubmarketWeaponStock?, metadata: FixerCatalogMetadata?) {
             if (itemKey.isNullOrEmpty() || stock == null || stock.count <= 0) return
             InventoryCountService.add(totals, itemKey, stock.count)
             if (stock.isPurchasable()) {
@@ -119,8 +126,8 @@ class MarketStockService {
                 byItemKey[itemKey] = stocks
             }
             stocks.add(stock)
-            if (rarity != null && !rarityByItemKey.containsKey(itemKey)) {
-                rarityByItemKey[itemKey] = rarity
+            if (metadata != null && !metadataByItemKey.containsKey(itemKey)) {
+                metadataByItemKey[itemKey] = metadata
             }
         }
 
@@ -138,7 +145,7 @@ class MarketStockService {
             immutableTotals(totals),
             immutableTotals(purchasableTotals),
             immutableStocks(byItemKey),
-            Collections.unmodifiableMap(HashMap(rarityByItemKey)),
+            Collections.unmodifiableMap(HashMap(metadataByItemKey)),
         )
     }
 

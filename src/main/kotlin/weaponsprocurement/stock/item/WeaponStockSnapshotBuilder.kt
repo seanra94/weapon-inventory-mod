@@ -80,7 +80,7 @@ class WeaponStockSnapshotBuilder {
                     desiredCount,
                     category,
                     marketStock.getSubmarketStocks(itemKey),
-                    marketStock.getRarity(itemKey),
+                    marketStock.getFixerCatalogMetadata(itemKey),
                 )
             )
         }
