@@ -34,7 +34,7 @@ class WeaponsProcurementBadgeConfig private constructor() {
                 if (!overrideSet && badgesEnabled != null) {
                     enabled = badgesEnabled
                 }
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 if (!configErrorLogged) {
                     configErrorLogged = true
                     LOG.error("WP_BADGE_CONFIG luna settings read error", t)

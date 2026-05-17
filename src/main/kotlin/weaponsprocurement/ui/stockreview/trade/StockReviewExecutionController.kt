@@ -106,7 +106,7 @@ class StockReviewExecutionController(
     ): StockPurchaseService.PurchaseResult? {
         return try {
             executePendingTrade(sector, market, trade, sourceMode)
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             LOG.error(
                 "WP_STOCK_REVIEW queued trade execution crashed item=" +
                     (trade?.itemKey ?: "null") +

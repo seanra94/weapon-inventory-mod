@@ -27,7 +27,7 @@ class WimGuiCampaignDialogHost private constructor(
     fun getPlayerCargo(): CargoAPI? {
         return try {
             if (sector == null || sector.playerFleet == null) null else sector.playerFleet.cargo
-        } catch (_: Throwable) {
+        } catch (_: RuntimeException) {
             null
         }
     }
@@ -53,11 +53,11 @@ class WimGuiCampaignDialogHost private constructor(
             )
             log?.info("$logPrefix market=${market?.id ?: "null"}")
             true
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             log?.warn("$logPrefix failed; closing stale core UI", t)
             try {
                 dialog.visualPanel.closeCoreUI()
-            } catch (_: Throwable) {
+            } catch (_: RuntimeException) {
             }
             false
         }

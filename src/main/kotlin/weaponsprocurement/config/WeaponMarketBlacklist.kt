@@ -1,10 +1,9 @@
 package weaponsprocurement.config
 
 import com.fs.starfarer.api.Global
-import com.fs.starfarer.api.loading.FighterWingSpecAPI
-import com.fs.starfarer.api.loading.WeaponSpecAPI
 import org.apache.log4j.Logger
 import org.json.JSONObject
+import weaponsprocurement.stock.item.StockItemSpecs
 import weaponsprocurement.stock.item.StockItemType
 import java.util.Collections
 import java.util.HashSet
@@ -41,7 +40,7 @@ class WeaponMarketBlacklist private constructor(
                 val loaded = WeaponMarketBlacklist(readSet(root, SECTOR_KEY), readSet(root, FIXERS_KEY))
                 cached = loaded
                 loaded
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 if (!errorLogged) {
                     errorLogged = true
                     LOG.warn("WP_MARKET_BLACKLIST load failed; using empty blacklist from $CONFIG_PATH", t)
@@ -77,27 +76,9 @@ class WeaponMarketBlacklist private constructor(
         private fun displayName(itemKey: String?, rawId: String?): String? {
             val itemType = StockItemType.fromKey(itemKey)
             if (StockItemType.WING == itemType) {
-                val spec = safeWingSpec(rawId)
-                return spec?.wingName
+                return StockItemSpecs.wingSpec(rawId)?.wingName
             }
-            val spec = safeWeaponSpec(rawId)
-            return spec?.weaponName
-        }
-
-        private fun safeWeaponSpec(weaponId: String?): WeaponSpecAPI? {
-            return try {
-                Global.getSettings().getWeaponSpec(weaponId)
-            } catch (ignored: Throwable) {
-                null
-            }
-        }
-
-        private fun safeWingSpec(wingId: String?): FighterWingSpecAPI? {
-            return try {
-                Global.getSettings().getFighterWingSpec(wingId)
-            } catch (ignored: Throwable) {
-                null
-            }
+            return StockItemSpecs.weaponSpec(rawId)?.weaponName
         }
 
         private fun normalize(value: String?): String? {

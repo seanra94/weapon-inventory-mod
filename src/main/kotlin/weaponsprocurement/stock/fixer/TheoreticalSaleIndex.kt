@@ -1,15 +1,12 @@
 package weaponsprocurement.stock.fixer
 
-import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.FactionAPI
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
 import com.fs.starfarer.api.campaign.econ.SubmarketAPI
-import com.fs.starfarer.api.combat.WeaponAPI
 import com.fs.starfarer.api.impl.campaign.ids.Submarkets
-import com.fs.starfarer.api.loading.FighterWingSpecAPI
-import com.fs.starfarer.api.loading.WeaponSpecAPI
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.stock.item.StockItemSpecs
 import weaponsprocurement.stock.item.StockItemStacks
 import weaponsprocurement.stock.item.StockItemType
 import java.util.Collections
@@ -90,18 +87,13 @@ class TheoreticalSaleIndex {
             val sellFrequency = faction.weaponSellFrequency
             val ids = candidateIds(faction.knownWeapons, sellFrequency)
             for (weaponId in ids) {
-                val spec = safeWeaponSpec(weaponId)
+                val spec = StockItemSpecs.weaponSpec(weaponId)
                 if (spec == null || spec.tier > tierCap) continue
                 val itemKey = StockItemType.WEAPON.key(weaponId)
                 if (blacklist != null && blacklist.isBannedFromFixers(itemKey)) continue
                 if (!FixerMarketObservedCatalog.isSafeFixerItem(itemKey)) continue
                 if (!militarySubmarket && hasTag(spec.tags, "military_market_only")) continue
-                try {
-                    if (spec.aiHints != null && spec.aiHints.contains(WeaponAPI.AIHints.SYSTEM)) {
-                        continue
-                    }
-                } catch (ignored: Throwable) {
-                }
+                if (StockItemSpecs.hasSystemHint(spec)) continue
                 val frequency = frequency(sellFrequency, weaponId)
                 if (frequency != null && frequency <= 0f) continue
                 addCandidate(
@@ -126,7 +118,7 @@ class TheoreticalSaleIndex {
             val sellFrequency = faction.fighterSellFrequency
             val ids = candidateIds(faction.knownFighters, sellFrequency)
             for (wingId in ids) {
-                val spec = safeWingSpec(wingId)
+                val spec = StockItemSpecs.wingSpec(wingId)
                 if (spec == null || spec.tier > tierCap) continue
                 val itemKey = StockItemType.WING.key(wingId)
                 if (blacklist != null && blacklist.isBannedFromFixers(itemKey)) continue
@@ -200,23 +192,7 @@ class TheoreticalSaleIndex {
         private fun safeFaction(sector: SectorAPI?, factionId: String?): FactionAPI? {
             return try {
                 if (sector == null || factionId == null) null else sector.getFaction(factionId)
-            } catch (ignored: Throwable) {
-                null
-            }
-        }
-
-        private fun safeWeaponSpec(weaponId: String): WeaponSpecAPI? {
-            return try {
-                Global.getSettings().getWeaponSpec(weaponId)
-            } catch (ignored: Throwable) {
-                null
-            }
-        }
-
-        private fun safeWingSpec(wingId: String): FighterWingSpecAPI? {
-            return try {
-                Global.getSettings().getFighterWingSpec(wingId)
-            } catch (ignored: Throwable) {
+            } catch (_: RuntimeException) {
                 null
             }
         }

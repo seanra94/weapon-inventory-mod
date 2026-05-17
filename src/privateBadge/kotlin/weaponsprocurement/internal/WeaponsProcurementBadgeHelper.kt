@@ -63,7 +63,7 @@ class WeaponsProcurementBadgeHelper private constructor() {
             }
             return try {
                 raw.toInt()
-            } catch (t: Throwable) {
+            } catch (t: NumberFormatException) {
                 logParseErrorOnce(key, raw, t)
                 null
             }
@@ -81,7 +81,7 @@ class WeaponsProcurementBadgeHelper private constructor() {
             else -> TOTAL_GREEN_PREFIX + total + TOTAL_SUFFIX
         }
 
-        private fun logParseErrorOnce(key: String, value: String, t: Throwable) {
+        private fun logParseErrorOnce(key: String, value: String, t: NumberFormatException) {
             if (parseErrorLogged) {
                 return
             }

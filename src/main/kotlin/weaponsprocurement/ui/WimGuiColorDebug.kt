@@ -83,7 +83,7 @@ object WimGuiColorDebug {
                     .put("b", normalized.blue),
             )
             Global.getSettings().writeJSONToCommon(COMMON_FILE, root, true)
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             LOG.warn("Unable to save $COMMON_FILE", t)
         }
     }
@@ -106,7 +106,7 @@ object WimGuiColorDebug {
                     ),
                 )
             }
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             LOG.warn("Unable to load $COMMON_FILE", t)
         }
     }
@@ -116,7 +116,7 @@ object WimGuiColorDebug {
             if (Global.getSettings().fileExistsInCommon(COMMON_FILE)) {
                 return Global.getSettings().readJSONFromCommon(COMMON_FILE, true)
             }
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             LOG.warn("Unable to read $COMMON_FILE", t)
         }
         return JSONObject()

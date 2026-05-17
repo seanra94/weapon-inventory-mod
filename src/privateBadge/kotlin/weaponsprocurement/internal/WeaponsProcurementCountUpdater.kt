@@ -88,7 +88,7 @@ class WeaponsProcurementCountUpdater : EveryFrameScript {
 
             System.setProperty(KEY_READY, "true")
             System.setProperty(KEY_UPDATED_AT, System.currentTimeMillis().toString())
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             System.setProperty(KEY_READY, "false")
             if (!updaterErrorLogged) {
                 updaterErrorLogged = true
@@ -125,7 +125,7 @@ class WeaponsProcurementCountUpdater : EveryFrameScript {
                         addCount(counts, quantity.item, quantity.count)
                     }
                 }
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 logCargoCountErrorOnce("weapons", t)
             }
             return counts
@@ -143,7 +143,7 @@ class WeaponsProcurementCountUpdater : EveryFrameScript {
                         addCount(counts, quantity.item, quantity.count)
                     }
                 }
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 logCargoCountErrorOnce("fighters", t)
             }
             return counts
@@ -165,7 +165,7 @@ class WeaponsProcurementCountUpdater : EveryFrameScript {
                     val storageCargo = Misc.getStorageCargo(market)
                     mergeCounts(weaponCounts, collectWeaponCounts(storageCargo))
                     mergeCounts(fighterCounts, collectFighterCounts(storageCargo))
-                } catch (t: Throwable) {
+                } catch (t: RuntimeException) {
                     logStorageCountErrorOnce(market, t)
                 }
             }
@@ -208,7 +208,7 @@ class WeaponsProcurementCountUpdater : EveryFrameScript {
             }
             return try {
                 market.id + "/" + market.name
-            } catch (_: Throwable) {
+            } catch (_: RuntimeException) {
                 market.toString()
             }
         }

@@ -74,7 +74,7 @@ class StockReviewConfig private constructor(
             return try {
                 val json = Global.getSettings().loadJSON(CONFIG_PATH)
                 fromJson(json)
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 LOG.warn("WP_STOCK_REVIEW config load failed; using defaults from $CONFIG_PATH", t)
                 defaults()
             }

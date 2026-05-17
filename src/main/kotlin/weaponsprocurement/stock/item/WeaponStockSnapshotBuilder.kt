@@ -1,7 +1,6 @@
 package weaponsprocurement.stock.item
 
 import weaponsprocurement.stock.market.MarketStockService.MarketStock
-import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
@@ -52,8 +51,8 @@ class WeaponStockSnapshotBuilder {
         for (itemKey in ids) {
             val itemType = StockItemType.fromKey(itemKey)
             val itemId = StockItemType.rawId(itemKey)
-            val spec = if (StockItemType.WEAPON == itemType) safeWeaponSpec(itemId) else null
-            val wingSpec = if (StockItemType.WING == itemType) safeWingSpec(itemId) else null
+            val spec = if (StockItemType.WEAPON == itemType) StockItemSpecs.weaponSpec(itemId) else null
+            val wingSpec = if (StockItemType.WING == itemType) StockItemSpecs.wingSpec(itemId) else null
             if (spec == null && wingSpec == null) continue
             val displayName = displayName(itemType, spec, wingSpec) ?: continue
             if (config.isIgnored(itemKey) || config.isIgnored(itemId)) continue
@@ -146,22 +145,6 @@ class WeaponStockSnapshotBuilder {
                 if (stock.isPurchasable() && stock.count > 0) return true
             }
             return false
-        }
-
-        private fun safeWeaponSpec(weaponId: String?): WeaponSpecAPI? {
-            return try {
-                Global.getSettings().getWeaponSpec(weaponId)
-            } catch (_: Throwable) {
-                null
-            }
-        }
-
-        private fun safeWingSpec(wingId: String?): FighterWingSpecAPI? {
-            return try {
-                Global.getSettings().getFighterWingSpec(wingId)
-            } catch (_: Throwable) {
-                null
-            }
         }
 
         private fun displayName(

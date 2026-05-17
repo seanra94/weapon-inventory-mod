@@ -42,6 +42,7 @@ class StockReviewHotkeyScript : EveryFrameScript {
         private val LOG: Logger = Logger.getLogger(StockReviewHotkeyScript::class.java)
         private const val HOTKEY = Keyboard.KEY_F8
         private val DIALOG_TRACKER = WimGuiDialogTracker<MarketAPI?, StockReviewLaunchState?>()
+        private var canOpenFailureLogged = false
 
         @JvmStatic
         fun markDialogClosed() {
@@ -84,7 +85,7 @@ class StockReviewHotkeyScript : EveryFrameScript {
             }
             try {
                 openDialog(market, null, source)
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 DIALOG_TRACKER.markClosed()
                 LOG.error("WP_STOCK_REVIEW open failed", t)
                 host.addMessage("Weapon Stock Review failed to open. Check starsector.log.")
@@ -110,7 +111,11 @@ class StockReviewHotkeyScript : EveryFrameScript {
                     return true
                 }
                 hasEnabledRemoteSource()
-            } catch (_: Throwable) {
+            } catch (t: RuntimeException) {
+                if (!canOpenFailureLogged) {
+                    canOpenFailureLogged = true
+                    LOG.warn("WP_STOCK_REVIEW availability check failed", t)
+                }
                 false
             }
         }
@@ -152,7 +157,7 @@ class StockReviewHotkeyScript : EveryFrameScript {
                 )
                 DIALOG_TRACKER.markOpen()
                 LOG.info("WP_STOCK_REVIEW opened source=$source market=${market?.id ?: "null"}")
-            } catch (t: Throwable) {
+            } catch (t: RuntimeException) {
                 DIALOG_TRACKER.markClosed()
                 LOG.error("WP_STOCK_REVIEW open failed", t)
                 host.addMessage("Weapon Stock Review failed to open. Check starsector.log.")

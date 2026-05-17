@@ -1,13 +1,10 @@
 package weaponsprocurement.stock.fixer
 
-import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.SectorAPI
 import com.fs.starfarer.api.campaign.econ.MarketAPI
-import com.fs.starfarer.api.combat.WeaponAPI
-import com.fs.starfarer.api.loading.FighterWingSpecAPI
-import com.fs.starfarer.api.loading.WeaponSpecAPI
 import org.apache.log4j.Logger
 import weaponsprocurement.config.WeaponMarketBlacklist
+import weaponsprocurement.stock.item.StockItemSpecs
 import weaponsprocurement.stock.item.StockItemType
 import weaponsprocurement.stock.item.SubmarketWeaponStock
 import weaponsprocurement.stock.market.MarketStockService
@@ -100,11 +97,8 @@ class FixerMarketObservedCatalog {
         }
 
         private fun isSafeWeapon(weaponId: String?): Boolean {
-            val spec = safeWeaponSpec(weaponId) ?: return false
-            try {
-                if (spec.aiHints != null && spec.aiHints.contains(WeaponAPI.AIHints.SYSTEM)) return false
-            } catch (_: Throwable) {
-            }
+            val spec = StockItemSpecs.weaponSpec(weaponId) ?: return false
+            if (StockItemSpecs.hasSystemHint(spec)) return false
             val tags = lowerTags(spec.tags)
             return !tags.contains("no_sell") &&
                 !tags.contains("weapon_no_sell") &&
@@ -112,7 +106,7 @@ class FixerMarketObservedCatalog {
         }
 
         private fun isSafeWing(wingId: String?): Boolean {
-            val spec = safeWingSpec(wingId) ?: return false
+            val spec = StockItemSpecs.wingSpec(wingId) ?: return false
             val tags = lowerTags(spec.tags)
             return !tags.contains("no_sell") &&
                 !tags.contains("wing_no_sell") &&
@@ -176,7 +170,7 @@ class FixerMarketObservedCatalog {
                 val baseUnitPrice = if (parts.isNotEmpty()) parts[0].toInt() else 0
                 val unitCargoSpace = if (parts.size > 1) parts[1].toFloat() else 1f
                 ObservedItem.create(Math.max(0, baseUnitPrice), Math.max(0.01f, unitCargoSpace))
-            } catch (_: Throwable) {
+            } catch (_: RuntimeException) {
                 null
             }
         }
@@ -213,20 +207,5 @@ class FixerMarketObservedCatalog {
             }
         }
 
-        private fun safeWeaponSpec(weaponId: String?): WeaponSpecAPI? {
-            return try {
-                Global.getSettings().getWeaponSpec(weaponId)
-            } catch (_: Throwable) {
-                null
-            }
-        }
-
-        private fun safeWingSpec(wingId: String?): FighterWingSpecAPI? {
-            return try {
-                Global.getSettings().getFighterWingSpec(wingId)
-            } catch (_: Throwable) {
-                null
-            }
-        }
     }
 }

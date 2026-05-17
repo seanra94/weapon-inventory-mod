@@ -165,7 +165,7 @@ object WeaponsProcurementConfig {
                 MIN_REMOTE_MARKET_PRICE_MULTIPLIER,
                 MAX_REMOTE_MARKET_PRICE_MULTIPLIER,
             )
-        } catch (_: Throwable) {
+        } catch (_: RuntimeException) {
             defaultValue
         }
     }
@@ -207,7 +207,7 @@ object WeaponsProcurementConfig {
     private fun readDoubleSetting(settingId: String): Double? {
         return try {
             LunaSettings.getDouble(MOD_ID, settingId)
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             logConfigReadError(settingId, t)
             null
         }
@@ -216,7 +216,7 @@ object WeaponsProcurementConfig {
     private fun readBooleanSetting(settingId: String): Boolean? {
         return try {
             LunaSettings.getBoolean(MOD_ID, settingId)
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             logConfigReadError(settingId, t)
             null
         }
@@ -236,7 +236,7 @@ object WeaponsProcurementConfig {
                 MIN_DESIRED_WEAPON_COUNT,
                 MAX_DESIRED_WEAPON_COUNT,
             )
-        } catch (_: Throwable) {
+        } catch (_: RuntimeException) {
             clamp(fallback, MIN_DESIRED_WEAPON_COUNT, MAX_DESIRED_WEAPON_COUNT)
         }
     }

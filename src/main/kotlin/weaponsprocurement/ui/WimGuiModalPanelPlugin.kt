@@ -70,7 +70,7 @@ abstract class WimGuiModalPanelPlugin<A>(
                 modalInput.setListBounds(renderedBounds)
             }
             contentPanel.attach(currentRoot)
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             onRebuildFailed(t)
             close()
         }

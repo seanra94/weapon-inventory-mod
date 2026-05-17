@@ -29,7 +29,7 @@ class WeaponsProcurementFixerCatalogUpdater : EveryFrameScript {
                 scanLogs++
                 LOG.info("WP_FIXER_CATALOG observed new legal items=$added")
             }
-        } catch (t: Throwable) {
+        } catch (t: RuntimeException) {
             if (!scanErrorLogged) {
                 scanErrorLogged = true
                 LOG.error("WP_FIXER_CATALOG scan failed", t)

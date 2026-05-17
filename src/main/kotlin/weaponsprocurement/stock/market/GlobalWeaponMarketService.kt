@@ -230,7 +230,7 @@ class GlobalWeaponMarketService {
         private fun safeFaction(sector: SectorAPI?, factionId: String?): FactionAPI? {
             return try {
                 if (sector == null || factionId == null) null else sector.getFaction(factionId)
-            } catch (_: Throwable) {
+            } catch (_: RuntimeException) {
                 null
             }
         }

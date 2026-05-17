@@ -1,6 +1,5 @@
 package weaponsprocurement.stock.item
 
-import com.fs.starfarer.api.Global
 import com.fs.starfarer.api.campaign.CargoAPI
 import com.fs.starfarer.api.campaign.CargoStackAPI
 
@@ -30,15 +29,10 @@ object StockItemCargo {
 
     @JvmStatic
     fun itemDisplayName(itemType: StockItemType, itemId: String): String {
-        return try {
-            if (StockItemType.WING == itemType) {
-                Global.getSettings().getFighterWingSpec(itemId).wingName
-            } else {
-                Global.getSettings().getWeaponSpec(itemId).weaponName
-            }
-        } catch (ignored: Throwable) {
-            itemId
+        if (StockItemType.WING == itemType) {
+            return StockItemSpecs.wingSpec(itemId)?.wingName ?: itemId
         }
+        return StockItemSpecs.weaponSpec(itemId)?.weaponName ?: itemId
     }
 
     @JvmStatic
